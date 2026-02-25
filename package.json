@@ -1,0 +1,27 @@
+{
+  "name": "seatai",
+  "version": "1.0.0",
+  "description": "AI-powered classroom seating optimization platform",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run build:core && cd web && npm run dev",
+    "build": "npm run build:core && cd web && npm run build",
+    "build:core": "cd core && wasm-pack build --target web --out-dir ../web/src/wasm",
+    "test": "cd core && cargo test && cd ../web && npm test",
+    "lint": "cd core && cargo clippy && cd ../web && npm run lint",
+    "clean": "rm -rf web/dist web/src/waml core/target"
+  },
+  "keywords": [
+    "classroom",
+    "seating",
+    "optimization",
+    "genetic-algorithm",
+    "education",
+    "wasm"
+  ],
+  "author": "",
+  "license": "MIT"
+}

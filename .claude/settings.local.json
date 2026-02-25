@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(wasm-pack:*)",
+      "Bash(cargo install:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(start:*)",
+      "Bash(winget install:*)",
+      "Bash($HOME/.cargo/bin/rustup target:*)",
+      "Bash($HOME/.cargo/bin/rustup toolchain:*)",
+      "Bash(npm install:*)",
+      "Bash(ping:*)",
+      "Bash($HOME/.cargo/bin/cargo install:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(which:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}
