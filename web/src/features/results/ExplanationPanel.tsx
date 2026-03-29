@@ -331,7 +331,7 @@ export default function ExplanationPanel() {
                           : 'bg-gray-400 text-white'
                     )}
                   >
-                    {compatibility.score}%
+                    {Math.min(compatibility.score, 100)}%
                   </span>
                 </div>
 
