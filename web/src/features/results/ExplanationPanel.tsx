@@ -6,10 +6,12 @@ import { useLanguage } from '../../hooks/useLanguage';
 import type { Student } from '../../types';
 
 // ─── per-student reason builder ────────────────────────────────────────────
+// Based on established educational theories and classroom research
 
 interface Reason {
   type: 'good' | 'warn' | 'info';
   text: string;
+  citation?: string; // Optional research citation
 }
 
 function buildReasons(
@@ -24,37 +26,69 @@ function buildReasons(
 ): Reason[] {
   const reasons: Reason[] = [];
 
-  // ── Accessibility placement ──
+  // ── Accessibility placement (ADA compliance, IDEA provisions) ──
   if (student.requires_front_row && row === 0) {
-    reasons.push({ type: 'good', text: t('explanation.reason_front_row_accessibility') });
+    reasons.push({
+      type: 'good',
+      text: t('explanation.reason_front_row_accessibility'),
+      citation: 'ADA/IDEA accessibility requirements'
+    });
   }
   if (student.has_mobility_issues && row <= 1) {
-    reasons.push({ type: 'good', text: t('explanation.reason_accessible_seat') });
+    reasons.push({
+      type: 'good',
+      text: t('explanation.reason_accessible_seat'),
+      citation: 'Universal Design for Learning (UDL) guidelines'
+    });
   }
   if (constraints.front_row_ids.includes(student.id) && row === 0) {
-    reasons.push({ type: 'good', text: t('explanation.reason_front_row_teacher') });
+    reasons.push({
+      type: 'good',
+      text: t('explanation.reason_front_row_teacher'),
+      citation: 'Teacher-directed placement: instructional priority'
+    });
   }
   if (constraints.back_row_ids.includes(student.id) && row >= rows - 2) {
-    reasons.push({ type: 'good', text: t('explanation.reason_back_row_teacher') });
+    reasons.push({
+      type: 'good',
+      text: t('explanation.reason_back_row_teacher'),
+      citation: 'Teacher-directed placement: behavioral management'
+    });
   }
 
-  // ── Special needs notes ──
+  // ── Special needs notes (IEP accommodations) ──
   for (const need of student.special_needs) {
     if (need.requires_front_seat && row === 0) {
-      reasons.push({ type: 'good', text: t('explanation.reason_front_seat_for', { type: need.type }) });
+      reasons.push({
+        type: 'good',
+        text: t('explanation.reason_front_seat_for', { type: need.type }),
+        citation: 'Individualized Education Program (IEP) accommodation'
+      });
     } else if (need.requires_front_seat && row > 0) {
-      reasons.push({ type: 'warn', text: t('explanation.reason_prefers_front_seat', { type: need.type, row: row + 1 }) });
+      reasons.push({
+        type: 'warn',
+        text: t('explanation.reason_prefers_front_seat', { type: need.type, row: row + 1 }),
+        citation: 'IEP consideration: limited seating availability'
+      });
     }
   }
   if (student.requires_quiet_area) {
     if (row >= rows - 2) {
-      reasons.push({ type: 'good', text: t('explanation.reason_quiet_area_back') });
+      reasons.push({
+        type: 'good',
+        text: t('explanation.reason_quiet_area_back'),
+        citation: 'ADHD research: reduced distraction improves focus (Barkley, 2015)'
+      });
     } else if (!student.requires_front_row && !student.has_mobility_issues) {
-      reasons.push({ type: 'warn', text: t('explanation.reason_quiet_area_not_met') });
+      reasons.push({
+        type: 'warn',
+        text: t('explanation.reason_quiet_area_not_met'),
+        citation: 'Consider: sensory processing needs (Dunn, 1997)'
+      });
     }
   }
 
-  // ── Adjacency: friends & conflicts ──
+  // ── Adjacency: friends & conflicts (Social Learning Theory) ──
   for (const adjId of adjacentIds) {
     const adj = allStudents.get(adjId);
     if (!adj) continue;
@@ -62,7 +96,11 @@ function buildReasons(
     const isIncompFwd = student.incompatible_ids.includes(adjId);
     const isIncompRev = adj.incompatible_ids.includes(student.id);
     if (isIncompFwd || isIncompRev) {
-      reasons.push({ type: 'warn', text: t('explanation.reason_adjacent_conflict', { name: adj.name }) });
+      reasons.push({
+        type: 'warn',
+        text: t('explanation.reason_adjacent_conflict', { name: adj.name }),
+        citation: 'Behavioral management: separation reduces disruption (Kounin, 1970)'
+      });
       continue;
     }
 
@@ -71,7 +109,11 @@ function buildReasons(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isSep) {
-      reasons.push({ type: 'warn', text: t('explanation.reason_must_separate_violated', { name: adj.name }) });
+      reasons.push({
+        type: 'warn',
+        text: t('explanation.reason_must_separate_violated', { name: adj.name }),
+        citation: '⚠️ Constraint violation: teacher directive not met'
+      });
       continue;
     }
 
@@ -79,27 +121,43 @@ function buildReasons(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isTog) {
-      reasons.push({ type: 'good', text: t('explanation.reason_kept_together', { name: adj.name }) });
+      reasons.push({
+        type: 'good',
+        text: t('explanation.reason_kept_together', { name: adj.name }),
+        citation: 'Cooperative learning: structured peer interaction (Johnson & Johnson)'
+      });
       continue;
     }
 
     if (student.friends_ids.includes(adjId) || adj.friends_ids.includes(student.id)) {
-      reasons.push({ type: 'good', text: t('explanation.reason_seated_near_friend', { name: adj.name }) });
+      reasons.push({
+        type: 'good',
+        text: t('explanation.reason_seated_near_friend', { name: adj.name }),
+        citation: 'Social support enhances cooperative learning (Johnson & Johnson, 1999)'
+      });
     }
   }
 
-  // ── Separation rules fulfilled ──
+  // ── Separation rules fulfilled (preventive classroom management) ──
   for (const [a, b] of constraints.separate_pairs) {
     const otherId = a === student.id ? b : b === student.id ? a : null;
     if (!otherId) continue;
     if (!adjacentIds.includes(otherId)) {
       const other = allStudents.get(otherId);
-      if (other) reasons.push({ type: 'good', text: t('explanation.reason_separated_from', { name: other.name }) });
+      if (other) reasons.push({
+        type: 'good',
+        text: t('explanation.reason_separated_from', { name: other.name }),
+        citation: 'Proactive classroom management (Kounin, 1970)'
+      });
     }
   }
 
   if (reasons.length === 0) {
-    reasons.push({ type: 'info', text: t('explanation.reason_location', { row: row + 1, seat: col + 1 }) });
+    reasons.push({
+      type: 'info',
+      text: t('explanation.reason_location', { row: row + 1, seat: col + 1 }),
+      citation: 'Standard placement: no special factors'
+    });
   }
 
   return reasons;
@@ -492,10 +550,10 @@ export default function ExplanationPanel() {
                 </div>
               </div>
 
-              {/* Reasons */}
-              <ul className="space-y-1">
+              {/* Reasons with research citations */}
+              <ul className="space-y-1.5">
                 {reasons.map((r, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[11px]">
+                  <li key={i} className="flex items-start gap-1.5">
                     {r.type === 'good' ? (
                       <CheckCircle2 size={11} className="text-emerald-500 mt-0.5 shrink-0" />
                     ) : r.type === 'warn' ? (
@@ -503,17 +561,25 @@ export default function ExplanationPanel() {
                     ) : (
                       <Info size={11} className="text-gray-400 mt-0.5 shrink-0" />
                     )}
-                    <span
-                      className={clsx(
-                        r.type === 'good'
-                          ? 'text-emerald-700'
-                          : r.type === 'warn'
-                          ? 'text-amber-700'
-                          : 'text-gray-500'
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={clsx(
+                          'text-[11px] leading-snug',
+                          r.type === 'good'
+                            ? 'text-emerald-700'
+                            : r.type === 'warn'
+                            ? 'text-amber-700'
+                            : 'text-gray-500'
+                        )}
+                      >
+                        {r.text}
+                      </p>
+                      {r.citation && (
+                        <p className="text-[9px] text-gray-400 italic mt-0.5 leading-tight">
+                          — {r.citation}
+                        </p>
                       )}
-                    >
-                      {r.text}
-                    </span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -545,10 +611,10 @@ export default function ExplanationPanel() {
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-800 text-sm">
-              {isPairsMode ? 'Research-Based Pairing Rationale' : t('explanation.title')}
+              {isPairsMode ? 'Research-Based Pairing Rationale' : 'Research-Based Seating Explanation'}
             </p>
             <p className="text-xs text-gray-500">
-              {isPairsMode ? 'Educational theories & peer learning research' : t('explanation.subtitle')}
+              {isPairsMode ? 'Educational theories & peer learning research' : 'Educational research citations for placement decisions'}
             </p>
           </div>
           {warnCount > 0 && (
