@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { current } from 'immer';
 import type {
   Student,
+  Seat,
   OptimizationResult,
   ObjectiveWeights,
   GeneticConfig,
   SeatingConstraints,
-} from '../types';
+} from '../../types';
+
+export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
+export type ViewMode = 'rows' | 'pairs' | 'clusters';
 
 interface AppState {
   // Students
@@ -46,6 +51,30 @@ interface AppState {
   setSelectedStudentId: (id: string | null) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+
+  // --- Seating Map UI ---
+  lockedSeats: string[];            // seat keys "row-col"
+  heatMapMode: HeatMapMode;
+  zoomLevel: number;
+  viewMode: ViewMode;
+  selectedSeatKey: string | null;   // for click-to-swap
+  showRelations: boolean;
+
+  toggleLockSeat: (seatKey: string) => void;
+  setHeatMapMode: (mode: HeatMapMode) => void;
+  setZoomLevel: (level: number) => void;
+  setViewMode: (mode: ViewMode) => void;
+  setSelectedSeat: (key: string | null) => void;
+  setShowRelations: (show: boolean) => void;
+
+  // Swap two seats (pushes to undo history)
+  swapStudents: (seatKeyA: string, seatKeyB: string) => void;
+
+  // Undo / Redo
+  history: OptimizationResult[];
+  historyFuture: OptimizationResult[];
+  undo: () => void;
+  redo: () => void;
 }
 
 const defaultWeights: ObjectiveWeights = {
@@ -82,14 +111,14 @@ export const useStore = create<AppState>()(
         }),
       updateStudent: (id, updates) =>
         set((state) => {
-          const index = state.students.findIndex((s) => s.id === id);
+          const index = state.students.findIndex((s: Student) => s.id === id);
           if (index !== -1) {
             state.students[index] = { ...state.students[index], ...updates };
           }
         }),
       removeStudent: (id) =>
         set((state) => {
-          state.students = state.students.filter((s) => s.id !== id);
+          state.students = state.students.filter((s: Student) => s.id !== id);
         }),
       setStudents: (students) =>
         set((state) => {
@@ -118,6 +147,9 @@ export const useStore = create<AppState>()(
       setResult: (result) =>
         set((state) => {
           state.result = result;
+          // New optimization clears undo history
+          state.history = [];
+          state.historyFuture = [];
         }),
 
       // Weights
@@ -152,6 +184,113 @@ export const useStore = create<AppState>()(
         set((state) => {
           state.sidebarOpen = open;
         }),
+
+      // --- Seating Map UI ---
+      lockedSeats: [],
+      heatMapMode: 'none',
+      zoomLevel: 1.0,
+      viewMode: 'rows',
+      selectedSeatKey: null,
+      showRelations: false,
+
+      toggleLockSeat: (seatKey) =>
+        set((state) => {
+          const idx = state.lockedSeats.indexOf(seatKey);
+          if (idx === -1) {
+            state.lockedSeats.push(seatKey);
+          } else {
+            state.lockedSeats.splice(idx, 1);
+          }
+        }),
+      setHeatMapMode: (mode) =>
+        set((state) => {
+          state.heatMapMode = mode;
+        }),
+      setZoomLevel: (level) =>
+        set((state) => {
+          state.zoomLevel = Math.min(1.5, Math.max(0.6, level));
+        }),
+      setViewMode: (mode) =>
+        set((state) => {
+          state.viewMode = mode;
+        }),
+      setSelectedSeat: (key) =>
+        set((state) => {
+          state.selectedSeatKey = key;
+        }),
+      setShowRelations: (show) =>
+        set((state) => {
+          state.showRelations = show;
+        }),
+
+      // Swap two students and push to undo history
+      swapStudents: (seatKeyA, seatKeyB) =>
+        set((state) => {
+          if (!state.result || seatKeyA === seatKeyB) return;
+
+          // Snapshot current result for undo
+          const snapshot = JSON.parse(JSON.stringify(current(state.result))) as OptimizationResult;
+          state.history = [...state.history, snapshot].slice(-20);
+          state.historyFuture = [];
+
+          // Parse seat keys
+          const [rowA, colA] = seatKeyA.split('-').map(Number);
+          const [rowB, colB] = seatKeyB.split('-').map(Number);
+
+          const seats = state.result.layout.seats;
+          const seatA = seats.find(
+            (s: Seat) => s.position.row === rowA && s.position.col === colA
+          );
+          const seatB = seats.find(
+            (s: Seat) => s.position.row === rowB && s.position.col === colB
+          );
+          if (!seatA || !seatB) return;
+
+          const studentIdA = seatA.student_id;
+          const studentIdB = seatB.student_id;
+
+          // Swap student IDs
+          seatA.student_id = studentIdB;
+          seatA.is_empty = studentIdB === undefined;
+          seatB.student_id = studentIdA;
+          seatB.is_empty = studentIdA === undefined;
+
+          // Update student_positions map
+          if (studentIdA !== undefined) {
+            state.result.student_positions[studentIdA] = { ...seatB.position };
+          }
+          if (studentIdB !== undefined) {
+            state.result.student_positions[studentIdB] = { ...seatA.position };
+          }
+        }),
+
+      // Undo / Redo
+      history: [],
+      historyFuture: [],
+
+      undo: () =>
+        set((state) => {
+          if (state.history.length === 0 || !state.result) return;
+          const previousResult = state.history[state.history.length - 1];
+          const currentSnapshot = JSON.parse(
+            JSON.stringify(current(state.result))
+          ) as OptimizationResult;
+          state.historyFuture = [currentSnapshot, ...state.historyFuture].slice(0, 20);
+          state.history = state.history.slice(0, -1);
+          state.result = previousResult as any;
+        }),
+
+      redo: () =>
+        set((state) => {
+          if (state.historyFuture.length === 0 || !state.result) return;
+          const nextResult = state.historyFuture[0];
+          const currentSnapshot = JSON.parse(
+            JSON.stringify(current(state.result))
+          ) as OptimizationResult;
+          state.history = [...state.history, currentSnapshot].slice(-20);
+          state.historyFuture = state.historyFuture.slice(1);
+          state.result = nextResult as any;
+        }),
     })),
     {
       name: 'seatai-storage',
@@ -162,6 +301,10 @@ export const useStore = create<AppState>()(
         weights: state.weights,
         config: state.config,
         constraints: state.constraints,
+        lockedSeats: state.lockedSeats,
+        heatMapMode: state.heatMapMode,
+        zoomLevel: state.zoomLevel,
+        viewMode: state.viewMode,
       }),
     }
   )
