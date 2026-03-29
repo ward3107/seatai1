@@ -10,7 +10,10 @@ import MetricsPanel from '../features/optimization/MetricsPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
+import ProjectManager from '../features/projects/ProjectManager';
+import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { useLanguage } from '../hooks/useLanguage';
 import { Menu, X, Play, RefreshCw, Users } from 'lucide-react';
 
 function App() {
@@ -23,6 +26,7 @@ function App() {
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
+  useLanguage(); // applies dir/lang to <html> on language changes
 
   // Initialize WASM on mount
   useEffect(() => {
@@ -66,6 +70,10 @@ function App() {
 
           {/* Content */}
           <div className="flex-1 overflow-auto p-4 space-y-4">
+            <ErrorBoundary name="Projects" inline>
+              <ProjectManager />
+            </ErrorBoundary>
+
             <ErrorBoundary name="CSV Import" inline>
               <CsvImport />
             </ErrorBoundary>
@@ -150,6 +158,7 @@ function App() {
               </div>
             )}
 
+            <LanguageSelector />
             <ExportButton />
           </div>
         </header>

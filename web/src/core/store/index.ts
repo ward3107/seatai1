@@ -9,6 +9,7 @@ import type {
   ObjectiveWeights,
   GeneticConfig,
   SeatingConstraints,
+  ClassProject,
 } from '../../types';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
@@ -75,6 +76,18 @@ interface AppState {
   historyFuture: OptimizationResult[];
   undo: () => void;
   redo: () => void;
+
+  // UI Language
+  uiLanguage: 'en' | 'he' | 'ar' | 'ru';
+  setUiLanguage: (lang: 'en' | 'he' | 'ar' | 'ru') => void;
+
+  // Projects
+  projects: ClassProject[];
+  currentProjectId: string | null;
+  saveProject: (name: string) => void;
+  loadProject: (id: string) => void;
+  deleteProject: (id: string) => void;
+  renameProject: (id: string, name: string) => void;
 }
 
 const defaultWeights: ObjectiveWeights = {
@@ -291,6 +304,79 @@ export const useStore = create<AppState>()(
           state.historyFuture = state.historyFuture.slice(1);
           state.result = nextResult as any;
         }),
+
+      // UI Language
+      uiLanguage: 'en',
+      setUiLanguage: (lang) =>
+        set((state) => { state.uiLanguage = lang; }),
+
+      // Projects
+      projects: [],
+      currentProjectId: null,
+
+      saveProject: (name) =>
+        set((state) => {
+          const now = new Date().toISOString();
+          const existing = state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
+          if (existing) {
+            existing.name = name;
+            existing.updatedAt = now;
+            existing.students = JSON.parse(JSON.stringify(current(state.students)));
+            existing.rows = state.rows;
+            existing.cols = state.cols;
+            existing.weights = { ...state.weights };
+            existing.config = { ...state.config };
+            existing.constraints = JSON.parse(JSON.stringify(current(state.constraints)));
+            existing.result = state.result ? JSON.parse(JSON.stringify(current(state.result))) : null;
+          } else {
+            const id = `proj_${Date.now()}`;
+            state.projects.push({
+              id,
+              name,
+              createdAt: now,
+              updatedAt: now,
+              students: JSON.parse(JSON.stringify(current(state.students))),
+              rows: state.rows,
+              cols: state.cols,
+              weights: { ...state.weights },
+              config: { ...state.config },
+              constraints: JSON.parse(JSON.stringify(current(state.constraints))),
+              result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+            });
+            state.currentProjectId = id;
+          }
+        }),
+
+      loadProject: (id) =>
+        set((state) => {
+          const p = state.projects.find((proj: ClassProject) => proj.id === id);
+          if (!p) return;
+          state.currentProjectId = id;
+          state.students = p.students;
+          state.rows = p.rows;
+          state.cols = p.cols;
+          state.weights = p.weights;
+          state.config = p.config;
+          state.constraints = p.constraints;
+          state.result = p.result;
+          state.history = [];
+          state.historyFuture = [];
+        }),
+
+      deleteProject: (id) =>
+        set((state) => {
+          state.projects = state.projects.filter((p: ClassProject) => p.id !== id);
+          if (state.currentProjectId === id) state.currentProjectId = null;
+        }),
+
+      renameProject: (id, name) =>
+        set((state) => {
+          const p = state.projects.find((proj: ClassProject) => proj.id === id);
+          if (p) {
+            p.name = name;
+            p.updatedAt = new Date().toISOString();
+          }
+        }),
     })),
     {
       name: 'seatai-storage',
@@ -305,6 +391,9 @@ export const useStore = create<AppState>()(
         heatMapMode: state.heatMapMode,
         zoomLevel: state.zoomLevel,
         viewMode: state.viewMode,
+        projects: state.projects,
+        currentProjectId: state.currentProjectId,
+        uiLanguage: state.uiLanguage,
       }),
     }
   )

@@ -92,3 +92,17 @@ export interface SeatingConstraints {
   front_row_ids: string[];
   back_row_ids: string[];
 }
+
+export interface ClassProject {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  students: Student[];
+  rows: number;
+  cols: number;
+  weights: ObjectiveWeights;
+  config: GeneticConfig;
+  constraints: SeatingConstraints;
+  result: OptimizationResult | null;
+}
