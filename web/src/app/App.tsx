@@ -28,7 +28,7 @@ function App() {
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
-  useLanguage();
+  const { t } = useLanguage();
   const [showPrint, setShowPrint] = useState(false);
 
   // Initialize WASM on mount
@@ -52,8 +52,8 @@ function App() {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <div>
-                <h1 className="font-bold text-xl text-gray-800">SeatAI</h1>
-                <p className="text-xs text-gray-500">Classroom Optimizer</p>
+                <h1 className="font-bold text-xl text-gray-800">{t('app.title')}</h1>
+                <p className="text-xs text-gray-500">{t('app.subtitle')}</p>
               </div>
             </div>
             <button
@@ -97,12 +97,12 @@ function App() {
               {isOptimizing ? (
                 <>
                   <RefreshCw size={20} className="animate-spin" />
-                  Optimizing...
+                  {t('app.optimizing')}
                 </>
               ) : (
                 <>
                   <Play size={20} />
-                  Optimize Seating
+                  {t('app.optimize_seating')}
                 </>
               )}
             </button>
@@ -116,7 +116,7 @@ function App() {
             {!wasmReady && !error && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-600 text-sm flex items-center gap-2">
                 <RefreshCw size={16} className="animate-spin" />
-                Loading optimizer...
+                {t('app.loading_optimizer')}
               </div>
             )}
           </div>
@@ -142,14 +142,14 @@ function App() {
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
               <Users size={16} className="text-gray-500" />
               <span className="text-sm font-medium text-gray-600">
-                {students.length} students
+                {students.length} {t('app.students')}
               </span>
             </div>
 
             {result && (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg">
                 <span className="text-sm font-medium text-green-700">
-                  Score: {(result.fitness_score * 100).toFixed(1)}%
+                  {t('app.score')}: {(result.fitness_score * 100).toFixed(1)}%
                 </span>
               </div>
             )}
@@ -158,10 +158,10 @@ function App() {
               <button
                 onClick={() => setShowPrint(true)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                title="Print seating chart"
+                title={t('app.print_title')}
               >
                 <Printer size={15} className="text-gray-500" />
-                Print
+                {t('app.print')}
               </button>
             )}
             <LanguageSelector />

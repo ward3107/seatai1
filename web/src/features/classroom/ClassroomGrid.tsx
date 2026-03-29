@@ -23,12 +23,15 @@ import {
 import clsx from 'clsx';
 import { useState, useRef, useCallback } from 'react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
 import RelationshipOverlay from './RelationshipOverlay';
 import GridControls from './GridControls';
 import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
 import type { Seat, Student } from '../../types';
+import Classroom3D from './Classroom3D';
+import OptimizationTimeline from './OptimizationTimeline';
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -57,20 +60,20 @@ function groupIntoDesks(rowSeats: Seat[]): Seat[][] {
 
 // ─── heat-map legend ────────────────────────────────────────────────────────
 
-function HeatMapLegend({ mode }: { mode: string }) {
+function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => string }) {
   if (mode === 'none') return null;
 
   const items =
     mode === 'gender'
       ? [
-          { color: 'bg-blue-300', label: 'Male' },
-          { color: 'bg-pink-300', label: 'Female' },
-          { color: 'bg-purple-300', label: 'Other' },
+          { color: 'bg-blue-300', label: t('classroom.legend_male') },
+          { color: 'bg-pink-300', label: t('classroom.legend_female') },
+          { color: 'bg-purple-300', label: t('classroom.legend_other') },
         ]
       : mode === 'conflicts'
       ? [
-          { color: 'bg-emerald-200', label: 'No violation' },
-          { color: 'bg-red-200', label: 'Violation' },
+          { color: 'bg-emerald-200', label: t('classroom.legend_no_violation') },
+          { color: 'bg-red-200', label: t('classroom.legend_violation') },
         ]
       : [
           { color: 'bg-emerald-200', label: '85–100' },
@@ -106,11 +109,13 @@ export default function ClassroomGrid() {
     viewMode,
     selectedSeatKey,
     showRelations,
+    showTimeline,
     setSelectedSeat,
     setShowRelations,
     swapStudents,
     toggleLockSeat,
   } = useStore();
+  const { t } = useLanguage();
 
   const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>('drag');
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
@@ -221,6 +226,31 @@ export default function ClassroomGrid() {
         setShowRelations={setShowRelations}
       />
 
+      {/* Timeline Panel */}
+      {showTimeline && (
+        <div className="mb-4">
+          <OptimizationTimeline />
+        </div>
+      )}
+
+      {/* 3D View */}
+      {viewMode === '3d' ? (
+        <Classroom3D
+          seats={seats}
+          students={students}
+          rows={rows}
+          cols={cols}
+          onStudentClick={(studentId) => {
+            // Find seat key for this student
+            const pos = result?.student_positions[studentId];
+            if (pos) {
+              const seatKey = `${pos.row}-${pos.col}`;
+              setSelectedSeat(seatKey);
+            }
+          }}
+        />
+      ) : (
+        <>
       {/* Teacher Desk */}
       <div className="flex justify-center mb-6">
         <motion.div
@@ -230,7 +260,7 @@ export default function ClassroomGrid() {
         >
           <span className="font-semibold text-white flex items-center gap-2">
             <User size={18} />
-            Teacher's Desk
+            {t('classroom.teacher_desk')}
           </span>
         </motion.div>
       </div>
@@ -238,8 +268,8 @@ export default function ClassroomGrid() {
       {/* Instruction hint */}
       <p className="text-center text-xs text-gray-400 mb-5">
         {interactionMode === 'drag'
-          ? '🖱️ Drag students to swap seats — right-click a seat for options'
-          : '👆 Click a student to select, then click a destination to swap'}
+          ? t('classroom.drag_hint')
+          : t('classroom.click_hint')}
       </p>
 
       {/* DnD Context wraps grid + drag overlay */}
@@ -445,15 +475,15 @@ export default function ClassroomGrid() {
               }}
             >
               {lockedSeats.includes(contextMenu.seatKey) ? (
-                <>🔓 <span>Unlock seat</span></>
+                <>🔓 <span>{t('classroom.unlock_seat')}</span></>
               ) : (
-                <>🔒 <span>Lock seat (keep in place)</span></>
+                <>🔒 <span>{t('classroom.lock_seat')}</span></>
               )}
             </button>
             {violations.has(contextMenu.seatKey) && (
               <div className="px-4 py-2 text-xs text-red-500 flex items-center gap-2 border-t border-gray-100 mt-1">
                 <AlertTriangle size={12} />
-                Constraint violation here
+                {t('classroom.constraint_violation')}
               </div>
             )}
           </motion.div>
@@ -506,7 +536,7 @@ export default function ClassroomGrid() {
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div className="bg-blue-50 rounded-lg p-2">
                 <div className="flex items-center gap-1 text-blue-600 text-xs mb-1">
-                  <BookOpen size={11} /> Academic
+                  <BookOpen size={11} /> {t('classroom.popup_academic')}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600 capitalize">
@@ -519,7 +549,7 @@ export default function ClassroomGrid() {
               </div>
               <div className="bg-green-50 rounded-lg p-2">
                 <div className="flex items-center gap-1 text-green-600 text-xs mb-1">
-                  <Users size={11} /> Behavior
+                  <Users size={11} /> {t('classroom.popup_behavior')}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600 capitalize">
@@ -539,22 +569,22 @@ export default function ClassroomGrid() {
               hoveredStudent.special_needs.length > 0) && (
               <div className="bg-amber-50 rounded-lg p-2 mb-3">
                 <div className="flex items-center gap-1 text-amber-600 text-xs font-medium mb-1.5">
-                  <Accessibility size={11} /> Special Requirements
+                  <Accessibility size={11} /> {t('classroom.popup_special')}
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {hoveredStudent.requires_front_row && (
                     <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">
-                      Front Row ⭐
+                      {t('classroom.popup_front_row')}
                     </span>
                   )}
                   {hoveredStudent.requires_quiet_area && (
                     <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
-                      Quiet 🔇
+                      {t('classroom.popup_quiet')}
                     </span>
                   )}
                   {hoveredStudent.has_mobility_issues && (
                     <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded-full">
-                      Mobility ♿
+                      {t('classroom.popup_mobility')}
                     </span>
                   )}
                   {hoveredStudent.special_needs.map((need: { type: string }, i: number) => (
@@ -574,32 +604,30 @@ export default function ClassroomGrid() {
               {hoveredStudent.friends_ids.length > 0 && (
                 <div className="flex-1 bg-green-50 rounded-lg p-2">
                   <div className="flex items-center gap-1 text-green-600 text-xs mb-1">
-                    <Heart size={11} /> Friends
+                    <Heart size={11} /> {t('classroom.popup_friends')}
                   </div>
                   <p className="text-xs text-gray-600">
-                    {hoveredStudent.friends_ids.length} friend
-                    {hoveredStudent.friends_ids.length !== 1 ? 's' : ''}
+                    {hoveredStudent.friends_ids.length} {hoveredStudent.friends_ids.length === 1 ? t('classroom.popup_friend') : t('classroom.popup_friends')}
                   </p>
                 </div>
               )}
               {hoveredStudent.incompatible_ids.length > 0 && (
                 <div className="flex-1 bg-red-50 rounded-lg p-2">
                   <div className="flex items-center gap-1 text-red-600 text-xs mb-1">
-                    <AlertTriangle size={11} /> Conflicts
+                    <AlertTriangle size={11} /> {t('classroom.popup_conflicts')}
                   </div>
                   <p className="text-xs text-gray-600">
-                    {hoveredStudent.incompatible_ids.length} conflict
-                    {hoveredStudent.incompatible_ids.length !== 1 ? 's' : ''}
+                    {hoveredStudent.incompatible_ids.length} {hoveredStudent.incompatible_ids.length === 1 ? t('classroom.popup_conflict') : t('classroom.popup_conflicts')}
                   </p>
                 </div>
               )}
               {hoveredStudent.is_bilingual && (
                 <div className="flex-1 bg-purple-50 rounded-lg p-2">
                   <div className="flex items-center gap-1 text-purple-600 text-xs mb-1">
-                    <Globe size={11} /> Language
+                    <Globe size={11} /> {t('classroom.popup_language')}
                   </div>
                   <p className="text-xs text-gray-600 truncate">
-                    {hoveredStudent.primary_language ?? 'Bilingual'}
+                    {hoveredStudent.primary_language ?? t('classroom.popup_bilingual')}
                   </p>
                 </div>
               )}
@@ -609,32 +637,34 @@ export default function ClassroomGrid() {
       </AnimatePresence>
 
       {/* Heat map legend */}
-      <HeatMapLegend mode={heatMapMode} />
+      <HeatMapLegend mode={heatMapMode} t={t} />
 
       {/* Static legend */}
       {heatMapMode === 'none' && (
         <div className="mt-5 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
           <div className="flex items-center gap-1.5">
             <div className="w-3.5 h-3.5 rounded bg-blue-50 border-2 border-blue-200" />
-            Front Row
+            {t('classroom.legend_front_row')}
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3.5 h-3.5 rounded-full bg-blue-400" />
-            Male
+            {t('classroom.legend_male')}
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3.5 h-3.5 rounded-full bg-pink-400" />
-            Female
+            {t('classroom.legend_female')}
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3.5 h-3.5 rounded bg-red-100 border-2 border-red-400" />
-            Constraint violation
+            {t('classroom.legend_violation')}
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px]">🔒</span>
-            Locked seat
+            {t('classroom.legend_locked')}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

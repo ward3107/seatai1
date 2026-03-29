@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Download, FileImage, FileText, Loader2 } from 'lucide-react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 
 export default function ExportButton() {
   const { result, students } = useStore();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<'pdf' | 'png' | null>(null);
 
@@ -89,35 +91,35 @@ export default function ExportButton() {
         onClick={() => setOpen(v => !v)}
         disabled={!!loading}
         className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
-        title="Export seating chart"
+        title={t('export.title')}
       >
         {loading ? (
           <Loader2 size={16} className="animate-spin text-gray-500" />
         ) : (
           <Download size={16} className="text-gray-500" />
         )}
-        Export
+        {t('export.button')}
       </button>
 
       {open && (
         <>
           {/* Backdrop */}
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+          <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
             <button
               onClick={exportPng}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <FileImage size={16} className="text-blue-500" />
-              Save as PNG
+              {t('export.save_png')}
             </button>
             <button
               onClick={exportPdf}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <FileText size={16} className="text-red-500" />
-              Save as PDF
+              {t('export.save_pdf')}
             </button>
           </div>
         </>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { User, Trash2, Edit2, Search, X, Filter } from 'lucide-react';
 import clsx from 'clsx';
 import type { AcademicLevel, BehaviorLevel } from '../../types';
@@ -9,6 +10,7 @@ type FilterLevel = 'all' | AcademicLevel | BehaviorLevel;
 
 export default function StudentList() {
   const { students, selectedStudentId, setSelectedStudentId, removeStudent } = useStore();
+  const { t } = useLanguage();
 
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterLevel>('all');
@@ -37,19 +39,19 @@ export default function StudentList() {
   }, [students, query, filter, filterType]);
 
   const academicFilters: { value: FilterLevel; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'advanced', label: 'Adv' },
-    { value: 'proficient', label: 'Prof' },
-    { value: 'basic', label: 'Basic' },
-    { value: 'below_basic', label: 'Below' },
+    { value: 'all', label: t('students.filter_all') },
+    { value: 'advanced', label: t('students.filter_advanced') },
+    { value: 'proficient', label: t('students.filter_proficient') },
+    { value: 'basic', label: t('students.filter_basic') },
+    { value: 'below_basic', label: t('students.filter_below_basic') },
   ];
 
   const behaviorFilters: { value: FilterLevel; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'excellent', label: 'Excel' },
-    { value: 'good', label: 'Good' },
-    { value: 'average', label: 'Avg' },
-    { value: 'challenging', label: 'Chal' },
+    { value: 'all', label: t('students.filter_all') },
+    { value: 'excellent', label: t('students.filter_excellent') },
+    { value: 'good', label: t('students.filter_good') },
+    { value: 'average', label: t('students.filter_average') },
+    { value: 'challenging', label: t('students.filter_challenging') },
   ];
 
   const activeFilters = filterType === 'academic' ? academicFilters : behaviorFilters;
@@ -66,9 +68,9 @@ export default function StudentList() {
     <div className="bg-gray-50 rounded-xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-gray-800">Students</h2>
+        <h2 className="font-semibold text-gray-800">{t('students.title')}</h2>
         <span className="text-sm text-gray-500">
-          {filtered.length}{filtered.length !== students.length ? `/${students.length}` : ''} total
+          {filtered.length}{filtered.length !== students.length ? `/${students.length}` : ''} {t('students.total')}
         </span>
       </div>
 
@@ -79,7 +81,7 @@ export default function StudentList() {
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name or language…"
+              placeholder={t('students.search_placeholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="w-full pl-8 pr-7 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
@@ -99,10 +101,10 @@ export default function StudentList() {
             <button
               onClick={() => setFilterType(t => t === 'academic' ? 'behavior' : 'academic')}
               className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded bg-white"
-              title="Toggle filter category"
+              title={t('students.toggle_filter')}
             >
               <Filter size={10} />
-              {filterType === 'academic' ? 'Academic' : 'Behavior'}
+              {filterType === 'academic' ? t('students.academic') : t('students.behavior')}
             </button>
             {activeFilters.map(({ value, label }) => (
               <button
@@ -189,17 +191,17 @@ export default function StudentList() {
         {students.length === 0 && (
           <div className="text-center py-8 text-gray-400">
             <User size={32} className="mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No students yet</p>
-            <p className="text-xs">Add students or import a CSV below</p>
+            <p className="text-sm">{t('students.no_students_yet')}</p>
+            <p className="text-xs">{t('students.add_students_or_import')}</p>
           </div>
         )}
 
         {students.length > 0 && filtered.length === 0 && (
           <div className="text-center py-6 text-gray-400">
             <Search size={24} className="mx-auto mb-1.5 opacity-50" />
-            <p className="text-sm">No students match</p>
+            <p className="text-sm">{t('students.no_students_match')}</p>
             <button onClick={() => { setQuery(''); setFilter('all'); }} className="text-xs text-primary-500 underline mt-1">
-              Clear filters
+              {t('students.clear_filters')}
             </button>
           </div>
         )}

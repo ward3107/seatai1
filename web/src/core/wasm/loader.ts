@@ -1,32 +1,38 @@
-// WASM module loader
-let wasmModule: typeof import('../../wasm/seatai_core') | null = null;
-let wasmLoading: Promise<typeof import('../../wasm/seatai_core')> | null = null;
+// Optimizer loader - hybrid TS/WASM implementation
+import { loadOptimizer, getOptimizerInfo } from './hybrid-loader';
 
-export async function loadWasm(): Promise<typeof import('../../wasm/seatai_core')> {
-  if (wasmModule) {
-    return wasmModule;
+export type OptimizerModule = {
+  ClassroomOptimizer: new (...args: any[]) => any;
+};
+
+let loaded = false;
+let loadedModule: OptimizerModule | null = null;
+
+/**
+ * Load the optimizer (WASM if available, otherwise TypeScript)
+ * @returns {OptimizerModule} The loaded optimizer module
+ */
+export async function loadWasm(): Promise<OptimizerModule> {
+  if (!loaded) {
+    const result = await loadOptimizer();
+    loadedModule = { ClassroomOptimizer: result.Optimizer as any };
+    loaded = true;
   }
-
-  if (wasmLoading) {
-    return wasmLoading;
-  }
-
-  wasmLoading = (async () => {
-    try {
-      // Dynamic import of the WASM module
-      const module = await import('../../wasm/seatai_core.js');
-      await module.default(); // Initialize WASM
-      wasmModule = module;
-      return module;
-    } catch (error) {
-      wasmLoading = null;
-      throw new Error(`Failed to load WASM module: ${error}`);
-    }
-  })();
-
-  return wasmLoading;
+  return loadedModule!;
 }
 
+/**
+ * Check if WASM is being used
+ * @returns {boolean} True if WASM optimizer is loaded
+ */
 export function isWasmLoaded(): boolean {
-  return wasmModule !== null;
+  return getOptimizerInfo().isWasm;
+}
+
+/**
+ * Get information about the current optimizer
+ * @returns {Object} Optimizer info { isWasm, name, performance }
+ */
+export function getOptimizerStats() {
+  return getOptimizerInfo();
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import type { ClassProject } from '../../types';
 
@@ -9,6 +10,7 @@ export default function ProjectManager() {
     saveProject, loadProject, deleteProject, renameProject,
     students,
   } = useStore();
+  const { t } = useLanguage();
 
   const [open, setOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -19,7 +21,7 @@ export default function ProjectManager() {
   const currentProject = projects.find(p => p.id === currentProjectId);
 
   const handleSave = () => {
-    const name = saveName.trim() || currentProject?.name || `Class ${new Date().toLocaleDateString()}`;
+    const name = saveName.trim() || currentProject?.name || `${t('projects.class')} ${new Date().toLocaleDateString()}`;
     saveProject(name);
     setSaveName('');
   };
@@ -48,7 +50,7 @@ export default function ProjectManager() {
         <div className="flex items-center gap-2">
           <FolderOpen size={18} className="text-gray-500" />
           <span className="font-medium text-gray-700">
-            Projects
+            {t('projects.title')}
             {projects.length > 0 && (
               <span className="ml-1.5 text-xs text-gray-500">({projects.length})</span>
             )}
@@ -68,7 +70,7 @@ export default function ProjectManager() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder={currentProject?.name ?? 'Class name…'}
+              placeholder={currentProject?.name ?? t('projects.class_placeholder')}
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
@@ -78,19 +80,19 @@ export default function ProjectManager() {
               onClick={handleSave}
               disabled={students.length === 0}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              title={currentProject ? 'Update project' : 'Save as new project'}
+              title={currentProject ? t('projects.update_project') : t('projects.save_as_new')}
             >
               <Save size={14} />
-              {currentProject ? 'Update' : 'Save'}
+              {currentProject ? t('projects.update') : t('projects.save')}
             </button>
             {currentProject && (
               <button
                 onClick={() => {
                   setSaveName('');
-                  useStore.getState().saveProject(saveName.trim() || `Class ${new Date().toLocaleDateString()}`);
+                  useStore.getState().saveProject(saveName.trim() || `${t('projects.class')} ${new Date().toLocaleDateString()}`);
                   // Actually make a new one by clearing currentProjectId first
                 }}
-                title="Save as new project"
+                title={t('projects.save_as_new')}
                 className="flex items-center gap-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 <Plus size={14} />
@@ -101,7 +103,7 @@ export default function ProjectManager() {
           {/* Project list */}
           {projects.length === 0 ? (
             <p className="text-xs text-gray-400 italic text-center py-2">
-              No saved projects yet. Add students and click Save.
+              {t('projects.no_projects')}
             </p>
           ) : (
             <div className="space-y-1.5 max-h-52 overflow-auto">
@@ -132,8 +134,8 @@ export default function ProjectManager() {
                       <>
                         <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
                         <p className="text-xs text-gray-400">
-                          {p.students.length} students · {formatDate(p.updatedAt)}
-                          {p.result && ` · Score: ${(p.result.fitness_score * 100).toFixed(0)}%`}
+                          {p.students.length} {t('app.students')} · {formatDate(p.updatedAt)}
+                          {p.result && ` · ${t('app.score')}: ${(p.result.fitness_score * 100).toFixed(0)}%`}
                         </p>
                       </>
                     )}
@@ -147,13 +149,13 @@ export default function ProjectManager() {
                           onClick={() => loadProject(p.id)}
                           className="px-2 py-1 text-xs bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors"
                         >
-                          Load
+                          {t('projects.load')}
                         </button>
                       )}
                       <button
                         onClick={() => startEdit(p)}
                         className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                        title="Rename"
+                        title={t('projects.rename')}
                       >
                         <Pencil size={12} className="text-gray-500" />
                       </button>
@@ -172,7 +174,7 @@ export default function ProjectManager() {
                         <button
                           onClick={() => setConfirmDelete(p.id)}
                           className="p-1.5 hover:bg-red-100 rounded transition-colors"
-                          title="Delete"
+                          title={t('projects.delete')}
                         >
                           <Trash2 size={12} className="text-red-500" />
                         </button>

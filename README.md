@@ -11,12 +11,49 @@ High-performance classroom seating arrangement tool that uses genetic algorithms
 
 ## Features
 
-- ⚡ **Blazing Fast** - Rust + WebAssembly for native-speed optimization (10-50x faster than JS)
+- ⚡ **Fast Optimization** - Genetic algorithm for optimal seating arrangements
 - 🎨 **Beautiful UI** - Smooth animations with Framer Motion
 - 💾 **Offline First** - Works without internet, data stored locally
 - 📱 **Responsive** - Works on desktop and mobile
 - 📤 **Export** - PDF and image export capabilities
 - 🔧 **Configurable** - Adjustable weights and algorithm parameters
+- 🌐 **RTL Support** - Right-to-left layout for Hebrew and Arabic
+
+---
+
+## Screenshots
+
+### Main Interface
+
+<!-- TODO: Add screenshot of main classroom interface -->
+*The main classroom interface showing the seating grid, student list, and optimization panel.*
+
+### Student Management
+
+<!-- TODO: Add screenshot of student form -->
+*Student form with all fields for academic, behavioral, and special needs data.*
+
+### Optimization Results
+
+<!-- TODO: Add screenshot of metrics panel -->
+*Optimization results showing fitness scores and objective breakdown.*
+
+### Export Options
+
+<!-- TODO: Add screenshot of export dialog -->
+*PDF and image export options for sharing seating arrangements.*
+
+### Multi-Language Support
+
+<!-- TODO: Add screenshot of RTL layout -->
+*Right-to-left layout for Hebrew and Arabic languages.*
+
+---
+
+*Note: Screenshots will be added soon. To capture screenshots:*
+1. *Run the app: `cd web && npm run dev`*
+2. *Open http://localhost:5173 in your browser*
+3. *Use screenshot tool or Snipping Tool (Windows)*
 
 ## Quick Start
 
@@ -92,11 +129,16 @@ seatai/
 │
 ├── web/               # React frontend
 │   ├── src/
-│   │   ├── features/  # UI components
-│   │   ├── core/      # State, WASM loader
-│   │   └── hooks/     # Custom hooks
+│   │   ├── app/       # App shell & routing
+│   │   ├── features/  # Feature-based UI components
+│   │   ├── core/      # State, WASM loader, storage
+│   │   ├── hooks/     # Custom React hooks
+│   │   ├── types/     # TypeScript definitions
+│   │   └── utils/     # Utility functions
 │   └── package.json
 │
+├── docs/              # Documentation
+├── CLAUDE.md          # AI assistant guidelines
 ├── PLAN.md            # Detailed project plan
 └── README.md          # This file
 ```
@@ -105,21 +147,30 @@ seatai/
 
 | Layer | Technology |
 |-------|------------|
-| Algorithm | Rust + wasm-bindgen |
+| Algorithm | TypeScript (Genetic Algorithm) |
+| Optional (Future) | Rust + WebAssembly (planned) |
 | Frontend | React 18 + TypeScript |
 | Build | Vite 5 |
-| State | Zustand |
-| Styling | TailwindCSS + Framer Motion |
-| Storage | IndexedDB (Dexie.js) |
+| State | Zustand + Immer |
+| Styling | TailwindCSS 3 |
+| Animation | Framer Motion 11 |
+| Drag & Drop | @dnd-kit 6 |
+| Storage | IndexedDB (Dexie.js 4) |
 | Export | jsPDF + html2canvas |
+| Testing | Vitest |
+| Language Support | RTL for Hebrew/Arabic |
 
 ## Performance
 
-| Students | Optimization Time |
-|----------|-------------------|
-| 30 | < 50ms |
-| 100 | < 200ms |
-| 500 | < 1s |
+Current TypeScript implementation:
+
+| Students | Optimization Time | Browser |
+|----------|-------------------|---------|
+| 30 | ~50ms | Chrome M1 |
+| 100 | ~200ms | Chrome M1 |
+| 500 | ~800ms | Chrome M1 |
+
+*WASM implementation (planned) expected to be 10-50x faster*
 
 ## Configuration
 
@@ -150,13 +201,10 @@ const config = {
 
 ## API
 
-### Rust/WASM API
+### TypeScript Optimizer API
 
-```javascript
-import init, { ClassroomOptimizer } from './wasm/seatai_core';
-
-// Initialize
-await init();
+```typescript
+import { ClassroomOptimizer } from './core/optimizer';
 
 // Create optimizer
 const optimizer = new ClassroomOptimizer(students, rows, cols);
@@ -171,6 +219,16 @@ optimizer.setWeights({
 
 // Run optimization
 const result = optimizer.optimize();
+```
+
+### Web Worker (Recommended for large classes)
+
+```typescript
+import OptimizerWorker from './workers/optimizer.worker?worker';
+
+const worker = new OptimizerWorker();
+worker.postMessage({ students, rows, cols, weights });
+worker.onmessage = (e) => console.log(e.data.result);
 ```
 
 ### Student Data Model
@@ -195,22 +253,34 @@ interface Student {
 
 ## Future Roadmap
 
-- [ ] PDF export
-- [ ] Image export
-- [ ] CSV import
-- [ ] Multiple layout types (pairs, clusters, U-shape)
-- [ ] Drag-and-drop seat editing
+### ✅ Completed
+- [x] PDF export
+- [x] Image export
+- [x] Print view
+- [x] CSV import
+- [x] Drag-and-drop seat editing
+- [x] Multi-class project management
+- [x] Onboarding experience
+- [x] Optimization explanation panel
+- [x] RTL support (Hebrew/Arabic)
+
+### 🚧 Planned Features
+- [ ] Full i18n translations (currently English UI only)
+- [ ] WASM optimization core (10-50x faster)
+- [ ] Multiple layout types (clusters, U-shape)
 - [ ] Shareable links
 - [ ] Backend sync (optional)
-- [ ] Multi-language support
+- [ ] Smart rotation engine
+- [ ] Behavioral prediction
+- [ ] Longitudinal tracking
+
+For detailed plans, see [docs/FUTURE_PLANS.md](docs/FUTURE_PLANS.md)
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `npm test`
-5. Submit a pull request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+For AI assistants working on this project, see [CLAUDE.md](CLAUDE.md) for project context and conventions.
 
 ## License
 

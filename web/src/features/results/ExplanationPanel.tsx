@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Info, CheckCircle2, AlertTriangle, Users } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import type { Student } from '../../types';
 
 // ─── per-student reason builder ────────────────────────────────────────────
@@ -18,37 +19,38 @@ function buildReasons(
   rows: number,
   allStudents: Map<string, Student>,
   adjacentIds: string[],
-  constraints: { separate_pairs: [string, string][]; keep_together_pairs: [string, string][]; front_row_ids: string[]; back_row_ids: string[] }
+  constraints: { separate_pairs: [string, string][]; keep_together_pairs: [string, string][]; front_row_ids: string[]; back_row_ids: string[] },
+  t: (key: string, values?: Record<string, string | number>) => string
 ): Reason[] {
   const reasons: Reason[] = [];
 
   // ── Accessibility placement ──
   if (student.requires_front_row && row === 0) {
-    reasons.push({ type: 'good', text: 'Placed in front row (accessibility requirement)' });
+    reasons.push({ type: 'good', text: t('explanation.reason_front_row_accessibility') });
   }
   if (student.has_mobility_issues && row <= 1) {
-    reasons.push({ type: 'good', text: 'Placed in accessible seat (rows 1–2)' });
+    reasons.push({ type: 'good', text: t('explanation.reason_accessible_seat') });
   }
   if (constraints.front_row_ids.includes(student.id) && row === 0) {
-    reasons.push({ type: 'good', text: 'Front row assigned by teacher rule' });
+    reasons.push({ type: 'good', text: t('explanation.reason_front_row_teacher') });
   }
   if (constraints.back_row_ids.includes(student.id) && row >= rows - 2) {
-    reasons.push({ type: 'good', text: 'Back row assigned by teacher rule' });
+    reasons.push({ type: 'good', text: t('explanation.reason_back_row_teacher') });
   }
 
   // ── Special needs notes ──
   for (const need of student.special_needs) {
     if (need.requires_front_seat && row === 0) {
-      reasons.push({ type: 'good', text: `Front seat for ${need.type}` });
+      reasons.push({ type: 'good', text: t('explanation.reason_front_seat_for', { type: need.type }) });
     } else if (need.requires_front_seat && row > 0) {
-      reasons.push({ type: 'warn', text: `${need.type} prefers front seat (row ${row + 1})` });
+      reasons.push({ type: 'warn', text: t('explanation.reason_prefers_front_seat', { type: need.type, row: row + 1 }) });
     }
   }
   if (student.requires_quiet_area) {
     if (row >= rows - 2) {
-      reasons.push({ type: 'good', text: 'Quiet area: placed in back rows' });
+      reasons.push({ type: 'good', text: t('explanation.reason_quiet_area_back') });
     } else if (!student.requires_front_row && !student.has_mobility_issues) {
-      reasons.push({ type: 'warn', text: 'Quiet area preference not fully met' });
+      reasons.push({ type: 'warn', text: t('explanation.reason_quiet_area_not_met') });
     }
   }
 
@@ -60,7 +62,7 @@ function buildReasons(
     const isIncompFwd = student.incompatible_ids.includes(adjId);
     const isIncompRev = adj.incompatible_ids.includes(student.id);
     if (isIncompFwd || isIncompRev) {
-      reasons.push({ type: 'warn', text: `Adjacent to conflict: ${adj.name}` });
+      reasons.push({ type: 'warn', text: t('explanation.reason_adjacent_conflict', { name: adj.name }) });
       continue;
     }
 
@@ -69,7 +71,7 @@ function buildReasons(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isSep) {
-      reasons.push({ type: 'warn', text: `Must-separate rule violated with ${adj.name}` });
+      reasons.push({ type: 'warn', text: t('explanation.reason_must_separate_violated', { name: adj.name }) });
       continue;
     }
 
@@ -77,12 +79,12 @@ function buildReasons(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isTog) {
-      reasons.push({ type: 'good', text: `Kept together with ${adj.name} (teacher rule)` });
+      reasons.push({ type: 'good', text: t('explanation.reason_kept_together', { name: adj.name }) });
       continue;
     }
 
     if (student.friends_ids.includes(adjId) || adj.friends_ids.includes(student.id)) {
-      reasons.push({ type: 'good', text: `Seated near friend: ${adj.name}` });
+      reasons.push({ type: 'good', text: t('explanation.reason_seated_near_friend', { name: adj.name }) });
     }
   }
 
@@ -92,12 +94,12 @@ function buildReasons(
     if (!otherId) continue;
     if (!adjacentIds.includes(otherId)) {
       const other = allStudents.get(otherId);
-      if (other) reasons.push({ type: 'good', text: `Separated from ${other.name} (teacher rule)` });
+      if (other) reasons.push({ type: 'good', text: t('explanation.reason_separated_from', { name: other.name }) });
     }
   }
 
   if (reasons.length === 0) {
-    reasons.push({ type: 'info', text: `Row ${row + 1}, seat ${col + 1}` });
+    reasons.push({ type: 'info', text: t('explanation.reason_location', { row: row + 1, seat: col + 1 }) });
   }
 
   return reasons;
@@ -125,6 +127,7 @@ function getAdjacentIds(
 
 export default function ExplanationPanel() {
   const { result, students, rows, constraints } = useStore();
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -143,7 +146,7 @@ export default function ExplanationPanel() {
       if (!seat) return null;
       const { row, col } = seat.position;
       const adjIds = getAdjacentIds(row, col, seats);
-      const reasons = buildReasons(student, row, col, rows, studentMap, adjIds, constraints);
+      const reasons = buildReasons(student, row, col, rows, studentMap, adjIds, constraints, t);
       const hasWarn = reasons.some((r) => r.type === 'warn');
       if (hasWarn) warnCount++;
       return { student, row, col, reasons, hasWarn };
@@ -168,15 +171,15 @@ export default function ExplanationPanel() {
             <Info size={16} className="text-indigo-600" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-gray-800 text-sm">Placement Explanations</p>
+            <p className="font-semibold text-gray-800 text-sm">{t('explanation.title')}</p>
             <p className="text-xs text-gray-500">
-              Why each student was placed where they are
+              {t('explanation.subtitle')}
             </p>
           </div>
           {warnCount > 0 && (
             <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full flex items-center gap-1">
               <AlertTriangle size={10} />
-              {warnCount} issue{warnCount !== 1 ? 's' : ''}
+              {warnCount} {t('explanation.issues')}
             </span>
           )}
         </div>
@@ -195,7 +198,7 @@ export default function ExplanationPanel() {
             <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search student…"
+              placeholder={t('explanation.search_placeholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -233,7 +236,7 @@ export default function ExplanationPanel() {
                       {student.name}
                     </p>
                     <p className="text-[10px] text-gray-400">
-                      Row {row + 1} · Seat {col + 1}
+                      {t('explanation.row_seat', { row: row + 1, seat: col + 1 })}
                     </p>
                   </div>
                 </div>
@@ -268,7 +271,7 @@ export default function ExplanationPanel() {
           </div>
 
           {entries.length === 0 && (
-            <p className="text-center text-sm text-gray-400 py-6">No students match "{search}"</p>
+            <p className="text-center text-sm text-gray-400 py-6">{t('explanation.no_match', { search })}</p>
           )}
         </div>
       )}

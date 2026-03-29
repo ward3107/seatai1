@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Globe } from 'lucide-react';
 import { useLanguage, LANG_LABELS, type UILanguage } from '../hooks/useLanguage';
+import { t } from '../lib/i18n';
 
 const LANGUAGES: UILanguage[] = ['en', 'he', 'ar', 'ru'];
 
@@ -13,7 +14,7 @@ export default function LanguageSelector() {
       <button
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-        title="Change language / שנה שפה / تغيير اللغة"
+        title={t('language.title')}
       >
         <Globe size={15} className="text-gray-500" />
         <span>{LANG_LABELS[uiLanguage]}</span>
@@ -21,8 +22,8 @@ export default function LanguageSelector() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute end-0 mt-1 w-28 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute end-0 mt-1 w-28 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
             {LANGUAGES.map(lang => (
               <button
                 key={lang}
@@ -36,7 +37,7 @@ export default function LanguageSelector() {
               >
                 <span>{LANG_LABELS[lang]}</span>
                 <span className="text-xs text-gray-400">
-                  {lang === 'en' ? 'English' : lang === 'he' ? 'עברית' : lang === 'ar' ? 'عربية' : 'Русский'}
+                  {t(`language.${lang}`)}
                 </span>
               </button>
             ))}

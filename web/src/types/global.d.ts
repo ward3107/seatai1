@@ -75,6 +75,8 @@ export interface OptimizationResult {
   generations: number;
   computation_time_ms: number;
   warnings: string[];
+  /** Algorithm used for optimization (if applicable) */
+  algorithm?: 'genetic' | 'simulated_annealing' | 'greedy' | 'random_search';
 }
 
 export interface GeneticConfig {

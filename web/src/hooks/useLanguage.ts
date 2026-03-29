@@ -1,7 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useStore } from '../core/store';
+import { type UILanguage } from '../lib/i18n';
+import en from '../locales/en.json';
+import he from '../locales/he.json';
+import ar from '../locales/ar.json';
+import ru from '../locales/ru.json';
 
-export type UILanguage = 'en' | 'he' | 'ar' | 'ru';
+const translations: Record<UILanguage, any> = { en, he, ar, ru };
+
+// Simple interpolation for {{variable}} placeholders
+function interpolate(text: string, values: Record<string, string | number>): string {
+  return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return values[key]?.toString() || match;
+  });
+}
+
+// Get translation by key path for a specific locale
+function getTranslation(locale: UILanguage, key: string, values?: Record<string, string | number>): string {
+  const keys = key.split('.');
+  let value: any = translations[locale];
+
+  for (const k of keys) {
+    value = value?.[k];
+  }
+
+  if (typeof value !== 'string') {
+    console.warn(`Translation not found: ${key}`);
+    return key;
+  }
+
+  return values ? interpolate(value, values) : value;
+}
 
 const RTL_LANGS: UILanguage[] = ['he', 'ar'];
 
@@ -19,10 +48,15 @@ export const LANG_FONTS: Record<UILanguage, string> = {
   ru: 'Inter, system-ui, sans-serif',
 };
 
-/** Applies dir/lang to <html> and returns isRTL */
+/** Applies dir/lang to <html> and returns isRTL and translation helper */
 export function useLanguage() {
   const { uiLanguage, setUiLanguage } = useStore();
   const isRTL = RTL_LANGS.includes(uiLanguage);
+
+  // Create a reactive translation function that depends on uiLanguage
+  const t = useCallback((key: string, values?: Record<string, string | number>) => {
+    return getTranslation(uiLanguage, key, values);
+  }, [uiLanguage]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -31,5 +65,13 @@ export function useLanguage() {
     document.body.style.fontFamily = LANG_FONTS[uiLanguage];
   }, [uiLanguage, isRTL]);
 
-  return { uiLanguage, setUiLanguage, isRTL };
+  return {
+    uiLanguage,
+    setUiLanguage,
+    isRTL,
+    t,
+  };
 }
+
+// Re-export types
+export type { UILanguage };

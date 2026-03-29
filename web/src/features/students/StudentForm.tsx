@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { generateId, createEmptyStudent } from '../../utils/sampleData';
 import type { Student, Gender, AcademicLevel, BehaviorLevel, SpecialNeed } from '../../types';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
@@ -16,6 +17,7 @@ const LANGUAGES = [
 
 export default function StudentForm() {
   const { students, addStudent, updateStudent, selectedStudentId, setSelectedStudentId } = useStore();
+  const { t } = useLanguage();
 
   const editingStudent = selectedStudentId
     ? students.find(s => s.id === selectedStudentId)
@@ -98,7 +100,7 @@ export default function StudentForm() {
         className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-primary-400 hover:text-primary-500 transition-colors flex items-center justify-center gap-2"
       >
         <Plus size={18} />
-        Add Student
+        {t('students.add_button')}
       </button>
     );
   }
@@ -108,7 +110,7 @@ export default function StudentForm() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-gray-800">
-          {editingStudent ? 'Edit Student' : 'Add Student'}
+          {editingStudent ? t('students.edit') : t('students.add')}
         </h3>
         <button type="button" onClick={handleCancel} className="p-1 hover:bg-gray-100 rounded">
           <X size={18} className="text-gray-500" />
@@ -117,13 +119,13 @@ export default function StudentForm() {
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
         <input
           type="text"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Student name"
+          placeholder={t('students.name_placeholder')}
           required
         />
       </div>
@@ -131,7 +133,7 @@ export default function StudentForm() {
       {/* Gender + Language */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.gender')}</label>
           <select
             value={form.gender}
             onChange={(e) => setForm({ ...form, gender: e.target.value as Gender })}
@@ -143,7 +145,7 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.language')}</label>
           <select
             value={form.primary_language ?? ''}
             onChange={(e) => setForm({ ...form, primary_language: e.target.value })}
@@ -158,7 +160,7 @@ export default function StudentForm() {
       {/* Academic */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Academic Level</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.academic_level')}</label>
           <select
             value={form.academic_level}
             onChange={(e) => setForm({ ...form, academic_level: e.target.value as AcademicLevel })}
@@ -171,7 +173,7 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Score (0–100)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
           <input
             type="number" min="0" max="100"
             value={form.academic_score}
@@ -184,7 +186,7 @@ export default function StudentForm() {
       {/* Behavior */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Behavior Level</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.behavior_level')}</label>
           <select
             value={form.behavior_level}
             onChange={(e) => setForm({ ...form, behavior_level: e.target.value as BehaviorLevel })}
@@ -197,7 +199,7 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Score (0–100)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
           <input
             type="number" min="0" max="100"
             value={form.behavior_score}
@@ -214,19 +216,19 @@ export default function StudentForm() {
           onClick={() => setShowRelations(v => !v)}
           className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100"
         >
-          <span>Relationships {(form.friends_ids.length + form.incompatible_ids.length) > 0 && `(${form.friends_ids.length + form.incompatible_ids.length})`}</span>
+          <span>{t('students.relationships')} {(form.friends_ids.length + form.incompatible_ids.length) > 0 && `(${form.friends_ids.length + form.incompatible_ids.length})`}</span>
           {showRelations ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {showRelations && (
           <div className="p-3 space-y-3">
             {otherStudents.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">Add more students to set relationships.</p>
+              <p className="text-xs text-gray-400 italic">{t('students.need_more_students')}</p>
             ) : (
               <>
                 {/* Friends */}
                 <div>
-                  <p className="text-xs font-medium text-green-700 mb-1">Friends (sit near)</p>
+                  <p className="text-xs font-medium text-green-700 mb-1">{t('students.friends_label')}</p>
                   <div className="flex flex-wrap gap-1">
                     {otherStudents.map(s => {
                       const active = form.friends_ids.includes(s.id);
@@ -254,7 +256,7 @@ export default function StudentForm() {
 
                 {/* Incompatible */}
                 <div>
-                  <p className="text-xs font-medium text-red-700 mb-1">Must not sit together</p>
+                  <p className="text-xs font-medium text-red-700 mb-1">{t('students.incompatible_label')}</p>
                   <div className="flex flex-wrap gap-1">
                     {otherStudents.map(s => {
                       const active = form.incompatible_ids.includes(s.id);
@@ -292,7 +294,7 @@ export default function StudentForm() {
           onClick={() => setShowSpecialNeeds(v => !v)}
           className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100"
         >
-          <span>Accessibility & Special Needs {form.special_needs.length > 0 && `(${form.special_needs.length})`}</span>
+          <span>{t('students.accessibility_title')} {form.special_needs.length > 0 && `(${form.special_needs.length})`}</span>
           {showSpecialNeeds ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
@@ -307,7 +309,7 @@ export default function StudentForm() {
                   onChange={(e) => setForm({ ...form, requires_front_row: e.target.checked })}
                   className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Requires front row</span>
+                <span className="text-sm text-gray-700">{t('students.requires_front_row')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -316,7 +318,7 @@ export default function StudentForm() {
                   onChange={(e) => setForm({ ...form, has_mobility_issues: e.target.checked })}
                   className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Mobility issues (wheelchair / aisle access)</span>
+                <span className="text-sm text-gray-700">{t('students.mobility_issues')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -325,7 +327,7 @@ export default function StudentForm() {
                   onChange={(e) => setForm({ ...form, requires_quiet_area: e.target.checked })}
                   className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Requires quiet area</span>
+                <span className="text-sm text-gray-700">{t('students.requires_quiet_area')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -334,13 +336,13 @@ export default function StudentForm() {
                   onChange={(e) => setForm({ ...form, is_bilingual: e.target.checked })}
                   className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Bilingual</span>
+                <span className="text-sm text-gray-700">{t('students.bilingual')}</span>
               </label>
             </div>
 
             {/* Add a special need type */}
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Add specific need</p>
+              <p className="text-xs font-medium text-gray-600 mb-1">{t('students.add_specific_need')}</p>
               <div className="flex flex-wrap gap-1">
                 {SPECIAL_NEED_TYPES.map(type => {
                   const active = form.special_needs.some(n => n.type === type);
@@ -386,7 +388,7 @@ export default function StudentForm() {
                       onChange={(e) => updateNeed(i, { requires_front_seat: e.target.checked })}
                       className="rounded border-purple-300 text-purple-500"
                     />
-                    Front seat
+                    {t('students.front_seat')}
                   </label>
                   <label className="flex items-center gap-1 text-xs text-purple-700">
                     <input
@@ -395,7 +397,7 @@ export default function StudentForm() {
                       onChange={(e) => updateNeed(i, { requires_support_buddy: e.target.checked })}
                       className="rounded border-purple-300 text-purple-500"
                     />
-                    Support buddy
+                    {t('students.support_buddy')}
                   </label>
                 </div>
               </div>
@@ -409,7 +411,7 @@ export default function StudentForm() {
         type="submit"
         className="w-full py-2.5 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
       >
-        {editingStudent ? 'Update Student' : 'Add Student'}
+        {editingStudent ? t('students.update') : t('students.add')}
       </button>
     </form>
   );

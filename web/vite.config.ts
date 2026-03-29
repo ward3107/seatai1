@@ -27,4 +27,22 @@ export default defineConfig({
     // ES module workers support dynamic imports (needed for WASM)
     format: 'es',
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/mockData',
+        'src/wasm/',  // Don't cover WASM files
+        'src/locales/' // Don't cover translation files
+      ]
+    }
+  }
 })

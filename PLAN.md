@@ -1,8 +1,10 @@
 # SeatAI - Enterprise-Grade Classroom Seating Optimizer
 
+> **Note:** This document describes the planned architecture. For current implementation status, see the actual codebase and README.md.
+
 ## Project Overview
 
-**SeatAI** is a high-performance classroom seating optimization platform that uses genetic algorithms to find optimal student placements. Built with Rust + WebAssembly for native-speed computation and React for a beautiful, responsive UI.
+**SeatAI** is a high-performance classroom seating optimization platform that uses genetic algorithms to find optimal student placements. Built with TypeScript + React for a beautiful, responsive UI, with planned Rust + WebAssembly for performance optimization.
 
 ---
 
@@ -66,146 +68,78 @@
 
 ```
 seatai/
-├── core/                              # Rust Core (WASM)
+├── core/                              # Rust Core (WASM) - Currently minimal
 │   ├── src/
-│   │   ├── lib.rs                     # WASM exports
-│   │   ├── engine/
-│   │   │   ├── mod.rs
-│   │   │   ├── optimizer.rs           # Main optimizer trait
-│   │   │   └── registry.rs            # Algorithm registry
-│   │   ├── algorithms/
-│   │   │   ├── mod.rs
-│   │   │   ├── genetic.rs             # Genetic algorithm
-│   │   │   ├── simulated_annealing.rs # Alternative algorithm
-│   │   │   └── greedy.rs              # Fast greedy approach
-│   │   ├── fitness/
-│   │   │   ├── mod.rs
-│   │   │   ├── academic.rs            # Academic balance
-│   │   │   ├── behavioral.rs          # Behavior compatibility
-│   │   │   ├── diversity.rs           # Gender/language mix
-│   │   │   ├── special_needs.rs       # Accessibility
-│   │   │   └── custom.rs              # User-defined fitness
-│   │   ├── constraints/
-│   │   │   ├── mod.rs
-│   │   │   ├── separation.rs          # Keep students apart
-│   │   │   ├── proximity.rs           # Keep students together
-│   │   │   └── zone.rs                # Zone-based constraints
-│   │   ├── models/
-│   │   │   ├── mod.rs
-│   │   │   ├── student.rs
-│   │   │   ├── classroom.rs
-│   │   │   ├── layout.rs
-│   │   │   └── result.rs
-│   │   └── utils/
-│   │       ├── math.rs
-│   │       └── serialization.rs
-│   ├── Cargo.toml
-│   └── tests/
-│       ├── test_genetic.rs
-│       └── test_fitness.rs
+│   │   └── lib.rs                     # WASM exports (basic)
+│   └── Cargo.toml
 │
 ├── web/                               # React Frontend
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── App.tsx
-│   │   │   ├── routes.tsx
-│   │   │   └── layout.tsx
+│   │   │   └── App.tsx                # Main app component
+│   │   ├── components/                # Shared UI components
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   └── LanguageSelector.tsx
 │   │   ├── features/                  # Feature-based organization
-│   │   │   ├── classroom/
+│   │   │   ├── classroom/             # Classroom grid & seats
 │   │   │   │   ├── ClassroomGrid.tsx
 │   │   │   │   ├── SeatCard.tsx
-│   │   │   │   ├── classroomSlice.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── students/
+│   │   │   │   ├── GridControls.tsx
+│   │   │   │   └── RelationshipOverlay.tsx
+│   │   │   ├── students/              # Student management
 │   │   │   │   ├── StudentList.tsx
-│   │   │   │   ├── StudentForm.tsx
-│   │   │   │   ├── studentsSlice.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── optimization/
-│   │   │   │   ├── OptimizationPanel.tsx
-│   │   │   │   ├── MetricsDisplay.tsx
-│   │   │   │   ├── optimizationSlice.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── settings/
-│   │   │   │   ├── SettingsPanel.tsx
-│   │   │   │   ├── AlgorithmConfig.tsx
-│   │   │   │   └── types.ts
-│   │   │   └── export/
-│   │   │       ├── ExportDialog.tsx
-│   │   │       ├── PdfExporter.ts
-│   │   │       └── ImageExporter.ts
-│   │   ├── core/
+│   │   │   │   └── StudentForm.tsx
+│   │   │   ├── optimization/          # Metrics & results
+│   │   │   │   ├── MetricsPanel.tsx
+│   │   │   │   └── ExplanationPanel.tsx
+│   │   │   ├── settings/              # Configuration
+│   │   │   │   └── SettingsPanel.tsx
+│   │   │   ├── export/                # PDF/Image export
+│   │   │   │   └── ExportButton.tsx
+│   │   │   ├── import/                # CSV import
+│   │   │   │   └── CsvImport.tsx
+│   │   │   ├── projects/              # Multi-class projects
+│   │   │   │   └── ProjectManager.tsx
+│   │   │   ├── print/                 # Print view
+│   │   │   │   └── PrintView.tsx
+│   │   │   └── onboarding/            # First-run experience
+│   │   │       └── OnboardingView.tsx
+│   │   ├── core/                      # Core infrastructure
 │   │   │   ├── wasm/
-│   │   │   │   ├── loader.ts
-│   │   │   │   └── optimizer.ts
+│   │   │   │   └── loader.ts          # WASM initialization
 │   │   │   ├── store/
-│   │   │   │   ├── index.ts
-│   │   │   │   └── middleware.ts
-│   │   │   ├── workers/
-│   │   │   │   └── optimizer.worker.ts
-│   │   │   └── storage/
-│   │   │       ├── indexedDB.ts
-│   │   │       └── sync.ts
-│   │   ├── ui/                        # Reusable UI components
-│   │   │   ├── Button/
-│   │   │   ├── Card/
-│   │   │   ├── Modal/
-│   │   │   ├── Input/
-│   │   │   ├── Select/
-│   │   │   ├── Progress/
-│   │   │   └── Toast/
-│   │   ├── hooks/
+│   │   │   │   └── index.ts           # Zustand global store
+│   │   │   ├── db.ts                  # Dexie IndexedDB schema
+│   │   │   └── optimizer.ts           # TS genetic algorithm
+│   │   ├── workers/                   # Web workers
+│   │   │   └── optimizer.worker.ts    # Background optimization
+│   │   ├── hooks/                     # Custom React hooks
 │   │   │   ├── useOptimizer.ts
-│   │   │   ├── useStudents.ts
-│   │   │   ├── useStorage.ts
-│   │   │   └── useExport.ts
-│   │   ├── utils/
-│   │   │   ├── sampleData.ts
-│   │   │   ├── validation.ts
-│   │   │   └── formatting.ts
-│   │   ├── i18n/                      # Internationalization
+│   │   │   ├── useLanguage.ts
+│   │   │   └── useSeatingHistory.ts
+│   │   ├── types/                     # TypeScript definitions
 │   │   │   ├── index.ts
-│   │   │   └── locales/
-│   │   │       ├── en.json
-│   │   │       ├── he.json
-│   │   │       └── ar.json
-│   │   └── types/
-│   │       └── global.d.ts
-│   ├── public/
-│   │   └── favicon.ico
+│   │   │   └── global.d.ts
+│   │   ├── utils/                     # Utility functions
+│   │   │   ├── sampleData.ts
+│   │   │   └── seatingUtils.ts
+│   │   └── main.tsx                   # Entry point
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tailwind.config.js
 │   └── tsconfig.json
 │
-├── backend/                           # OPTIONAL: Future backend
-│   ├── src/
-│   │   ├── api/
-│   │   │   ├── routes/
-│   │   │   ├── middleware/
-│   │   │   └── validators/
-│   │   ├── services/
-│   │   │   ├── auth.ts
-│   │   │   ├── sync.ts
-│   │   │   └── analytics.ts
-│   │   └── db/
-│   │       ├── schema.ts
-│   │       └── migrations/
-│   └── package.json
-│
-├── shared/                            # Shared types & utilities
-│   ├── types.ts
-│   └── constants.ts
-│
 ├── docs/                              # Documentation
-│   ├── API.md
-│   ├── ALGORITHMS.md
-│   └── DEPLOYMENT.md
+│   ├── API.md                         # API reference
+│   ├── ALGORITHMS.md                  # Algorithm documentation
+│   ├── DEPLOYMENT.md                  # Deployment guide
+│   └── FUTURE_PLANS.md                # Future roadmap
 │
-├── package.json                       # Root workspace
-├── turbo.json                         # Turborepo config
-├── README.md
-└── LICENSE
+├── CLAUDE.md                          # AI assistant guidelines
+├── CONTRIBUTING.md                    # Contribution guidelines
+├── README.md                          # Project overview
+├── PLAN.md                            # This file - Architecture plan
+└── package.json                       # Root workspace
 ```
 
 ---
@@ -229,21 +163,21 @@ seatai/
 
 ## Implementation Phases
 
+> **Current Status:** The project has diverged from this original plan. The core is implemented in TypeScript (`web/src/core/optimizer.ts`) rather than Rust/WASM. Many features beyond Phase 2 have been implemented.
+
 ### Phase 1: Core Foundation ✅
 **Goal: Working MVP with clean architecture**
 
 | Task | Files | Status |
 |------|-------|--------|
-| Rust project setup | `core/Cargo.toml`, `lib.rs` | ✅ |
-| Data models | `core/src/models/*.rs` | ✅ |
-| Basic genetic algorithm | `core/src/algorithms/genetic.rs` | ✅ |
-| Fitness functions | `core/src/fitness/*.rs` | ✅ |
-| WASM bindings | `core/src/lib.rs` | ✅ |
+| Algorithm (TS implementation) | `web/src/core/optimizer.ts` | ✅ |
+| Data models | `web/src/types/global.d.ts` | ✅ |
+| Fitness functions | Built into optimizer.ts | ✅ |
 | React project setup | `web/package.json`, `vite.config.ts` | ✅ |
-| Basic UI shell | `web/src/app/*` | ✅ |
-| WASM integration | `web/src/core/wasm/*` | ✅ |
+| Basic UI shell | `web/src/app/App.tsx` | ✅ |
+| WASM loader | `web/src/core/wasm/loader.ts` | ✅ (planned for future use) |
 
-**Deliverable**: Optimize 30 students in <50ms, display results
+**Note:** Original plan called for Rust/WASM core; currently using TypeScript implementation.
 
 ### Phase 2: Feature Complete ✅
 **Goal: Production-ready UX**
@@ -254,42 +188,45 @@ seatai/
 | Classroom grid with animations | `web/src/features/classroom/*` | ✅ |
 | Metrics visualization | `web/src/features/optimization/*` | ✅ |
 | Settings panel | `web/src/features/settings/*` | ✅ |
-| Local persistence | `web/src/core/store/*` | ✅ |
+| Local persistence (Dexie) | `web/src/core/db.ts`, `web/src/core/store/*` | ✅ |
 | Sample data | `web/src/utils/sampleData.ts` | ✅ |
+| Web worker optimization | `web/src/workers/optimizer.worker.ts` | ✅ |
 
-**Deliverable**: Full CRUD for students, animated grid, persisted state
+**Deliverable:** Full CRUD for students, animated grid, persisted state
 
-### Phase 3: Polish & Export (Next)
+### Phase 3: Polish & Export ✅
 **Goal: Professional output**
 
-| Task | Files | Priority |
-|------|-------|----------|
-| PDF export | `web/src/features/export/*` | High |
-| Image export | `web/src/features/export/*` | High |
-| UI polish & animations | All components | Medium |
-| Error handling | All files | High |
-| Loading states | All components | Medium |
+| Task | Files | Status |
+|------|-------|--------|
+| PDF export | `web/src/features/export/ExportButton.tsx` | ✅ |
+| Image export | `web/src/features/export/ExportButton.tsx` | ✅ |
+| Print view | `web/src/features/print/PrintView.tsx` | ✅ |
+| CSV import | `web/src/features/import/CsvImport.tsx` | ✅ |
+| UI polish & animations | All components | ✅ |
+| Error handling | `web/src/components/ErrorBoundary.tsx` | ✅ |
+| Loading states | Various components | ✅ |
 
-### Phase 4: Advanced Features (Future)
+### Phase 4: Advanced Features ✅
 **Goal: Enterprise readiness**
 
-| Task | Files | Priority |
-|------|-------|----------|
-| Alternative algorithms | `core/src/algorithms/*.rs` | Medium |
-| Custom constraints | `core/src/constraints/*.rs` | Medium |
-| CSV import | `web/src/features/students/*` | Medium |
-| Multiple layouts | `core/src/models/layout.rs` | Low |
-| i18n support | `web/src/i18n/*` | Low |
+| Task | Files | Status |
+|------|-------|--------|
+| Multi-class projects | `web/src/features/projects/ProjectManager.tsx` | ✅ |
+| Onboarding | `web/src/features/onboarding/OnboardingView.tsx` | ✅ |
+| Explanation panel | `web/src/features/results/ExplanationPanel.tsx` | ✅ |
+| i18n support | `web/src/hooks/useLanguage.ts` | ✅ |
+| Seating history | `web/src/hooks/useSeatingHistory.ts` | ✅ |
 
 ### Phase 5: Backend (Future)
 **Goal: Multi-user collaboration**
 
 | Task | Files | Priority |
 |------|-------|----------|
-| Backend API | `backend/src/api/*` | Future |
-| Authentication | `backend/src/services/auth.ts` | Future |
-| Cloud sync | `backend/src/services/sync.ts` | Future |
-| Analytics | `backend/src/services/analytics.ts` | Future |
+| Backend API | Not implemented | Future |
+| Authentication | Not implemented | Future |
+| Cloud sync | Not implemented | Future |
+| Analytics | Not implemented | Future |
 
 ---
 
@@ -358,7 +295,7 @@ pub trait Constraint: Send + Sync {
 
 ```bash
 # Navigate to project
-cd C:\Users\User\Documents\Projects\seatai
+cd seatai
 
 # Install frontend dependencies
 cd web && npm install && cd ..

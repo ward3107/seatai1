@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { Settings, ChevronDown, ChevronUp, RotateCcw, Plus, X, ArrowUpToLine, ArrowDownToLine } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
 import type { SeatingConstraints } from '../../types';
@@ -159,6 +160,7 @@ export default function SettingsPanel() {
     setStudents, setResult,
   } = useStore();
 
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
 
@@ -208,7 +210,7 @@ export default function SettingsPanel() {
       >
         <div className="flex items-center gap-2">
           <Settings size={18} className="text-gray-500" />
-          <span className="font-medium text-gray-700">Settings</span>
+          <span className="font-medium text-gray-700">{t('settings.title')}</span>
         </div>
         {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
@@ -221,13 +223,13 @@ export default function SettingsPanel() {
             className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:shadow-md transition-shadow"
           >
             <RotateCcw size={16} />
-            Load Demo Data (30 students)
+            {t('settings.load_demo')}
           </button>
 
           {/* Layout */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Rows</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{t('settings.rows')}</label>
               <input
                 type="number" min="1" max="20" value={rows}
                 onChange={(e) => setRows(Number(e.target.value))}
@@ -235,7 +237,7 @@ export default function SettingsPanel() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Columns</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{t('settings.columns')}</label>
               <input
                 type="number" min="1" max="20" value={cols}
                 onChange={(e) => setCols(Number(e.target.value))}
@@ -246,13 +248,13 @@ export default function SettingsPanel() {
 
           {/* Objective Weights */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Objective Weights</label>
+            <label className="block text-sm font-medium text-gray-600 mb-2">{t('settings.objective_weights')}</label>
             <div className="space-y-2">
               {[
-                { key: 'academic_balance', label: 'Academic' },
-                { key: 'behavioral_balance', label: 'Behavioral' },
-                { key: 'diversity', label: 'Diversity' },
-                { key: 'special_needs', label: 'Special Needs' },
+                { key: 'academic_balance', label: t('settings.weight_academic') },
+                { key: 'behavioral_balance', label: t('settings.weight_behavioral') },
+                { key: 'diversity', label: t('settings.weight_diversity') },
+                { key: 'special_needs', label: t('settings.weight_special_needs') },
               ].map(({ key, label }) => (
                 <div key={key} className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 w-24">{label}</span>
@@ -272,10 +274,10 @@ export default function SettingsPanel() {
 
           {/* Algorithm Config */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Algorithm</label>
+            <label className="block text-sm font-medium text-gray-600 mb-2">{t('settings.algorithm')}</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Population</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('settings.population')}</label>
                 <input
                   type="number" min="10" max="500" value={config.populationSize}
                   onChange={(e) => setConfig({ ...config, populationSize: Number(e.target.value) })}
@@ -283,7 +285,7 @@ export default function SettingsPanel() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Generations</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('settings.generations')}</label>
                 <input
                   type="number" min="10" max="500" value={config.maxGenerations}
                   onChange={(e) => setConfig({ ...config, maxGenerations: Number(e.target.value) })}
@@ -301,7 +303,7 @@ export default function SettingsPanel() {
               className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
             >
               <span>
-                Seating Rules
+                {t('settings.seating_rules')}
                 {totalRules > 0 && (
                   <span className="ml-1.5 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs">
                     {totalRules}
@@ -315,7 +317,7 @@ export default function SettingsPanel() {
               <div className="p-3 space-y-4">
                 {students.length < 2 ? (
                   <p className="text-xs text-gray-400 italic">
-                    Add at least 2 students to define seating rules.
+                    {t('settings.need_more_students')}
                   </p>
                 ) : (
                   <>
@@ -324,7 +326,7 @@ export default function SettingsPanel() {
                       existingPairs={constraints.separate_pairs as [string, string][]}
                       onAdd={addPair('separate_pairs')}
                       onRemove={removePair('separate_pairs')}
-                      label="Must be separated (placed far apart)"
+                      label={t('settings.must_separate')}
                       color="red"
                     />
 
@@ -333,7 +335,7 @@ export default function SettingsPanel() {
                       existingPairs={constraints.keep_together_pairs as [string, string][]}
                       onAdd={addPair('keep_together_pairs')}
                       onRemove={removePair('keep_together_pairs')}
-                      label="Should sit near each other"
+                      label={t('settings.should_sit_near')}
                       color="green"
                     />
 
@@ -341,7 +343,7 @@ export default function SettingsPanel() {
                       students={students}
                       selectedIds={constraints.front_row_ids}
                       onToggle={toggleRowId('front_row_ids')}
-                      label="Force to front row"
+                      label={t('settings.force_front_row')}
                       icon={<ArrowUpToLine size={12} className="text-indigo-500" />}
                       color="indigo"
                     />
@@ -350,7 +352,7 @@ export default function SettingsPanel() {
                       students={students}
                       selectedIds={constraints.back_row_ids}
                       onToggle={toggleRowId('back_row_ids')}
-                      label="Prefer back row"
+                      label={t('settings.prefer_back_row')}
                       icon={<ArrowDownToLine size={12} className="text-orange-500" />}
                       color="orange"
                     />
@@ -366,7 +368,7 @@ export default function SettingsPanel() {
                         })}
                         className="text-xs text-red-500 hover:text-red-700 underline"
                       >
-                        Clear all rules
+                        {t('settings.clear_all_rules')}
                       </button>
                     )}
                   </>

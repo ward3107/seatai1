@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Upload, AlertCircle, CheckCircle2, X, Download } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { generateId } from '../../utils/sampleData';
+import { useLanguage } from '../../hooks/useLanguage';
 import type { Student, Gender, AcademicLevel, BehaviorLevel } from '../../types';
 
 // Expected CSV columns (case-insensitive, trimmed)
@@ -60,13 +61,13 @@ function parseStudent(row: Record<string, string>): Student | null {
   };
 }
 
-function parseCsv(text: string): { students: Student[]; errors: string[] } {
+function parseCsv(text: string, t: (key: string, values?: Record<string, string | number>) => string): { students: Student[]; errors: string[] } {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return { students: [], errors: ['CSV must have a header row and at least one data row.'] };
+  if (lines.length < 2) return { students: [], errors: [t('csvImport.error_no_header')] };
 
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
   if (!headers.includes('name')) {
-    return { students: [], errors: ['Missing required column: "name"'] };
+    return { students: [], errors: [t('csvImport.error_missing_name')] };
   }
 
   const students: Student[] = [];
@@ -81,7 +82,7 @@ function parseCsv(text: string): { students: Student[]; errors: string[] } {
     if (student) {
       students.push(student);
     } else {
-      errors.push(`Row ${i + 1}: missing name — skipped`);
+      errors.push(t('csvImport.error_missing_name_row', { row: i + 1 }));
     }
   }
 
@@ -107,6 +108,7 @@ interface ImportResult {
 
 export default function CsvImport() {
   const { addStudent } = useStore();
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [mode, setMode] = useState<'replace' | 'append'>('append');
@@ -115,7 +117,7 @@ export default function CsvImport() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const { students, errors } = parseCsv(text);
+      const { students, errors } = parseCsv(text, t);
 
       if (mode === 'replace') {
         useStore.getState().setStudents([]);
@@ -137,14 +139,14 @@ export default function CsvImport() {
     <div className="space-y-3">
       {/* Mode toggle */}
       <div className="flex items-center gap-2 text-xs text-gray-600">
-        <span>Import mode:</span>
+        <span>{t('csvImport.import_mode')}</span>
         <button
           onClick={() => setMode('append')}
           className={`px-2 py-0.5 rounded-full border transition-colors ${
             mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 hover:border-gray-400'
           }`}
         >
-          Add to class
+          {t('csvImport.add_to_class')}
         </button>
         <button
           onClick={() => setMode('replace')}
@@ -152,7 +154,7 @@ export default function CsvImport() {
             mode === 'replace' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'border-gray-300 hover:border-gray-400'
           }`}
         >
-          Replace class
+          {t('csvImport.replace_class')}
         </button>
       </div>
 
@@ -165,7 +167,7 @@ export default function CsvImport() {
       >
         <Upload size={20} className="text-gray-400" />
         <p className="text-sm text-gray-500 text-center">
-          Drop a CSV file here or <span className="text-primary-500 underline">browse</span>
+          {t('csvImport.drop_here').replace('<span>', '<span className="text-primary-500 underline">')}
         </p>
         <p className="text-xs text-gray-400">Columns: name, gender, academic_level, score…</p>
         <input
@@ -183,7 +185,7 @@ export default function CsvImport() {
         className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 transition-colors"
       >
         <Download size={12} />
-        Download template CSV
+        {t('csvImport.download_template')}
       </button>
 
       {/* Result banner */}
@@ -195,7 +197,7 @@ export default function CsvImport() {
             <CheckCircle2 size={16} className="text-green-500 shrink-0 mt-0.5" />
           )}
           <div className="flex-1 text-xs">
-            <p className="font-medium text-gray-700">{result.added} student{result.added !== 1 ? 's' : ''} imported</p>
+            <p className="font-medium text-gray-700">{result.added} {t('csvImport.imported')}</p>
             {result.errors.map((err, i) => (
               <p key={i} className="text-yellow-700 mt-0.5">{err}</p>
             ))}

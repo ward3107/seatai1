@@ -1,0 +1,36 @@
+/**
+ * Z-Index Scale
+ *
+ * Consistent z-index values across the application.
+ * Use these custom properties for maintainability.
+ *
+ * Scale:
+ * - 0-9:   Base layer, default stacking
+ * - 10-19: Overlays (relationship lines, map markers)
+ * - 20-29: Sticky elements, inline promotions
+ * - 30-39: Dropdown backdrops
+ * - 40-49: Dropdowns, popovers, tooltips
+ * - 50-59: Modals, dialogs, drawers
+ * - 60-69: Toasts, notifications
+ * - 70-79: Highest priority (loading states, critical alerts)
+ */
+
+:root {
+  --z-base: 1;
+  --z-overlay: 10;
+  --z-sticky: 20;
+  --z-dropdown-backdrop: 40;
+  --z-dropdown: 50;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-top: 70;
+}
+
+/* Tailwind arbitrary values reference:
+ * z-[10]  -> overlays
+ * z-[20]  -> sticky
+ * z-[40]  -> dropdown backdrop
+ * z-[50]  -> dropdowns/modals
+ * z-[60]  -> toasts
+ * z-[70]  -> highest priority
+ */

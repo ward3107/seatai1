@@ -16,7 +16,22 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(which:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Read(//c/Users/Waseem/Documents/seatai/seatai1/web/**)",
+      "Bash(npm run:*)",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__take_snapshot",
+      "Bash(wc -l core/src/lib.rs core/src/**/*.rs)",
+      "Bash(cargo --version)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -l useLanguage web/src/features/**/*.tsx web/src/app/App.tsx web/src/features/settings/SettingsPanel.tsx)",
+      "Bash(node -e \"const locales = [''en'', ''he'', ''ar'', ''ru'']; locales.forEach\\(l => { try { require\\(''./src/locales/'' + l + ''.json''\\); console.log\\(l + ''.json ✓''\\); } catch\\(e\\) { console.log\\(l + ''.json ✗ '' + e.message\\); } }\\);\")",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)",
+      "Bash(grep -n '\"\"gridControls\"\"' \"C:\\\\Users\\\\Waseem\\\\Documents\\\\seatai\\\\seatai1\\\\web\\\\src\\\\locales\\\\ar.json\")"
     ]
   }
 }

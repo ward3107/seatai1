@@ -1,33 +1,35 @@
 import { motion } from 'framer-motion';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { BookOpen, Users, Globe, Accessibility, Clock, Zap } from 'lucide-react';
 
 export default function MetricsPanel() {
   const { result } = useStore();
+  const { t } = useLanguage();
 
   if (!result) return null;
 
   const metrics = [
     {
-      label: 'Academic Balance',
+      label: t('optimization.academic_balance'),
       value: result.objective_scores.academic_balance,
       icon: BookOpen,
       color: 'blue',
     },
     {
-      label: 'Behavioral Fit',
+      label: t('optimization.behavioral_fit'),
       value: result.objective_scores.behavioral_balance,
       icon: Users,
       color: 'green',
     },
     {
-      label: 'Diversity',
+      label: t('optimization.diversity'),
       value: result.objective_scores.diversity,
       icon: Globe,
       color: 'purple',
     },
     {
-      label: 'Special Needs',
+      label: t('optimization.special_needs'),
       value: result.objective_scores.special_needs,
       icon: Accessibility,
       color: 'orange',
@@ -49,7 +51,7 @@ export default function MetricsPanel() {
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800">Optimization Results</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{t('optimization.results_title')}</h2>
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <Clock size={14} />
@@ -57,7 +59,7 @@ export default function MetricsPanel() {
           </div>
           <div className="flex items-center gap-1">
             <Zap size={14} />
-            <span>{result.generations} generations</span>
+            <span>{result.generations} {t('optimization.generations')}</span>
           </div>
         </div>
       </div>
@@ -67,7 +69,7 @@ export default function MetricsPanel() {
         <div className="text-5xl font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
           {(result.fitness_score * 100).toFixed(1)}%
         </div>
-        <p className="text-sm text-gray-500 mt-1">Overall Fitness Score</p>
+        <p className="text-sm text-gray-500 mt-1">{t('optimization.overall_fitness_score')}</p>
       </div>
 
       {/* Metrics Grid */}
@@ -119,7 +121,7 @@ export default function MetricsPanel() {
       {/* Warnings */}
       {result.warnings.length > 0 && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm font-medium text-yellow-800">Notes:</p>
+          <p className="text-sm font-medium text-yellow-800">{t('optimization.notes')}:</p>
           <ul className="mt-1 text-sm text-yellow-700 list-disc list-inside">
             {result.warnings.map((warning, i) => (
               <li key={i}>{warning}</li>

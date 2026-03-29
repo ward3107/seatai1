@@ -14,7 +14,7 @@ import type {
 } from '../../types';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
-export type ViewMode = 'rows' | 'pairs' | 'clusters';
+export type ViewMode = 'rows' | 'pairs' | 'clusters' | '3d';
 
 interface AppState {
   // Students
@@ -61,6 +61,7 @@ interface AppState {
   viewMode: ViewMode;
   selectedSeatKey: string | null;   // for click-to-swap
   showRelations: boolean;
+  showTimeline: boolean;             // show optimization timeline panel
 
   toggleLockSeat: (seatKey: string) => void;
   setHeatMapMode: (mode: HeatMapMode) => void;
@@ -68,6 +69,7 @@ interface AppState {
   setViewMode: (mode: ViewMode) => void;
   setSelectedSeat: (key: string | null) => void;
   setShowRelations: (show: boolean) => void;
+  setShowTimeline: (show: boolean) => void;
 
   // Swap two seats (pushes to undo history)
   swapStudents: (seatKeyA: string, seatKeyB: string) => void;
@@ -206,6 +208,7 @@ export const useStore = create<AppState>()(
       viewMode: 'rows',
       selectedSeatKey: null,
       showRelations: false,
+      showTimeline: false,
 
       toggleLockSeat: (seatKey) =>
         set((state) => {
@@ -235,6 +238,10 @@ export const useStore = create<AppState>()(
       setShowRelations: (show) =>
         set((state) => {
           state.showRelations = show;
+        }),
+      setShowTimeline: (show) =>
+        set((state) => {
+          state.showTimeline = show;
         }),
 
       // Swap two students and push to undo history

@@ -1,41 +1,43 @@
 import { motion } from 'framer-motion';
 import { Upload, UserPlus, Sparkles, FileText } from 'lucide-react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { sampleStudents } from '../../utils/sampleData';
 
 interface Props {
   onOpenSidebar: () => void;
 }
 
-const steps = [
-  {
-    icon: Upload,
-    color: 'bg-blue-100 text-blue-600',
-    title: 'Import a class roster',
-    desc: 'Upload a CSV file with student names and attributes — done in seconds.',
-  },
-  {
-    icon: UserPlus,
-    color: 'bg-purple-100 text-purple-600',
-    title: 'Add students manually',
-    desc: 'Fill in names, scores, relationships, and accessibility needs one by one.',
-  },
-  {
-    icon: Sparkles,
-    color: 'bg-amber-100 text-amber-600',
-    title: 'Run the optimizer',
-    desc: 'The AI engine generates an optimal seating chart in under a second.',
-  },
-  {
-    icon: FileText,
-    color: 'bg-green-100 text-green-600',
-    title: 'Print or export',
-    desc: 'Get a ready-to-hang seating chart as a PDF or PNG.',
-  },
-];
-
 export default function OnboardingView({ onOpenSidebar }: Props) {
   const { setStudents } = useStore();
+  const { t } = useLanguage();
+
+  const steps = [
+    {
+      icon: Upload,
+      color: 'bg-blue-100 text-blue-600',
+      title: t('onboarding.import_title'),
+      desc: t('onboarding.import_desc'),
+    },
+    {
+      icon: UserPlus,
+      color: 'bg-purple-100 text-purple-600',
+      title: t('onboarding.manual_title'),
+      desc: t('onboarding.manual_desc'),
+    },
+    {
+      icon: Sparkles,
+      color: 'bg-amber-100 text-amber-600',
+      title: t('onboarding.optimize_title'),
+      desc: t('onboarding.optimize_desc'),
+    },
+    {
+      icon: FileText,
+      color: 'bg-green-100 text-green-600',
+      title: t('onboarding.export_title'),
+      desc: t('onboarding.export_desc'),
+    },
+  ];
 
   function loadDemo() {
     setStudents(sampleStudents);
@@ -55,11 +57,10 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
           <span className="text-white font-bold text-4xl">S</span>
         </div>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Welcome to SeatAI
+          {t('onboarding.welcome_title')}
         </h1>
         <p className="text-gray-500 text-base max-w-md mx-auto">
-          Intelligent classroom seating — balancing academic levels, behavior,
-          social dynamics, and accessibility requirements automatically.
+          {t('onboarding.welcome_desc')}
         </p>
       </motion.div>
 
@@ -101,19 +102,19 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
           className="px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold shadow hover:shadow-lg transition-shadow flex items-center gap-2"
         >
           <UserPlus size={18} />
-          Get started
+          {t('onboarding.get_started')}
         </button>
         <button
           onClick={loadDemo}
           className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
           <Sparkles size={18} className="text-amber-500" />
-          Load demo class (30 students)
+          {t('onboarding.load_demo')}
         </button>
       </motion.div>
 
       <p className="mt-6 text-xs text-gray-400">
-        All data stays in your browser — nothing is sent to any server.
+        {t('onboarding.privacy')}
       </p>
     </div>
   );
