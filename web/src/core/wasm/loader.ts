@@ -1,8 +1,8 @@
 // Optimizer loader - hybrid TS/WASM implementation
-import { loadOptimizer, getOptimizerInfo } from './hybrid-loader';
+import { loadOptimizer, getOptimizerInfo, ClassroomOptimizer } from './hybrid-loader';
 
 export type OptimizerModule = {
-  ClassroomOptimizer: new (...args: any[]) => any;
+  ClassroomOptimizer: new (...args: ConstructorParameters<typeof ClassroomOptimizer>) => InstanceType<typeof ClassroomOptimizer>;
 };
 
 let loaded = false;
@@ -36,3 +36,6 @@ export function isWasmLoaded(): boolean {
 export function getOptimizerStats() {
   return getOptimizerInfo();
 }
+
+// Export directly for convenience
+export { ClassroomOptimizer } from './hybrid-loader';

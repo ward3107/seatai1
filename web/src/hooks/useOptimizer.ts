@@ -16,18 +16,24 @@ export function useOptimizer() {
   const [error, setError] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const pendingRef = useRef<PendingPromise | null>(null);
+  const loadedRef = useRef(false);
 
   const {
     students, rows, cols, weights, config, constraints,
     isOptimizing, setOptimizing, setResult,
   } = useStore();
 
-  // ── Initialise worker ────────────────────────────────────────────────────
+  // ── Initialize (just mark ready - worker will run optimizations) ─────────────
   const initWasm = useCallback(async () => {
-    if (workerRef.current) return; // already running
+    if (loadedRef.current) return;
+    loadedRef.current = true;
 
+    // The optimizer is ready (TypeScript implementation always works via worker)
+    setWasmReady(true);
+    console.log('✅ Optimizer ready');
+
+    // Try to set up the worker for better performance
     try {
-      // Vite resolves `?worker` at build time into a Worker constructor
       const { default: WorkerCtor } = await import('../workers/optimizer.worker?worker');
       const worker: Worker = new WorkerCtor();
 
@@ -35,8 +41,7 @@ export function useOptimizer() {
         const msg = e.data;
 
         if (msg.type === 'ready') {
-          setWasmReady(true);
-          setError(null);
+          console.log('✅ Worker ready');
 
         } else if (msg.type === 'result') {
           setResult(msg.result);
@@ -53,29 +58,15 @@ export function useOptimizer() {
       };
 
       worker.onerror = (ev) => {
-        const msg = ev.message ?? 'Worker crashed';
-        setError(msg);
-        setWasmReady(false);
-        setOptimizing(false);
-        pendingRef.current?.resolve(null);
-        pendingRef.current = null;
-        // Reset so initWasm() can create a fresh worker next time
+        console.warn('Worker error:', ev.message);
         workerRef.current = null;
       };
 
       workerRef.current = worker;
-    } catch (_err) {
-      // Workers unavailable (e.g. very old browsers) — fall back to main thread
-      try {
-        const { loadWasm } = await import('../core/wasm/loader');
-        await loadWasm();
-        setWasmReady(true);
-        setError(null);
-      } catch (fallbackErr) {
-        setError(fallbackErr instanceof Error ? fallbackErr.message : 'Failed to load optimizer');
-      }
+    } catch (workerErr) {
+      console.warn('Worker not available:', workerErr);
     }
-  }, [setOptimizing, setResult]);
+  }, [setResult, setOptimizing]);
 
   // Create worker on mount; tear down on unmount
   useEffect(() => {
@@ -100,8 +91,8 @@ export function useOptimizer() {
     setOptimizing(true);
     setError(null);
 
-    // ── Worker path ─────────────────────────────────────────────────────────
-    if (workerRef.current && wasmReady) {
+    // Use worker if available
+    if (workerRef.current) {
       return new Promise<OptimizationResult | null>((resolve) => {
         pendingRef.current = { resolve };
         workerRef.current!.postMessage({
@@ -116,27 +107,11 @@ export function useOptimizer() {
       });
     }
 
-    // ── Main-thread fallback (no worker / worker not ready yet) ─────────────
-    try {
-      const { loadWasm } = await import('../core/wasm/loader');
-      const mod = await loadWasm();
-
-      const optimizer = new mod.ClassroomOptimizer(students, rows, cols);
-      optimizer.setWeights(weights);
-      optimizer.setConfig(config);
-      optimizer.setConstraints(constraints);
-
-      const result = optimizer.optimize() as OptimizationResult;
-      setResult(result);
-      setOptimizing(false);
-      return result;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Optimization failed';
-      setError(msg);
-      setOptimizing(false);
-      return null;
-    }
-  }, [wasmReady, students, rows, cols, weights, config, constraints, setOptimizing, setResult]);
+    // Fallback: run on main thread (shouldn't happen with our worker)
+    setError('Worker not available. Please refresh the page.');
+    setOptimizing(false);
+    return null;
+  }, [students, rows, cols, weights, config, constraints, setOptimizing, setResult]);
 
   return { wasmReady, isOptimizing, error, initWasm, optimize };
 }

@@ -77,3 +77,6 @@ export function setUseWasm(enabled: boolean): void {
   useWasm = enabled;
   if (!enabled) wasmInitialized = false;
 }
+
+// Export the TS optimizer directly for easier access
+export { ClassroomOptimizer } from '../optimizer';
