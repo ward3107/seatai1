@@ -2,7 +2,46 @@
 
 use crate::models::*;
 use crate::fitness::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::cmp::Ordering;
+
+// ── Platform-agnostic random helpers ────────────────────────────────────────
+// On WASM targets we delegate to `js_sys`; on native targets (unit tests) we
+// use a simple xorshift64 LCG so tests don't require a WASM runtime.
+
+#[cfg(target_arch = "wasm32")]
+#[inline]
+fn random() -> f64 {
+    random()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn random() -> f64 {
+    use std::sync::atomic::{AtomicU64, Ordering as AOrdering};
+    static SEED: AtomicU64 = AtomicU64::new(6_364_136_223_846_793_005);
+    let mut s = SEED.load(AOrdering::Relaxed);
+    s ^= s << 13;
+    s ^= s >> 7;
+    s ^= s << 17;
+    SEED.store(s, AOrdering::Relaxed);
+    // Map to [0, 1)
+    (s >> 11) as f64 / (1u64 << 53) as f64
+}
+
+#[cfg(target_arch = "wasm32")]
+#[inline]
+fn current_time_ms() -> u64 {
+    js_sys::Date::now() as u64
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn current_time_ms() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
 
 /// Configuration for the genetic algorithm
 #[derive(Debug, Clone)]
@@ -64,6 +103,10 @@ pub struct GeneticOptimizer {
     weights: ObjectiveWeights,
     constraints: SeatingConstraints,
     config: GeneticConfig,
+    /// Student indices that MUST be in front row (row 0)
+    front_row_indices: HashSet<usize>,
+    /// Student indices that MUST be in rows 0-1 (accessibility)
+    accessible_indices: HashSet<usize>,
 }
 
 impl GeneticOptimizer {
@@ -75,13 +118,35 @@ impl GeneticOptimizer {
         weights: Option<ObjectiveWeights>,
         constraints: Option<SeatingConstraints>,
     ) -> Self {
+        let constraints = constraints.unwrap_or_default();
+
+        // Pre-compute which students have hard placement constraints
+        let front_row_indices: HashSet<usize> = students
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| {
+                s.requires_front_row || constraints.front_row_ids.contains(&s.id)
+            })
+            .map(|(i, _)| i)
+            .collect();
+
+        let accessible_indices: HashSet<usize> = students
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| s.has_mobility_issues)
+            .map(|(i, _)| i)
+            .chain(front_row_indices.iter().copied())
+            .collect();
+
         Self {
             students,
             rows,
             cols,
             weights: weights.unwrap_or_default(),
-            constraints: constraints.unwrap_or_default(),
+            constraints,
             config: GeneticConfig::default(),
+            front_row_indices,
+            accessible_indices,
         }
     }
 
@@ -93,7 +158,7 @@ impl GeneticOptimizer {
 
     /// Run optimization
     pub fn optimize(&self) -> OptimizationResult {
-        let start_ms = js_sys::Date::now() as u64;
+        let start_ms = current_time_ms();
 
         // Create student ID map for quick lookup
         let student_map: HashMap<&str, &Student> = self.students
@@ -101,7 +166,7 @@ impl GeneticOptimizer {
             .map(|s| (s.id.as_str(), s))
             .collect();
 
-        // Initialize population
+        // Initialize population with constrained placements
         let mut population = self.initialize_population();
 
         // Track best fitness for early stopping
@@ -109,18 +174,18 @@ impl GeneticOptimizer {
         let mut generations_without_improvement = 0;
 
         // Evolution loop
-        for generation in 0..self.config.max_generations {
+        for _generation in 0..self.config.max_generations {
             // Evaluate fitness
             let fitnesses: Vec<f64> = population
                 .iter()
                 .map(|individual| self.evaluate_fitness(individual, &student_map))
                 .collect();
 
-            // Find best
+            // Find best (safe comparison — treats NaN as less-than)
             let (best_idx, &current_best) = fitnesses
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Ordering::Equal))
                 .unwrap_or((0, &0.0));
 
             // Check for improvement
@@ -139,12 +204,12 @@ impl GeneticOptimizer {
             // Selection
             let selected = self.selection(&population, &fitnesses);
 
-            // Crossover and mutation
+            // Crossover, mutation, and repair
             population = self.breed(&selected);
 
-            // Elitism: keep best individual
-            if population.len() > self.config.population_size {
-                population[0] = population[best_idx].clone();
+            // Elitism: preserve best individual from previous gen
+            if !population.is_empty() {
+                population[0] = population[best_idx % population.len()].clone();
             }
         }
 
@@ -157,29 +222,136 @@ impl GeneticOptimizer {
         let (best_idx, _) = fitnesses
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Ordering::Equal))
             .unwrap_or((0, &0.0));
 
         let best_individual = &population[best_idx];
 
-        // Create result
-        let elapsed_ms = js_sys::Date::now() as u64 - start_ms;
-        self.create_result(best_individual, &student_map, elapsed_ms)
+        // Create result with warnings for any remaining violations
+        let elapsed_ms = current_time_ms() - start_ms;
+        let mut result = self.create_result(best_individual, &student_map, elapsed_ms);
+        self.add_violation_warnings(&mut result);
+        result
     }
 
-    /// Initialize random population
+    /// Initialize population with hard constraints pre-satisfied.
+    ///
+    /// Front-row and mobility students are placed into valid seat
+    /// positions first; remaining students are shuffled into the rest.
     fn initialize_population(&self) -> Vec<Individual> {
         let num_students = self.students.len();
         let mut population = Vec::with_capacity(self.config.population_size);
 
         for _ in 0..self.config.population_size {
-            // Create a random permutation
             let mut individual: Vec<usize> = (0..num_students).collect();
-            shuffle(&mut individual);
+
+            // Phase 1: place front-row students into positions 0..cols
+            let front_row_slots = self.cols.min(num_students);
+            let mut front_assigned = 0;
+            for &student_idx in &self.front_row_indices {
+                if front_assigned >= front_row_slots {
+                    break;
+                }
+                // Find current position of this student in the individual
+                let cur_pos = individual.iter().position(|&s| s == student_idx).unwrap();
+                if cur_pos >= front_row_slots {
+                    // Swap with the student currently at a front-row slot
+                    individual.swap(cur_pos, front_assigned);
+                }
+                front_assigned += 1;
+            }
+
+            // Phase 2: place mobility-only students into positions 0..(2*cols)
+            let accessible_slots = (2 * self.cols).min(num_students);
+            for &student_idx in &self.accessible_indices {
+                if self.front_row_indices.contains(&student_idx) {
+                    continue; // Already placed
+                }
+                let cur_pos = individual.iter().position(|&s| s == student_idx).unwrap();
+                if cur_pos >= accessible_slots {
+                    // Find a non-constrained student in the accessible range to swap with
+                    for swap_pos in front_assigned..accessible_slots {
+                        let occupant = individual[swap_pos];
+                        if !self.accessible_indices.contains(&occupant) {
+                            individual.swap(cur_pos, swap_pos);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Phase 3: shuffle non-constrained students (positions after constrained ones)
+            // Only shuffle positions that don't contain constrained students
+            let free_positions: Vec<usize> = (0..num_students)
+                .filter(|pos| {
+                    let student_at_pos = individual[*pos];
+                    !self.accessible_indices.contains(&student_at_pos)
+                })
+                .collect();
+
+            // Fisher-Yates on free positions only
+            let free_len = free_positions.len();
+            for i in (1..free_len).rev() {
+                let j = (random() * (i + 1) as f64) as usize;
+                // Swap the students at free_positions[i] and free_positions[j]
+                let pos_a = free_positions[i];
+                let pos_b = free_positions[j];
+                individual.swap(pos_a, pos_b);
+            }
+
             population.push(individual);
         }
 
         population
+    }
+
+    /// Repair an individual after crossover/mutation to restore hard constraints.
+    ///
+    /// If a front-row student ended up outside row 0, swap them with a
+    /// non-constrained student who is currently in that zone.
+    fn repair(&self, individual: &mut Individual) {
+        let cols = self.cols;
+        let num_students = individual.len();
+        let front_row_slots = cols.min(num_students);
+        let accessible_slots = (2 * cols).min(num_students);
+
+        // Repair front-row students
+        for &student_idx in &self.front_row_indices {
+            let pos = match individual.iter().position(|&s| s == student_idx) {
+                Some(p) => p,
+                None => continue,
+            };
+            if pos >= front_row_slots {
+                // Find a non-front-row student currently in the front row to swap with
+                for swap_pos in 0..front_row_slots {
+                    let occupant = individual[swap_pos];
+                    if !self.front_row_indices.contains(&occupant) {
+                        individual.swap(pos, swap_pos);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Repair mobility students (need rows 0–1)
+        for &student_idx in &self.accessible_indices {
+            if self.front_row_indices.contains(&student_idx) {
+                continue; // Already in front row
+            }
+            let pos = match individual.iter().position(|&s| s == student_idx) {
+                Some(p) => p,
+                None => continue,
+            };
+            if pos >= accessible_slots {
+                for swap_pos in front_row_slots..accessible_slots {
+                    let occupant = individual[swap_pos];
+                    if !self.accessible_indices.contains(&occupant) {
+                        individual.swap(pos, swap_pos);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     /// Evaluate fitness of an individual
@@ -230,7 +402,7 @@ impl GeneticOptimizer {
             let mut best_fitness = -1.0;
 
             for _ in 0..self.config.tournament_size {
-                let idx = (js_sys::Math::random() * population.len() as f64) as usize;
+                let idx = (random() * population.len() as f64) as usize;
                 if fitnesses[idx] > best_fitness {
                     best_fitness = fitnesses[idx];
                     best_idx = idx;
@@ -243,7 +415,7 @@ impl GeneticOptimizer {
         selected
     }
 
-    /// Crossover and mutation
+    /// Crossover, mutation, AND repair
     fn breed(&self, population: &[Individual]) -> Vec<Individual> {
         let mut new_population = Vec::with_capacity(self.config.population_size);
         let mut i = 0;
@@ -253,7 +425,7 @@ impl GeneticOptimizer {
             let parent2 = &population[(i + 1) % population.len()];
 
             // Crossover
-            let (child1, child2) = if js_sys::Math::random() < self.config.crossover_rate {
+            let (child1, child2) = if random() < self.config.crossover_rate {
                 self.crossover(parent1, parent2)
             } else {
                 (parent1.clone(), parent2.clone())
@@ -263,12 +435,16 @@ impl GeneticOptimizer {
             let mut child1 = child1;
             let mut child2 = child2;
 
-            if js_sys::Math::random() < self.config.mutation_rate {
+            if random() < self.config.mutation_rate {
                 mutate(&mut child1);
             }
-            if js_sys::Math::random() < self.config.mutation_rate {
+            if random() < self.config.mutation_rate {
                 mutate(&mut child2);
             }
+
+            // Repair hard constraints after crossover/mutation
+            self.repair(&mut child1);
+            self.repair(&mut child2);
 
             new_population.push(child1);
             if new_population.len() < self.config.population_size {
@@ -289,8 +465,8 @@ impl GeneticOptimizer {
         }
 
         // Select random segment
-        let start = (js_sys::Math::random() * (len - 1) as f64) as usize;
-        let end = start + 1 + (js_sys::Math::random() * (len - start - 1) as f64) as usize;
+        let start = (random() * (len - 1) as f64) as usize;
+        let end = start + 1 + (random() * (len - start - 1) as f64) as usize;
 
         // Create children
         let mut child1 = vec![usize::MAX; len];
@@ -313,7 +489,7 @@ impl GeneticOptimizer {
     fn create_result(
         &self,
         individual: &Individual,
-        student_map: &HashMap<&str, &Student>,
+        _student_map: &HashMap<&str, &Student>,
         computation_time_ms: u64,
     ) -> OptimizationResult {
         let seats = self.create_seats(individual);
@@ -348,13 +524,43 @@ impl GeneticOptimizer {
             computation_time_ms,
         )
     }
+
+    /// Check the final result for any remaining violations and add warnings
+    fn add_violation_warnings(&self, result: &mut OptimizationResult) {
+        let mut warnings: Vec<String> = Vec::new();
+
+        for seat in &result.layout.seats {
+            if let Some(ref student_id) = seat.student_id {
+                if let Some(student) = self.students.iter().find(|s| &s.id == student_id) {
+                    if student.requires_front_row && !seat.position.is_front_row {
+                        warnings.push(format!(
+                            "{} requires front row but placed in row {}",
+                            student.name,
+                            seat.position.row + 1
+                        ));
+                    }
+                    if student.has_mobility_issues && seat.position.row > 1 {
+                        warnings.push(format!(
+                            "{} has mobility issues but placed in row {}",
+                            student.name,
+                            seat.position.row + 1
+                        ));
+                    }
+                }
+            }
+        }
+
+        for warning in warnings {
+            result.add_warning(warning);
+        }
+    }
 }
 
 /// Shuffle a vector using Fisher-Yates algorithm
 fn shuffle(vec: &mut Vec<usize>) {
     let len = vec.len();
     for i in (1..len).rev() {
-        let j = (js_sys::Math::random() * (i + 1) as f64) as usize;
+        let j = (random() * (i + 1) as f64) as usize;
         vec.swap(i, j);
     }
 }
@@ -365,8 +571,8 @@ fn mutate(individual: &mut Individual) {
         return;
     }
 
-    let i = (js_sys::Math::random() * individual.len() as f64) as usize;
-    let j = (js_sys::Math::random() * individual.len() as f64) as usize;
+    let i = (random() * individual.len() as f64) as usize;
+    let j = (random() * individual.len() as f64) as usize;
 
     if i != j {
         individual.swap(i, j);
@@ -401,5 +607,50 @@ mod tests {
 
         let optimizer = GeneticOptimizer::new(students, 2, 2, None, None);
         assert_eq!(optimizer.students.len(), 2);
+    }
+
+    #[test]
+    fn test_front_row_constraint_enforced() {
+        // Student 0 requires front row, 3 rows x 2 cols
+        let students = vec![
+            Student::new("a", "Alice").with_front_row(true),
+            Student::new("b", "Bob"),
+            Student::new("c", "Charlie"),
+            Student::new("d", "David"),
+        ];
+        let optimizer = GeneticOptimizer::new(students, 3, 2, None, None);
+        let population = optimizer.initialize_population();
+
+        // Every individual must have student 0 in positions 0 or 1 (front row)
+        for individual in &population {
+            let alice_pos = individual.iter().position(|&s| s == 0).unwrap();
+            assert!(
+                alice_pos < 2,
+                "Alice (requires_front_row) at position {}, expected < 2",
+                alice_pos
+            );
+        }
+    }
+
+    #[test]
+    fn test_repair_restores_constraints() {
+        let students = vec![
+            Student::new("a", "Alice").with_front_row(true),
+            Student::new("b", "Bob"),
+            Student::new("c", "Charlie"),
+            Student::new("d", "David"),
+        ];
+        let optimizer = GeneticOptimizer::new(students, 2, 2, None, None);
+
+        // Place Alice (index 0) at position 3 (back row) — broken
+        let mut individual = vec![1, 2, 3, 0];
+        optimizer.repair(&mut individual);
+
+        let alice_pos = individual.iter().position(|&s| s == 0).unwrap();
+        assert!(
+            alice_pos < 2,
+            "After repair, Alice at position {}, expected < 2",
+            alice_pos
+        );
     }
 }
