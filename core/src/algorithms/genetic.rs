@@ -12,7 +12,7 @@ use std::cmp::Ordering;
 #[cfg(target_arch = "wasm32")]
 #[inline]
 fn random() -> f64 {
-    random()
+    js_sys::Math::random()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

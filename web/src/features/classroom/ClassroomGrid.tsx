@@ -256,7 +256,7 @@ export default function ClassroomGrid() {
             transition: 'transform 0.2s ease',
           }}
         >
-          <div ref={gridContainerRef} className="relative">
+          <div ref={gridContainerRef} id="seating-grid-export" className="relative">
             <div className="flex flex-col gap-3">
               {sortedRows.map(([rowIndex, rowSeats]) => {
                 const desks = groupIntoDesks(rowSeats);

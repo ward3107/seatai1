@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { loadWasm } from '../core/wasm/loader';
 import { useStore } from '../core/store';
-import type { OptimizationResult, Student } from '../types';
+import type { OptimizationResult } from '../types';
 
 export function useOptimizer() {
   const [wasmReady, setWasmReady] = useState(false);

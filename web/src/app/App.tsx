@@ -8,7 +8,10 @@ import StudentList from '../features/students/StudentList';
 import StudentForm from '../features/students/StudentForm';
 import MetricsPanel from '../features/optimization/MetricsPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
-import { Menu, X, Play, RefreshCw, Download, Users, Settings } from 'lucide-react';
+import ExportButton from '../features/export/ExportButton';
+import CsvImport from '../features/import/CsvImport';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { Menu, X, Play, RefreshCw, Users } from 'lucide-react';
 
 function App() {
   const {
@@ -63,14 +66,21 @@ function App() {
 
           {/* Content */}
           <div className="flex-1 overflow-auto p-4 space-y-4">
-            {/* Students List */}
-            <StudentList />
+            <ErrorBoundary name="CSV Import" inline>
+              <CsvImport />
+            </ErrorBoundary>
 
-            {/* Student Form */}
-            <StudentForm />
+            <ErrorBoundary name="Student List" inline>
+              <StudentList />
+            </ErrorBoundary>
 
-            {/* Settings */}
-            <SettingsPanel />
+            <ErrorBoundary name="Student Form" inline>
+              <StudentForm />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Settings" inline>
+              <SettingsPanel />
+            </ErrorBoundary>
           </div>
 
           {/* Footer */}
@@ -139,17 +149,25 @@ function App() {
                 </span>
               </div>
             )}
+
+            <ExportButton />
           </div>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
           {/* Metrics */}
-          {result && <MetricsPanel />}
+          {result && (
+            <ErrorBoundary name="Metrics Panel" inline>
+              <MetricsPanel />
+            </ErrorBoundary>
+          )}
 
           {/* Classroom Grid */}
           <div className="mt-6">
-            <ClassroomGrid />
+            <ErrorBoundary name="Seating Grid">
+              <ClassroomGrid />
+            </ErrorBoundary>
           </div>
         </div>
       </main>
