@@ -103,6 +103,7 @@ export default function ClassroomGrid() {
     lockedSeats,
     heatMapMode,
     zoomLevel,
+    viewMode,
     selectedSeatKey,
     showRelations,
     setSelectedSeat,
@@ -259,64 +260,121 @@ export default function ClassroomGrid() {
           <div ref={gridContainerRef} id="seating-grid-export" className="relative">
             <div className="flex flex-col gap-3">
               {sortedRows.map(([rowIndex, rowSeats]) => {
-                const desks = groupIntoDesks(rowSeats);
+                const sortedSeats = [...rowSeats].sort(
+                  (a, b) => a.position.col - b.position.col
+                );
+                const isPairs = viewMode === 'pairs';
+                const desks = isPairs ? groupIntoDesks(sortedSeats) : null;
+
                 return (
-                  <div key={rowIndex} className="flex gap-4 justify-center items-start">
+                  <div
+                    key={rowIndex}
+                    className={clsx(
+                      'flex justify-center items-start',
+                      isPairs ? 'gap-6' : 'gap-2'
+                    )}
+                  >
                     {/* Row number label */}
                     <span className="text-[10px] text-gray-400 font-medium self-center w-8 text-right shrink-0">
                       {rowIndex + 1}
                     </span>
 
-                    {desks.map((deskSeats, deskIdx) => (
-                      <motion.div
-                        key={`desk-${rowIndex}-${deskIdx}`}
-                        layout
-                        initial={{ opacity: 0, scale: 0.85 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 25,
-                          delay: result ? (rowIndex * 3 + deskIdx) * 0.015 : 0,
-                        }}
-                        className={clsx(
-                          'flex gap-2 p-2 rounded-xl border-2',
-                          rowIndex === 0
-                            ? 'border-blue-200 bg-blue-50'
-                            : 'border-amber-200 bg-amber-50'
-                        )}
-                      >
-                        {deskSeats.map((seat) => {
+                    {isPairs && desks
+                      ? /* ── Pairs layout: seats grouped in 2-seat desk units ── */
+                        desks.map((deskSeats, deskIdx) => (
+                          <motion.div
+                            key={`desk-${rowIndex}-${deskIdx}`}
+                            layout
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 300,
+                              damping: 25,
+                              delay: result ? (rowIndex * 3 + deskIdx) * 0.015 : 0,
+                            }}
+                            className={clsx(
+                              'flex gap-2 p-2 rounded-xl border-2',
+                              rowIndex === 0
+                                ? 'border-blue-200 bg-blue-50'
+                                : 'border-amber-200 bg-amber-50'
+                            )}
+                          >
+                            {deskSeats.map((seat) => {
+                              const sk = `${seat.position.row}-${seat.position.col}`;
+                              const student = seat.student_id
+                                ? (studentMap.get(seat.student_id) ?? null)
+                                : null;
+                              return (
+                                <SeatCard
+                                  key={sk}
+                                  seat={seat}
+                                  student={student}
+                                  seatKey={sk}
+                                  isLocked={lockedSeats.includes(sk)}
+                                  isSelected={selectedSeatKey === sk}
+                                  isViolated={violations.has(sk)}
+                                  heatMapMode={heatMapMode}
+                                  interactionMode={interactionMode}
+                                  onSeatClick={handleSeatClick}
+                                  onContextMenu={handleContextMenu}
+                                  onMouseEnter={() => {
+                                    setHoveredSeatKey(sk);
+                                    if (student) setHoveredStudent(student);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setHoveredSeatKey(null);
+                                    setHoveredStudent(null);
+                                  }}
+                                />
+                              );
+                            })}
+                          </motion.div>
+                        ))
+                      : /* ── Rows layout: individual seats in a straight row ── */
+                        sortedSeats.map((seat, seatIdx) => {
                           const sk = `${seat.position.row}-${seat.position.col}`;
                           const student = seat.student_id
                             ? (studentMap.get(seat.student_id) ?? null)
                             : null;
                           return (
-                            <SeatCard
+                            <motion.div
                               key={sk}
-                              seat={seat}
-                              student={student}
-                              seatKey={sk}
-                              isLocked={lockedSeats.includes(sk)}
-                              isSelected={selectedSeatKey === sk}
-                              isViolated={violations.has(sk)}
-                              heatMapMode={heatMapMode}
-                              interactionMode={interactionMode}
-                              onSeatClick={handleSeatClick}
-                              onContextMenu={handleContextMenu}
-                              onMouseEnter={() => {
-                                setHoveredSeatKey(sk);
-                                if (student) setHoveredStudent(student);
+                              layout
+                              initial={{ opacity: 0, scale: 0.85 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 25,
+                                delay: result
+                                  ? (rowIndex * cols + seatIdx) * 0.012
+                                  : 0,
                               }}
-                              onMouseLeave={() => {
-                                setHoveredSeatKey(null);
-                                setHoveredStudent(null);
-                              }}
-                            />
+                            >
+                              <SeatCard
+                                seat={seat}
+                                student={student}
+                                seatKey={sk}
+                                isLocked={lockedSeats.includes(sk)}
+                                isSelected={selectedSeatKey === sk}
+                                isViolated={violations.has(sk)}
+                                heatMapMode={heatMapMode}
+                                interactionMode={interactionMode}
+                                onSeatClick={handleSeatClick}
+                                onContextMenu={handleContextMenu}
+                                onMouseEnter={() => {
+                                  setHoveredSeatKey(sk);
+                                  if (student) setHoveredStudent(student);
+                                }}
+                                onMouseLeave={() => {
+                                  setHoveredSeatKey(null);
+                                  setHoveredStudent(null);
+                                }}
+                              />
+                            </motion.div>
                           );
                         })}
-                      </motion.div>
-                    ))}
 
                     {/* Spacer to balance row label */}
                     <span className="w-8 shrink-0" />

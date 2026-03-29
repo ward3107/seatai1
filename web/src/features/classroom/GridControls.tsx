@@ -9,6 +9,8 @@ import {
   ZoomOut,
   Eye,
   EyeOff,
+  AlignJustify,
+  Columns2,
 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import type { HeatMapMode } from '../../core/store';
@@ -43,6 +45,8 @@ export default function GridControls({
     setHeatMapMode,
     zoomLevel,
     setZoomLevel,
+    viewMode,
+    setViewMode,
   } = useStore();
 
   return (
@@ -112,6 +116,38 @@ export default function GridControls({
         >
           <MousePointer2 size={12} />
           Click
+        </button>
+      </div>
+
+      <div className="w-px h-5 bg-gray-300" />
+
+      {/* ── Layout Mode ── */}
+      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <button
+          onClick={() => setViewMode('rows')}
+          title="Standard rows layout"
+          className={clsx(
+            'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
+            viewMode === 'rows'
+              ? 'bg-indigo-500 text-white'
+              : 'text-gray-600 hover:bg-gray-50'
+          )}
+        >
+          <AlignJustify size={12} />
+          Rows
+        </button>
+        <button
+          onClick={() => setViewMode('pairs')}
+          title="Paired desks layout"
+          className={clsx(
+            'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
+            viewMode === 'pairs'
+              ? 'bg-indigo-500 text-white'
+              : 'text-gray-600 hover:bg-gray-50'
+          )}
+        >
+          <Columns2 size={12} />
+          Pairs
         </button>
       </div>
 

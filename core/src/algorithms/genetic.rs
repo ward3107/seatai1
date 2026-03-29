@@ -107,6 +107,8 @@ pub struct GeneticOptimizer {
     front_row_indices: HashSet<usize>,
     /// Student indices that MUST be in rows 0-1 (accessibility)
     accessible_indices: HashSet<usize>,
+    /// Student indices that SHOULD be in the last 2 rows (soft preference)
+    back_row_indices: HashSet<usize>,
 }
 
 impl GeneticOptimizer {
@@ -138,6 +140,13 @@ impl GeneticOptimizer {
             .chain(front_row_indices.iter().copied())
             .collect();
 
+        let back_row_indices: HashSet<usize> = students
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| constraints.back_row_ids.contains(&s.id))
+            .map(|(i, _)| i)
+            .collect();
+
         Self {
             students,
             rows,
@@ -147,6 +156,7 @@ impl GeneticOptimizer {
             config: GeneticConfig::default(),
             front_row_indices,
             accessible_indices,
+            back_row_indices,
         }
     }
 
@@ -280,12 +290,34 @@ impl GeneticOptimizer {
                 }
             }
 
+            // Phase 2b: place back-row students into last 2 rows
+            let back_start = num_students.saturating_sub(2 * self.cols);
+            for &student_idx in &self.back_row_indices {
+                if self.accessible_indices.contains(&student_idx) {
+                    continue; // front/mobility constraint takes priority
+                }
+                let cur_pos = individual.iter().position(|&s| s == student_idx).unwrap();
+                if cur_pos < back_start {
+                    // Find a non-constrained student in the back zone to swap with
+                    for swap_pos in back_start..num_students {
+                        let occupant = individual[swap_pos];
+                        if !self.accessible_indices.contains(&occupant)
+                            && !self.back_row_indices.contains(&occupant)
+                        {
+                            individual.swap(cur_pos, swap_pos);
+                            break;
+                        }
+                    }
+                }
+            }
+
             // Phase 3: shuffle non-constrained students (positions after constrained ones)
             // Only shuffle positions that don't contain constrained students
             let free_positions: Vec<usize> = (0..num_students)
                 .filter(|pos| {
                     let student_at_pos = individual[*pos];
                     !self.accessible_indices.contains(&student_at_pos)
+                        && !self.back_row_indices.contains(&student_at_pos)
                 })
                 .collect();
 
@@ -346,6 +378,29 @@ impl GeneticOptimizer {
                 for swap_pos in front_row_slots..accessible_slots {
                     let occupant = individual[swap_pos];
                     if !self.accessible_indices.contains(&occupant) {
+                        individual.swap(pos, swap_pos);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Repair back-row students (should be in last 2 rows)
+        let back_start = num_students.saturating_sub(2 * cols);
+        for &student_idx in &self.back_row_indices {
+            if self.accessible_indices.contains(&student_idx) {
+                continue; // front constraint wins
+            }
+            let pos = match individual.iter().position(|&s| s == student_idx) {
+                Some(p) => p,
+                None => continue,
+            };
+            if pos < back_start {
+                for swap_pos in back_start..num_students {
+                    let occupant = individual[swap_pos];
+                    if !self.accessible_indices.contains(&occupant)
+                        && !self.back_row_indices.contains(&occupant)
+                    {
                         individual.swap(pos, swap_pos);
                         break;
                     }
