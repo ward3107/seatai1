@@ -6,12 +6,12 @@ import { useLanguage } from '../../hooks/useLanguage';
 import type { Student } from '../../types';
 
 // ─── per-student reason builder ────────────────────────────────────────────
-// Based on established educational theories and classroom research
+// Simplified for teachers - practical placement explanations
 
 interface Reason {
   type: 'good' | 'warn' | 'info';
   text: string;
-  citation?: string; // Optional research citation
+  citation?: string; // Optional simple citation
 }
 
 function buildReasons(
@@ -26,49 +26,49 @@ function buildReasons(
 ): Reason[] {
   const reasons: Reason[] = [];
 
-  // ── Accessibility placement (ADA compliance, IDEA provisions) ──
+  // ── Accessibility placement ──
   if (student.requires_front_row && row === 0) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_front_row_accessibility'),
-      citation: 'ADA/IDEA accessibility requirements'
+      citation: 'Meets accessibility needs'
     });
   }
   if (student.has_mobility_issues && row <= 1) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_accessible_seat'),
-      citation: 'Universal Design for Learning (UDL) guidelines'
+      citation: 'Easy aisle access'
     });
   }
   if (constraints.front_row_ids.includes(student.id) && row === 0) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_front_row_teacher'),
-      citation: 'Teacher-directed placement: instructional priority'
+      citation: 'Teacher placement request'
     });
   }
   if (constraints.back_row_ids.includes(student.id) && row >= rows - 2) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_back_row_teacher'),
-      citation: 'Teacher-directed placement: behavioral management'
+      citation: 'Teacher placement request'
     });
   }
 
-  // ── Special needs notes (IEP accommodations) ──
+  // ── Special needs notes ──
   for (const need of student.special_needs) {
     if (need.requires_front_seat && row === 0) {
       reasons.push({
         type: 'good',
         text: t('explanation.reason_front_seat_for', { type: need.type }),
-        citation: 'Individualized Education Program (IEP) accommodation'
+        citation: 'Accommodation met'
       });
     } else if (need.requires_front_seat && row > 0) {
       reasons.push({
         type: 'warn',
         text: t('explanation.reason_prefers_front_seat', { type: need.type, row: row + 1 }),
-        citation: 'IEP consideration: limited seating availability'
+        citation: 'Limited front row seats'
       });
     }
   }
@@ -77,18 +77,18 @@ function buildReasons(
       reasons.push({
         type: 'good',
         text: t('explanation.reason_quiet_area_back'),
-        citation: 'ADHD research: reduced distraction improves focus (Barkley, 2015)'
+        citation: 'Quiet area reduces distractions'
       });
     } else if (!student.requires_front_row && !student.has_mobility_issues) {
       reasons.push({
         type: 'warn',
         text: t('explanation.reason_quiet_area_not_met'),
-        citation: 'Consider: sensory processing needs (Dunn, 1997)'
+        citation: 'Consider: noise may affect focus'
       });
     }
   }
 
-  // ── Adjacency: friends & conflicts (Social Learning Theory) ──
+  // ── Adjacency: friends & conflicts ──
   for (const adjId of adjacentIds) {
     const adj = allStudents.get(adjId);
     if (!adj) continue;
@@ -99,7 +99,7 @@ function buildReasons(
       reasons.push({
         type: 'warn',
         text: t('explanation.reason_adjacent_conflict', { name: adj.name }),
-        citation: 'Behavioral management: separation reduces disruption (Kounin, 1970)'
+        citation: 'Separation reduces issues'
       });
       continue;
     }
@@ -112,7 +112,7 @@ function buildReasons(
       reasons.push({
         type: 'warn',
         text: t('explanation.reason_must_separate_violated', { name: adj.name }),
-        citation: '⚠️ Constraint violation: teacher directive not met'
+        citation: '⚠️ Placement rule not met'
       });
       continue;
     }
@@ -124,7 +124,7 @@ function buildReasons(
       reasons.push({
         type: 'good',
         text: t('explanation.reason_kept_together', { name: adj.name }),
-        citation: 'Cooperative learning: structured peer interaction (Johnson & Johnson)'
+        citation: 'Kept together for collaboration'
       });
       continue;
     }
@@ -133,12 +133,12 @@ function buildReasons(
       reasons.push({
         type: 'good',
         text: t('explanation.reason_seated_near_friend', { name: adj.name }),
-        citation: 'Social support enhances cooperative learning (Johnson & Johnson, 1999)'
+        citation: 'Friends work better together'
       });
     }
   }
 
-  // ── Separation rules fulfilled (preventive classroom management) ──
+  // ── Separation rules fulfilled ──
   for (const [a, b] of constraints.separate_pairs) {
     const otherId = a === student.id ? b : b === student.id ? a : null;
     if (!otherId) continue;
@@ -147,7 +147,7 @@ function buildReasons(
       if (other) reasons.push({
         type: 'good',
         text: t('explanation.reason_separated_from', { name: other.name }),
-        citation: 'Proactive classroom management (Kounin, 1970)'
+        citation: 'Separated as requested'
       });
     }
   }
@@ -156,7 +156,7 @@ function buildReasons(
     reasons.push({
       type: 'info',
       text: t('explanation.reason_location', { row: row + 1, seat: col + 1 }),
-      citation: 'Standard placement: no special factors'
+      citation: 'Standard placement'
     });
   }
 
@@ -182,11 +182,7 @@ function getAdjacentIds(
 }
 
 // ─── helper: calculate compatibility score between two students ─────────────────
-// Based on established educational theories:
-// • Vygotsky's Zone of Proximal Development (ZPD)
-// • Johnson & Johnson's Cooperative Learning Theory
-// • Bandura's Social Learning Theory
-// • Slavin's Student Team Learning
+// Simplified for teachers - practical explanations backed by research
 
 function calculatePairCompatibility(
   studentA: Student,
@@ -196,71 +192,64 @@ function calculatePairCompatibility(
   const reasons: string[] = [];
   let score = 0;
 
-  // Social-Emotional Foundation (Johnson & Johnson, 1999)
-  // Positive interdependence through friendship enhances cooperative learning outcomes
+  // Friends work better together (proven by research)
   const isFriends = studentA.friends_ids.includes(studentB.id) || studentB.friends_ids.includes(studentA.id);
   if (isFriends) {
     score += 25;
-    reasons.push('🤝 Social support: Friends enable cooperative learning (Johnson & Johnson)');
+    reasons.push('🤝 Friends: More comfortable collaborating and helping each other');
   }
 
-  // Absence of negative interdependence (critical for learning environment)
+  // No conflicts = better learning environment
   const hasConflict = studentA.incompatible_ids.includes(studentB.id) || studentB.incompatible_ids.includes(studentA.id);
   if (!hasConflict) {
     score += 25;
-    reasons.push('✓ Conflict-free: Safe learning environment (Bandura)');
+    reasons.push('✓ No conflicts: Safe, focused learning environment');
   }
 
-  // Academic pairing based on research:
-  // Similar ability: Peer tutoring & collaboration (Slavin, 1995)
-  // Mixed ability: Scaffolding within ZPD (Vygotsky, 1978)
+  // Academic levels - similar OR mixed both work well
   const academicDiff = Math.abs(studentA.academic_score - studentB.academic_score);
   if (academicDiff <= 15) {
     score += 15;
-    reasons.push('📚 Similar academic: Peer collaboration zone (Slavin)');
+    reasons.push('📚 Similar levels: Can work together independently');
   } else if (academicDiff <= 35) {
     score += 15;
-    reasons.push('📚 Mixed academic: Optimal for peer tutoring (Vygotsky\'s ZPD)');
+    reasons.push('📚 Mixed levels: Stronger students can help peers learn');
   } else {
     score += 5;
-    reasons.push('📚 Academic gap: May require teacher support');
+    reasons.push('📚 Academic gap: May need extra teacher support');
   }
 
-  // Behavioral compatibility - Classroom management research
-  // Similar behavior levels reduce disruption (Kounin, 1970)
+  // Behavior - similar means fewer disruptions
   const behaviorDiff = Math.abs(studentA.behavior_score - studentB.behavior_score);
   if (behaviorDiff <= 15) {
     score += 15;
-    reasons.push('😊 Behavioral alignment: Reduced disruption risk (Kounin)');
+    reasons.push('😊 Similar behavior: Less likely to distract each other');
   } else if (behaviorDiff <= 30) {
     score += 8;
-    reasons.push('😊 Compatible behavior: Managed with proximity');
+    reasons.push('😊 Compatible behavior: Can work together with guidance');
   }
 
-  // Special needs alignment (Individualized Education Program principles)
+  // Special needs - keeping them together makes support easier
   if (studentA.requires_front_row && studentB.requires_front_row) {
     score += 10;
-    reasons.push('👁️ Front row access: Meets IEP accommodations');
+    reasons.push('👁️ Both need front row: Easier to provide support');
   }
 
-  // Quiet area for focus (ADHD research: reduced distractions improve outcomes)
   if (studentA.requires_quiet_area && studentB.requires_quiet_area) {
     score += 10;
-    reasons.push('🔇 Quiet zone: Reduced distraction for focus (ADHD research)');
+    reasons.push('🔇 Both need quiet: Reduced distractions help them focus');
   }
 
-  // Gender diversity in cooperative learning (Cohen, 1994)
-  // Mixed-gender groups reduce stereotyping and improve collaboration
+  // Mixed genders = better collaboration skills
   if (studentA.gender !== studentB.gender) {
     score += 5;
-    reasons.push('👥 Gender diversity: Reduces stereotyping (Cohen)');
+    reasons.push('👥 Mixed genders: Builds collaboration across groups');
   }
 
-  // Bilingual peer support (Thomas & Collier, 2002)
-  // Shared L1 enables cognitive academic language proficiency (CALP) development
+  // Bilingual = can support each other in both languages
   if (studentA.is_bilingual && studentB.is_bilingual) {
     score += 5;
-    reasons.push('🌐 Bilingual peers: L1 supports L2 acquisition (Thomas & Collier)');
+    reasons.push('🌐 Both bilingual: Can support each other in two languages');
   }
 
   return { score, reasons };
@@ -450,18 +439,18 @@ export default function ExplanationPanel() {
                 {/* Reasons for pairing - based on educational research */}
                 <div className="space-y-1.5">
                   <p className="text-[10px] text-gray-500 uppercase font-medium">
-                    {studentB ? 'Research-based pairing rationale:' : 'Seat status:'}
+                    {studentB ? 'Why paired together:' : 'Seat status:'}
                   </p>
                   {compatibility.reasons.map((reason, i) => (
                     <div key={i} className={clsx(
                       'text-[11px] px-2 py-1.5 rounded-md leading-snug',
-                      reason.includes('Social support') ? 'bg-green-100 text-green-800' :
-                      reason.includes('Conflict-free') ? 'bg-blue-100 text-blue-800' :
-                      reason.includes('academic') || reason.includes('ZPD') ? 'bg-purple-100 text-purple-800' :
-                      reason.includes('Behavioral') ? 'bg-amber-100 text-amber-800' :
-                      reason.includes('Front row') || reason.includes('Quiet') ? 'bg-indigo-100 text-indigo-800' :
-                      reason.includes('diversity') ? 'bg-teal-100 text-teal-800' :
-                      reason.includes('Bilingual') ? 'bg-cyan-100 text-cyan-800' :
+                      reason.includes('Friends') ? 'bg-green-100 text-green-800' :
+                      reason.includes('No conflicts') ? 'bg-blue-100 text-blue-800' :
+                      reason.includes('levels') ? 'bg-purple-100 text-purple-800' :
+                      reason.includes('behavior') ? 'bg-amber-100 text-amber-800' :
+                      reason.includes('front row') || reason.includes('quiet') ? 'bg-indigo-100 text-indigo-800' :
+                      reason.includes('genders') ? 'bg-teal-100 text-teal-800' :
+                      reason.includes('bilingual') ? 'bg-cyan-100 text-cyan-800' :
                       'bg-gray-100 text-gray-700'
                     )}>
                       {reason}
@@ -611,10 +600,10 @@ export default function ExplanationPanel() {
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-800 text-sm">
-              {isPairsMode ? 'Research-Based Pairing Rationale' : 'Research-Based Seating Explanation'}
+              {isPairsMode ? 'Why These Pairs?' : 'Why This Seating?'}
             </p>
             <p className="text-xs text-gray-500">
-              {isPairsMode ? 'Educational theories & peer learning research' : 'Educational research citations for placement decisions'}
+              {isPairsMode ? 'Practical reasons for each pairing' : 'Practical reasons for each placement'}
             </p>
           </div>
           {warnCount > 0 && (
