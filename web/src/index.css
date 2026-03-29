@@ -1,3 +1,6 @@
+/* Hebrew & Arabic web fonts — loaded only when used */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,6 +44,31 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* ── RTL / Bidirectional layout support ────────────────────────────────────
+   When dir="rtl" is set on <html>, the browser flips inline flow automatically.
+   We use CSS logical properties so padding/margin/border respect the direction.
+   Specific overrides below fix things Tailwind can't handle purely via variants.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+[dir="rtl"] {
+  /* Sidebar slides from the right — swap the shadow direction */
+  aside {
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+  }
+
+  /* Input icons: flip the padding side */
+  .search-input-icon { padding-inline-start: 2rem; padding-inline-end: 0.75rem; }
+
+  /* Number inputs: keep numerals LTR even in RTL layouts */
+  input[type="number"] { direction: ltr; text-align: end; }
+
+  /* Range sliders render correctly in all browsers under RTL */
+  input[type="range"] { direction: ltr; }
+
+  /* Seat grid labels: row numbers should be on the right in RTL */
+  .seat-row-label { order: 1; }
 }
 
 /* Animation utilities */

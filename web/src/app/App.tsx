@@ -2,13 +2,22 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
-import { sampleStudents } from '../utils/sampleData';
+import { useState } from 'react';
 import ClassroomGrid from '../features/classroom/ClassroomGrid';
 import StudentList from '../features/students/StudentList';
 import StudentForm from '../features/students/StudentForm';
 import MetricsPanel from '../features/optimization/MetricsPanel';
+import ExplanationPanel from '../features/results/ExplanationPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
-import { Menu, X, Play, RefreshCw, Download, Users, Settings } from 'lucide-react';
+import ExportButton from '../features/export/ExportButton';
+import CsvImport from '../features/import/CsvImport';
+import ProjectManager from '../features/projects/ProjectManager';
+import PrintView from '../features/print/PrintView';
+import OnboardingView from '../features/onboarding/OnboardingView';
+import LanguageSelector from '../components/LanguageSelector';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { useLanguage } from '../hooks/useLanguage';
+import { Menu, X, Play, RefreshCw, Users, Printer } from 'lucide-react';
 
 function App() {
   const {
@@ -16,22 +25,16 @@ function App() {
     sidebarOpen,
     setSidebarOpen,
     result,
-    setStudents,
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
+  useLanguage();
+  const [showPrint, setShowPrint] = useState(false);
 
   // Initialize WASM on mount
   useEffect(() => {
     initWasm();
   }, [initWasm]);
-
-  // Load sample data if no students
-  useEffect(() => {
-    if (students.length === 0) {
-      setStudents(sampleStudents);
-    }
-  }, []);
 
   return (
     <div className="min-h-screen flex">
@@ -63,14 +66,25 @@ function App() {
 
           {/* Content */}
           <div className="flex-1 overflow-auto p-4 space-y-4">
-            {/* Students List */}
-            <StudentList />
+            <ErrorBoundary name="Projects" inline>
+              <ProjectManager />
+            </ErrorBoundary>
 
-            {/* Student Form */}
-            <StudentForm />
+            <ErrorBoundary name="CSV Import" inline>
+              <CsvImport />
+            </ErrorBoundary>
 
-            {/* Settings */}
-            <SettingsPanel />
+            <ErrorBoundary name="Student List" inline>
+              <StudentList />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Student Form" inline>
+              <StudentForm />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Settings" inline>
+              <SettingsPanel />
+            </ErrorBoundary>
           </div>
 
           {/* Footer */}
@@ -139,20 +153,54 @@ function App() {
                 </span>
               </div>
             )}
+
+            {result && (
+              <button
+                onClick={() => setShowPrint(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                title="Print seating chart"
+              >
+                <Printer size={15} className="text-gray-500" />
+                Print
+              </button>
+            )}
+            <LanguageSelector />
+            <ExportButton />
           </div>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
-          {/* Metrics */}
-          {result && <MetricsPanel />}
+          {students.length === 0 ? (
+            /* ── Onboarding empty state ── */
+            <OnboardingView onOpenSidebar={() => setSidebarOpen(true)} />
+          ) : (
+            <>
+              {/* Metrics */}
+              {result && (
+                <ErrorBoundary name="Metrics Panel" inline>
+                  <MetricsPanel />
+                </ErrorBoundary>
+              )}
 
-          {/* Classroom Grid */}
-          <div className="mt-6">
-            <ClassroomGrid />
-          </div>
+              {/* Placement explanations */}
+              {result && (
+                <ErrorBoundary name="Explanation Panel" inline>
+                  <ExplanationPanel />
+                </ErrorBoundary>
+              )}
+
+              {/* Classroom Grid */}
+              <div className="mt-6">
+                <ErrorBoundary name="Seating Grid">
+                  <ClassroomGrid />
+                </ErrorBoundary>
+              </div>
+            </>
+          )}
         </div>
       </main>
+      {showPrint && <PrintView onClose={() => setShowPrint(false)} />}
     </div>
   );
 }

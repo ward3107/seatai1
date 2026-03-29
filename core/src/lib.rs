@@ -10,6 +10,7 @@ use std::collections::HashMap;
 mod models;
 mod algorithms;
 mod fitness;
+mod constraints;
 
 use models::*;
 use algorithms::*;

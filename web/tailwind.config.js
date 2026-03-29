@@ -4,6 +4,9 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // Enables rtl: variant — applied when an ancestor has dir="rtl"
+  // e.g. rtl:flex-row-reverse, rtl:text-right
+
   theme: {
     extend: {
       colors: {

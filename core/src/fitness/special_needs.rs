@@ -5,10 +5,12 @@ use std::collections::HashMap;
 
 /// Calculate special needs compliance score (0-1)
 ///
-/// Checks if special needs are accommodated:
-/// - Front row requirements
-/// - Quiet area requirements
-/// - Mobility accessibility
+/// Hard constraints (score = 0.0 if violated):
+///   - Front-row requirement: student MUST be in row 0
+///   - Mobility issues: student MUST be in rows 0–1
+///
+/// Soft constraints (graduated penalty):
+///   - Quiet area preference
 pub fn calculate_special_needs(
     seats: &[Seat],
     student_map: &HashMap<&str, &Student>,
@@ -39,21 +41,34 @@ pub fn calculate_special_needs(
         if let Some(seat) = student_seat {
             let mut score: f64 = 1.0;
 
-            // Check front row requirement
+            // HARD: front-row requirement — row 0 or nothing
             if student.requires_front_row && !seat.position.is_front_row {
-                score -= 0.5;
+                score = 0.0;
+                scores.push(score);
+                continue;
             }
 
-            // Check quiet area requirement (back rows are quieter)
-            if student.requires_quiet_area && seat.position.row < 2 {
-                // Too close to front (noisy area)
-                score -= 0.3;
+            // HARD: mobility issues — must be in rows 0 or 1
+            if student.has_mobility_issues && seat.position.row > 1 {
+                score = 0.0;
+                scores.push(score);
+                continue;
             }
 
-            // Check mobility (should be near front or accessible)
-            if student.has_mobility_issues && seat.position.row > 2 {
-                // Not easily accessible
-                score -= 0.3;
+            // SOFT: quiet area preference (back rows are quieter).
+            // Skip penalty when a hard accessibility constraint already forces
+            // the student into a front/accessible seat — the constraints conflict
+            // and the hard one wins; no extra penalty is warranted.
+            let front_forced = student.requires_front_row || student.has_mobility_issues;
+            if student.requires_quiet_area && !front_forced && seat.position.row < 2 {
+                score -= 0.25;
+            }
+
+            // SOFT: special needs that require front seat
+            for need in &student.special_needs {
+                if need.requires_front_seat && !seat.position.is_front_row {
+                    score -= 0.3;
+                }
             }
 
             scores.push(score.max(0.0));
@@ -90,11 +105,11 @@ mod tests {
         let seats = vec![Seat::occupied(0, 0, "1")];
 
         let score = calculate_special_needs(&seats, &map);
-        assert!(score > 0.9);
+        assert!(score > 0.9, "Score {} should be > 0.9 for met requirement", score);
     }
 
     #[test]
-    fn test_front_row_requirement_not_met() {
+    fn test_front_row_requirement_hard_fail() {
         let student = Student {
             id: "1".to_string(),
             name: "Alice".to_string(),
@@ -105,10 +120,72 @@ mod tests {
         let mut map = HashMap::new();
         map.insert("1", &student);
 
-        // Back row seat (row 2)
+        // NOT front row (row 2)
         let seats = vec![Seat::occupied(2, 0, "1")];
 
         let score = calculate_special_needs(&seats, &map);
-        assert!(score < 0.6);
+        assert_eq!(score, 0.0, "Score should be 0.0 for hard violation");
+    }
+
+    #[test]
+    fn test_mobility_hard_fail() {
+        let student = Student {
+            id: "1".to_string(),
+            name: "Alice".to_string(),
+            has_mobility_issues: true,
+            ..Default::default()
+        };
+
+        let mut map = HashMap::new();
+        map.insert("1", &student);
+
+        // Row 3 — too far back
+        let seats = vec![Seat::occupied(3, 0, "1")];
+
+        let score = calculate_special_needs(&seats, &map);
+        assert_eq!(score, 0.0, "Score should be 0.0 for mobility violation");
+    }
+
+    #[test]
+    fn test_front_row_and_quiet_area_no_penalty() {
+        // A student who requires both front_row AND quiet_area should not be
+        // penalised when placed in row 0 — the hard constraint wins.
+        let student = Student {
+            id: "1".to_string(),
+            name: "Alice".to_string(),
+            requires_front_row: true,
+            requires_quiet_area: true,
+            ..Default::default()
+        };
+
+        let mut map = HashMap::new();
+        map.insert("1", &student);
+
+        let seats = vec![Seat::occupied(0, 0, "1")];
+        let score = calculate_special_needs(&seats, &map);
+        assert!(
+            score >= 1.0,
+            "Score {} should be 1.0 when front-row is met and quiet_area penalty is suppressed",
+            score
+        );
+    }
+
+    #[test]
+    fn test_mobility_in_row_1_passes() {
+        let student = Student {
+            id: "1".to_string(),
+            name: "Alice".to_string(),
+            has_mobility_issues: true,
+            ..Default::default()
+        };
+
+        let mut map = HashMap::new();
+        map.insert("1", &student);
+
+        // Row 1 — accessible
+        let seats = vec![Seat::occupied(1, 0, "1")];
+
+        let score = calculate_special_needs(&seats, &map);
+        assert!(score > 0.9, "Score {} should be > 0.9 for row 1 mobility", score);
     }
 }
