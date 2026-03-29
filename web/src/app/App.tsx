@@ -7,6 +7,7 @@ import ClassroomGrid from '../features/classroom/ClassroomGrid';
 import StudentList from '../features/students/StudentList';
 import StudentForm from '../features/students/StudentForm';
 import MetricsPanel from '../features/optimization/MetricsPanel';
+import ExplanationPanel from '../features/results/ExplanationPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
@@ -179,6 +180,13 @@ function App() {
               {result && (
                 <ErrorBoundary name="Metrics Panel" inline>
                   <MetricsPanel />
+                </ErrorBoundary>
+              )}
+
+              {/* Placement explanations */}
+              {result && (
+                <ErrorBoundary name="Explanation Panel" inline>
+                  <ExplanationPanel />
                 </ErrorBoundary>
               )}
 

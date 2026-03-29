@@ -55,8 +55,12 @@ pub fn calculate_special_needs(
                 continue;
             }
 
-            // SOFT: quiet area preference (back rows are quieter)
-            if student.requires_quiet_area && seat.position.row < 2 {
+            // SOFT: quiet area preference (back rows are quieter).
+            // Skip penalty when a hard accessibility constraint already forces
+            // the student into a front/accessible seat — the constraints conflict
+            // and the hard one wins; no extra penalty is warranted.
+            let front_forced = student.requires_front_row || student.has_mobility_issues;
+            if student.requires_quiet_area && !front_forced && seat.position.row < 2 {
                 score -= 0.25;
             }
 
@@ -140,6 +144,30 @@ mod tests {
 
         let score = calculate_special_needs(&seats, &map);
         assert_eq!(score, 0.0, "Score should be 0.0 for mobility violation");
+    }
+
+    #[test]
+    fn test_front_row_and_quiet_area_no_penalty() {
+        // A student who requires both front_row AND quiet_area should not be
+        // penalised when placed in row 0 — the hard constraint wins.
+        let student = Student {
+            id: "1".to_string(),
+            name: "Alice".to_string(),
+            requires_front_row: true,
+            requires_quiet_area: true,
+            ..Default::default()
+        };
+
+        let mut map = HashMap::new();
+        map.insert("1", &student);
+
+        let seats = vec![Seat::occupied(0, 0, "1")];
+        let score = calculate_special_needs(&seats, &map);
+        assert!(
+            score >= 1.0,
+            "Score {} should be 1.0 when front-row is met and quiet_area penalty is suppressed",
+            score
+        );
     }
 
     #[test]
