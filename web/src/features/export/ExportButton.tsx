@@ -4,7 +4,8 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 
 export default function ExportButton() {
-  const { result, students } = useStore();
+  const result = useStore((s) => s.result);
+  const students = useStore((s) => s.students);
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<'pdf' | 'png' | null>(null);

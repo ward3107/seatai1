@@ -4,7 +4,7 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { BookOpen, Users, Globe, Accessibility, Clock, Zap } from 'lucide-react';
 
 export default function MetricsPanel() {
-  const { result } = useStore();
+  const result = useStore((s) => s.result);
   const { t } = useLanguage();
 
   if (!result) return null;

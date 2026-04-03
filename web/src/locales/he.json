@@ -267,6 +267,7 @@
     "error_missing_name": "חסר עמודה נדרשת: \"שם\"",
     "error_missing_name_row": "שורה {{row}}: חסר שם — דולג",
     "error_parse": "שגיאה בפענוח CSV:",
+    "error_read_file": "שגיאה בקריאת הקובץ",
     "success": "הייבוא הושלם בהצלחה",
     "cancel": "ביטול",
     "import": "ייבוא"

@@ -151,14 +151,19 @@ function RowAssignPicker({
 
 // ─── Main SettingsPanel ────────────────────────────────────────────────────────
 export default function SettingsPanel() {
-  const {
-    rows, cols, setRows, setCols,
-    weights, setWeights,
-    config, setConfig,
-    constraints, setConstraints,
-    students,
-    setStudents, setResult,
-  } = useStore();
+  const rows = useStore((s) => s.rows);
+  const cols = useStore((s) => s.cols);
+  const setRows = useStore((s) => s.setRows);
+  const setCols = useStore((s) => s.setCols);
+  const weights = useStore((s) => s.weights);
+  const setWeights = useStore((s) => s.setWeights);
+  const config = useStore((s) => s.config);
+  const setConfig = useStore((s) => s.setConfig);
+  const constraints = useStore((s) => s.constraints);
+  const setConstraints = useStore((s) => s.setConstraints);
+  const students = useStore((s) => s.students);
+  const setStudents = useStore((s) => s.setStudents);
+  const setResult = useStore((s) => s.setResult);
 
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);

@@ -107,7 +107,7 @@ interface ImportResult {
 }
 
 export default function CsvImport() {
-  const { addStudent } = useStore();
+  const addStudent = useStore((s) => s.addStudent);
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -125,6 +125,9 @@ export default function CsvImport() {
 
       students.forEach(s => addStudent(s));
       setResult({ added: students.length, errors });
+    };
+    reader.onerror = () => {
+      setResult({ added: 0, errors: [t('csvImport.error_read_file')] });
     };
     reader.readAsText(file);
   };

@@ -50,7 +50,8 @@ export const LANG_FONTS: Record<UILanguage, string> = {
 
 /** Applies dir/lang to <html> and returns isRTL and translation helper */
 export function useLanguage() {
-  const { uiLanguage, setUiLanguage } = useStore();
+  const uiLanguage = useStore((s) => s.uiLanguage);
+  const setUiLanguage = useStore((s) => s.setUiLanguage);
   const isRTL = RTL_LANGS.includes(uiLanguage);
 
   // Create a reactive translation function that depends on uiLanguage

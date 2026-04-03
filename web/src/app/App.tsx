@@ -20,12 +20,10 @@ import { useLanguage } from '../hooks/useLanguage';
 import { Menu, X, Play, RefreshCw, Users, Printer } from 'lucide-react';
 
 function App() {
-  const {
-    students,
-    sidebarOpen,
-    setSidebarOpen,
-    result,
-  } = useStore();
+  const students = useStore((s) => s.students);
+  const sidebarOpen = useStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useStore((s) => s.setSidebarOpen);
+  const result = useStore((s) => s.result);
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();

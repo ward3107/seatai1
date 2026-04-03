@@ -18,10 +18,15 @@ export function useOptimizer() {
   const pendingRef = useRef<PendingPromise | null>(null);
   const loadedRef = useRef(false);
 
-  const {
-    students, rows, cols, weights, config, constraints,
-    isOptimizing, setOptimizing, setResult,
-  } = useStore();
+  const students = useStore((s) => s.students);
+  const rows = useStore((s) => s.rows);
+  const cols = useStore((s) => s.cols);
+  const weights = useStore((s) => s.weights);
+  const config = useStore((s) => s.config);
+  const constraints = useStore((s) => s.constraints);
+  const isOptimizing = useStore((s) => s.isOptimizing);
+  const setOptimizing = useStore((s) => s.setOptimizing);
+  const setResult = useStore((s) => s.setResult);
 
   // ── Initialize (just mark ready - worker will run optimizations) ─────────────
   const initWasm = useCallback(async () => {

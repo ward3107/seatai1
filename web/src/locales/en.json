@@ -267,6 +267,7 @@
     "error_missing_name": "Missing required column: \"name\"",
     "error_missing_name_row": "Row {{row}}: missing name — skipped",
     "error_parse": "Error parsing CSV:",
+    "error_read_file": "Failed to read file",
     "success": "Import completed successfully",
     "cancel": "Cancel",
     "import": "Import"

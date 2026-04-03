@@ -7,7 +7,10 @@ interface Props {
 }
 
 export default function PrintView({ onClose }: Props) {
-  const { result, students, rows, cols } = useStore();
+  const result = useStore((s) => s.result);
+  const students = useStore((s) => s.students);
+  const rows = useStore((s) => s.rows);
+  const cols = useStore((s) => s.cols);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape

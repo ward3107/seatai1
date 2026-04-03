@@ -250,7 +250,7 @@ export const useStore = create<AppState>()(
           if (!state.result || seatKeyA === seatKeyB) return;
 
           // Snapshot current result for undo
-          const snapshot = JSON.parse(JSON.stringify(current(state.result))) as OptimizationResult;
+          const snapshot = structuredClone(current(state.result)) as OptimizationResult;
           state.history = [...state.history, snapshot].slice(-20);
           state.historyFuture = [];
 
@@ -293,24 +293,20 @@ export const useStore = create<AppState>()(
         set((state) => {
           if (state.history.length === 0 || !state.result) return;
           const previousResult = state.history[state.history.length - 1];
-          const currentSnapshot = JSON.parse(
-            JSON.stringify(current(state.result))
-          ) as OptimizationResult;
+          const currentSnapshot = structuredClone(current(state.result)) as OptimizationResult;
           state.historyFuture = [currentSnapshot, ...state.historyFuture].slice(0, 20);
           state.history = state.history.slice(0, -1);
-          state.result = previousResult as any;
+          state.result = previousResult;
         }),
 
       redo: () =>
         set((state) => {
           if (state.historyFuture.length === 0 || !state.result) return;
           const nextResult = state.historyFuture[0];
-          const currentSnapshot = JSON.parse(
-            JSON.stringify(current(state.result))
-          ) as OptimizationResult;
+          const currentSnapshot = structuredClone(current(state.result)) as OptimizationResult;
           state.history = [...state.history, currentSnapshot].slice(-20);
           state.historyFuture = state.historyFuture.slice(1);
-          state.result = nextResult as any;
+          state.result = nextResult;
         }),
 
       // UI Language
@@ -329,13 +325,13 @@ export const useStore = create<AppState>()(
           if (existing) {
             existing.name = name;
             existing.updatedAt = now;
-            existing.students = JSON.parse(JSON.stringify(current(state.students)));
+            existing.students = structuredClone(current(state.students));
             existing.rows = state.rows;
             existing.cols = state.cols;
             existing.weights = { ...state.weights };
             existing.config = { ...state.config };
-            existing.constraints = JSON.parse(JSON.stringify(current(state.constraints)));
-            existing.result = state.result ? JSON.parse(JSON.stringify(current(state.result))) : null;
+            existing.constraints = structuredClone(current(state.constraints));
+            existing.result = state.result ? structuredClone(current(state.result)) : null;
           } else {
             const id = `proj_${Date.now()}`;
             state.projects.push({
@@ -343,13 +339,13 @@ export const useStore = create<AppState>()(
               name,
               createdAt: now,
               updatedAt: now,
-              students: JSON.parse(JSON.stringify(current(state.students))),
+              students: structuredClone(current(state.students)),
               rows: state.rows,
               cols: state.cols,
               weights: { ...state.weights },
               config: { ...state.config },
-              constraints: JSON.parse(JSON.stringify(current(state.constraints))),
-              result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+              constraints: structuredClone(current(state.constraints)),
+              result: state.result ? structuredClone(current(state.result)) : null,
             });
             state.currentProjectId = id;
           }
