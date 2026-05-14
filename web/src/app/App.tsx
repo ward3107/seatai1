@@ -16,7 +16,9 @@ import PrintView from '../features/print/PrintView';
 import OnboardingView from '../features/onboarding/OnboardingView';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
+import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
+import { useDeviceCheck } from '../hooks/useDeviceCheck';
 import { Menu, X, Play, RefreshCw, Users, Printer } from 'lucide-react';
 
 function App() {
@@ -29,12 +31,18 @@ function App() {
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
+  const { isPhone } = useDeviceCheck();
   const [showPrint, setShowPrint] = useState(false);
 
   // Initialize WASM on mount
   useEffect(() => {
+    if (isPhone) return;
     initWasm();
-  }, [initWasm]);
+  }, [initWasm, isPhone]);
+
+  if (isPhone) {
+    return <MobileBlockScreen />;
+  }
 
   return (
     <div className="min-h-screen flex">
