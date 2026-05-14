@@ -19,9 +19,10 @@ import {
   Heart,
   Globe,
   Accessibility,
+  RefreshCw,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, lazy, Suspense } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -31,8 +32,19 @@ import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
 import { generateSlots, type LayoutDef } from '../../core/layouts';
 import type { Seat, Student } from '../../types';
-import Classroom3D from './Classroom3D';
-import OptimizationTimeline from './OptimizationTimeline';
+
+// Both views are heavy and conditional — only loaded when the user opts in.
+const Classroom3D = lazy(() => import('./Classroom3D'));
+const OptimizationTimeline = lazy(() => import('./OptimizationTimeline'));
+
+function LazyFallback() {
+  return (
+    <div className="flex items-center justify-center py-12 text-sm text-gray-400">
+      <RefreshCw size={16} className="animate-spin mr-2" />
+      Loading…
+    </div>
+  );
+}
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -263,26 +275,30 @@ export default function ClassroomGrid() {
       {/* Timeline Panel */}
       {showTimeline && (
         <div className="mb-4">
-          <OptimizationTimeline />
+          <Suspense fallback={<LazyFallback />}>
+            <OptimizationTimeline />
+          </Suspense>
         </div>
       )}
 
       {/* 3D View */}
       {viewMode === '3d' ? (
-        <Classroom3D
-          seats={seats}
-          students={students}
-          rows={rows}
-          cols={cols}
-          onStudentClick={(studentId) => {
-            // Find seat key for this student
-            const pos = result?.student_positions[studentId];
-            if (pos) {
-              const seatKey = `${pos.row}-${pos.col}`;
-              setSelectedSeat(seatKey);
-            }
-          }}
-        />
+        <Suspense fallback={<LazyFallback />}>
+          <Classroom3D
+            seats={seats}
+            students={students}
+            rows={rows}
+            cols={cols}
+            onStudentClick={(studentId) => {
+              // Find seat key for this student
+              const pos = result?.student_positions[studentId];
+              if (pos) {
+                const seatKey = `${pos.row}-${pos.col}`;
+                setSelectedSeat(seatKey);
+              }
+            }}
+          />
+        </Suspense>
       ) : isAbsoluteLayout ? (
         /* ── Free-positioning renderer for clusters / u-shape / circle ── */
         <>

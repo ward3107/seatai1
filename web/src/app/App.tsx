@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
@@ -14,7 +14,10 @@ import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import LayoutPanel from '../features/layout/LayoutPanel';
-import PrintView from '../features/print/PrintView';
+
+// PrintView pulls in html2canvas indirectly (the user only sees it after
+// clicking Print), so defer its load.
+const PrintView = lazy(() => import('../features/print/PrintView'));
 import OnboardingView from '../features/onboarding/OnboardingView';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -337,7 +340,11 @@ function App() {
           )}
         </div>
       </main>
-      {showPrint && <PrintView onClose={() => setShowPrint(false)} />}
+      {showPrint && (
+        <Suspense fallback={null}>
+          <PrintView onClose={() => setShowPrint(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
