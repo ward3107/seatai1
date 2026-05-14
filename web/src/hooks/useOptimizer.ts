@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
+import { ClassroomOptimizer } from '../core/optimizer';
 import type { OptimizationResult } from '../types';
 
 type WorkerOut =
@@ -112,10 +113,22 @@ export function useOptimizer() {
       });
     }
 
-    // Fallback: run on main thread (shouldn't happen with our worker)
-    setError('Worker not available. Please refresh the page.');
-    setOptimizing(false);
-    return null;
+    // Fallback: worker didn't load (older browser, blocked by sandbox, etc.).
+    // Run on the main thread so the user still gets a result — UI will block briefly.
+    try {
+      const optimizer = new ClassroomOptimizer(students, rows, cols);
+      optimizer.setWeights(weights);
+      optimizer.setConfig(config);
+      optimizer.setConstraints(constraints);
+      const result = await Promise.resolve().then(() => optimizer.optimize());
+      setResult(result);
+      setOptimizing(false);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Optimization failed');
+      setOptimizing(false);
+      return null;
+    }
   }, [students, rows, cols, weights, config, constraints, setOptimizing, setResult]);
 
   return { wasmReady, isOptimizing, error, initWasm, optimize };

@@ -46,7 +46,7 @@ test.describe('Language Switching', () => {
 
     // Verify language persists
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByText(/שיוש כיתה/i })).toBeVisible();
+    await expect(page.getByText(/שיוש כיתה/i)).toBeVisible();
   });
 });
 

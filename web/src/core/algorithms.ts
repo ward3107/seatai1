@@ -190,6 +190,22 @@ function calculateFitness(
     }
   }
 
+  const lastRow = rows - 1;
+  for (const id of constraints.front_row_ids) {
+    const pos = chromosome.indexOf(id);
+    if (pos === -1) continue;
+    const r = Math.floor(pos / cols);
+    if (r === 0) score += 1;
+    else score -= 0.5 * r;
+  }
+  for (const id of constraints.back_row_ids) {
+    const pos = chromosome.indexOf(id);
+    if (pos === -1) continue;
+    const r = Math.floor(pos / cols);
+    if (r === lastRow) score += 1;
+    else score -= 0.5 * (lastRow - r);
+  }
+
   return score;
 }
 
