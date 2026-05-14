@@ -145,18 +145,31 @@ describe('CsvImport Component', () => {
 
   describe('Download template', () => {
     it('should download CSV template', () => {
-      // Create mock for URL and anchor elements
       const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL');
-      const createElementSpy = vi.spyOn(document, 'createElement')
-        .mockReturnValue({ click: vi.fn(), href: '', download: '' } as any);
+      const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
       render(<CsvImport />);
+
+      // Only intercept the anchor element used for the download — letting
+      // React's createElement calls (for divs/buttons) pass through.
+      const realCreateElement = document.createElement.bind(document);
+      const anchorClick = vi.fn();
+      const createElementSpy = vi
+        .spyOn(document, 'createElement')
+        .mockImplementation(((tag: string) => {
+          if (tag === 'a') {
+            const a = realCreateElement('a') as HTMLAnchorElement;
+            a.click = anchorClick;
+            return a;
+          }
+          return realCreateElement(tag);
+        }) as typeof document.createElement);
 
       const downloadButton = screen.getByText('Download template');
       fireEvent.click(downloadButton);
 
       expect(createObjectURLSpy).toHaveBeenCalled();
+      expect(anchorClick).toHaveBeenCalled();
       expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock-url');
 
       createObjectURLSpy.mockRestore();

@@ -81,10 +81,14 @@ export class ClassroomOptimizer {
 
     const studentMap = new Map(this.students.map((s) => [s.id, s]));
     const totalSeats = this.rows * this.cols;
-    const ids = this.students.map((s) => s.id);
+    let ids = this.students.map((s) => s.id);
 
     if (ids.length > totalSeats) {
-      warnings.push(`Too many students (${ids.length}) for ${totalSeats} seats.`);
+      warnings.push(`Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`);
+      // Truncate so every chromosome has length === totalSeats. Without this,
+      // orderCrossover() can spin forever when chromosomes have mismatched
+      // lengths and all child slots end up filled.
+      ids = ids.slice(0, totalSeats);
     }
 
     // Build initial population
