@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { getDisplayScorePct } from '../../utils/seatingUtils';
 import { BookOpen, Users, Globe, Accessibility, Clock, Zap } from 'lucide-react';
 
 export default function MetricsPanel() {
@@ -67,7 +68,7 @@ export default function MetricsPanel() {
       {/* Overall Score */}
       <div className="text-center mb-6">
         <div className="text-5xl font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
-          {(result.fitness_score * 100).toFixed(1)}%
+          {getDisplayScorePct(result)}%
         </div>
         <p className="text-sm text-gray-500 mt-1">{t('optimization.overall_fitness_score')}</p>
       </div>
@@ -76,7 +77,8 @@ export default function MetricsPanel() {
       <div className="grid grid-cols-4 gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
-          const percentage = Math.round(metric.value * 100);
+          // objective_scores are already in [0, 100] — don't multiply again.
+          const percentage = Math.max(0, Math.min(100, Math.round(metric.value)));
 
           return (
             <motion.div

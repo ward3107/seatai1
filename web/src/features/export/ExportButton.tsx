@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Download, FileImage, FileText, Loader2 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { getDisplayScorePct } from '../../utils/seatingUtils';
 
 export default function ExportButton() {
   const { result, students } = useStore();
@@ -56,7 +57,7 @@ export default function ExportButton() {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(9);
       pdf.text(
-        `${students.length} students  |  Score: ${(result.fitness_score * 100).toFixed(1)}%  |  Generated: ${new Date().toLocaleDateString()}`,
+        `${students.length} students  |  Score: ${getDisplayScorePct(result)}%  |  Generated: ${new Date().toLocaleDateString()}`,
         pageW / 2, 18, { align: 'center' }
       );
 

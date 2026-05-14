@@ -43,15 +43,19 @@ function Seat3D({
   seat,
   student,
   isSelected,
+  rows,
+  cols,
   onClick,
 }: {
   seat: Seat;
   student?: Student;
   isSelected?: boolean;
+  rows: number;
+  cols: number;
   onClick?: () => void;
 }) {
   const { row, col } = seat.position;
-  const pos = calculate3DPosition(row, col, 5, 6);
+  const pos = calculate3DPosition(row, col, rows, cols);
 
   const baseColor = student
     ? student.gender === 'female'
@@ -243,6 +247,8 @@ export default function Classroom3D({ seats, students, rows, cols, onStudentClic
                 key={`${seat.position.row}-${seat.position.col}`}
                 seat={seat}
                 student={student}
+                rows={rows}
+                cols={cols}
                 onClick={() => student && onStudentClick?.(student.id)}
               />
             );

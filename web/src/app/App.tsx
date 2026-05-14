@@ -20,6 +20,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
 import { useDeviceCheck } from '../hooks/useDeviceCheck';
+import { getDisplayScorePct } from '../utils/seatingUtils';
 import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2 } from 'lucide-react';
 
 function App() {
@@ -236,10 +237,10 @@ function App() {
               <div
                 className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg"
                 role="status"
-                aria-label={`${t('app.score')}: ${(result.fitness_score * 100).toFixed(1)}%`}
+                aria-label={`${t('app.score')}: ${getDisplayScorePct(result)}%`}
               >
                 <span className="text-sm font-medium text-green-700">
-                  {t('app.score')}: {(result.fitness_score * 100).toFixed(1)}%
+                  {t('app.score')}: {getDisplayScorePct(result)}%
                 </span>
               </div>
             )}

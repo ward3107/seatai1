@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
+import { getDisplayScorePct } from '../../utils/seatingUtils';
 
 interface Props {
   onClose: () => void;
@@ -47,7 +48,7 @@ export default function PrintView({ onClose }: Props) {
           <div>
             <h2 className="text-lg font-bold text-gray-800">Seating Chart</h2>
             <p className="text-sm text-gray-500">
-              {students.length} students · Score: {(result.fitness_score * 100).toFixed(1)}% ·{' '}
+              {students.length} students · Score: {getDisplayScorePct(result)}% ·{' '}
               {new Date().toLocaleDateString()}
             </p>
           </div>
@@ -75,7 +76,7 @@ export default function PrintView({ onClose }: Props) {
             <div className="hidden print:block mb-6 text-center">
               <h1 className="text-2xl font-bold">SeatAI — Classroom Seating Chart</h1>
               <p className="text-sm text-gray-500 mt-1">
-                {students.length} students · Score: {(result.fitness_score * 100).toFixed(1)}% ·{' '}
+                {students.length} students · Score: {getDisplayScorePct(result)}% ·{' '}
                 {new Date().toLocaleDateString()}
               </p>
             </div>
