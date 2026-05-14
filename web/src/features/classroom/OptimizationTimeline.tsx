@@ -34,7 +34,7 @@ interface OptimizationTimelineProps {
 
 export default function OptimizationTimeline({ onClose }: OptimizationTimelineProps) {
   const { t } = useLanguage();
-  const { result } = useStore();
+  const result = useStore((s) => s.result);
 
   // Simulate optimization history (in real implementation, this would come from the optimizer)
   const history: HistoryEntry[] = useMemo(() => {

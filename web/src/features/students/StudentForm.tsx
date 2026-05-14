@@ -16,7 +16,11 @@ const LANGUAGES = [
 ];
 
 export default function StudentForm() {
-  const { students, addStudent, updateStudent, selectedStudentId, setSelectedStudentId } = useStore();
+  const students = useStore((s) => s.students);
+  const addStudent = useStore((s) => s.addStudent);
+  const updateStudent = useStore((s) => s.updateStudent);
+  const selectedStudentId = useStore((s) => s.selectedStudentId);
+  const setSelectedStudentId = useStore((s) => s.setSelectedStudentId);
   const { t } = useLanguage();
 
   const editingStudent = selectedStudentId

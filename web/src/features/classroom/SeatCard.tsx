@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
@@ -21,7 +22,7 @@ interface Props {
   onMouseLeave: () => void;
 }
 
-export default function SeatCard({
+export default memo(function SeatCard({
   seat,
   student,
   seatKey,
@@ -149,8 +150,8 @@ export default function SeatCard({
           {/* Special needs icons */}
           {icons.length > 0 && (
             <div className="flex gap-0.5 mt-0.5 text-[10px] leading-none">
-              {icons.slice(0, 3).map((icon, i) => (
-                <span key={i} title={icon}>
+              {icons.slice(0, 3).map((icon) => (
+                <span key={icon} title={icon}>
                   {icon}
                 </span>
               ))}
@@ -164,4 +165,4 @@ export default function SeatCard({
       )}
     </div>
   );
-}
+})

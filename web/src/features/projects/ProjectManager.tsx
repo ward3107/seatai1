@@ -5,11 +5,13 @@ import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Penci
 import type { ClassProject } from '../../types';
 
 export default function ProjectManager() {
-  const {
-    projects, currentProjectId,
-    saveProject, loadProject, deleteProject, renameProject,
-    students,
-  } = useStore();
+  const projects = useStore((s) => s.projects);
+  const currentProjectId = useStore((s) => s.currentProjectId);
+  const saveProject = useStore((s) => s.saveProject);
+  const loadProject = useStore((s) => s.loadProject);
+  const deleteProject = useStore((s) => s.deleteProject);
+  const renameProject = useStore((s) => s.renameProject);
+  const students = useStore((s) => s.students);
   const { t } = useLanguage();
 
   const [open, setOpen] = useState(false);

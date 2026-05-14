@@ -7,7 +7,8 @@ import { useStore } from '../core/store';
  * Mount this once inside ClassroomGrid.
  */
 export function useSeatingHistory() {
-  const { undo, redo } = useStore();
+  const undo = useStore((s) => s.undo);
+  const redo = useStore((s) => s.redo);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -21,7 +21,7 @@ import {
   Accessibility,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -98,23 +98,21 @@ function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => string }
 // ─── main component ─────────────────────────────────────────────────────────
 
 export default function ClassroomGrid() {
-  const {
-    result,
-    rows,
-    cols,
-    students,
-    lockedSeats,
-    heatMapMode,
-    zoomLevel,
-    viewMode,
-    selectedSeatKey,
-    showRelations,
-    showTimeline,
-    setSelectedSeat,
-    setShowRelations,
-    swapStudents,
-    toggleLockSeat,
-  } = useStore();
+  const result = useStore((s) => s.result);
+  const rows = useStore((s) => s.rows);
+  const cols = useStore((s) => s.cols);
+  const students = useStore((s) => s.students);
+  const lockedSeats = useStore((s) => s.lockedSeats);
+  const heatMapMode = useStore((s) => s.heatMapMode);
+  const zoomLevel = useStore((s) => s.zoomLevel);
+  const viewMode = useStore((s) => s.viewMode);
+  const selectedSeatKey = useStore((s) => s.selectedSeatKey);
+  const showRelations = useStore((s) => s.showRelations);
+  const showTimeline = useStore((s) => s.showTimeline);
+  const setSelectedSeat = useStore((s) => s.setSelectedSeat);
+  const setShowRelations = useStore((s) => s.setShowRelations);
+  const swapStudents = useStore((s) => s.swapStudents);
+  const toggleLockSeat = useStore((s) => s.toggleLockSeat);
   const { t } = useLanguage();
 
   const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>('drag');
@@ -132,8 +130,8 @@ export default function ClassroomGrid() {
   useSeatingHistory();
 
   const seats = result?.layout.seats ?? createEmptyGrid(rows, cols);
-  const studentMap = new Map(students.map((s) => [s.id, s]));
-  const violations = result ? getViolations(result, students) : new Set<string>();
+  const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
+  const violations = useMemo(() => result ? getViolations(result, students) : new Set<string>(), [result, students]);
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
   const sensors = useSensors(
@@ -587,9 +585,9 @@ export default function ClassroomGrid() {
                       {t('classroom.popup_mobility')}
                     </span>
                   )}
-                  {hoveredStudent.special_needs.map((need: { type: string }, i: number) => (
+                  {hoveredStudent.special_needs.map((need: { type: string }) => (
                     <span
-                      key={i}
+                      key={need.type}
                       className="px-2 py-0.5 bg-amber-100 text-amber-600 text-xs rounded-full"
                     >
                       {need.type}
