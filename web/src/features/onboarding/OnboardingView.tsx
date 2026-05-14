@@ -1,16 +1,26 @@
 import { motion } from 'framer-motion';
-import { Upload, UserPlus, Sparkles, FileText } from 'lucide-react';
+import { Upload, UserPlus, Sparkles, FileText, Users } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { sampleStudents } from '../../utils/sampleData';
+import { SAMPLE_CLASSES } from '../../utils/sampleData';
 
 interface Props {
   onOpenSidebar: () => void;
 }
 
 export default function OnboardingView({ onOpenSidebar }: Props) {
-  const { setStudents } = useStore();
+  const { setStudents, setLayoutDef } = useStore();
   const { t } = useLanguage();
+
+  function loadSampleClass(id: typeof SAMPLE_CLASSES[number]['id']) {
+    const sample = SAMPLE_CLASSES.find((c) => c.id === id);
+    if (!sample) return;
+    // Make a deep copy so the user can edit students without mutating the
+    // original sample data (otherwise switching back returns edited names).
+    setStudents(JSON.parse(JSON.stringify(sample.students)));
+    setLayoutDef({ type: 'rows', rows: sample.rows, cols: sample.cols });
+    onOpenSidebar();
+  }
 
   const steps = [
     {
@@ -38,11 +48,6 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
       desc: t('onboarding.export_desc'),
     },
   ];
-
-  function loadDemo() {
-    setStudents(sampleStudents);
-    onOpenSidebar();
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
@@ -90,12 +95,12 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
         })}
       </motion.div>
 
-      {/* CTAs */}
+      {/* Primary CTA */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex flex-col sm:flex-row items-center gap-3"
+        className="flex flex-col items-center gap-4"
       >
         <button
           onClick={onOpenSidebar}
@@ -104,13 +109,28 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
           <UserPlus size={18} />
           {t('onboarding.get_started')}
         </button>
-        <button
-          onClick={loadDemo}
-          className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-        >
-          <Sparkles size={18} className="text-amber-500" />
-          {t('onboarding.load_demo')}
-        </button>
+
+        {/* Or pick a pre-built demo class */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs text-gray-400 uppercase tracking-wide">
+            {t('onboarding.or_try_a_sample')}
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {SAMPLE_CLASSES.map((sample) => (
+              <button
+                key={sample.id}
+                onClick={() => loadSampleClass(sample.id)}
+                className="px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
+              >
+                <Users size={14} className="text-amber-500" />
+                <span>{t(`onboarding.sample_${sample.id}` as const)}</span>
+                <span className="text-xs text-gray-400">
+                  · {sample.students.length}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
       <p className="mt-6 text-xs text-gray-400">

@@ -50,6 +50,164 @@ export function generateId(): string {
   return `s_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// ─── Additional sample classes (procedurally generated) ─────────────────────
+// These give the user something to click before they bother entering data.
+// Names + traits are deterministic from index → same demo class every load.
+
+const FEMALE_NAMES = [
+  'Aaliyah','Amelia','Ava','Bella','Camila','Chloe','Eliana','Emma','Hannah',
+  'Isabella','Lila','Maya','Mia','Nora','Olivia','Priya','Sofia','Yara','Zoe',
+];
+const MALE_NAMES = [
+  'Adam','Aiden','Aryan','Caleb','Daniel','Diego','Eli','Felix','Hugo','Ian',
+  'Ivan','Jamal','Kai','Liam','Noah','Omar','Riley','Sam','Tomas','Yusuf',
+];
+const LANGS = ['English','Spanish','Arabic','Hebrew','Russian','Mandarin','French'];
+
+interface SampleSpec {
+  size: number;
+  /** Probability that a given student has a friend within the class. */
+  friendDensity: number;
+  /** Probability that a given student has an incompatible peer. */
+  conflictDensity: number;
+  /** Probability that a given student has a documented special need. */
+  specialNeedsDensity: number;
+}
+
+const SPECIAL_NEED_KINDS = [
+  { type: 'ADHD', requires_front_seat: true, requires_support_buddy: false },
+  { type: 'Dyslexia', requires_front_seat: true, requires_support_buddy: false },
+  { type: 'Hearing Impairment', requires_front_seat: true, requires_support_buddy: false },
+  { type: 'Visual Impairment', requires_front_seat: true, requires_support_buddy: false },
+  { type: 'Anxiety', requires_front_seat: false, requires_support_buddy: true },
+];
+
+/**
+ * Deterministic pseudo-random — same seed always yields the same class so
+ * users can switch back and forth between demo classes without losing
+ * confidence in what they're looking at.
+ */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateSampleClass(spec: SampleSpec, seed: number): Student[] {
+  const rng = mulberry32(seed);
+  const pick = <T>(arr: T[]) => arr[Math.floor(rng() * arr.length)];
+  const score = (mid: number, spread: number) =>
+    Math.max(0, Math.min(100, Math.round(mid + (rng() - 0.5) * 2 * spread)));
+
+  const students: Student[] = [];
+  for (let i = 0; i < spec.size; i++) {
+    const gender: Student['gender'] = rng() < 0.5 ? 'female' : 'male';
+    const namePool = gender === 'female' ? FEMALE_NAMES : MALE_NAMES;
+    const name = `${namePool[i % namePool.length]} ${String.fromCharCode(65 + (i % 26))}.`;
+    const academic = score(70, 25);
+    const behavior = score(75, 20);
+
+    const academic_level: Student['academic_level'] =
+      academic >= 85 ? 'advanced'
+      : academic >= 70 ? 'proficient'
+      : academic >= 55 ? 'basic'
+      : 'below_basic';
+    const behavior_level: Student['behavior_level'] =
+      behavior >= 85 ? 'excellent'
+      : behavior >= 70 ? 'good'
+      : behavior >= 55 ? 'average'
+      : 'challenging';
+
+    students.push({
+      id: `demo_${seed}_${i}`,
+      name,
+      gender,
+      age: 9 + Math.floor(rng() * 3),
+      academic_level,
+      academic_score: academic,
+      behavior_level,
+      behavior_score: behavior,
+      friends_ids: [],
+      incompatible_ids: [],
+      special_needs:
+        rng() < spec.specialNeedsDensity
+          ? [{ ...pick(SPECIAL_NEED_KINDS), description: '' }]
+          : [],
+      requires_front_row: false,
+      requires_quiet_area: rng() < 0.1,
+      has_mobility_issues: rng() < 0.03,
+      primary_language: rng() < 0.3 ? pick(LANGS.slice(1)) : 'English',
+      is_bilingual: rng() < 0.4,
+    });
+  }
+
+  // Wire up friendships + conflicts after the roster is fixed so we can
+  // reference real IDs.
+  for (const s of students) {
+    if (rng() < spec.friendDensity) {
+      const other = students[Math.floor(rng() * students.length)];
+      if (other.id !== s.id && !s.friends_ids.includes(other.id)) {
+        s.friends_ids.push(other.id);
+      }
+    }
+    if (rng() < spec.conflictDensity) {
+      const other = students[Math.floor(rng() * students.length)];
+      if (other.id !== s.id && !s.incompatible_ids.includes(other.id)) {
+        s.incompatible_ids.push(other.id);
+      }
+    }
+    // Promote special-needs students who need front seating.
+    if (s.special_needs.some((n) => n.requires_front_seat)) {
+      s.requires_front_row = true;
+    }
+  }
+
+  return students;
+}
+
+export interface SampleClass {
+  /** Stable key used by translations + UI. */
+  id: 'demo-small' | 'demo-standard' | 'demo-large';
+  /** Pre-built or generated roster. */
+  students: Student[];
+  rows: number;
+  cols: number;
+}
+
+export const SAMPLE_CLASSES: SampleClass[] = [
+  {
+    id: 'demo-small',
+    rows: 3,
+    cols: 5,
+    students: generateSampleClass(
+      { size: 15, friendDensity: 0.3, conflictDensity: 0.1, specialNeedsDensity: 0.1 },
+      42,
+    ),
+  },
+  {
+    id: 'demo-standard',
+    rows: 5,
+    cols: 6,
+    // Re-use the curated 30-student class (has hand-picked friend/conflict
+    // patterns that show off the algorithm well).
+    students: sampleStudents,
+  },
+  {
+    id: 'demo-large',
+    rows: 6,
+    cols: 7,
+    students: generateSampleClass(
+      { size: 40, friendDensity: 0.35, conflictDensity: 0.15, specialNeedsDensity: 0.15 },
+      7,
+    ),
+  },
+];
+
 // Create empty student
 export function createEmptyStudent(): Student {
   return {

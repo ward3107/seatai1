@@ -6,51 +6,61 @@ import {
   Plus,
   Minus,
   RotateCcw,
-  Grid3x3,
-  Squircle,
-  Circle,
-  type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { slotCount, type LayoutDef } from '../../core/layouts';
+import LayoutThumbnail from '../../components/LayoutThumbnail';
 
 type LayoutType = LayoutDef['type'];
 
 interface PresetInfo {
   type: LayoutType;
-  icon: LucideIcon;
   i18nKey: string;
   descKey: string;
+  /** Sample LayoutDef used to render the preview thumbnail. */
+  preview: LayoutDef;
 }
 
-// Order matters — shown to users in this sequence.
+// Order matters — shown to users in this sequence. `preview` is fixed at a
+// readable shape (5x6 / 4x4 / etc.) so the thumbnail reflects the layout's
+// character regardless of the user's current rows/cols selection.
 const PRESETS: PresetInfo[] = [
-  { type: 'rows', icon: LayoutGrid, i18nKey: 'layout.rows', descKey: 'layout.rows_desc' },
+  {
+    type: 'rows',
+    i18nKey: 'layout.rows',
+    descKey: 'layout.rows_desc',
+    preview: { type: 'rows', rows: 4, cols: 5 },
+  },
   {
     type: 'clusters',
-    icon: Grid3x3,
     i18nKey: 'layout.clusters',
     descKey: 'layout.clusters_desc',
+    preview: { type: 'clusters', rows: 4, cols: 4, clusterSize: 2 },
   },
   {
     type: 'u-shape',
-    icon: Squircle,
     i18nKey: 'layout.u_shape',
     descKey: 'layout.u_shape_desc',
+    preview: { type: 'u-shape', rows: 4, cols: 5 },
   },
   {
     type: 'circle',
-    icon: Circle,
     i18nKey: 'layout.circle',
     descKey: 'layout.circle_desc',
+    preview: { type: 'circle', rows: 3, cols: 5 },
   },
   {
     type: 'custom-rows',
-    icon: LayoutGrid,
     i18nKey: 'layout.custom_rows',
     descKey: 'layout.custom_rows_desc',
+    preview: {
+      type: 'custom-rows',
+      rows: 4,
+      cols: 6,
+      customRowSizes: [3, 5, 6, 4],
+    },
   },
 ];
 
@@ -152,7 +162,6 @@ export default function LayoutPanel() {
           {/* Preset picker */}
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('layout.title')}>
             {PRESETS.map((p) => {
-              const Icon = p.icon;
               const active = layoutDef.type === p.type;
               return (
                 <button
@@ -162,22 +171,20 @@ export default function LayoutPanel() {
                   aria-checked={active}
                   onClick={() => setType(p.type)}
                   className={clsx(
-                    'flex flex-col items-start gap-1 p-2.5 rounded-lg border-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
+                    'flex items-start gap-2.5 p-2.5 rounded-lg border-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
                     active
                       ? 'bg-primary-50 border-primary-400'
                       : 'bg-white border-gray-200 hover:border-gray-300',
                   )}
                 >
-                  <Icon
-                    size={16}
-                    className={active ? 'text-primary-600' : 'text-gray-500'}
-                    aria-hidden="true"
-                  />
-                  <div className="text-xs font-medium text-gray-800">
-                    {t(p.i18nKey)}
-                  </div>
-                  <div className="text-[10px] text-gray-500 leading-tight">
-                    {t(p.descKey)}
+                  <LayoutThumbnail def={p.preview} size={48} active={active} />
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="text-xs font-medium text-gray-800 leading-tight">
+                      {t(p.i18nKey)}
+                    </div>
+                    <div className="text-[10px] text-gray-500 leading-tight">
+                      {t(p.descKey)}
+                    </div>
                   </div>
                 </button>
               );

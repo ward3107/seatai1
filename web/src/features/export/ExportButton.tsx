@@ -1,18 +1,113 @@
 import { useState } from 'react';
-import { Download, FileImage, FileText, Loader2 } from 'lucide-react';
+import { Download, FileImage, FileText, FileSpreadsheet, FileJson, Loader2 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 
+type Loading = 'pdf' | 'png' | 'csv' | 'json' | null;
+
+function downloadBlob(filename: string, content: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// CSV cell quoting — only quote when necessary and escape embedded quotes.
+function csvCell(value: string | number | undefined): string {
+  if (value === undefined || value === null) return '';
+  const s = String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 export default function ExportButton() {
-  const { result, students } = useStore();
+  const { result, students, layoutDef } = useStore();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState<'pdf' | 'png' | null>(null);
+  const [loading, setLoading] = useState<Loading>(null);
 
   if (!result) return null;
 
   const getGrid = () => document.getElementById('seating-grid-export');
+
+  const exportCsv = () => {
+    setLoading('csv');
+    setOpen(false);
+    try {
+      const studentMap = new Map(students.map((s) => [s.id, s]));
+      // One row per seat. Empty seats included so the export reflects the
+      // full classroom shape (especially for circle / cluster layouts).
+      const rows: string[] = [
+        [
+          'row', 'col', 'student_name', 'gender', 'age', 'academic_level',
+          'academic_score', 'behavior_level', 'behavior_score',
+          'requires_front_row', 'requires_quiet_area', 'has_mobility_issues',
+          'special_needs', 'primary_language', 'is_bilingual',
+        ].map(csvCell).join(','),
+      ];
+      for (const seat of result.layout.seats) {
+        const s = seat.student_id ? studentMap.get(seat.student_id) : undefined;
+        rows.push(
+          [
+            seat.position.row + 1,
+            seat.position.col + 1,
+            s?.name,
+            s?.gender,
+            s?.age,
+            s?.academic_level,
+            s?.academic_score,
+            s?.behavior_level,
+            s?.behavior_score,
+            s?.requires_front_row ? 'yes' : '',
+            s?.requires_quiet_area ? 'yes' : '',
+            s?.has_mobility_issues ? 'yes' : '',
+            s?.special_needs.map((n) => n.type).join('; '),
+            s?.primary_language,
+            s?.is_bilingual ? 'yes' : '',
+          ].map(csvCell).join(','),
+        );
+      }
+      downloadBlob(
+        `seating-chart-${new Date().toISOString().slice(0, 10)}.csv`,
+        rows.join('\n'),
+        'text/csv;charset=utf-8',
+      );
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const exportJson = () => {
+    setLoading('json');
+    setOpen(false);
+    try {
+      // Full serializable snapshot — round-trippable through the importer
+      // (not implemented yet, but the data is sufficient).
+      const payload = {
+        meta: {
+          exportedAt: new Date().toISOString(),
+          scorePct: getDisplayScorePct(result),
+          generations: result.generations,
+          computationMs: result.computation_time_ms,
+        },
+        layoutDef,
+        students,
+        seats: result.layout.seats,
+        warnings: result.warnings,
+      };
+      downloadBlob(
+        `seating-chart-${new Date().toISOString().slice(0, 10)}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json',
+      );
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const exportPng = async () => {
     const el = getGrid();
@@ -107,7 +202,7 @@ export default function ExportButton() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+          <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
             <button
               onClick={exportPng}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -121,6 +216,21 @@ export default function ExportButton() {
             >
               <FileText size={16} className="text-red-500" />
               {t('export.save_pdf')}
+            </button>
+            <div className="border-t border-gray-100" />
+            <button
+              onClick={exportCsv}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <FileSpreadsheet size={16} className="text-emerald-500" />
+              {t('export.save_csv')}
+            </button>
+            <button
+              onClick={exportJson}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <FileJson size={16} className="text-amber-500" />
+              {t('export.save_json')}
             </button>
           </div>
         </>
