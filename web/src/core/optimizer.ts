@@ -326,6 +326,26 @@ export class ClassroomOptimizer {
       }
     }
 
+    // Force front-row / back-row assignments: previously these only seeded
+    // the initial chromosome, so the GA could drift away from them. Reward
+    // correct placement and penalize wrong rows proportional to the distance
+    // so partial matches still pull in the right direction.
+    const lastRow = this.rows - 1;
+    for (const id of this.constraints.front_row_ids) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const r = Math.floor(pos / this.cols);
+      if (r === 0) score += 1;
+      else score -= 0.5 * r;
+    }
+    for (const id of this.constraints.back_row_ids) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const r = Math.floor(pos / this.cols);
+      if (r === lastRow) score += 1;
+      else score -= 0.5 * (lastRow - r);
+    }
+
     return score;
   }
 
