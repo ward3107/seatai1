@@ -113,6 +113,18 @@ export interface ClassProject {
   students: Student[];
   rows: number;
   cols: number;
+  /** Full layout definition (shape of the room). Optional for back-compat
+   *  with projects saved before the multi-layout system — when absent the
+   *  loader falls back to `{ type: 'rows', rows, cols }`. The runtime
+   *  type is `LayoutDef` from `core/layouts`; declared loosely here to
+   *  avoid a circular type dep with this `types` module. */
+  layoutDef?: {
+    type: 'rows' | 'clusters' | 'u-shape' | 'circle' | 'custom-rows';
+    rows: number;
+    cols: number;
+    customRowSizes?: number[];
+    clusterSize?: number;
+  };
   weights: ObjectiveWeights;
   config: GeneticConfig;
   constraints: SeatingConstraints;

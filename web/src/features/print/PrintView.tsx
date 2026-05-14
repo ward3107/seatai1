@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function PrintView({ onClose }: Props) {
-  const { result, students, rows, cols } = useStore();
+  const { result, students, rows, cols, layoutDef } = useStore();
   const printRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -21,6 +21,15 @@ export default function PrintView({ onClose }: Props) {
   if (!result) return null;
 
   const studentMap = new Map(students.map(s => [s.id, s]));
+
+  // Non-grid layouts (clusters, U-shape, circle) don't fit a row/col table,
+  // so we render them with absolute positioning from each seat's
+  // normalized x/y instead. Rows + custom-rows still use the table — they
+  // both have a clean row structure that prints well.
+  const isAbsoluteLayout =
+    layoutDef.type === 'clusters' ||
+    layoutDef.type === 'u-shape' ||
+    layoutDef.type === 'circle';
 
   // Build grid: rows × cols with student name (or empty)
   const grid: (string | null)[][] = Array.from({ length: rows }, () =>
@@ -88,7 +97,64 @@ export default function PrintView({ onClose }: Props) {
               </div>
             </div>
 
-            {/* Grid */}
+            {/* Seating chart — absolute positioning for non-grid layouts */}
+            {isAbsoluteLayout ? (
+              <div
+                className="relative mx-auto bg-amber-50/30 border-2 border-amber-200 rounded-2xl"
+                style={{ width: 'min(720px, 100%)', aspectRatio: '5 / 4' }}
+              >
+                {result.layout.seats.map((seat) => {
+                  const student = seat.student_id
+                    ? (studentMap.get(seat.student_id) ?? null)
+                    : null;
+                  const px = typeof seat.position.x === 'number'
+                    ? seat.position.x
+                    : cols > 1 ? seat.position.col / (cols - 1) : 0.5;
+                  const py = typeof seat.position.y === 'number'
+                    ? seat.position.y
+                    : rows > 1 ? seat.position.row / (rows - 1) : 0.5;
+                  const hasNeeds = student && (
+                    student.has_mobility_issues ||
+                    student.requires_front_row ||
+                    student.special_needs.length > 0
+                  );
+                  return (
+                    <div
+                      key={`${seat.position.row}-${seat.position.col}`}
+                      className={`
+                        absolute border-2 rounded-lg p-1.5 text-center min-h-[48px] w-[80px]
+                        flex flex-col items-center justify-center
+                        ${student
+                          ? hasNeeds
+                            ? 'border-purple-300 bg-purple-50'
+                            : 'border-gray-300 bg-white'
+                          : 'border-dashed border-gray-200 bg-gray-50'
+                        }
+                      `}
+                      style={{
+                        left: `calc(${6 + px * 88}% - 40px)`,
+                        top: `calc(${6 + py * 88}% - 24px)`,
+                      }}
+                    >
+                      {student ? (
+                        <>
+                          <span className="text-[11px] font-semibold text-gray-800 leading-tight">
+                            {student.name}
+                          </span>
+                          <span className="text-[9px] text-gray-400">
+                            {student.academic_level === 'advanced' ? '▲' : student.academic_level === 'below_basic' ? '▼' : ''}
+                            {student.has_mobility_issues ? ' ♿' : ''}
+                            {student.requires_front_row && !student.has_mobility_issues ? ' ⭐' : ''}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
             <div className="overflow-auto">
               <table className="w-full border-collapse mx-auto" style={{ maxWidth: `${cols * 120}px` }}>
                 <tbody>
@@ -148,6 +214,7 @@ export default function PrintView({ onClose }: Props) {
                 </tbody>
               </table>
             </div>
+            )}
 
             {/* Legend */}
             <div className="mt-6 flex flex-wrap gap-4 justify-center text-xs text-gray-500">

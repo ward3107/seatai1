@@ -163,25 +163,40 @@ export const useStore = create<AppState>()(
       // Layout
       rows: 4,
       cols: 5,
-      setRows: (rows) =>
-        set((state) => {
-          state.rows = rows;
-          // Keep layoutDef in sync — rows/cols are the source of truth for
-          // grid-shaped layouts; layoutDef only adds the shape selector.
-          state.layoutDef = { ...state.layoutDef, rows };
-        }),
-      setCols: (cols) =>
-        set((state) => {
-          state.cols = cols;
-          state.layoutDef = { ...state.layoutDef, cols };
-        }),
+      setRows: (rows) => {
+        // Route through setLayoutDef so the result-invalidation logic runs.
+        const { layoutDef, setLayoutDef } = useStore.getState();
+        setLayoutDef({ ...layoutDef, rows });
+      },
+      setCols: (cols) => {
+        const { layoutDef, setLayoutDef } = useStore.getState();
+        setLayoutDef({ ...layoutDef, cols });
+      },
 
       layoutDef: { type: 'rows', rows: 4, cols: 5 },
       setLayoutDef: (def) =>
         set((state) => {
+          // Clear any stale optimization result when the shape of the room
+          // changes — the old seat positions no longer match the new
+          // layout, so showing them in the new renderer would look broken.
+          // Changes that only adjust rows/cols within the same layout type
+          // also invalidate the result because the seat count differs.
+          const prev = state.layoutDef;
+          const shapeChanged =
+            prev.type !== def.type ||
+            prev.rows !== def.rows ||
+            prev.cols !== def.cols ||
+            prev.clusterSize !== def.clusterSize ||
+            JSON.stringify(prev.customRowSizes ?? []) !==
+              JSON.stringify(def.customRowSizes ?? []);
           state.layoutDef = def;
           state.rows = def.rows;
           state.cols = def.cols;
+          if (shapeChanged) {
+            state.result = null;
+            state.lockedSeats = [];
+            state.selectedSeatKey = null;
+          }
         }),
 
       // Optimization
@@ -367,16 +382,18 @@ export const useStore = create<AppState>()(
         set((state) => {
           const now = new Date().toISOString();
           const existing = state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
+          const snapshot = {
+            students: JSON.parse(JSON.stringify(current(state.students))),
+            rows: state.rows,
+            cols: state.cols,
+            layoutDef: JSON.parse(JSON.stringify(current(state.layoutDef))),
+            weights: { ...state.weights },
+            config: { ...state.config },
+            constraints: JSON.parse(JSON.stringify(current(state.constraints))),
+            result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+          };
           if (existing) {
-            existing.name = name;
-            existing.updatedAt = now;
-            existing.students = JSON.parse(JSON.stringify(current(state.students)));
-            existing.rows = state.rows;
-            existing.cols = state.cols;
-            existing.weights = { ...state.weights };
-            existing.config = { ...state.config };
-            existing.constraints = JSON.parse(JSON.stringify(current(state.constraints)));
-            existing.result = state.result ? JSON.parse(JSON.stringify(current(state.result))) : null;
+            Object.assign(existing, snapshot, { name, updatedAt: now });
           } else {
             const id = `proj_${Date.now()}`;
             state.projects.push({
@@ -384,13 +401,7 @@ export const useStore = create<AppState>()(
               name,
               createdAt: now,
               updatedAt: now,
-              students: JSON.parse(JSON.stringify(current(state.students))),
-              rows: state.rows,
-              cols: state.cols,
-              weights: { ...state.weights },
-              config: { ...state.config },
-              constraints: JSON.parse(JSON.stringify(current(state.constraints))),
-              result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+              ...snapshot,
             });
             state.currentProjectId = id;
           }
@@ -404,6 +415,9 @@ export const useStore = create<AppState>()(
           state.students = p.students;
           state.rows = p.rows;
           state.cols = p.cols;
+          // Pre-multi-layout projects have no layoutDef — fall back to a
+          // 'rows' layout reconstructed from rows/cols so they still load.
+          state.layoutDef = p.layoutDef ?? { type: 'rows', rows: p.rows, cols: p.cols };
           state.weights = p.weights;
           state.config = p.config;
           state.constraints = p.constraints;
