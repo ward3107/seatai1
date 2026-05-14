@@ -1,0 +1,323 @@
+import { useState } from 'react';
+import {
+  LayoutGrid,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Minus,
+  RotateCcw,
+  Grid3x3,
+  Squircle,
+  Circle,
+  type LucideIcon,
+} from 'lucide-react';
+import clsx from 'clsx';
+import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
+import { slotCount, type LayoutDef } from '../../core/layouts';
+
+type LayoutType = LayoutDef['type'];
+
+interface PresetInfo {
+  type: LayoutType;
+  icon: LucideIcon;
+  i18nKey: string;
+  descKey: string;
+}
+
+// Order matters — shown to users in this sequence.
+const PRESETS: PresetInfo[] = [
+  { type: 'rows', icon: LayoutGrid, i18nKey: 'layout.rows', descKey: 'layout.rows_desc' },
+  {
+    type: 'clusters',
+    icon: Grid3x3,
+    i18nKey: 'layout.clusters',
+    descKey: 'layout.clusters_desc',
+  },
+  {
+    type: 'u-shape',
+    icon: Squircle,
+    i18nKey: 'layout.u_shape',
+    descKey: 'layout.u_shape_desc',
+  },
+  {
+    type: 'circle',
+    icon: Circle,
+    i18nKey: 'layout.circle',
+    descKey: 'layout.circle_desc',
+  },
+  {
+    type: 'custom-rows',
+    icon: LayoutGrid,
+    i18nKey: 'layout.custom_rows',
+    descKey: 'layout.custom_rows_desc',
+  },
+];
+
+export default function LayoutPanel() {
+  const { layoutDef, setLayoutDef, students } = useStore();
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  const total = slotCount(layoutDef);
+  const enough = total >= students.length;
+
+  const setType = (type: LayoutType) => {
+    if (type === 'custom-rows' && !layoutDef.customRowSizes) {
+      // Seed customRowSizes from current rows/cols.
+      setLayoutDef({
+        ...layoutDef,
+        type,
+        customRowSizes: Array.from(
+          { length: layoutDef.rows },
+          () => layoutDef.cols,
+        ),
+      });
+    } else {
+      setLayoutDef({ ...layoutDef, type });
+    }
+  };
+
+  const setRows = (rows: number) => {
+    const clamped = Math.max(1, Math.min(20, rows));
+    setLayoutDef({ ...layoutDef, rows: clamped });
+  };
+
+  const setCols = (cols: number) => {
+    const clamped = Math.max(1, Math.min(20, cols));
+    setLayoutDef({ ...layoutDef, cols: clamped });
+  };
+
+  const setClusterSize = (size: number) => {
+    setLayoutDef({ ...layoutDef, clusterSize: Math.max(2, Math.min(4, size)) });
+  };
+
+  const updateCustomRow = (idx: number, value: number) => {
+    const sizes = [...(layoutDef.customRowSizes ?? [])];
+    sizes[idx] = Math.max(0, Math.min(20, value));
+    setLayoutDef({ ...layoutDef, customRowSizes: sizes });
+  };
+
+  const addCustomRow = () => {
+    const sizes = [...(layoutDef.customRowSizes ?? []), layoutDef.cols];
+    setLayoutDef({ ...layoutDef, customRowSizes: sizes, rows: sizes.length });
+  };
+
+  const removeCustomRow = (idx: number) => {
+    const sizes = (layoutDef.customRowSizes ?? []).filter((_, i) => i !== idx);
+    if (sizes.length === 0) return;
+    setLayoutDef({ ...layoutDef, customRowSizes: sizes, rows: sizes.length });
+  };
+
+  const resetCustomRows = () => {
+    setLayoutDef({
+      ...layoutDef,
+      customRowSizes: Array.from({ length: layoutDef.rows }, () => layoutDef.cols),
+    });
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="layout-panel-body"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+      >
+        <div className="flex items-center gap-2">
+          <LayoutGrid size={18} className="text-gray-500" aria-hidden="true" />
+          <span className="font-medium text-gray-700">{t('layout.title')}</span>
+          <span className="text-xs text-gray-500 tabular-nums">
+            {total} {t('layout.seats')}
+          </span>
+          {!enough && (
+            <span
+              className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px]"
+              title={t('layout.not_enough_seats')}
+            >
+              !
+            </span>
+          )}
+        </div>
+        {open ? (
+          <ChevronUp size={18} aria-hidden="true" />
+        ) : (
+          <ChevronDown size={18} aria-hidden="true" />
+        )}
+      </button>
+
+      {open && (
+        <div id="layout-panel-body" className="p-4 pt-0 space-y-3">
+          {/* Preset picker */}
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('layout.title')}>
+            {PRESETS.map((p) => {
+              const Icon = p.icon;
+              const active = layoutDef.type === p.type;
+              return (
+                <button
+                  key={p.type}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setType(p.type)}
+                  className={clsx(
+                    'flex flex-col items-start gap-1 p-2.5 rounded-lg border-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
+                    active
+                      ? 'bg-primary-50 border-primary-400'
+                      : 'bg-white border-gray-200 hover:border-gray-300',
+                  )}
+                >
+                  <Icon
+                    size={16}
+                    className={active ? 'text-primary-600' : 'text-gray-500'}
+                    aria-hidden="true"
+                  />
+                  <div className="text-xs font-medium text-gray-800">
+                    {t(p.i18nKey)}
+                  </div>
+                  <div className="text-[10px] text-gray-500 leading-tight">
+                    {t(p.descKey)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Grid dimensions — shown for layouts that use rows/cols as input */}
+          {(layoutDef.type === 'rows' ||
+            layoutDef.type === 'clusters' ||
+            layoutDef.type === 'u-shape' ||
+            layoutDef.type === 'circle') && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {t('settings.rows')}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={layoutDef.rows}
+                  onChange={(e) => setRows(Number(e.target.value))}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {t('settings.columns')}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={layoutDef.cols}
+                  onChange={(e) => setCols(Number(e.target.value))}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Cluster pod size */}
+          {layoutDef.type === 'clusters' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                {t('layout.cluster_size')}
+              </label>
+              <div className="flex gap-1">
+                {[2, 3, 4].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setClusterSize(n)}
+                    aria-pressed={(layoutDef.clusterSize ?? 2) === n}
+                    className={clsx(
+                      'flex-1 py-1.5 text-xs font-medium rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
+                      (layoutDef.clusterSize ?? 2) === n
+                        ? 'bg-primary-50 border-primary-400 text-primary-700'
+                        : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400',
+                    )}
+                  >
+                    {n}×{n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Custom row sizes */}
+          {layoutDef.type === 'custom-rows' && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-600">
+                  {t('layout.seats_per_row')}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={resetCustomRows}
+                    title={t('layout.reset_rows')}
+                    aria-label={t('layout.reset_rows')}
+                    className="p-1 rounded hover:bg-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <RotateCcw size={12} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addCustomRow}
+                    aria-label={t('layout.add_row')}
+                    className="p-1 rounded bg-gray-800 hover:bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <Plus size={12} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              <ul className="space-y-1.5 max-h-44 overflow-auto pr-1">
+                {(layoutDef.customRowSizes ?? []).map((size, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <span className="text-[11px] text-gray-500 w-12 tabular-nums">
+                      {t('layout.row')} {idx + 1}
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={size}
+                      onChange={(e) =>
+                        updateCustomRow(idx, Number(e.target.value))
+                      }
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeCustomRow(idx)}
+                      disabled={(layoutDef.customRowSizes ?? []).length <= 1}
+                      aria-label={t('layout.remove_row')}
+                      className="p-1 rounded hover:bg-gray-200 text-gray-500 disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <Minus size={12} aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {!enough && (
+            <p
+              className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-2"
+              role="alert"
+            >
+              {t('layout.not_enough_seats_detail', {
+                seats: total,
+                students: students.length,
+              })}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

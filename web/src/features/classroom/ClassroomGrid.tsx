@@ -29,6 +29,7 @@ import RelationshipOverlay from './RelationshipOverlay';
 import GridControls from './GridControls';
 import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
+import { generateSlots, type LayoutDef } from '../../core/layouts';
 import type { Seat, Student } from '../../types';
 import Classroom3D from './Classroom3D';
 import OptimizationTimeline from './OptimizationTimeline';
@@ -47,6 +48,26 @@ function createEmptyGrid(rows: number, cols: number): Seat[] {
     }
   }
   return seats;
+}
+
+/**
+ * Build an empty seat list from any LayoutDef, so non-grid layouts still
+ * show the room shape before optimization runs. Each seat carries the
+ * slot's normalized (x,y) so the absolute renderer can place them.
+ */
+function emptySeatsFromLayout(def: LayoutDef): Seat[] {
+  return generateSlots(def).map((slot) => ({
+    position: {
+      row: slot.row,
+      col: slot.col,
+      is_front_row: slot.isFront,
+      is_near_teacher: slot.isFront,
+      x: slot.x,
+      y: slot.y,
+    },
+    student_id: undefined,
+    is_empty: true,
+  }));
 }
 
 function groupIntoDesks(rowSeats: Seat[]): Seat[][] {
@@ -102,6 +123,7 @@ export default function ClassroomGrid() {
     result,
     rows,
     cols,
+    layoutDef,
     students,
     lockedSeats,
     heatMapMode,
@@ -131,7 +153,19 @@ export default function ClassroomGrid() {
 
   useSeatingHistory();
 
-  const seats = result?.layout.seats ?? createEmptyGrid(rows, cols);
+  const seats =
+    result?.layout.seats ??
+    (layoutDef.type === 'rows'
+      ? createEmptyGrid(rows, cols)
+      : emptySeatsFromLayout(layoutDef));
+
+  // Non-grid layouts (clusters, u-shape, circle) need absolute positioning
+  // because their seats aren't on a regular grid. custom-rows still works
+  // with the row-based renderer because every seat belongs to a row.
+  const isAbsoluteLayout =
+    layoutDef.type === 'clusters' ||
+    layoutDef.type === 'u-shape' ||
+    layoutDef.type === 'circle';
   const studentMap = new Map(students.map((s) => [s.id, s]));
   const violations = result ? getViolations(result, students) : new Set<string>();
 
@@ -249,6 +283,152 @@ export default function ClassroomGrid() {
             }
           }}
         />
+      ) : isAbsoluteLayout ? (
+        /* ── Free-positioning renderer for clusters / u-shape / circle ── */
+        <>
+          <div className="flex justify-center mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="px-10 py-2.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg shadow-lg"
+            >
+              <span className="font-semibold text-white flex items-center gap-2 text-sm">
+                <User size={16} />
+                {t('classroom.teacher_desk')}
+              </span>
+            </motion.div>
+          </div>
+
+          <p className="text-center text-xs text-gray-400 mb-4">
+            {interactionMode === 'drag'
+              ? t('classroom.drag_hint')
+              : t('classroom.click_hint')}
+          </p>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div
+              style={{
+                transform: `scale(${zoomLevel})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <div
+                ref={gridContainerRef}
+                id="seating-grid-export"
+                className="relative mx-auto bg-amber-50/30 border-2 border-amber-200 rounded-2xl"
+                style={{
+                  // Aspect ratio close to a classroom — wider than tall.
+                  width: 'min(820px, 100%)',
+                  aspectRatio: '5 / 4',
+                }}
+              >
+                {seats.map((seat) => {
+                  const sk = `${seat.position.row}-${seat.position.col}`;
+                  const student = seat.student_id
+                    ? (studentMap.get(seat.student_id) ?? null)
+                    : null;
+                  // Fall back to a row/col grid position if the optimizer
+                  // returned a result built before this rendering path
+                  // existed (e.g. persisted projects from earlier versions).
+                  const px =
+                    typeof seat.position.x === 'number'
+                      ? seat.position.x
+                      : cols > 1
+                        ? seat.position.col / (cols - 1)
+                        : 0.5;
+                  const py =
+                    typeof seat.position.y === 'number'
+                      ? seat.position.y
+                      : rows > 1
+                        ? seat.position.row / (rows - 1)
+                        : 0.5;
+                  // Inset so seats aren't clipped against the room walls.
+                  const left = 6 + px * 88;
+                  const top = 6 + py * 88;
+
+                  return (
+                    <div
+                      key={sk}
+                      className="absolute"
+                      style={{
+                        left: `${left}%`,
+                        top: `${top}%`,
+                        width: '88px',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                      onMouseEnter={() => {
+                        setHoveredSeatKey(sk);
+                        if (student) setHoveredStudent(student);
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredSeatKey(null);
+                        setHoveredStudent(null);
+                      }}
+                    >
+                      <SeatCard
+                        seat={seat}
+                        student={student}
+                        seatKey={sk}
+                        isLocked={lockedSeats.includes(sk)}
+                        isSelected={selectedSeatKey === sk}
+                        isViolated={violations.has(sk)}
+                        heatMapMode={heatMapMode}
+                        interactionMode={interactionMode}
+                        onSeatClick={handleSeatClick}
+                        onContextMenu={handleContextMenu}
+                        onMouseEnter={() => {
+                          setHoveredSeatKey(sk);
+                          if (student) setHoveredStudent(student);
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredSeatKey(null);
+                          setHoveredStudent(null);
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+
+                {showRelations && (
+                  <RelationshipOverlay
+                    activeSeatKey={selectedSeatKey ?? hoveredSeatKey}
+                    result={result}
+                    students={students}
+                    containerRef={gridContainerRef}
+                  />
+                )}
+              </div>
+            </div>
+
+            <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
+              {activeDragStudent ? (
+                <div
+                  className={clsx(
+                    'w-[88px] min-h-[88px] rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl scale-105',
+                    activeDragStudent.gender === 'male'
+                      ? 'bg-blue-400'
+                      : activeDragStudent.gender === 'female'
+                        ? 'bg-pink-400'
+                        : 'bg-purple-400',
+                  )}
+                >
+                  <div className="text-xl">
+                    {activeDragStudent.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-xs mt-0.5 truncate w-full text-center">
+                    {activeDragStudent.name.split(' ')[0]}
+                  </div>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </>
       ) : (
         <>
       {/* Teacher Desk */}

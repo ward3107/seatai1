@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
 import { ClassroomOptimizer } from '../core/optimizer';
+import { slotCount } from '../core/layouts';
 import type { OptimizationResult } from '../types';
 
 type WorkerOut =
@@ -20,7 +21,7 @@ export function useOptimizer() {
   const loadedRef = useRef(false);
 
   const {
-    students, rows, cols, weights, config, constraints,
+    students, rows, cols, layoutDef, weights, config, constraints,
     isOptimizing, setOptimizing, setResult,
   } = useStore();
 
@@ -84,8 +85,9 @@ export function useOptimizer() {
       setError('Add at least 2 students');
       return null;
     }
-    if (students.length > rows * cols) {
-      setError(`Too many students (${students.length}) for available seats (${rows * cols})`);
+    const seats = slotCount(layoutDef);
+    if (students.length > seats) {
+      setError(`Too many students (${students.length}) for available seats (${seats})`);
       return null;
     }
 
@@ -101,6 +103,7 @@ export function useOptimizer() {
           students,
           rows,
           cols,
+          layoutDef,
           weights,
           config,
           constraints,
@@ -111,7 +114,7 @@ export function useOptimizer() {
     // Fallback: worker didn't load (older browser, blocked by sandbox, etc.).
     // Run on the main thread so the user still gets a result — UI will block briefly.
     try {
-      const optimizer = new ClassroomOptimizer(students, rows, cols);
+      const optimizer = new ClassroomOptimizer(students, layoutDef);
       optimizer.setWeights(weights);
       optimizer.setConfig(config);
       optimizer.setConstraints(constraints);
@@ -124,7 +127,7 @@ export function useOptimizer() {
       setOptimizing(false);
       return null;
     }
-  }, [students, rows, cols, weights, config, constraints, setOptimizing, setResult]);
+  }, [students, rows, cols, layoutDef, weights, config, constraints, setOptimizing, setResult]);
 
   return { wasmReady, isOptimizing, error, initWasm, optimize };
 }

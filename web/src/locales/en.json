@@ -16,6 +16,28 @@
     "history_controls": "History controls",
     "text_size": "Text size"
   },
+  "layout": {
+    "title": "Classroom Layout",
+    "seats": "seats",
+    "rows": "Rows",
+    "rows_desc": "Classic rows facing the teacher.",
+    "clusters": "Clusters",
+    "clusters_desc": "Small pods for group work.",
+    "u_shape": "U-shape",
+    "u_shape_desc": "Open in front, walls on three sides.",
+    "circle": "Circle",
+    "circle_desc": "Single ring for seminars.",
+    "custom_rows": "Custom rows",
+    "custom_rows_desc": "Different seats in each row.",
+    "cluster_size": "Pod size",
+    "seats_per_row": "Seats per row (front → back)",
+    "row": "Row",
+    "add_row": "Add row",
+    "remove_row": "Remove row",
+    "reset_rows": "Reset rows",
+    "not_enough_seats": "Not enough seats for the current class.",
+    "not_enough_seats_detail": "This layout has {{seats}} seats but you have {{students}} students. Add more rows or change layout."
+  },
   "constraints": {
     "title": "Seating Rules",
     "need_more_students": "Add at least 2 students to define seating rules.",

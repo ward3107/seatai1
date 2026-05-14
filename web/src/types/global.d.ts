@@ -2,7 +2,14 @@
 export type Gender = 'male' | 'female' | 'other';
 export type AcademicLevel = 'advanced' | 'proficient' | 'basic' | 'below_basic';
 export type BehaviorLevel = 'excellent' | 'good' | 'average' | 'challenging';
-export type LayoutType = 'rows' | 'pairs' | 'clusters' | 'u-shape' | 'circle' | 'flexible';
+export type LayoutType =
+  | 'rows'
+  | 'pairs'
+  | 'clusters'
+  | 'u-shape'
+  | 'circle'
+  | 'custom-rows'
+  | 'flexible';
 
 export interface SpecialNeed {
   type: string;
@@ -36,6 +43,9 @@ export interface SeatPosition {
   col: number;
   is_front_row: boolean;
   is_near_teacher: boolean;
+  /** Normalized 0..1 render coordinate (only set for non-grid layouts). */
+  x?: number;
+  y?: number;
 }
 
 export interface Seat {

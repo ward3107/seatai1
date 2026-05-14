@@ -12,6 +12,7 @@ import type {
   SeatingConstraints,
   ClassProject,
 } from '../../types';
+import type { LayoutDef } from '../layouts';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
 export type ViewMode = 'rows' | 'pairs' | 'clusters' | '3d';
@@ -29,6 +30,14 @@ interface AppState {
   cols: number;
   setRows: (rows: number) => void;
   setCols: (cols: number) => void;
+
+  /**
+   * Layout definition (shape of the classroom). Drives both the optimizer
+   * and the renderer. Defaults to `{ type: 'rows', rows, cols }` so
+   * existing projects keep working.
+   */
+  layoutDef: LayoutDef;
+  setLayoutDef: (def: LayoutDef) => void;
 
   // Optimization
   isOptimizing: boolean;
@@ -157,10 +166,22 @@ export const useStore = create<AppState>()(
       setRows: (rows) =>
         set((state) => {
           state.rows = rows;
+          // Keep layoutDef in sync — rows/cols are the source of truth for
+          // grid-shaped layouts; layoutDef only adds the shape selector.
+          state.layoutDef = { ...state.layoutDef, rows };
         }),
       setCols: (cols) =>
         set((state) => {
           state.cols = cols;
+          state.layoutDef = { ...state.layoutDef, cols };
+        }),
+
+      layoutDef: { type: 'rows', rows: 4, cols: 5 },
+      setLayoutDef: (def) =>
+        set((state) => {
+          state.layoutDef = def;
+          state.rows = def.rows;
+          state.cols = def.cols;
         }),
 
       // Optimization
@@ -413,6 +434,7 @@ export const useStore = create<AppState>()(
         students: state.students,
         rows: state.rows,
         cols: state.cols,
+        layoutDef: state.layoutDef,
         weights: state.weights,
         config: state.config,
         constraints: state.constraints,

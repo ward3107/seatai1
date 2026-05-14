@@ -13,6 +13,7 @@ import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
+import LayoutPanel from '../features/layout/LayoutPanel';
 import PrintView from '../features/print/PrintView';
 import OnboardingView from '../features/onboarding/OnboardingView';
 import LanguageSelector from '../components/LanguageSelector';
@@ -152,6 +153,10 @@ function App() {
 
             <ErrorBoundary name="Student Form" inline>
               <StudentForm />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Layout" inline>
+              <LayoutPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Seating Rules" inline>

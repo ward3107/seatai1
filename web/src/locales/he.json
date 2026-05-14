@@ -16,6 +16,28 @@
     "history_controls": "פקדי היסטוריה",
     "text_size": "גודל טקסט"
   },
+  "layout": {
+    "title": "פריסת הכיתה",
+    "seats": "מושבים",
+    "rows": "שורות",
+    "rows_desc": "שורות קלאסיות מול המורה.",
+    "clusters": "אשכולות",
+    "clusters_desc": "קבוצות קטנות לעבודה משותפת.",
+    "u_shape": "צורת U",
+    "u_shape_desc": "פתוח מלפנים, קירות בשלושה צדדים.",
+    "circle": "מעגל",
+    "circle_desc": "טבעת אחת לדיונים.",
+    "custom_rows": "שורות מותאמות",
+    "custom_rows_desc": "מספר מושבים שונה בכל שורה.",
+    "cluster_size": "גודל אשכול",
+    "seats_per_row": "מושבים בכל שורה (קדמית → אחורית)",
+    "row": "שורה",
+    "add_row": "הוסף שורה",
+    "remove_row": "הסר שורה",
+    "reset_rows": "אפס שורות",
+    "not_enough_seats": "אין מספיק מושבים לכיתה הנוכחית.",
+    "not_enough_seats_detail": "בפריסה זו {{seats}} מושבים אך יש {{students}} תלמידים. הוסיפו שורות או שנו פריסה."
+  },
   "constraints": {
     "title": "כללי ישיבה",
     "need_more_students": "הוסיפו לפחות 2 תלמידים כדי להגדיר כללי ישיבה.",
