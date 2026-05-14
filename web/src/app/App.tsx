@@ -1,5 +1,5 @@
 import { useEffect, Suspense, lazy } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
 import { useState } from 'react';
@@ -59,6 +59,16 @@ function App() {
   const canUndo = history.length > 0;
   const canRedo = historyFuture.length > 0;
 
+  // On small viewports, default the sidebar to closed so the user sees
+  // the seating area first. Run once on mount only — afterwards the
+  // user's toggle wins.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      useStore.setState({ sidebarOpen: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Initialize WASM on mount
   useEffect(() => {
     if (isPhone) return;
@@ -110,16 +120,41 @@ function App() {
   }
 
   return (
-    <div className={clsx('min-h-screen flex', SCALE_CLASS[uiScale])}>
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: sidebarOpen ? 400 : 0 }}
-        transition={shouldReduceMotion ? { duration: 0 } : undefined}
-        className="bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col"
+    <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
+      {/* Backdrop — visible only when the sidebar is open on small screens. */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label={t('app.close_sidebar')}
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] md:hidden"
+        />
+      )}
+
+      {/* Sidebar — overlay drawer on small viewports, push-style from md+.
+          Animation strategy:
+            - Small: position fixed, slide via translate-x. Width fixed at
+              400px (capped to 85vw). Main content is full-width
+              underneath; backdrop dismisses.
+            - md+:   position relative inside flex layout. Width
+              transitions 0 ↔ 400 so main content reflows. */}
+      <aside
+        className={clsx(
+          'bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
+          'fixed inset-y-0 left-0 z-40 max-w-[85vw] w-[400px]',
+          'transition-transform duration-200',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          // md+: switch to flow-layout push-style. Translate becomes a
+          // no-op (we're always in-flow), and width animates instead.
+          'md:relative md:z-0 md:translate-x-0 md:max-w-none',
+          'md:transition-[width] md:duration-200',
+          sidebarOpen ? 'md:w-[400px]' : 'md:w-0',
+          shouldReduceMotion && 'transition-none md:transition-none',
+        )}
         aria-label={t('app.title')}
+        aria-hidden={!sidebarOpen}
       >
-        <div className="w-[400px] h-full flex flex-col">
+        <div className="w-[400px] max-w-[85vw] h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -205,7 +240,7 @@ function App() {
             )}
           </div>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
