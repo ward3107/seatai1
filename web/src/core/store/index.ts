@@ -84,6 +84,16 @@ interface AppState {
   uiLanguage: 'en' | 'he' | 'ar' | 'ru';
   setUiLanguage: (lang: 'en' | 'he' | 'ar' | 'ru') => void;
 
+  // UI scale ("sm" | "md" | "lg") — lets teachers bump text size up for
+  // readability without changing browser zoom.
+  uiScale: 'sm' | 'md' | 'lg';
+  setUiScale: (scale: 'sm' | 'md' | 'lg') => void;
+
+  // Whether the results stack (metrics + explanation) starts collapsed so
+  // the seating map dominates the viewport.
+  resultsCollapsed: boolean;
+  setResultsCollapsed: (v: boolean) => void;
+
   // Projects
   projects: ClassProject[];
   currentProjectId: string | null;
@@ -318,6 +328,16 @@ export const useStore = create<AppState>()(
       setUiLanguage: (lang) =>
         set((state) => { state.uiLanguage = lang; }),
 
+      // UI scale
+      uiScale: 'md',
+      setUiScale: (scale) =>
+        set((state) => { state.uiScale = scale; }),
+
+      // Collapsed results stack
+      resultsCollapsed: false,
+      setResultsCollapsed: (v) =>
+        set((state) => { state.resultsCollapsed = v; }),
+
       // Projects
       projects: [],
       currentProjectId: null,
@@ -403,6 +423,8 @@ export const useStore = create<AppState>()(
         projects: state.projects,
         currentProjectId: state.currentProjectId,
         uiLanguage: state.uiLanguage,
+        uiScale: state.uiScale,
+        resultsCollapsed: state.resultsCollapsed,
       }),
     }
   )

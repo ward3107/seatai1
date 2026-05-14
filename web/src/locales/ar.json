@@ -13,7 +13,8 @@
     "close_sidebar": "إغلاق الشريط الجانبي",
     "undo": "تراجع (Ctrl+Z)",
     "redo": "إعادة (Ctrl+Y)",
-    "history_controls": "عناصر التحكم في السجل"
+    "history_controls": "عناصر التحكم في السجل",
+    "text_size": "حجم الخط"
   },
   "constraints": {
     "title": "قواعد الجلوس",
@@ -384,6 +385,7 @@
     "3d_view": "عرض ثلاثي الأبعاد",
     "stop_rotation": "إيقاف الدوران",
     "auto_rotate": "دوران تلقائي",
+    "teacher_area": "المعلم",
     "optimization_timeline": "الجدول الزمني للتحسين",
     "no_history": "لا يوجد سجل تحسين متاح",
     "generation": "جيل",

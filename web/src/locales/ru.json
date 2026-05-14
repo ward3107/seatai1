@@ -13,7 +13,8 @@
     "close_sidebar": "Закрыть боковую панель",
     "undo": "Отменить (Ctrl+Z)",
     "redo": "Повторить (Ctrl+Y)",
-    "history_controls": "Управление историей"
+    "history_controls": "Управление историей",
+    "text_size": "Размер текста"
   },
   "constraints": {
     "title": "Правила рассадки",
@@ -384,6 +385,7 @@
     "3d_view": "3D вид",
     "stop_rotation": "Остановить вращение",
     "auto_rotate": "Автовращение",
+    "teacher_area": "Учитель",
     "optimization_timeline": "Временная шкала оптимизации",
     "no_history": "Нет доступной истории оптимизации",
     "generation": "Поколение",

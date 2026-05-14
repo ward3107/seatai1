@@ -13,7 +13,8 @@
     "close_sidebar": "סגור סרגל צד",
     "undo": "בטל (Ctrl+Z)",
     "redo": "בצע שוב (Ctrl+Y)",
-    "history_controls": "פקדי היסטוריה"
+    "history_controls": "פקדי היסטוריה",
+    "text_size": "גודל טקסט"
   },
   "constraints": {
     "title": "כללי ישיבה",
@@ -384,6 +385,7 @@
     "3d_view": "תצוגה תלת-ממדית",
     "stop_rotation": "הפסק סיבוב",
     "auto_rotate": "סיבוב אוטומטי",
+    "teacher_area": "מורה",
     "optimization_timeline": "ציר זמן אופטימיזציה",
     "no_history": "אין היסטוריית אופטימיזציה זמינה",
     "generation": "דור",

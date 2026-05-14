@@ -1,5 +1,4 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
 import { Lock } from 'lucide-react';
 import type { Seat, Student } from '../../types';
@@ -42,7 +41,6 @@ export default function SeatCard({
     setNodeRef: setDragRef,
     attributes,
     listeners,
-    transform,
     isDragging,
   } = useDraggable({
     id: seatKey,
@@ -60,8 +58,6 @@ export default function SeatCard({
     setDragRef(node);
     setDropRef(node);
   };
-
-  const dragStyle = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
 
   const heatColor = heatMapMode !== 'none' ? getHeatMapColor(heatMapMode, student, isViolated) : '';
 
@@ -81,7 +77,6 @@ export default function SeatCard({
   return (
     <div
       ref={setRef}
-      style={dragStyle}
       data-seat-key={seatKey}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}

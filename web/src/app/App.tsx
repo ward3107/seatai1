@@ -21,7 +21,15 @@ import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
 import { useDeviceCheck } from '../hooks/useDeviceCheck';
 import { getDisplayScorePct } from '../utils/seatingUtils';
-import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2 } from 'lucide-react';
+import TextSizeToggle from '../components/TextSizeToggle';
+import clsx from 'clsx';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp } from 'lucide-react';
+
+const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+};
 
 function App() {
   const {
@@ -33,6 +41,9 @@ function App() {
     historyFuture,
     undo,
     redo,
+    uiScale,
+    resultsCollapsed,
+    setResultsCollapsed,
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
@@ -95,7 +106,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className={clsx('min-h-screen flex', SCALE_CLASS[uiScale])}>
       {/* Sidebar */}
       <motion.aside
         initial={false}
@@ -255,6 +266,7 @@ function App() {
                 {t('app.print')}
               </button>
             )}
+            <TextSizeToggle />
             <LanguageSelector />
             <ExportButton />
           </div>
@@ -267,26 +279,55 @@ function App() {
             <OnboardingView onOpenSidebar={() => setSidebarOpen(true)} />
           ) : (
             <>
-              {/* Metrics */}
+              {/* Results disclosure: metrics + per-student explanations
+                  collapse into a single bar by default so the seating map
+                  dominates the viewport. Score stays visible in the header
+                  for at-a-glance feedback. */}
               {result && (
-                <ErrorBoundary name="Metrics Panel" inline>
-                  <MetricsPanel />
-                </ErrorBoundary>
+                <div className="mb-4 bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setResultsCollapsed(!resultsCollapsed)}
+                    aria-expanded={!resultsCollapsed}
+                    aria-controls="results-disclosure-body"
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                  >
+                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                      <span className="font-semibold">{t('optimization.results_title')}</span>
+                      <span className="text-gray-400">·</span>
+                      <span>
+                        {t('app.score')}: <strong>{getDisplayScorePct(result)}%</strong>
+                      </span>
+                      <span className="text-gray-400 hidden sm:inline">·</span>
+                      <span className="text-gray-500 hidden sm:inline">
+                        {result.computation_time_ms}ms · {result.generations}{' '}
+                        {t('optimization.generations')}
+                      </span>
+                    </div>
+                    {resultsCollapsed ? (
+                      <ChevronDown size={18} className="text-gray-400" aria-hidden="true" />
+                    ) : (
+                      <ChevronUp size={18} className="text-gray-400" aria-hidden="true" />
+                    )}
+                  </button>
+
+                  {!resultsCollapsed && (
+                    <div id="results-disclosure-body" className="px-2 pb-2 space-y-2">
+                      <ErrorBoundary name="Metrics Panel" inline>
+                        <MetricsPanel />
+                      </ErrorBoundary>
+                      <ErrorBoundary name="Explanation Panel" inline>
+                        <ExplanationPanel />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                </div>
               )}
 
-              {/* Placement explanations */}
-              {result && (
-                <ErrorBoundary name="Explanation Panel" inline>
-                  <ExplanationPanel />
-                </ErrorBoundary>
-              )}
-
-              {/* Classroom Grid */}
-              <div className="mt-6">
-                <ErrorBoundary name="Seating Grid">
-                  <ClassroomGrid />
-                </ErrorBoundary>
-              </div>
+              {/* Classroom Grid — main attraction */}
+              <ErrorBoundary name="Seating Grid">
+                <ClassroomGrid />
+              </ErrorBoundary>
             </>
           )}
         </div>

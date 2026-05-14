@@ -13,7 +13,8 @@
     "close_sidebar": "Close sidebar",
     "undo": "Undo (Ctrl+Z)",
     "redo": "Redo (Ctrl+Y)",
-    "history_controls": "History controls"
+    "history_controls": "History controls",
+    "text_size": "Text size"
   },
   "constraints": {
     "title": "Seating Rules",
@@ -384,6 +385,7 @@
     "3d_view": "3D View",
     "stop_rotation": "Stop rotation",
     "auto_rotate": "Auto rotate",
+    "teacher_area": "Teacher",
     "optimization_timeline": "Optimization Timeline",
     "no_history": "No optimization history available",
     "generation": "Generation",
