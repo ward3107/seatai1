@@ -12,6 +12,7 @@ export default function PrintView({ onClose }: Props) {
   const students = useStore((s) => s.students);
   const rows = useStore((s) => s.rows);
   const cols = useStore((s) => s.cols);
+  const layoutDef = useStore((s) => s.layoutDef);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
