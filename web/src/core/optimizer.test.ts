@@ -215,6 +215,51 @@ describe('ClassroomOptimizer', () => {
       const distance = Math.abs(pos1.row - pos4.row) + Math.abs(pos1.col - pos4.col);
       expect(distance).toBeGreaterThan(1); // Not adjacent
     });
+
+    it('keeps front_row_ids in row 0 across GA evolution (not just seeding)', () => {
+      // Alice has no accessibility flags — the only reason for her to be in
+      // row 0 is the front_row_ids rule. Previously this was used only to
+      // seed the initial chromosome and the GA could drift away from it.
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({
+        populationSize: 30,
+        maxGenerations: 60,
+        crossoverRate: 0.8,
+        mutationRate: 0.3,
+        tournamentSize: 3,
+        earlyStopPatience: 100, // disable early stop so we exercise drift
+      });
+      optimizer.setConstraints({
+        separate_pairs: [],
+        keep_together_pairs: [],
+        front_row_ids: ['1'], // Alice
+        back_row_ids: [],
+      });
+
+      const result = optimizer.optimize();
+      expect(result.student_positions['1'].row).toBe(0);
+    });
+
+    it('keeps back_row_ids in the last row after evolution', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({
+        populationSize: 30,
+        maxGenerations: 60,
+        crossoverRate: 0.8,
+        mutationRate: 0.3,
+        tournamentSize: 3,
+        earlyStopPatience: 100,
+      });
+      optimizer.setConstraints({
+        separate_pairs: [],
+        keep_together_pairs: [],
+        front_row_ids: [],
+        back_row_ids: ['2'], // Bob
+      });
+
+      const result = optimizer.optimize();
+      expect(result.student_positions['2'].row).toBe(2); // last row of 3
+    });
   });
 
   describe('Objective Scores', () => {

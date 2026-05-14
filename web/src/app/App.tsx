@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
 import { useState } from 'react';
@@ -12,12 +12,15 @@ import SettingsPanel from '../features/settings/SettingsPanel';
 import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
+import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import PrintView from '../features/print/PrintView';
 import OnboardingView from '../features/onboarding/OnboardingView';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
+import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
-import { Menu, X, Play, RefreshCw, Users, Printer } from 'lucide-react';
+import { useDeviceCheck } from '../hooks/useDeviceCheck';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2 } from 'lucide-react';
 
 function App() {
   const {
@@ -25,16 +28,70 @@ function App() {
     sidebarOpen,
     setSidebarOpen,
     result,
+    history,
+    historyFuture,
+    undo,
+    redo,
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
+  const { isPhone } = useDeviceCheck();
+  const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
+
+  const canUndo = history.length > 0;
+  const canRedo = historyFuture.length > 0;
 
   // Initialize WASM on mount
   useEffect(() => {
+    if (isPhone) return;
     initWasm();
-  }, [initWasm]);
+  }, [initWasm, isPhone]);
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z (undo), Ctrl/Cmd+Shift+Z or Ctrl+Y (redo),
+  // Ctrl/Cmd+Enter (run optimization). Skip when focus is in a text field so
+  // we don't fight the browser's native undo on inputs.
+  useEffect(() => {
+    if (isPhone) return;
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const isEditable =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        target?.isContentEditable;
+      if (isEditable) return;
+
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+
+      if (key === 'z' && !e.shiftKey) {
+        if (canUndo) {
+          e.preventDefault();
+          undo();
+        }
+      } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+        if (canRedo) {
+          e.preventDefault();
+          redo();
+        }
+      } else if (key === 'enter') {
+        if (wasmReady && !isOptimizing && students.length >= 2) {
+          e.preventDefault();
+          optimize();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isPhone, canUndo, canRedo, undo, redo, wasmReady, isOptimizing, students.length, optimize]);
+
+  if (isPhone) {
+    return <MobileBlockScreen />;
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -42,7 +99,9 @@ function App() {
       <motion.aside
         initial={false}
         animate={{ width: sidebarOpen ? 400 : 0 }}
+        transition={shouldReduceMotion ? { duration: 0 } : undefined}
         className="bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col"
+        aria-label={t('app.title')}
       >
         <div className="w-[400px] h-full flex flex-col">
           {/* Header */}
@@ -59,8 +118,9 @@ function App() {
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label={t('app.close_sidebar')}
             >
-              <X size={20} className="text-gray-500" />
+              <X size={20} className="text-gray-500" aria-hidden="true" />
             </button>
           </div>
 
@@ -80,6 +140,10 @@ function App() {
 
             <ErrorBoundary name="Student Form" inline>
               <StudentForm />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Seating Rules" inline>
+              <ConstraintsPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Settings" inline>
@@ -131,10 +195,32 @@ function App() {
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label={t('app.open_sidebar')}
             >
-              <Menu size={20} className="text-gray-600" />
+              <Menu size={20} className="text-gray-600" aria-hidden="true" />
             </button>
           )}
+
+          <div className="flex items-center gap-1" aria-label={t('app.history_controls')} role="group">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label={t('app.undo')}
+              title={t('app.undo')}
+            >
+              <Undo2 size={18} className="text-gray-600" aria-hidden="true" />
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label={t('app.redo')}
+              title={t('app.redo')}
+            >
+              <Redo2 size={18} className="text-gray-600" aria-hidden="true" />
+            </button>
+          </div>
 
           <div className="flex-1" />
 
@@ -147,7 +233,11 @@ function App() {
             </div>
 
             {result && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg">
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg"
+                role="status"
+                aria-label={`${t('app.score')}: ${(result.fitness_score * 100).toFixed(1)}%`}
+              >
                 <span className="text-sm font-medium text-green-700">
                   {t('app.score')}: {(result.fitness_score * 100).toFixed(1)}%
                 </span>

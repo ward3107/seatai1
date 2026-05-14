@@ -81,10 +81,14 @@ export class ClassroomOptimizer {
 
     const studentMap = new Map(this.students.map((s) => [s.id, s]));
     const totalSeats = this.rows * this.cols;
-    const ids = this.students.map((s) => s.id);
+    let ids = this.students.map((s) => s.id);
 
     if (ids.length > totalSeats) {
-      warnings.push(`Too many students (${ids.length}) for ${totalSeats} seats.`);
+      warnings.push(`Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`);
+      // Truncate so every chromosome has length === totalSeats. Without this,
+      // orderCrossover() can spin forever when chromosomes have mismatched
+      // lengths and all child slots end up filled.
+      ids = ids.slice(0, totalSeats);
     }
 
     // Build initial population
@@ -320,6 +324,26 @@ export class ClassroomOptimizer {
       if (dist <= 1) {
         score += 0.5;
       }
+    }
+
+    // Force front-row / back-row assignments: previously these only seeded
+    // the initial chromosome, so the GA could drift away from them. Reward
+    // correct placement and penalize wrong rows proportional to the distance
+    // so partial matches still pull in the right direction.
+    const lastRow = this.rows - 1;
+    for (const id of this.constraints.front_row_ids) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const r = Math.floor(pos / this.cols);
+      if (r === 0) score += 1;
+      else score -= 0.5 * r;
+    }
+    for (const id of this.constraints.back_row_ids) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const r = Math.floor(pos / this.cols);
+      if (r === lastRow) score += 1;
+      else score -= 0.5 * (lastRow - r);
     }
 
     return score;

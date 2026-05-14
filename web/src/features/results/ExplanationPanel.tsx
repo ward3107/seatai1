@@ -187,7 +187,7 @@ function getAdjacentIds(
 function calculatePairCompatibility(
   studentA: Student,
   studentB: Student,
-  allStudents: Map<string, Student>
+  _allStudents: Map<string, Student>
 ): { score: number; reasons: string[] } {
   const reasons: string[] = [];
   let score = 0;
