@@ -7,20 +7,18 @@
     "web"
   ],
   "scripts": {
-    "dev": "npm run build:core && cd web && npm run dev",
-    "build": "npm run build:core && cd web && npm run build",
-    "build:core": "cd core && wasm-pack build --target web --out-dir ../web/src/wasm",
-    "test": "cd core && cargo test && cd ../web && npm test",
-    "lint": "cd core && cargo clippy && cd ../web && npm run lint",
-    "clean": "rm -rf web/dist web/src/waml core/target"
+    "dev": "cd web && npm run dev",
+    "build": "cd web && npm run build",
+    "test": "cd web && npm test",
+    "lint": "cd web && npm run lint",
+    "clean": "rm -rf web/dist"
   },
   "keywords": [
     "classroom",
     "seating",
     "optimization",
     "genetic-algorithm",
-    "education",
-    "wasm"
+    "education"
   ],
   "author": "",
   "license": "MIT"

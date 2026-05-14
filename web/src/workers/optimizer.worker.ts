@@ -7,12 +7,14 @@
 
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints, OptimizationResult } from '../types';
 import { ClassroomOptimizer } from '../core/optimizer';
+import type { LayoutDef } from '../core/layouts';
 
 type InMessage = {
   type: 'optimize';
   students: Student[];
   rows: number;
   cols: number;
+  layoutDef?: LayoutDef;
   weights: ObjectiveWeights;
   config: GeneticConfig;
   constraints: SeatingConstraints;
@@ -27,11 +29,13 @@ type OutMessage =
 self.postMessage({ type: 'ready' } satisfies OutMessage);
 
 self.onmessage = async (e: MessageEvent<InMessage>) => {
-  const { type, students, rows, cols, weights, config, constraints } = e.data;
+  const { type, students, rows, cols, layoutDef, weights, config, constraints } = e.data;
   if (type !== 'optimize') return;
 
   try {
-    const optimizer = new ClassroomOptimizer(students, rows, cols);
+    const optimizer = layoutDef
+      ? new ClassroomOptimizer(students, layoutDef)
+      : new ClassroomOptimizer(students, rows, cols);
     optimizer.setWeights(weights);
     optimizer.setConfig(config);
     optimizer.setConstraints(constraints);

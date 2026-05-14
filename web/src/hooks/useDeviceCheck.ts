@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 
-const PHONE_MAX_SHORT_SIDE_PX = 600;
+// Block ONLY very narrow screens (small phones in portrait orientation).
+// Tablets, landscape phones, and any screen ≥ 480px wide get the
+// responsive UI now that the sidebar collapses into a drawer.
+const TINY_PORTRAIT_MAX_WIDTH = 480;
 
-function detectPhone(): boolean {
+function detectTinyPortrait(): boolean {
   if (typeof window === 'undefined') return false;
-
-  const ua = window.navigator.userAgent || '';
-  const isIPad = /iPad/i.test(ua) || (ua.includes('Macintosh') && 'ontouchend' in document);
-  const isAndroidTablet = /Android/i.test(ua) && !/Mobile/i.test(ua);
-  if (isIPad || isAndroidTablet) return false;
-
-  const isPhoneUA = /iPhone|iPod|Mobi/i.test(ua);
-  const shortSide = Math.min(window.innerWidth, window.innerHeight);
-  const isPhoneViewport = shortSide > 0 && shortSide < PHONE_MAX_SHORT_SIDE_PX;
-
-  return isPhoneUA || isPhoneViewport;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  if (!w || !h) return false;
+  const isPortrait = h > w;
+  return isPortrait && w < TINY_PORTRAIT_MAX_WIDTH;
 }
 
 export function useDeviceCheck() {
-  const [isPhone, setIsPhone] = useState<boolean>(() => detectPhone());
+  // `isPhone` keeps the existing name for back-compat with App.tsx but
+  // its meaning has narrowed: it's now true only for truly tiny portrait
+  // phones where the UI can't usefully fit.
+  const [isPhone, setIsPhone] = useState<boolean>(() => detectTinyPortrait());
 
   useEffect(() => {
-    const update = () => setIsPhone(detectPhone());
+    const update = () => setIsPhone(detectTinyPortrait());
     window.addEventListener('resize', update);
     window.addEventListener('orientationchange', update);
     return () => {

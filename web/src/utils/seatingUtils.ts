@@ -107,3 +107,18 @@ export function buildStudentToSeatMap(result: OptimizationResult): Map<string, s
   }
   return map;
 }
+
+/**
+ * The optimizer's `fitness_score` is an unbounded sum of per-seat scores —
+ * it can easily exceed 100 for a normal classroom, so showing it as a
+ * percentage produced absurd values (e.g. "Score: 8500%"). For the
+ * user-facing headline we instead compute the unweighted average of the
+ * four normalized objective scores, which are each guaranteed to be in
+ * the [0, 100] range. Result is rounded to 1 decimal.
+ */
+export function getDisplayScorePct(result: OptimizationResult): number {
+  const o = result.objective_scores;
+  const avg =
+    (o.academic_balance + o.behavioral_balance + o.diversity + o.special_needs) / 4;
+  return Math.round(avg * 10) / 10;
+}

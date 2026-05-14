@@ -2,7 +2,14 @@
 export type Gender = 'male' | 'female' | 'other';
 export type AcademicLevel = 'advanced' | 'proficient' | 'basic' | 'below_basic';
 export type BehaviorLevel = 'excellent' | 'good' | 'average' | 'challenging';
-export type LayoutType = 'rows' | 'pairs' | 'clusters' | 'u-shape' | 'circle' | 'flexible';
+export type LayoutType =
+  | 'rows'
+  | 'pairs'
+  | 'clusters'
+  | 'u-shape'
+  | 'circle'
+  | 'custom-rows'
+  | 'flexible';
 
 export interface SpecialNeed {
   type: string;
@@ -36,6 +43,9 @@ export interface SeatPosition {
   col: number;
   is_front_row: boolean;
   is_near_teacher: boolean;
+  /** Normalized 0..1 render coordinate (only set for non-grid layouts). */
+  x?: number;
+  y?: number;
 }
 
 export interface Seat {
@@ -93,6 +103,12 @@ export interface SeatingConstraints {
   keep_together_pairs: [string, string][];
   front_row_ids: string[];
   back_row_ids: string[];
+  /** Students who must sit on an aisle / edge column for easy egress. */
+  aisle_ids?: string[];
+  /** Students who must sit near a window (left edge in our coordinate space). */
+  near_window_ids?: string[];
+  /** Mentor → mentee assignments; the mentee must be adjacent to the mentor. */
+  peer_mentor_pairs?: [string, string][];
 }
 
 export interface ClassProject {
@@ -103,6 +119,18 @@ export interface ClassProject {
   students: Student[];
   rows: number;
   cols: number;
+  /** Full layout definition (shape of the room). Optional for back-compat
+   *  with projects saved before the multi-layout system — when absent the
+   *  loader falls back to `{ type: 'rows', rows, cols }`. The runtime
+   *  type is `LayoutDef` from `core/layouts`; declared loosely here to
+   *  avoid a circular type dep with this `types` module. */
+  layoutDef?: {
+    type: 'rows' | 'clusters' | 'u-shape' | 'circle' | 'custom-rows';
+    rows: number;
+    cols: number;
+    customRowSizes?: number[];
+    clusterSize?: number;
+  };
   weights: ObjectiveWeights;
   config: GeneticConfig;
   constraints: SeatingConstraints;

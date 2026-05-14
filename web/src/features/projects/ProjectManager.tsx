@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { getDisplayScorePct } from '../../utils/seatingUtils';
 import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import type { ClassProject } from '../../types';
 
@@ -137,7 +138,7 @@ export default function ProjectManager() {
                         <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
                         <p className="text-xs text-gray-400">
                           {p.students.length} {t('app.students')} · {formatDate(p.updatedAt)}
-                          {p.result && ` · ${t('app.score')}: ${(p.result.fitness_score * 100).toFixed(0)}%`}
+                          {p.result && ` · ${t('app.score')}: ${getDisplayScorePct(p.result)}%`}
                         </p>
                       </>
                     )}

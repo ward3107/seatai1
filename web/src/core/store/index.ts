@@ -12,6 +12,7 @@ import type {
   SeatingConstraints,
   ClassProject,
 } from '../../types';
+import type { LayoutDef } from '../layouts';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
 export type ViewMode = 'rows' | 'pairs' | 'clusters' | '3d';
@@ -30,11 +31,25 @@ interface AppState {
   setRows: (rows: number) => void;
   setCols: (cols: number) => void;
 
+  /**
+   * Layout definition (shape of the classroom). Drives both the optimizer
+   * and the renderer. Defaults to `{ type: 'rows', rows, cols }` so
+   * existing projects keep working.
+   */
+  layoutDef: LayoutDef;
+  setLayoutDef: (def: LayoutDef) => void;
+
   // Optimization
   isOptimizing: boolean;
   result: OptimizationResult | null;
+  /** Student positions from the previous optimization run, captured the
+   *  moment a NEW result arrives. Used for the "show what moved"
+   *  highlight. Cleared when result itself is cleared. */
+  previousPositions: Record<string, { row: number; col: number }> | null;
+  showMovementDiff: boolean;
   setOptimizing: (value: boolean) => void;
   setResult: (result: OptimizationResult | null) => void;
+  setShowMovementDiff: (v: boolean) => void;
 
   // Weights
   weights: ObjectiveWeights;
@@ -83,6 +98,16 @@ interface AppState {
   // UI Language
   uiLanguage: 'en' | 'he' | 'ar' | 'ru';
   setUiLanguage: (lang: 'en' | 'he' | 'ar' | 'ru') => void;
+
+  // UI scale ("sm" | "md" | "lg") — lets teachers bump text size up for
+  // readability without changing browser zoom.
+  uiScale: 'sm' | 'md' | 'lg';
+  setUiScale: (scale: 'sm' | 'md' | 'lg') => void;
+
+  // Whether the results stack (metrics + explanation) starts collapsed so
+  // the seating map dominates the viewport.
+  resultsCollapsed: boolean;
+  setResultsCollapsed: (v: boolean) => void;
 
   // Projects
   projects: ClassProject[];
@@ -144,24 +169,62 @@ export const useStore = create<AppState>()(
       // Layout
       rows: 4,
       cols: 5,
-      setRows: (rows) =>
+      setRows: (rows) => {
+        // Route through setLayoutDef so the result-invalidation logic runs.
+        const { layoutDef, setLayoutDef } = useStore.getState();
+        setLayoutDef({ ...layoutDef, rows });
+      },
+      setCols: (cols) => {
+        const { layoutDef, setLayoutDef } = useStore.getState();
+        setLayoutDef({ ...layoutDef, cols });
+      },
+
+      layoutDef: { type: 'rows', rows: 4, cols: 5 },
+      setLayoutDef: (def) =>
         set((state) => {
-          state.rows = rows;
-        }),
-      setCols: (cols) =>
-        set((state) => {
-          state.cols = cols;
+          // Clear any stale optimization result when the shape of the room
+          // changes — the old seat positions no longer match the new
+          // layout, so showing them in the new renderer would look broken.
+          // Changes that only adjust rows/cols within the same layout type
+          // also invalidate the result because the seat count differs.
+          const prev = state.layoutDef;
+          const shapeChanged =
+            prev.type !== def.type ||
+            prev.rows !== def.rows ||
+            prev.cols !== def.cols ||
+            prev.clusterSize !== def.clusterSize ||
+            JSON.stringify(prev.customRowSizes ?? []) !==
+              JSON.stringify(def.customRowSizes ?? []);
+          state.layoutDef = def;
+          state.rows = def.rows;
+          state.cols = def.cols;
+          if (shapeChanged) {
+            state.result = null;
+            state.lockedSeats = [];
+            state.selectedSeatKey = null;
+          }
         }),
 
       // Optimization
       isOptimizing: false,
       result: null,
+      previousPositions: null,
+      showMovementDiff: false,
       setOptimizing: (value) =>
         set((state) => {
           state.isOptimizing = value;
         }),
       setResult: (result) =>
         set((state) => {
+          // Capture the previous run's positions so the UI can highlight
+          // who moved between optimizations. Only swap in when a NEW result
+          // arrives (not when clearing) so a layout-change wipe doesn't
+          // drop the prior baseline.
+          if (result && state.result) {
+            state.previousPositions = state.result.student_positions;
+          } else if (!result) {
+            state.previousPositions = null;
+          }
           state.result = result;
           // New optimization clears undo history
           state.history = [];
@@ -314,6 +377,19 @@ export const useStore = create<AppState>()(
       setUiLanguage: (lang) =>
         set((state) => { state.uiLanguage = lang; }),
 
+      // UI scale
+      uiScale: 'md',
+      setUiScale: (scale) =>
+        set((state) => { state.uiScale = scale; }),
+
+      // Collapsed results stack
+      resultsCollapsed: false,
+      setResultsCollapsed: (v) =>
+        set((state) => { state.resultsCollapsed = v; }),
+
+      setShowMovementDiff: (v) =>
+        set((state) => { state.showMovementDiff = v; }),
+
       // Projects
       projects: [],
       currentProjectId: null,
@@ -322,6 +398,16 @@ export const useStore = create<AppState>()(
         set((state) => {
           const now = new Date().toISOString();
           const existing = state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
+          const snapshot = {
+            students: JSON.parse(JSON.stringify(current(state.students))),
+            rows: state.rows,
+            cols: state.cols,
+            layoutDef: JSON.parse(JSON.stringify(current(state.layoutDef))),
+            weights: { ...state.weights },
+            config: { ...state.config },
+            constraints: JSON.parse(JSON.stringify(current(state.constraints))),
+            result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+          };
           if (existing) {
             existing.name = name;
             existing.updatedAt = now;
@@ -359,6 +445,9 @@ export const useStore = create<AppState>()(
           state.students = p.students;
           state.rows = p.rows;
           state.cols = p.cols;
+          // Pre-multi-layout projects have no layoutDef — fall back to a
+          // 'rows' layout reconstructed from rows/cols so they still load.
+          state.layoutDef = p.layoutDef ?? { type: 'rows', rows: p.rows, cols: p.cols };
           state.weights = p.weights;
           state.config = p.config;
           state.constraints = p.constraints;
@@ -389,6 +478,7 @@ export const useStore = create<AppState>()(
         students: state.students,
         rows: state.rows,
         cols: state.cols,
+        layoutDef: state.layoutDef,
         weights: state.weights,
         config: state.config,
         constraints: state.constraints,
@@ -399,6 +489,8 @@ export const useStore = create<AppState>()(
         projects: state.projects,
         currentProjectId: state.currentProjectId,
         uiLanguage: state.uiLanguage,
+        uiScale: state.uiScale,
+        resultsCollapsed: state.resultsCollapsed,
       }),
     }
   )

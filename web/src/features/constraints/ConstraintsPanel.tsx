@@ -11,13 +11,20 @@ import {
   AlertTriangle,
   UserMinus,
   UserPlus,
+  PanelLeft,
+  Sun,
+  GraduationCap,
 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import type { SeatingConstraints, Student } from '../../types';
 
-type PairField = 'separate_pairs' | 'keep_together_pairs';
-type RowField = 'front_row_ids' | 'back_row_ids';
+type PairField = 'separate_pairs' | 'keep_together_pairs' | 'peer_mentor_pairs';
+type RowField =
+  | 'front_row_ids'
+  | 'back_row_ids'
+  | 'aisle_ids'
+  | 'near_window_ids';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -429,7 +436,10 @@ export default function ConstraintsPanel() {
     constraints.separate_pairs.length +
     constraints.keep_together_pairs.length +
     constraints.front_row_ids.length +
-    constraints.back_row_ids.length;
+    constraints.back_row_ids.length +
+    (constraints.aisle_ids?.length ?? 0) +
+    (constraints.near_window_ids?.length ?? 0) +
+    (constraints.peer_mentor_pairs?.length ?? 0);
 
   const conflicts = useMemo(
     () => detectConflicts(constraints, students, t),
@@ -439,17 +449,17 @@ export default function ConstraintsPanel() {
   const addPair = (field: PairField) => (a: string, b: string) =>
     setConstraints({
       ...constraints,
-      [field]: [...constraints[field], [a, b] as [string, string]],
+      [field]: [...(constraints[field] ?? []), [a, b] as [string, string]],
     });
 
   const removePair = (field: PairField) => (a: string, b: string) =>
     setConstraints({
       ...constraints,
-      [field]: constraints[field].filter((p) => !pairsEqual(p, [a, b])),
+      [field]: (constraints[field] ?? []).filter((p) => !pairsEqual(p, [a, b])),
     });
 
   const toggleRowId = (field: RowField) => (id: string) => {
-    const list = constraints[field];
+    const list = constraints[field] ?? [];
     setConstraints({
       ...constraints,
       [field]: list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
@@ -460,6 +470,9 @@ export default function ConstraintsPanel() {
     setConstraints({
       separate_pairs: [],
       keep_together_pairs: [],
+      aisle_ids: [],
+      near_window_ids: [],
+      peer_mentor_pairs: [],
       front_row_ids: [],
       back_row_ids: [],
     });
@@ -568,6 +581,40 @@ export default function ConstraintsPanel() {
                 description={t('constraints.prefer_back_row_desc')}
                 icon={<ArrowDownToLine size={14} />}
                 variant="back"
+                t={t}
+              />
+
+              <RowPicker
+                students={students}
+                selectedIds={constraints.aisle_ids ?? []}
+                onToggle={toggleRowId('aisle_ids')}
+                label={t('constraints.on_aisle')}
+                description={t('constraints.on_aisle_desc')}
+                icon={<PanelLeft size={14} />}
+                variant="back"
+                t={t}
+              />
+
+              <RowPicker
+                students={students}
+                selectedIds={constraints.near_window_ids ?? []}
+                onToggle={toggleRowId('near_window_ids')}
+                label={t('constraints.near_window')}
+                description={t('constraints.near_window_desc')}
+                icon={<Sun size={14} />}
+                variant="front"
+                t={t}
+              />
+
+              <PairPicker
+                students={students}
+                pairs={constraints.peer_mentor_pairs ?? []}
+                onAdd={addPair('peer_mentor_pairs')}
+                onRemove={removePair('peer_mentor_pairs')}
+                label={t('constraints.peer_mentor')}
+                description={t('constraints.peer_mentor_desc')}
+                icon={<GraduationCap size={14} />}
+                variant="together"
                 t={t}
               />
 

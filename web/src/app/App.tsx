@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, Suspense, lazy } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
 import { useState } from 'react';
@@ -13,14 +13,27 @@ import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
-import PrintView from '../features/print/PrintView';
+import LayoutPanel from '../features/layout/LayoutPanel';
+
+// PrintView pulls in html2canvas indirectly (the user only sees it after
+// clicking Print), so defer its load.
+const PrintView = lazy(() => import('../features/print/PrintView'));
 import OnboardingView from '../features/onboarding/OnboardingView';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
 import { useDeviceCheck } from '../hooks/useDeviceCheck';
-import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2 } from 'lucide-react';
+import { getDisplayScorePct } from '../utils/seatingUtils';
+import TextSizeToggle from '../components/TextSizeToggle';
+import clsx from 'clsx';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp } from 'lucide-react';
+
+const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+};
 
 function App() {
   const {
@@ -28,10 +41,16 @@ function App() {
     sidebarOpen,
     setSidebarOpen,
     result,
+    previousPositions,
+    showMovementDiff,
+    setShowMovementDiff,
     history,
     historyFuture,
     undo,
     redo,
+    uiScale,
+    resultsCollapsed,
+    setResultsCollapsed,
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
@@ -42,6 +61,16 @@ function App() {
 
   const canUndo = history.length > 0;
   const canRedo = historyFuture.length > 0;
+
+  // On small viewports, default the sidebar to closed so the user sees
+  // the seating area first. Run once on mount only — afterwards the
+  // user's toggle wins.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      useStore.setState({ sidebarOpen: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initialize WASM on mount
   useEffect(() => {
@@ -94,16 +123,41 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: sidebarOpen ? 400 : 0 }}
-        transition={shouldReduceMotion ? { duration: 0 } : undefined}
-        className="bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col"
+    <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
+      {/* Backdrop — visible only when the sidebar is open on small screens. */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label={t('app.close_sidebar')}
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] md:hidden"
+        />
+      )}
+
+      {/* Sidebar — overlay drawer on small viewports, push-style from md+.
+          Animation strategy:
+            - Small: position fixed, slide via translate-x. Width fixed at
+              400px (capped to 85vw). Main content is full-width
+              underneath; backdrop dismisses.
+            - md+:   position relative inside flex layout. Width
+              transitions 0 ↔ 400 so main content reflows. */}
+      <aside
+        className={clsx(
+          'bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
+          'fixed inset-y-0 left-0 z-40 max-w-[85vw] w-[400px]',
+          'transition-transform duration-200',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          // md+: switch to flow-layout push-style. Translate becomes a
+          // no-op (we're always in-flow), and width animates instead.
+          'md:relative md:z-0 md:translate-x-0 md:max-w-none',
+          'md:transition-[width] md:duration-200',
+          sidebarOpen ? 'md:w-[400px]' : 'md:w-0',
+          shouldReduceMotion && 'transition-none md:transition-none',
+        )}
         aria-label={t('app.title')}
+        aria-hidden={!sidebarOpen}
       >
-        <div className="w-[400px] h-full flex flex-col">
+        <div className="w-[400px] max-w-[85vw] h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -140,6 +194,10 @@ function App() {
 
             <ErrorBoundary name="Student Form" inline>
               <StudentForm />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Layout" inline>
+              <LayoutPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Seating Rules" inline>
@@ -185,7 +243,7 @@ function App() {
             )}
           </div>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
@@ -236,10 +294,10 @@ function App() {
               <div
                 className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg"
                 role="status"
-                aria-label={`${t('app.score')}: ${(result.fitness_score * 100).toFixed(1)}%`}
+                aria-label={`${t('app.score')}: ${getDisplayScorePct(result)}%`}
               >
                 <span className="text-sm font-medium text-green-700">
-                  {t('app.score')}: {(result.fitness_score * 100).toFixed(1)}%
+                  {t('app.score')}: {getDisplayScorePct(result)}%
                 </span>
               </div>
             )}
@@ -254,6 +312,7 @@ function App() {
                 {t('app.print')}
               </button>
             )}
+            <TextSizeToggle />
             <LanguageSelector />
             <ExportButton />
           </div>
@@ -266,31 +325,77 @@ function App() {
             <OnboardingView onOpenSidebar={() => setSidebarOpen(true)} />
           ) : (
             <>
-              {/* Metrics */}
+              {/* Results disclosure: metrics + per-student explanations
+                  collapse into a single bar by default so the seating map
+                  dominates the viewport. Score stays visible in the header
+                  for at-a-glance feedback. */}
               {result && (
-                <ErrorBoundary name="Metrics Panel" inline>
-                  <MetricsPanel />
-                </ErrorBoundary>
+                <div className="mb-4 bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setResultsCollapsed(!resultsCollapsed)}
+                    aria-expanded={!resultsCollapsed}
+                    aria-controls="results-disclosure-body"
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                  >
+                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                      <span className="font-semibold">{t('optimization.results_title')}</span>
+                      <span className="text-gray-400">·</span>
+                      <span>
+                        {t('app.score')}: <strong>{getDisplayScorePct(result)}%</strong>
+                      </span>
+                      <span className="text-gray-400 hidden sm:inline">·</span>
+                      <span className="text-gray-500 hidden sm:inline">
+                        {result.computation_time_ms}ms · {result.generations}{' '}
+                        {t('optimization.generations')}
+                      </span>
+                    </div>
+                    {resultsCollapsed ? (
+                      <ChevronDown size={18} className="text-gray-400" aria-hidden="true" />
+                    ) : (
+                      <ChevronUp size={18} className="text-gray-400" aria-hidden="true" />
+                    )}
+                  </button>
+
+                  {!resultsCollapsed && (
+                    <div id="results-disclosure-body" className="px-2 pb-2 space-y-2">
+                      {/* Movement-diff toggle — only meaningful when a
+                          previous run is available to compare against. */}
+                      {previousPositions && (
+                        <label className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={showMovementDiff}
+                            onChange={(e) => setShowMovementDiff(e.target.checked)}
+                            className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                          />
+                          <span>{t('optimization.show_movement_diff')}</span>
+                        </label>
+                      )}
+                      <ErrorBoundary name="Metrics Panel" inline>
+                        <MetricsPanel />
+                      </ErrorBoundary>
+                      <ErrorBoundary name="Explanation Panel" inline>
+                        <ExplanationPanel />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                </div>
               )}
 
-              {/* Placement explanations */}
-              {result && (
-                <ErrorBoundary name="Explanation Panel" inline>
-                  <ExplanationPanel />
-                </ErrorBoundary>
-              )}
-
-              {/* Classroom Grid */}
-              <div className="mt-6">
-                <ErrorBoundary name="Seating Grid">
-                  <ClassroomGrid />
-                </ErrorBoundary>
-              </div>
+              {/* Classroom Grid — main attraction */}
+              <ErrorBoundary name="Seating Grid">
+                <ClassroomGrid />
+              </ErrorBoundary>
             </>
           )}
         </div>
       </main>
-      {showPrint && <PrintView onClose={() => setShowPrint(false)} />}
+      {showPrint && (
+        <Suspense fallback={null}>
+          <PrintView onClose={() => setShowPrint(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
