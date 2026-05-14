@@ -103,6 +103,12 @@ export interface SeatingConstraints {
   keep_together_pairs: [string, string][];
   front_row_ids: string[];
   back_row_ids: string[];
+  /** Students who must sit on an aisle / edge column for easy egress. */
+  aisle_ids?: string[];
+  /** Students who must sit near a window (left edge in our coordinate space). */
+  near_window_ids?: string[];
+  /** Mentor → mentee assignments; the mentee must be adjacent to the mentor. */
+  peer_mentor_pairs?: [string, string][];
 }
 
 export interface ClassProject {

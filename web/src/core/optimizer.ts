@@ -320,6 +320,38 @@ export class ClassroomOptimizer {
       }
     }
 
+    // Aisle assignments — reward edge-column placement.
+    // Anyone in the leftmost or rightmost ~5% of normalized x is "on the aisle".
+    for (const id of this.constraints.aisle_ids ?? []) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const slot = this.slots[pos];
+      const onAisle = slot.x <= 0.05 || slot.x >= 0.95;
+      if (onAisle) score += 1;
+      else score -= 0.5 * Math.min(slot.x, 1 - slot.x);
+    }
+
+    // Near-window assignments — reward left-column placement.
+    // (UI presents this as "window side". Mirror with `aisle` if you need the
+    // other wall.)
+    for (const id of this.constraints.near_window_ids ?? []) {
+      const pos = chrom.indexOf(id);
+      if (pos === -1) continue;
+      const slot = this.slots[pos];
+      if (slot.x <= 0.1) score += 1;
+      else score -= 0.4 * slot.x;
+    }
+
+    // Peer mentor → mentee adjacency. Both must be adjacent; if they are,
+    // reward strongly so mentor pairs reliably sit together.
+    for (const [mentor, mentee] of this.constraints.peer_mentor_pairs ?? []) {
+      const sa = chrom.indexOf(mentor);
+      const sb = chrom.indexOf(mentee);
+      if (sa === -1 || sb === -1) continue;
+      if (this.slots[sa].neighbors.includes(sb)) score += 0.75;
+      else score -= 0.25;
+    }
+
     return score;
   }
 
