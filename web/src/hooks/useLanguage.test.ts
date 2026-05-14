@@ -14,13 +14,17 @@ vi.mock('../core/store', () => ({
 
 describe('useLanguage Hook', () => {
   const mockSetUiLanguage = vi.fn();
+  // The hook reads each slice via per-selector calls: useStore((s) => s.x).
+  // Our mock has to honor that pattern, not just return the whole state.
+  function setStoreState(state: { uiLanguage: string; setUiLanguage: typeof mockSetUiLanguage }) {
+    (useStore as any).mockImplementation((selector?: (s: typeof state) => unknown) =>
+      typeof selector === 'function' ? selector(state) : state,
+    );
+  }
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as any).mockReturnValue({
-      uiLanguage: 'en',
-      setUiLanguage: mockSetUiLanguage,
-    });
+    setStoreState({ uiLanguage: 'en', setUiLanguage: mockSetUiLanguage });
 
     // Reset document state
     document.documentElement.lang = '';
@@ -37,7 +41,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should detect Hebrew as RTL', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'he',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -49,7 +53,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should detect Arabic as RTL', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'ar',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -61,7 +65,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should detect Russian as LTR', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'ru',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -75,7 +79,7 @@ describe('useLanguage Hook', () => {
 
   describe('DOM updates', () => {
     it('should set HTML lang attribute to English', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'en',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -87,7 +91,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should set HTML dir attribute to RTL for Hebrew', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'he',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -99,7 +103,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should apply correct font for English', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'en',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -110,7 +114,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should apply Heebo font for Hebrew', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'he',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -121,7 +125,7 @@ describe('useLanguage Hook', () => {
     });
 
     it('should apply Cairo font for Arabic', () => {
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'ar',
         setUiLanguage: mockSetUiLanguage,
       });
@@ -205,7 +209,7 @@ describe('useLanguage Hook', () => {
   describe('Reactive updates', () => {
     it('should update DOM when language changes via setUiLanguage', () => {
       // Test Hebrew language from the start
-      (useStore as any).mockReturnValue({
+      setStoreState({
         uiLanguage: 'he',
         setUiLanguage: mockSetUiLanguage,
       });

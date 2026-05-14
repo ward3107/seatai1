@@ -23,6 +23,7 @@ export function useOptimizer() {
   const students = useStore((s) => s.students);
   const rows = useStore((s) => s.rows);
   const cols = useStore((s) => s.cols);
+  const layoutDef = useStore((s) => s.layoutDef);
   const weights = useStore((s) => s.weights);
   const config = useStore((s) => s.config);
   const constraints = useStore((s) => s.constraints);

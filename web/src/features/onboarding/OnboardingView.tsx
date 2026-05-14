@@ -10,6 +10,7 @@ interface Props {
 
 export default function OnboardingView({ onOpenSidebar }: Props) {
   const setStudents = useStore((s) => s.setStudents);
+  const setLayoutDef = useStore((s) => s.setLayoutDef);
   const { t } = useLanguage();
 
   function loadSampleClass(id: typeof SAMPLE_CLASSES[number]['id']) {

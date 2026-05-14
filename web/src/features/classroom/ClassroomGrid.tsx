@@ -22,7 +22,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -132,8 +132,11 @@ function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => string }
 
 export default function ClassroomGrid() {
   const result = useStore((s) => s.result);
+  const previousPositions = useStore((s) => s.previousPositions);
+  const showMovementDiff = useStore((s) => s.showMovementDiff);
   const rows = useStore((s) => s.rows);
   const cols = useStore((s) => s.cols);
+  const layoutDef = useStore((s) => s.layoutDef);
   const students = useStore((s) => s.students);
   const lockedSeats = useStore((s) => s.lockedSeats);
   const heatMapMode = useStore((s) => s.heatMapMode);
@@ -162,7 +165,23 @@ export default function ClassroomGrid() {
 
   useSeatingHistory();
 
-  const seats = result?.layout.seats ?? createEmptyGrid(rows, cols);
+  const seats = useMemo(
+    () =>
+      result?.layout.seats ??
+      (layoutDef.type === 'rows'
+        ? createEmptyGrid(rows, cols)
+        : emptySeatsFromLayout(layoutDef)),
+    [result, layoutDef, rows, cols],
+  );
+
+  // Non-grid layouts (clusters, u-shape, circle) need absolute positioning
+  // because their seats aren't on a regular grid. custom-rows still works
+  // with the row-based renderer because every seat belongs to a row.
+  const isAbsoluteLayout =
+    layoutDef.type === 'clusters' ||
+    layoutDef.type === 'u-shape' ||
+    layoutDef.type === 'circle';
+
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
   const violations = useMemo(() => result ? getViolations(result, students) : new Set<string>(), [result, students]);
 
@@ -291,7 +310,7 @@ export default function ClassroomGrid() {
             students={students}
             rows={rows}
             cols={cols}
-            onStudentClick={(studentId) => {
+            onStudentClick={(studentId: string) => {
               // Find seat key for this student
               const pos = result?.student_positions[studentId];
               if (pos) {

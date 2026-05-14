@@ -27,6 +27,7 @@ function csvCell(value: string | number | undefined): string {
 export default function ExportButton() {
   const result = useStore((s) => s.result);
   const students = useStore((s) => s.students);
+  const layoutDef = useStore((s) => s.layoutDef);
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<Loading>(null);

@@ -398,26 +398,21 @@ export const useStore = create<AppState>()(
         set((state) => {
           const now = new Date().toISOString();
           const existing = state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
+          // Build the persistable snapshot once. Uses structuredClone (faster
+          // than JSON round-trip) for nested arrays/objects. `layoutDef` is
+          // included so circle / cluster / U-shape projects survive reload.
           const snapshot = {
-            students: JSON.parse(JSON.stringify(current(state.students))),
+            students: structuredClone(current(state.students)),
             rows: state.rows,
             cols: state.cols,
-            layoutDef: JSON.parse(JSON.stringify(current(state.layoutDef))),
+            layoutDef: structuredClone(current(state.layoutDef)),
             weights: { ...state.weights },
             config: { ...state.config },
-            constraints: JSON.parse(JSON.stringify(current(state.constraints))),
-            result: state.result ? JSON.parse(JSON.stringify(current(state.result))) : null,
+            constraints: structuredClone(current(state.constraints)),
+            result: state.result ? structuredClone(current(state.result)) : null,
           };
           if (existing) {
-            existing.name = name;
-            existing.updatedAt = now;
-            existing.students = structuredClone(current(state.students));
-            existing.rows = state.rows;
-            existing.cols = state.cols;
-            existing.weights = { ...state.weights };
-            existing.config = { ...state.config };
-            existing.constraints = structuredClone(current(state.constraints));
-            existing.result = state.result ? structuredClone(current(state.result)) : null;
+            Object.assign(existing, snapshot, { name, updatedAt: now });
           } else {
             const id = `proj_${Date.now()}`;
             state.projects.push({
@@ -425,13 +420,7 @@ export const useStore = create<AppState>()(
               name,
               createdAt: now,
               updatedAt: now,
-              students: structuredClone(current(state.students)),
-              rows: state.rows,
-              cols: state.cols,
-              weights: { ...state.weights },
-              config: { ...state.config },
-              constraints: structuredClone(current(state.constraints)),
-              result: state.result ? structuredClone(current(state.result)) : null,
+              ...snapshot,
             });
             state.currentProjectId = id;
           }
