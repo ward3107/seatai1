@@ -8,7 +8,12 @@
     "students": "طلاب",
     "score": "الدرجة",
     "print": "طباعة",
-    "print_title": "طباعة خطة المقاعد"
+    "print_title": "طباعة خطة المقاعد",
+    "open_sidebar": "فتح الشريط الجانبي",
+    "close_sidebar": "إغلاق الشريط الجانبي",
+    "undo": "تراجع (Ctrl+Z)",
+    "redo": "إعادة (Ctrl+Y)",
+    "history_controls": "عناصر التحكم في السجل"
   },
   "navigation": {
     "students": "الطلاب",

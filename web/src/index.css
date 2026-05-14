@@ -91,3 +91,17 @@ body {
     }
   }
 }
+
+/* Respect the user's OS-level "reduce motion" preference.
+   Framer Motion is handled separately via useReducedMotion(); this rule
+   covers Tailwind transitions and the CSS @keyframes above. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

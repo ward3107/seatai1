@@ -8,7 +8,12 @@
     "students": "תלמידים",
     "score": "ניקוד",
     "print": "הדפס",
-    "print_title": "הדפס מפת מושבים"
+    "print_title": "הדפס מפת מושבים",
+    "open_sidebar": "פתח סרגל צד",
+    "close_sidebar": "סגור סרגל צד",
+    "undo": "בטל (Ctrl+Z)",
+    "redo": "בצע שוב (Ctrl+Y)",
+    "history_controls": "פקדי היסטוריה"
   },
   "navigation": {
     "students": "תלמידים",

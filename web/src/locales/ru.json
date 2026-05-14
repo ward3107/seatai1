@@ -8,7 +8,12 @@
     "students": "учеников",
     "score": "Оценка",
     "print": "Печать",
-    "print_title": "Печать рассадки"
+    "print_title": "Печать рассадки",
+    "open_sidebar": "Открыть боковую панель",
+    "close_sidebar": "Закрыть боковую панель",
+    "undo": "Отменить (Ctrl+Z)",
+    "redo": "Повторить (Ctrl+Y)",
+    "history_controls": "Управление историей"
   },
   "navigation": {
     "students": "Ученики",

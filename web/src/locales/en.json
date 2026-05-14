@@ -8,7 +8,12 @@
     "students": "students",
     "score": "Score",
     "print": "Print",
-    "print_title": "Print seating chart"
+    "print_title": "Print seating chart",
+    "open_sidebar": "Open sidebar",
+    "close_sidebar": "Close sidebar",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Y)",
+    "history_controls": "History controls"
   },
   "navigation": {
     "students": "Students",
