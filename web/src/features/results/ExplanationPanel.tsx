@@ -317,7 +317,11 @@ function groupIntoPairs(
 // ─── main component ─────────────────────────────────────────────────────────
 
 export default function ExplanationPanel() {
-  const { result, students, rows, constraints, viewMode } = useStore();
+  const result = useStore((s) => s.result);
+  const students = useStore((s) => s.students);
+  const rows = useStore((s) => s.rows);
+  const constraints = useStore((s) => s.constraints);
+  const viewMode = useStore((s) => s.viewMode);
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState('');

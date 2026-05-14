@@ -41,20 +41,18 @@ export default function GridControls({
   showRelations,
   setShowRelations,
 }: Props) {
-  const {
-    history,
-    historyFuture,
-    undo,
-    redo,
-    heatMapMode,
-    setHeatMapMode,
-    zoomLevel,
-    setZoomLevel,
-    viewMode,
-    setViewMode,
-    showTimeline,
-    setShowTimeline,
-  } = useStore();
+  const history = useStore((s) => s.history);
+  const historyFuture = useStore((s) => s.historyFuture);
+  const undo = useStore((s) => s.undo);
+  const redo = useStore((s) => s.redo);
+  const heatMapMode = useStore((s) => s.heatMapMode);
+  const setHeatMapMode = useStore((s) => s.setHeatMapMode);
+  const zoomLevel = useStore((s) => s.zoomLevel);
+  const setZoomLevel = useStore((s) => s.setZoomLevel);
+  const viewMode = useStore((s) => s.viewMode);
+  const setViewMode = useStore((s) => s.setViewMode);
+  const showTimeline = useStore((s) => s.showTimeline);
+  const setShowTimeline = useStore((s) => s.setShowTimeline);
   const { t } = useLanguage();
   const heatMapOptions = getHeatMapOptions(t);
 

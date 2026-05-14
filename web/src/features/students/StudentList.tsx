@@ -9,7 +9,10 @@ import type { AcademicLevel, BehaviorLevel } from '../../types';
 type FilterLevel = 'all' | AcademicLevel | BehaviorLevel;
 
 export default function StudentList() {
-  const { students, selectedStudentId, setSelectedStudentId, removeStudent } = useStore();
+  const students = useStore((s) => s.students);
+  const selectedStudentId = useStore((s) => s.selectedStudentId);
+  const setSelectedStudentId = useStore((s) => s.setSelectedStudentId);
+  const removeStudent = useStore((s) => s.removeStudent);
   const { t } = useLanguage();
 
   const [query, setQuery] = useState('');
