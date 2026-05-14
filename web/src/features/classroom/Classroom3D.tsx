@@ -16,8 +16,8 @@
  * floating outside the floor for any other dimensions.
  */
 
-import { useEffect, useState } from 'react';
-import { Box, RotateCw } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Box, RotateCw, RotateCcw, Move } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '../../hooks/useLanguage';
 import type { Seat, Student } from '../../types';
@@ -160,6 +160,74 @@ export default function Classroom3D({
   const [autoRotate, setAutoRotate] = useState(false);
   const [spin, setSpin] = useState(0);
 
+  // Mouse-driven free camera. When the user drags or scrolls, these
+  // override the preset until the user clicks a preset again.
+  // - dragRotX / dragRotY are offsets in degrees added to the preset.
+  // - zoom is a scale factor (0.5..2.0).
+  const [dragRotX, setDragRotX] = useState(0);
+  const [dragRotY, setDragRotY] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const dragStateRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startRotX: number;
+    startRotY: number;
+  } | null>(null);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      // Don't hijack clicks on student labels — those are <button>s and
+      // their own click handler runs first. Mouse drag on empty stage
+      // = orbit camera.
+      if ((e.target as HTMLElement).closest('button')) return;
+      const el = e.currentTarget as HTMLElement;
+      el.setPointerCapture(e.pointerId);
+      // Stop auto-rotate while the user is actively driving the camera.
+      setAutoRotate(false);
+      dragStateRef.current = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        startRotX: dragRotX,
+        startRotY: dragRotY,
+      };
+    },
+    [dragRotX, dragRotY],
+  );
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    // Horizontal drag = yaw, vertical drag = pitch. Clamp pitch so the
+    // user can't flip the room upside down (looks broken since shadows
+    // / depth are baked in).
+    setDragRotY(drag.startRotY + dx * 0.4);
+    setDragRotX(Math.max(-85, Math.min(85, drag.startRotX - dy * 0.4)));
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const drag = dragStateRef.current;
+    if (drag && drag.pointerId === e.pointerId) {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      dragStateRef.current = null;
+    }
+  }, []);
+
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    // Trackpad / wheel: zoom the room.
+    e.preventDefault();
+    setZoom((z) => Math.max(0.5, Math.min(2.0, z - e.deltaY * 0.001)));
+  }, []);
+
+  const resetCamera = () => {
+    setDragRotX(0);
+    setDragRotY(0);
+    setZoom(1);
+  };
+
   useEffect(() => {
     if (!autoRotate) return;
     let raf = 0;
@@ -179,7 +247,10 @@ export default function Classroom3D({
   const floorW = cols * SEAT_W + (cols - 1) * GAP_X + FLOOR_PAD * 2;
   const floorD = rows * SEAT_D + (rows - 1) * GAP_Z + FLOOR_PAD * 2;
 
-  const { rotX, rotY } = PRESETS[preset];
+  // Combine the picked preset with the user's drag offsets.
+  const { rotX: presetRotX, rotY: presetRotY } = PRESETS[preset];
+  const rotX = presetRotX + dragRotX;
+  const rotY = presetRotY + dragRotY;
 
   // Center the seat grid on the floor.
   const seatOriginX = -((cols - 1) * (SEAT_W + GAP_X)) / 2;
@@ -237,24 +308,49 @@ export default function Classroom3D({
           >
             <RotateCw size={14} className={autoRotate ? 'animate-spin' : ''} aria-hidden="true" />
           </button>
+
+          <button
+            onClick={resetCamera}
+            className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            title={t('classroom.reset_camera')}
+          >
+            <RotateCcw size={14} aria-hidden="true" />
+          </button>
         </div>
       </div>
 
-      {/* 3D stage */}
+      {/* Hint banner */}
+      <div className="flex items-center gap-2 text-[11px] text-gray-500 px-1">
+        <Move size={12} aria-hidden="true" />
+        <span>{t('classroom.drag_to_rotate_hint')}</span>
+      </div>
+
+      {/* 3D stage — pointer drag rotates camera, wheel zooms.
+          Larger by default (min 640px, up to 75vh) so the room feels
+          like a room and not a thumbnail. */}
       <div
-        className="relative bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 rounded-2xl overflow-hidden border border-gray-200"
+        className="relative bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 rounded-2xl overflow-hidden border border-gray-200 touch-none"
         style={{
-          height: 'min(540px, 60vh)',
-          perspective: '1100px',
-          perspectiveOrigin: '50% 35%',
+          height: 'min(720px, 75vh)',
+          perspective: '1200px',
+          perspectiveOrigin: '50% 38%',
+          cursor: dragStateRef.current ? 'grabbing' : 'grab',
         }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onWheel={onWheel}
       >
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
             transformStyle: 'preserve-3d',
-            transform: `rotateX(${rotX}deg) rotateY(${rotY + spin}deg)`,
-            transition: autoRotate ? 'none' : 'transform 0.45s ease-out',
+            transform: `scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY + spin}deg)`,
+            transition:
+              autoRotate || dragStateRef.current
+                ? 'none'
+                : 'transform 0.45s ease-out',
           }}
         >
           {/* Floor */}

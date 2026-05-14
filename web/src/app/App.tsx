@@ -19,6 +19,7 @@ import LayoutPanel from '../features/layout/LayoutPanel';
 // clicking Print), so defer its load.
 const PrintView = lazy(() => import('../features/print/PrintView'));
 import OnboardingView from '../features/onboarding/OnboardingView';
+import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
@@ -396,6 +397,10 @@ function App() {
           <PrintView onClose={() => setShowPrint(false)} />
         </Suspense>
       )}
+
+      {/* Student detail drawer — opens when a student is clicked from
+          the grid, the 3D view, or the sidebar student list. */}
+      <StudentDetailPanel />
     </div>
   );
 }
