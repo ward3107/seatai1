@@ -133,6 +133,8 @@ function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => string }
 export default function ClassroomGrid() {
   const {
     result,
+    previousPositions,
+    showMovementDiff,
     rows,
     cols,
     layoutDef,
@@ -180,6 +182,23 @@ export default function ClassroomGrid() {
     layoutDef.type === 'circle';
   const studentMap = new Map(students.map((s) => [s.id, s]));
   const violations = result ? getViolations(result, students) : new Set<string>();
+
+  // Set of student IDs whose row/col changed between the previous and
+  // current optimization run. Only computed when the user has the
+  // "show movement" toggle on AND both a current result and a previous
+  // baseline exist.
+  const movedStudentIds: Set<string> =
+    showMovementDiff && result && previousPositions
+      ? (() => {
+          const moved = new Set<string>();
+          for (const [id, pos] of Object.entries(result.student_positions)) {
+            const prev = previousPositions[id];
+            if (!prev) continue; // student is new in this run
+            if (prev.row !== pos.row || prev.col !== pos.col) moved.add(id);
+          }
+          return moved;
+        })()
+      : new Set<string>();
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
   const sensors = useSensors(
@@ -394,6 +413,7 @@ export default function ClassroomGrid() {
                         isLocked={lockedSeats.includes(sk)}
                         isSelected={selectedSeatKey === sk}
                         isViolated={violations.has(sk)}
+                        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                         heatMapMode={heatMapMode}
                         interactionMode={interactionMode}
                         onSeatClick={handleSeatClick}
@@ -540,6 +560,7 @@ export default function ClassroomGrid() {
                                   isLocked={lockedSeats.includes(sk)}
                                   isSelected={selectedSeatKey === sk}
                                   isViolated={violations.has(sk)}
+                        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                                   heatMapMode={heatMapMode}
                                   interactionMode={interactionMode}
                                   onSeatClick={handleSeatClick}
@@ -585,6 +606,7 @@ export default function ClassroomGrid() {
                                 isLocked={lockedSeats.includes(sk)}
                                 isSelected={selectedSeatKey === sk}
                                 isViolated={violations.has(sk)}
+                        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                                 heatMapMode={heatMapMode}
                                 interactionMode={interactionMode}
                                 onSeatClick={handleSeatClick}

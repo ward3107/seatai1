@@ -1,6 +1,6 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
-import { Lock } from 'lucide-react';
+import { Lock, ArrowRightLeft } from 'lucide-react';
 import type { Seat, Student } from '../../types';
 import type { HeatMapMode } from '../../core/store';
 import { getHeatMapColor } from '../../utils/seatingUtils';
@@ -12,6 +12,10 @@ interface Props {
   isLocked: boolean;
   isSelected: boolean;
   isViolated: boolean;
+  /** True if this student moved from a different seat in the previous
+   *  optimization run. Lit up only when the user enables the movement
+   *  diff toggle. */
+  isMoved?: boolean;
   heatMapMode: HeatMapMode;
   interactionMode: 'drag' | 'click';
   onSeatClick: (seatKey: string) => void;
@@ -27,6 +31,7 @@ export default function SeatCard({
   isLocked,
   isSelected,
   isViolated,
+  isMoved,
   heatMapMode,
   interactionMode,
   onSeatClick,
@@ -109,6 +114,9 @@ export default function SeatCard({
         // Violation glow
         isViolated && !isDragging && heatMapMode === 'none' && 'border-red-400 bg-red-50',
 
+        // Moved between optimization runs
+        isMoved && !isDragging && 'ring-2 ring-amber-400/70 ring-offset-1',
+
         // Locked
         isLocked && 'opacity-60',
       )}
@@ -117,6 +125,16 @@ export default function SeatCard({
       {isLocked && (
         <div className="absolute top-1 right-1 text-gray-400 pointer-events-none">
           <Lock size={10} />
+        </div>
+      )}
+
+      {/* Moved badge */}
+      {isMoved && (
+        <div
+          className="absolute top-1 left-1 text-amber-600 pointer-events-none bg-amber-100 rounded-full p-0.5"
+          title="Moved from previous run"
+        >
+          <ArrowRightLeft size={9} />
         </div>
       )}
 

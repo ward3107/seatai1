@@ -42,8 +42,14 @@ interface AppState {
   // Optimization
   isOptimizing: boolean;
   result: OptimizationResult | null;
+  /** Student positions from the previous optimization run, captured the
+   *  moment a NEW result arrives. Used for the "show what moved"
+   *  highlight. Cleared when result itself is cleared. */
+  previousPositions: Record<string, { row: number; col: number }> | null;
+  showMovementDiff: boolean;
   setOptimizing: (value: boolean) => void;
   setResult: (result: OptimizationResult | null) => void;
+  setShowMovementDiff: (v: boolean) => void;
 
   // Weights
   weights: ObjectiveWeights;
@@ -202,12 +208,23 @@ export const useStore = create<AppState>()(
       // Optimization
       isOptimizing: false,
       result: null,
+      previousPositions: null,
+      showMovementDiff: false,
       setOptimizing: (value) =>
         set((state) => {
           state.isOptimizing = value;
         }),
       setResult: (result) =>
         set((state) => {
+          // Capture the previous run's positions so the UI can highlight
+          // who moved between optimizations. Only swap in when a NEW result
+          // arrives (not when clearing) so a layout-change wipe doesn't
+          // drop the prior baseline.
+          if (result && state.result) {
+            state.previousPositions = state.result.student_positions;
+          } else if (!result) {
+            state.previousPositions = null;
+          }
           state.result = result;
           // New optimization clears undo history
           state.history = [];
@@ -373,6 +390,9 @@ export const useStore = create<AppState>()(
       resultsCollapsed: false,
       setResultsCollapsed: (v) =>
         set((state) => { state.resultsCollapsed = v; }),
+
+      setShowMovementDiff: (v) =>
+        set((state) => { state.showMovementDiff = v; }),
 
       // Projects
       projects: [],

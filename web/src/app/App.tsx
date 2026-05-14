@@ -41,6 +41,9 @@ function App() {
     sidebarOpen,
     setSidebarOpen,
     result,
+    previousPositions,
+    showMovementDiff,
+    setShowMovementDiff,
     history,
     historyFuture,
     undo,
@@ -356,6 +359,19 @@ function App() {
 
                   {!resultsCollapsed && (
                     <div id="results-disclosure-body" className="px-2 pb-2 space-y-2">
+                      {/* Movement-diff toggle — only meaningful when a
+                          previous run is available to compare against. */}
+                      {previousPositions && (
+                        <label className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={showMovementDiff}
+                            onChange={(e) => setShowMovementDiff(e.target.checked)}
+                            className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                          />
+                          <span>{t('optimization.show_movement_diff')}</span>
+                        </label>
+                      )}
                       <ErrorBoundary name="Metrics Panel" inline>
                         <MetricsPanel />
                       </ErrorBoundary>

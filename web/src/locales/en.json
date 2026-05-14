@@ -187,6 +187,7 @@
     "generations": "generations",
     "time": "Computation Time",
     "results_title": "Optimization Results",
+    "show_movement_diff": "Highlight students who moved from the previous run",
     "overall_fitness_score": "Overall Fitness Score",
     "notes": "Notes",
     "academic_balance": "Academic Balance",
