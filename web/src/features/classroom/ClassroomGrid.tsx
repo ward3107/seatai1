@@ -227,12 +227,30 @@ export default function ClassroomGrid() {
     [lockedSeats, swapStudents]
   );
 
-  // ── Click-to-swap ─────────────────────────────────────────────────────────
+  const setDetailsTarget = useStore((s) => s.setDetailsTarget);
+
+  // ── Click handlers ────────────────────────────────────────────────────────
+  // - In CLICK mode: select-then-swap (existing behavior).
+  // - In DRAG mode: opening the detail drawer is the natural click
+  //   action (no drag in flight = the user wants to inspect).
   const handleSeatClick = useCallback(
     (seatKey: string) => {
       setContextMenu(null);
-      if (interactionMode !== 'click') return;
 
+      // Resolve the seat regardless of mode — used by both branches below.
+      const [row, col] = seatKey.split('-').map(Number);
+      const seat = seats.find(
+        (s) => s.position.row === row && s.position.col === col
+      );
+
+      if (interactionMode === 'drag') {
+        // In drag mode, a plain click on an occupied seat = "tell me
+        // about this student". Empty seats do nothing.
+        if (seat?.student_id) setDetailsTarget(seat.student_id);
+        return;
+      }
+
+      // Click-to-swap mode (existing behavior).
       if (selectedSeatKey === seatKey) {
         setSelectedSeat(null);
         return;
@@ -244,15 +262,10 @@ export default function ClassroomGrid() {
         }
         setSelectedSeat(null);
       } else {
-        // Only allow selecting occupied seats
-        const [row, col] = seatKey.split('-').map(Number);
-        const seat = seats.find(
-          (s) => s.position.row === row && s.position.col === col
-        );
         if (seat?.student_id) setSelectedSeat(seatKey);
       }
     },
-    [interactionMode, selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat]
+    [interactionMode, selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, setDetailsTarget]
   );
 
   // ── Context menu ──────────────────────────────────────────────────────────
@@ -310,14 +323,7 @@ export default function ClassroomGrid() {
             students={students}
             rows={rows}
             cols={cols}
-            onStudentClick={(studentId: string) => {
-              // Find seat key for this student
-              const pos = result?.student_positions[studentId];
-              if (pos) {
-                const seatKey = `${pos.row}-${pos.col}`;
-                setSelectedSeat(seatKey);
-              }
-            }}
+            onStudentClick={(studentId: string) => setDetailsTarget(studentId)}
           />
         </Suspense>
       ) : isAbsoluteLayout ? (

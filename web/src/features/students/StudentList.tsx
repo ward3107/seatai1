@@ -12,6 +12,7 @@ export default function StudentList() {
   const students = useStore((s) => s.students);
   const selectedStudentId = useStore((s) => s.selectedStudentId);
   const setSelectedStudentId = useStore((s) => s.setSelectedStudentId);
+  const setDetailsTarget = useStore((s) => s.setDetailsTarget);
   const removeStudent = useStore((s) => s.removeStudent);
   const { t } = useLanguage();
 
@@ -144,7 +145,7 @@ export default function StudentList() {
                   ? 'bg-primary-100 border-2 border-primary-300'
                   : 'bg-white hover:bg-gray-100 border-2 border-transparent'
               )}
-              onClick={() => setSelectedStudentId(student.id)}
+              onClick={() => setDetailsTarget(student.id)}
             >
               {/* Avatar */}
               <div className={clsx(

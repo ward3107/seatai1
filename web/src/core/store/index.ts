@@ -78,6 +78,10 @@ interface AppState {
   showRelations: boolean;
   showTimeline: boolean;             // show optimization timeline panel
 
+  /** Student whose detail drawer is currently open, or null. */
+  detailsTargetStudentId: string | null;
+  setDetailsTarget: (id: string | null) => void;
+
   toggleLockSeat: (seatKey: string) => void;
   setHeatMapMode: (mode: HeatMapMode) => void;
   setZoomLevel: (level: number) => void;
@@ -270,6 +274,11 @@ export const useStore = create<AppState>()(
       zoomLevel: 1.0,
       viewMode: 'rows',
       selectedSeatKey: null,
+
+      detailsTargetStudentId: null,
+      setDetailsTarget: (id) =>
+        set((state) => { state.detailsTargetStudentId = id; }),
+
       showRelations: false,
       showTimeline: false,
 
