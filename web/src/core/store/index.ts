@@ -112,6 +112,11 @@ interface AppState {
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
 
+  /** Whether the welcome-tips modal has been dismissed.
+   *  Persisted so it never auto-pops twice for the same teacher. */
+  welcomeTipsDismissed: boolean;
+  setWelcomeTipsDismissed: (v: boolean) => void;
+
   // Whether the results stack (metrics + explanation) starts collapsed so
   // the seating map dominates the viewport.
   resultsCollapsed: boolean;
@@ -403,6 +408,10 @@ export const useStore = create<AppState>()(
       setTheme: (theme) =>
         set((state) => { state.theme = theme; }),
 
+      welcomeTipsDismissed: false,
+      setWelcomeTipsDismissed: (v) =>
+        set((state) => { state.welcomeTipsDismissed = v; }),
+
       // Collapsed results stack
       resultsCollapsed: false,
       setResultsCollapsed: (v) =>
@@ -501,6 +510,7 @@ export const useStore = create<AppState>()(
         uiLanguage: state.uiLanguage,
         uiScale: state.uiScale,
         theme: state.theme,
+        welcomeTipsDismissed: state.welcomeTipsDismissed,
         resultsCollapsed: state.resultsCollapsed,
       }),
     }
