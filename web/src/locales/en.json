@@ -63,7 +63,9 @@
     "ai_summary": "AI summary",
     "ai_generate": "Generate AI explanation",
     "ai_loading": "Generating…",
-    "ai_try_again": "Try again"
+    "ai_try_again": "Try again",
+    "last_together": "last sat together",
+    "rotation_tooltip": "Sat adjacent {{count}} times in your recent runs"
   },
   "explain": {
     "not_placed": "This student wasn't placed — your class has more students than seats.",

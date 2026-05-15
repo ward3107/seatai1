@@ -46,6 +46,14 @@ interface AppState {
    *  moment a NEW result arrives. Used for the "show what moved"
    *  highlight. Cleared when result itself is cleared. */
   previousPositions: Record<string, { row: number; col: number }> | null;
+
+  /** Rolling history of optimization runs. Capped at 20 entries so
+   *  storage stays small. Used to surface "who has this student sat
+   *  with recently?" insights in the detail drawer. */
+  resultHistory: Array<{
+    timestamp: string;
+    positions: Record<string, { row: number; col: number }>;
+  }>;
   showMovementDiff: boolean;
   setOptimizing: (value: boolean) => void;
   setResult: (result: OptimizationResult | null) => void;
@@ -236,6 +244,7 @@ export const useStore = create<AppState>()(
       isOptimizing: false,
       result: null,
       previousPositions: null,
+      resultHistory: [],
       showMovementDiff: false,
       setOptimizing: (value) =>
         set((state) => {
@@ -253,6 +262,22 @@ export const useStore = create<AppState>()(
             state.previousPositions = null;
           }
           state.result = result;
+
+          // Append to rolling result history (capped at 20 entries) so
+          // the rotation tracker can answer "who has this student sat
+          // with recently?". Skip the append when clearing (result is
+          // null) — that's a state reset, not a new run.
+          if (result) {
+            const positions: Record<string, { row: number; col: number }> = {};
+            for (const [id, p] of Object.entries(result.student_positions)) {
+              positions[id] = { row: p.row, col: p.col };
+            }
+            state.resultHistory = [
+              { timestamp: new Date().toISOString(), positions },
+              ...state.resultHistory,
+            ].slice(0, 20);
+          }
+
           // New optimization clears undo history
           state.history = [];
           state.historyFuture = [];
@@ -526,6 +551,7 @@ export const useStore = create<AppState>()(
         theme: state.theme,
         welcomeTipsDismissed: state.welcomeTipsDismissed,
         aiSettings: state.aiSettings,
+        resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
       }),
     }

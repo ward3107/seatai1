@@ -63,7 +63,9 @@
     "ai_summary": "סיכום AI",
     "ai_generate": "צור הסבר AI",
     "ai_loading": "מייצר…",
-    "ai_try_again": "נסה שוב"
+    "ai_try_again": "נסה שוב",
+    "last_together": "ישבו יחד לאחרונה",
+    "rotation_tooltip": "ישבו זה לצד זה {{count}} פעמים בהרצות האחרונות"
   },
   "explain": {
     "not_placed": "לתלמיד לא הוקצה מקום — יש יותר תלמידים ממושבים.",

@@ -36,6 +36,7 @@ import {
   type NeighborBreakdown,
 } from '../../utils/explainPlacement';
 import { aiExplainPlacement } from '../../utils/aiExplain';
+import { getNeighborHistory, relativeTime } from '../../utils/rotationHistory';
 
 const TONE_STYLES: Record<ExplanationLine['tone'], string> = {
   positive: 'bg-emerald-50 border-emerald-200 text-emerald-900',
@@ -92,6 +93,7 @@ export default function StudentDetailPanel() {
   const layoutDef = useStore((s) => s.layoutDef);
   const constraints = useStore((s) => s.constraints);
   const aiSettings = useStore((s) => s.aiSettings);
+  const resultHistory = useStore((s) => s.resultHistory);
   const { t } = useLanguage();
 
   // AI-generated paragraph (one per student per drawer open). Lives
@@ -128,6 +130,16 @@ export default function StudentDetailPanel() {
   const explanation = result
     ? explainPlacement(student, result, layoutDef, students, constraints)
     : null;
+
+  // Per-neighbor history lookup: who has this student already sat
+  // next to in past optimizations, and how recently? Indexed by other
+  // student's id for O(1) lookup in the render loop.
+  const historyByPeer = new Map(
+    getNeighborHistory(student.id, layoutDef, resultHistory).map((e) => [
+      e.otherId,
+      e,
+    ]),
+  );
 
   return (
     <>
@@ -469,6 +481,23 @@ export default function StudentDetailPanel() {
                                   <ArrowUpRight size={9} /> {t('detail.mixed_gender')}
                                 </span>
                               )}
+                              {/* Rotation freshness — how recently this pair sat together. */}
+                              {(() => {
+                                const hist = historyByPeer.get(n.student.id);
+                                if (!hist || hist.timesAdjacent <= 1) {
+                                  // Only one run = this very one; no rotation insight yet.
+                                  return null;
+                                }
+                                const rel = relativeTime(hist.lastAdjacentAt);
+                                return (
+                                  <span
+                                    className="inline-flex items-center gap-1 text-violet-600"
+                                    title={t('detail.rotation_tooltip', { count: hist.timesAdjacent })}
+                                  >
+                                    🔄 {t('detail.last_together')} {rel}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
                         </li>
