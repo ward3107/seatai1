@@ -1,105 +1,75 @@
 # Security Policy
 
-## Reporting Security Vulnerabilities
+## Reporting a Vulnerability
 
-If you discover a security vulnerability in SeatAI, please report it responsibly.
+If you find a security issue in SeatAI, please report it privately.
 
-### How to Report
+**Please do not open a public GitHub issue for security problems.**
 
-**Do NOT create a public issue.**
+Open a private security advisory through the GitHub repository's
+**Security → Report a vulnerability** flow, or contact the maintainers
+through the email address listed in the repository's `package.json`
+author field.
 
-Instead, please send an email to: [SECURITY EMAIL PLACEHOLDER]
+Include:
+- A clear description of the issue.
+- Reproduction steps or a minimal proof-of-concept.
+- Your assessment of the impact (e.g. data exposure, denial of
+  service, account takeover — n/a since there is no account).
+- Suggested fix, if you have one.
 
-Your email should include:
-- Description of the vulnerability
-- Steps to reproduce the vulnerability
-- Affected versions (if known)
-- Potential impact assessment
-- Suggested fix (if you have one)
+We will acknowledge receipt within a few business days, work with
+you on a timeline, and credit you in the advisory once a fix has
+shipped (unless you prefer to remain anonymous).
 
-### What to Expect
+Please do not publicly disclose the issue until a fix is available
+and users have had a reasonable window to update.
 
-- We will acknowledge receipt of your report within 48 hours
-- We will provide a timeline for addressing the vulnerability
-- We will notify you when the fix is deployed
-- We will credit you in the security advisory (if desired)
+## Trust Model
 
-### Supported Versions
+SeatAI is a browser-only application:
 
-Security updates are provided for:
-- Latest major version
-- Previous major version for 6 months after new release
+- All student data is stored in the user's own browser
+  (IndexedDB / localStorage). No server-side component receives,
+  stores, or processes roster data.
+- There is no authentication, no multi-tenancy, and no cross-user
+  data path. Each browser holds exactly its own teacher's data.
+- The only outbound network calls are:
+  - First-load asset requests to the origin serving the app.
+  - Optional, opt-in calls to a language-model API when the teacher
+    has explicitly enabled AI explanations and entered their own
+    API key. The key never leaves the teacher's browser except in
+    the Authorization header on that direct request.
 
-### Security Best Practices
+Because there is no backend, classes of vulnerability that depend on
+shared server state (account hijacking, lateral access, server-side
+injection, mass data exfiltration) do not apply to the hosted app.
+What does apply: anything that could compromise an individual
+teacher's local data or cause incorrect behavior in their browser.
 
-SeatAI follows these security practices:
+## Scope
 
-#### Client-Side Security
-- ✅ All data stored locally in browser (IndexedDB)
-- ✅ No server-side vulnerabilities (static app)
-- ✅ No SQL injection risk (no database)
-- ✅ Input validation on all user inputs
-- ✅ XSS prevention through React's default escaping
+In scope:
+- Issues in the application source code in this repository.
+- Issues in the official build deployed from `main`.
 
-#### Data Privacy
-- ✅ No data transmission to external servers
-- ✅ All processing happens in browser
-- ✅ Students' data never leaves the user's device
-- ✅ No third-party analytics by default
+Out of scope:
+- Findings that require physical access to the teacher's device
+  (their IndexedDB is, by design, readable by anyone with access to
+  the browser).
+- Findings against forks or self-hosted deployments.
+- Social-engineering attacks on individual teachers.
+- Issues in third-party dependencies that are already addressed by
+  an upstream release we have not yet adopted (please report
+  upstream first).
 
-#### Deployment Security
-- ✅ Static file hosting (no server execution)
-- ✅ HTTPS enforced on production domains
-- ✅ Content Security Policy headers
-- ✅ Subresource Integrity (SRI) for external scripts
+## Coordinated Disclosure
 
-## Security Scope
-
-This security policy applies to:
-- The SeatAI application code
-- Official SeatAI deployments
-- SeatAI infrastructure
-
-It does NOT apply to:
-- Third-party integrations
-- Modified versions of SeatAI
-- Deployments on untrusted infrastructure
+We follow standard responsible-disclosure practice: private report,
+private fix, coordinated public advisory. We will not pursue legal
+action against good-faith research conducted within the scope above.
 
 ## Supported Versions
 
-| Version | Security Support | Until |
-|---------|-------------------|-------|
-| 1.x     | ✅ Supported        | Until 2.x release |
-| < 1.0   | ❌ Unsupported      | N/A |
-
-## Disclosure Policy
-
-We follow responsible disclosure principles:
-
-1. **Private Disclosure** - Report vulnerabilities privately
-2. **Reasonable Timeline** - Allow time to fix before public disclosure
-3. **Coordinated Disclosure** - Work with reporter on disclosure timing
-4. **Credit** - Acknowledge responsible reporters
-
-## Allowed Security Research
-
-We encourage security research under these conditions:
-
-### ✅ Allowed
-- Testing your own account/classroom data
-- Automated testing tools with reasonable rate limits
-- Research on public deployments with prior notice
-
-### ❌ Not Allowed
-- Accessing other users' data without permission
-- Disrupting service availability
-- Using vulnerabilities to harm users
-- Public disclosure without prior fix
-
-## Contact
-
-For security questions not related to vulnerability reports, please open a GitHub Discussion.
-
----
-
-*Last updated: 2026-03-29*
+The latest released build is the only supported version. Bug fixes
+are not back-ported.
