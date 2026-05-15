@@ -108,6 +108,10 @@ interface AppState {
   uiScale: 'sm' | 'md' | 'lg';
   setUiScale: (scale: 'sm' | 'md' | 'lg') => void;
 
+  /** Color theme. 'system' follows the OS preference. */
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+
   // Whether the results stack (metrics + explanation) starts collapsed so
   // the seating map dominates the viewport.
   resultsCollapsed: boolean;
@@ -395,6 +399,10 @@ export const useStore = create<AppState>()(
       setUiScale: (scale) =>
         set((state) => { state.uiScale = scale; }),
 
+      theme: 'system',
+      setTheme: (theme) =>
+        set((state) => { state.theme = theme; }),
+
       // Collapsed results stack
       resultsCollapsed: false,
       setResultsCollapsed: (v) =>
@@ -492,6 +500,7 @@ export const useStore = create<AppState>()(
         currentProjectId: state.currentProjectId,
         uiLanguage: state.uiLanguage,
         uiScale: state.uiScale,
+        theme: state.theme,
         resultsCollapsed: state.resultsCollapsed,
       }),
     }

@@ -25,6 +25,46 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/*
+ * Dark mode — the root `dark` class is set by the useTheme() hook
+ * based on the user's theme preference (light / dark / system).
+ *
+ * Strategy: shift the page background + the highest-traffic Tailwind
+ * surface colors (white panels, gray scales) at the @layer level so
+ * every component reads correctly without touching every file. Per-
+ * component `dark:` variants can still override these for fine-tuning.
+ */
+html.dark body {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: rgb(226 232 240); /* slate-200 */
+}
+
+html.dark .bg-white,
+html.dark .bg-white\/90,
+html.dark .bg-white\/95 {
+  background-color: rgb(30 41 59); /* slate-800 */
+  color: rgb(226 232 240);
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: rgb(15 23 42); /* slate-900 */
+  color: rgb(226 232 240);
+}
+
+html.dark .text-gray-800,
+html.dark .text-gray-900 {
+  color: rgb(241 245 249); /* slate-100 */
+}
+html.dark .text-gray-700 { color: rgb(226 232 240); }
+html.dark .text-gray-600 { color: rgb(203 213 225); }
+html.dark .text-gray-500 { color: rgb(148 163 184); }
+
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: rgb(51 65 85); /* slate-700 */
+}
+
 #root {
   min-height: 100vh;
 }

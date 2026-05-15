@@ -6,6 +6,10 @@ export default {
   ],
   // Enables rtl: variant — applied when an ancestor has dir="rtl"
   // e.g. rtl:flex-row-reverse, rtl:text-right
+  //
+  // Class-based dark mode — applied when the <html> element has class
+  // `dark`. Driven by the `theme` field in the Zustand store.
+  darkMode: 'class',
 
   theme: {
     extend: {

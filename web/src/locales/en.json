@@ -16,6 +16,12 @@
     "history_controls": "History controls",
     "text_size": "Text size"
   },
+  "theme": {
+    "label": "Color theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Follow system"
+  },
   "detail": {
     "close": "Close details",
     "row": "Row",

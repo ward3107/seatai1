@@ -16,6 +16,12 @@
     "history_controls": "פקדי היסטוריה",
     "text_size": "גודל טקסט"
   },
+  "theme": {
+    "label": "ערכת צבעים",
+    "light": "בהיר",
+    "dark": "כהה",
+    "system": "לפי המערכת"
+  },
   "detail": {
     "close": "סגור פרטים",
     "row": "שורה",

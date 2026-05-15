@@ -24,9 +24,11 @@ import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
+import { useTheme } from '../hooks/useTheme';
 import { useDeviceCheck } from '../hooks/useDeviceCheck';
 import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
+import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
 import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -56,6 +58,7 @@ function App() {
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
+  useTheme();
   const { isPhone } = useDeviceCheck();
   const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
@@ -313,6 +316,7 @@ function App() {
                 {t('app.print')}
               </button>
             )}
+            <ThemeToggle />
             <TextSizeToggle />
             <LanguageSelector />
             <ExportButton />
