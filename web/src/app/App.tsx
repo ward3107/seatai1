@@ -21,6 +21,7 @@ const PrintView = lazy(() => import('../features/print/PrintView'));
 import OnboardingView from '../features/onboarding/OnboardingView';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import WelcomeTipsModal from '../components/WelcomeTipsModal';
+import UserGuide from '../components/UserGuide';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
@@ -65,6 +66,7 @@ function App() {
   const [showPrint, setShowPrint] = useState(false);
   const welcomeTipsDismissed = useStore((s) => s.welcomeTipsDismissed);
   const [showTips, setShowTips] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   // Auto-show the tips modal once: when the user has students loaded
   // for the first time AND hasn't dismissed before.
   useEffect(() => {
@@ -325,10 +327,10 @@ function App() {
               </button>
             )}
             <button
-              onClick={() => setShowTips(true)}
+              onClick={() => setShowGuide(true)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              aria-label={t('tips.title')}
-              title={t('tips.title')}
+              aria-label={t('guide.title')}
+              title={t('guide.title')}
             >
               <HelpCircle size={18} className="text-gray-500 dark:text-slate-400" aria-hidden="true" />
             </button>
@@ -422,9 +424,11 @@ function App() {
           the grid, the 3D view, or the sidebar student list. */}
       <StudentDetailPanel />
 
-      {/* Welcome tips — auto-pops on first roster load, reopenable
-          from the help button in the header. */}
+      {/* Welcome tips — auto-pops on first roster load (one time only). */}
       <WelcomeTipsModal open={showTips} onClose={() => setShowTips(false)} />
+
+      {/* Comprehensive user guide — opens from the help button in the header. */}
+      <UserGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }

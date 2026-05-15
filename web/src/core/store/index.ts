@@ -430,7 +430,10 @@ export const useStore = create<AppState>()(
         }),
 
       // UI Language
-      uiLanguage: 'en',
+      // Default to Hebrew per product brief — most teachers using
+      // SeatAI in the field are Hebrew-speaking. Users can switch
+      // immediately from the language picker in the header.
+      uiLanguage: 'he',
       setUiLanguage: (lang) =>
         set((state) => { state.uiLanguage = lang; }),
 
