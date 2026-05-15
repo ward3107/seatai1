@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
 
 // ─── Main SettingsPanel ────────────────────────────────────────────────────────
@@ -11,7 +11,9 @@ export default function SettingsPanel() {
     weights, setWeights,
     config, setConfig,
     setStudents, setResult,
+    aiSettings, setAiSettings,
   } = useStore();
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -150,6 +152,76 @@ export default function SettingsPanel() {
             <p className="text-[10px] text-gray-500 mt-1">
               {t('settings.quality_hint')}
             </p>
+          </div>
+
+          {/* AI explanation — opt-in, browser-only LLM integration */}
+          <div className="border-t border-gray-200 pt-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2">
+              <Sparkles size={14} className="text-amber-500" />
+              {t('settings.ai_title')}
+            </label>
+            <p className="text-[10px] text-gray-500 mb-2">{t('settings.ai_description')}</p>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700 mb-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={aiSettings.enabled}
+                onChange={(e) =>
+                  setAiSettings({ ...aiSettings, enabled: e.target.checked })
+                }
+                className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <span>{t('settings.ai_enable')}</span>
+            </label>
+
+            {aiSettings.enabled && (
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('settings.ai_api_key')}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={aiSettings.apiKey}
+                      autoComplete="off"
+                      spellCheck={false}
+                      onChange={(e) =>
+                        setAiSettings({ ...aiSettings, apiKey: e.target.value.trim() })
+                      }
+                      placeholder="sk-ant-…"
+                      className="w-full pr-8 px-2 py-1 border border-gray-300 rounded text-sm font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((v) => !v)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
+                      aria-label={showApiKey ? t('settings.ai_hide_key') : t('settings.ai_show_key')}
+                    >
+                      {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('settings.ai_model')}
+                  </label>
+                  <select
+                    value={aiSettings.model}
+                    onChange={(e) =>
+                      setAiSettings({ ...aiSettings, model: e.target.value })
+                    }
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast & cheap</option>
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — best quality</option>
+                  </select>
+                </div>
+                <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  {t('settings.ai_security_note')}
+                </p>
+              </div>
+            )}
           </div>
 
         </div>

@@ -59,7 +59,11 @@
     "confidence_high": "Strong fit",
     "confidence_medium": "Acceptable fit",
     "confidence_low": "Compromise",
-    "no_result_yet": "Run an optimization to see this student's placement analysis."
+    "no_result_yet": "Run an optimization to see this student's placement analysis.",
+    "ai_summary": "AI summary",
+    "ai_generate": "Generate AI explanation",
+    "ai_loading": "Generating…",
+    "ai_try_again": "Try again"
   },
   "explain": {
     "not_placed": "This student wasn't placed — your class has more students than seats.",
@@ -303,6 +307,14 @@
     "quality_balanced": "Balanced",
     "quality_best": "Best",
     "quality_hint": "Higher quality runs the optimizer several times and keeps the best result. Recommended for conflict-heavy classes.",
+    "ai_title": "AI explanations (optional)",
+    "ai_description": "Use a language model to write a teacher-friendly paragraph for each student. Your API key stays in this browser; the AI call goes directly to Anthropic.",
+    "ai_enable": "Enable AI explanations",
+    "ai_api_key": "Anthropic API key",
+    "ai_show_key": "Show key",
+    "ai_hide_key": "Hide key",
+    "ai_model": "Model",
+    "ai_security_note": "Your key is stored only in this browser. Don't enable on a shared computer. Each generation costs roughly $0.001.",
     "seating_rules": "Seating Rules",
     "must_separate": "Must be separated (placed far apart)",
     "should_sit_near": "Should sit near each other",

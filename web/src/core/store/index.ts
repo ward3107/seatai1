@@ -117,6 +117,16 @@ interface AppState {
   welcomeTipsDismissed: boolean;
   setWelcomeTipsDismissed: (v: boolean) => void;
 
+  /** Optional client-side LLM integration. Off by default. The API
+   *  key is stored only in this browser's IndexedDB — no server, no
+   *  telemetry. */
+  aiSettings: {
+    enabled: boolean;
+    apiKey: string;
+    model: string;
+  };
+  setAiSettings: (s: { enabled: boolean; apiKey: string; model: string }) => void;
+
   // Whether the results stack (metrics + explanation) starts collapsed so
   // the seating map dominates the viewport.
   resultsCollapsed: boolean;
@@ -412,6 +422,10 @@ export const useStore = create<AppState>()(
       setWelcomeTipsDismissed: (v) =>
         set((state) => { state.welcomeTipsDismissed = v; }),
 
+      aiSettings: { enabled: false, apiKey: '', model: 'claude-haiku-4-5-20251001' },
+      setAiSettings: (s) =>
+        set((state) => { state.aiSettings = s; }),
+
       // Collapsed results stack
       resultsCollapsed: false,
       setResultsCollapsed: (v) =>
@@ -511,6 +525,7 @@ export const useStore = create<AppState>()(
         uiScale: state.uiScale,
         theme: state.theme,
         welcomeTipsDismissed: state.welcomeTipsDismissed,
+        aiSettings: state.aiSettings,
         resultsCollapsed: state.resultsCollapsed,
       }),
     }

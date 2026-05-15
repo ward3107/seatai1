@@ -8,7 +8,7 @@
  * `explainPlacement()` and renders. No mutations.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   X,
   Heart,
@@ -35,6 +35,7 @@ import {
   type ExplanationLine,
   type NeighborBreakdown,
 } from '../../utils/explainPlacement';
+import { aiExplainPlacement } from '../../utils/aiExplain';
 
 const TONE_STYLES: Record<ExplanationLine['tone'], string> = {
   positive: 'bg-emerald-50 border-emerald-200 text-emerald-900',
@@ -90,14 +91,29 @@ export default function StudentDetailPanel() {
   const result = useStore((s) => s.result);
   const layoutDef = useStore((s) => s.layoutDef);
   const constraints = useStore((s) => s.constraints);
+  const aiSettings = useStore((s) => s.aiSettings);
   const { t } = useLanguage();
+
+  // AI-generated paragraph (one per student per drawer open). Lives
+  // locally — never persisted. Clears when the drawer closes.
+  const [aiText, setAiText] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string>('');
 
   const open = !!detailsTargetStudentId;
   const student = open
     ? students.find((s) => s.id === detailsTargetStudentId) ?? null
     : null;
 
-  // Close on Escape
+  // Close on Escape; also reset the AI text whenever the drawer closes
+  // or the targeted student changes so the cached result doesn't bleed
+  // across students.
+  useEffect(() => {
+    setAiText('');
+    setAiError('');
+    setAiLoading(false);
+  }, [detailsTargetStudentId]);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -197,6 +213,62 @@ export default function StudentDetailPanel() {
 
         {/* Body */}
         <div className="flex-1 overflow-auto p-4 space-y-5">
+          {/* AI summary — opt-in. Shows a button when not yet
+              generated, a loading indicator while in flight, then the
+              generated paragraph. Errors surface inline without
+              breaking the rest of the drawer. */}
+          {aiSettings.enabled && aiSettings.apiKey && explanation && (
+            <section className="bg-gradient-to-br from-primary-50 to-accent-50 dark:from-slate-700 dark:to-slate-800 rounded-xl p-3 border border-primary-200 dark:border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide">
+                  {t('detail.ai_summary')}
+                </span>
+              </div>
+              {aiText ? (
+                <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                  {aiText}
+                </p>
+              ) : aiLoading ? (
+                <p className="text-sm text-gray-500 italic">{t('detail.ai_loading')}</p>
+              ) : aiError ? (
+                <div>
+                  <p className="text-sm text-red-700 dark:text-red-300 mb-2">{aiError}</p>
+                  <button
+                    type="button"
+                    onClick={() => { setAiError(''); setAiText(''); }}
+                    className="text-xs text-primary-600 underline"
+                  >
+                    {t('detail.ai_try_again')}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!explanation) return;
+                    setAiLoading(true);
+                    setAiError('');
+                    try {
+                      const text = await aiExplainPlacement(
+                        { apiKey: aiSettings.apiKey, model: aiSettings.model },
+                        student,
+                        explanation,
+                      );
+                      setAiText(text);
+                    } catch (err) {
+                      setAiError(err instanceof Error ? err.message : String(err));
+                    } finally {
+                      setAiLoading(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-primary-300 dark:border-slate-600 rounded-lg text-xs font-medium text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  {t('detail.ai_generate')}
+                </button>
+              )}
+            </section>
+          )}
+
           {/* Profile */}
           <section>
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
