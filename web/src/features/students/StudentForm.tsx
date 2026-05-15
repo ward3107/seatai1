@@ -3,12 +3,45 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { generateId, createEmptyStudent } from '../../utils/sampleData';
 import type { Student, Gender, AcademicLevel, BehaviorLevel, SpecialNeed } from '../../types';
-import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, ChevronDown, ChevronUp, ImagePlus, Trash2 } from 'lucide-react';
 
 const SPECIAL_NEED_TYPES = [
   'ADHD', 'Dyslexia', 'Visual Impairment', 'Hearing Impairment',
   'Wheelchair', 'ESL', 'Autism', 'Dyscalculia', 'Other',
 ];
+
+/**
+ * Resize an uploaded image to a max dimension and re-encode as JPEG.
+ * Keeps IndexedDB storage manageable — a full-size phone photo can be
+ * 5 MB; we cap at ~30 KB. Returns a data URL so the photo persists
+ * with the student record (no server, no external upload).
+ */
+async function shrinkPhoto(file: File, maxDim = 256): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error('image decode failed'));
+    el.src = dataUrl;
+  });
+
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas unavailable');
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', 0.82);
+}
 
 const LANGUAGES = [
   'Hebrew', 'Arabic', 'Russian', 'English', 'Amharic',
@@ -121,17 +154,72 @@ export default function StudentForm() {
         </button>
       </div>
 
-      {/* Name */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
-        <input
-          type="text"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder={t('students.name_placeholder')}
-          required
-        />
+      {/* Photo + Name */}
+      <div className="flex gap-3 items-start">
+        {/* Photo */}
+        <div className="flex-shrink-0">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('students.photo')}
+          </label>
+          <div className="relative w-16 h-16">
+            {form.photo_url ? (
+              <>
+                <img
+                  src={form.photo_url}
+                  alt=""
+                  className="w-16 h-16 rounded-lg object-cover border border-gray-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, photo_url: undefined })}
+                  className="absolute -top-1 -right-1 p-0.5 bg-white border border-gray-300 rounded-full text-gray-500 hover:text-red-500 shadow-sm"
+                  aria-label={t('students.photo_remove')}
+                >
+                  <Trash2 size={11} />
+                </button>
+              </>
+            ) : (
+              <label
+                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-primary-400 hover:text-primary-500 cursor-pointer transition-colors"
+                title={t('students.photo_add')}
+              >
+                <ImagePlus size={20} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const dataUrl = await shrinkPhoto(file);
+                      setForm({ ...form, photo_url: dataUrl });
+                    } catch {
+                      // Silently ignore — user can try again. Don't surface
+                      // file-decode errors as scary messages.
+                    } finally {
+                      // Reset the input so re-selecting the same file works.
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder={t('students.name_placeholder')}
+            required
+          />
+        </div>
       </div>
 
       {/* Gender + Language */}
@@ -408,6 +496,21 @@ export default function StudentForm() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Notes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {t('students.notes')}
+        </label>
+        <textarea
+          value={form.notes ?? ''}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          placeholder={t('students.notes_placeholder')}
+          rows={3}
+          maxLength={500}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-y"
+        />
       </div>
 
       {/* Submit */}

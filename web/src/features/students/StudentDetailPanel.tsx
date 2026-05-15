@@ -138,18 +138,26 @@ export default function StudentDetailPanel() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={clsx(
-                'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0',
-                student.gender === 'male'
-                  ? 'bg-blue-400'
-                  : student.gender === 'female'
-                    ? 'bg-pink-400'
-                    : 'bg-purple-400',
-              )}
-            >
-              {student.name.charAt(0).toUpperCase()}
-            </div>
+            {student.photo_url ? (
+              <img
+                src={student.photo_url}
+                alt=""
+                className="w-12 h-12 rounded-full object-cover shadow-sm flex-shrink-0 border border-white"
+              />
+            ) : (
+              <div
+                className={clsx(
+                  'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0',
+                  student.gender === 'male'
+                    ? 'bg-blue-400'
+                    : student.gender === 'female'
+                      ? 'bg-pink-400'
+                      : 'bg-purple-400',
+                )}
+              >
+                {student.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0">
               <h2
                 id="student-detail-title"
@@ -218,6 +226,18 @@ export default function StudentDetailPanel() {
               </div>
             </div>
           </section>
+
+          {/* Teacher notes */}
+          {student.notes && student.notes.trim().length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                {t('detail.notes')}
+              </h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap bg-amber-50 border border-amber-200 rounded-xl p-3">
+                {student.notes}
+              </p>
+            </section>
+          )}
 
           {/* Special needs */}
           {(student.special_needs.length > 0 ||
@@ -327,18 +347,26 @@ export default function StudentDetailPanel() {
                           key={n.student.id}
                           className="flex items-start gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100"
                         >
-                          <div
-                            className={clsx(
-                              'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0',
-                              n.student.gender === 'male'
-                                ? 'bg-blue-400'
-                                : n.student.gender === 'female'
-                                  ? 'bg-pink-400'
-                                  : 'bg-purple-400',
-                            )}
-                          >
-                            {n.student.name.charAt(0).toUpperCase()}
-                          </div>
+                          {n.student.photo_url ? (
+                            <img
+                              src={n.student.photo_url}
+                              alt=""
+                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white"
+                            />
+                          ) : (
+                            <div
+                              className={clsx(
+                                'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0',
+                                n.student.gender === 'male'
+                                  ? 'bg-blue-400'
+                                  : n.student.gender === 'female'
+                                    ? 'bg-pink-400'
+                                    : 'bg-purple-400',
+                              )}
+                            >
+                              {n.student.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-gray-800 truncate">

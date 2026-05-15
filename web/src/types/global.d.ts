@@ -35,6 +35,13 @@ export interface Student {
   has_mobility_issues: boolean;
   primary_language?: string;
   is_bilingual: boolean;
+  /** Optional teacher-supplied photo (data URL or absolute URL). Stays
+   *  in IndexedDB with the rest of the roster — never uploaded anywhere. */
+  photo_url?: string;
+  /** Free-text teacher observation (e.g. "rough morning, lots of
+   *  energy", "needs help with reading comprehension"). Persists with
+   *  the student record. */
+  notes?: string;
 }
 
 // Seating types
