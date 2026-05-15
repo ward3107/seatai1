@@ -103,6 +103,11 @@ export interface GeneticConfig {
   mutationRate: number;
   tournamentSize: number;
   earlyStopPatience: number;
+  /** Number of independent GA restarts. 1 = fastest, 3 = balanced
+   *  (recommended), 5+ = highest quality for the same problem.
+   *  Optional for back-compat with persisted projects from before
+   *  multi-start landed. */
+  multiStart?: number;
 }
 
 export interface SeatingConstraints {

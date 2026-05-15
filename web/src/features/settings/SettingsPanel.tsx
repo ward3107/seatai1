@@ -116,6 +116,42 @@ export default function SettingsPanel() {
             </div>
           </div>
 
+          {/* Quality / speed tradeoff — multi-start GA */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              {t('settings.quality')}
+            </label>
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('settings.quality')}>
+              {[
+                { starts: 1, key: 'settings.quality_fast' },
+                { starts: 3, key: 'settings.quality_balanced' },
+                { starts: 5, key: 'settings.quality_best' },
+              ].map(({ starts, key }) => {
+                const active = (config.multiStart ?? 1) === starts;
+                return (
+                  <button
+                    key={starts}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setConfig({ ...config, multiStart: starts })}
+                    className={
+                      'px-2 py-1.5 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ' +
+                      (active
+                        ? 'bg-primary-50 border-primary-400 text-primary-700 font-medium'
+                        : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400')
+                    }
+                  >
+                    {t(key)}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1">
+              {t('settings.quality_hint')}
+            </p>
+          </div>
+
         </div>
       )}
     </div>

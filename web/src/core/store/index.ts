@@ -136,6 +136,10 @@ const defaultConfig: GeneticConfig = {
   mutationRate: 0.2,
   tournamentSize: 3,
   earlyStopPatience: 20,
+  // 3 independent starts strikes a good balance: noticeably better
+  // results than 1 (especially on conflict-heavy classes), still
+  // sub-second for typical 30-student rosters.
+  multiStart: 3,
 };
 
 const defaultConstraints: SeatingConstraints = {

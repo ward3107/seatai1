@@ -92,21 +92,16 @@ export class ClassroomOptimizer {
 
   // ── Main entry point ──────────────────────────────────────────────────────
 
-  optimize(): OptimizationResult {
-    const t0 = performance.now();
-    const warnings: string[] = [];
-
-    const studentMap = new Map(this.students.map((s) => [s.id, s]));
-    const totalSeats = this.slots.length;
-    let ids = this.students.map((s) => s.id);
-
-    if (ids.length > totalSeats) {
-      warnings.push(
-        `Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`,
-      );
-      ids = ids.slice(0, totalSeats);
-    }
-
+  /**
+   * Run the genetic algorithm one full time and return the best
+   * chromosome it produced with its fitness. Pure (no class-state
+   * mutation), so the multi-start wrapper can call it repeatedly.
+   */
+  private runSingleStart(
+    ids: string[],
+    studentMap: Map<string, Student>,
+    totalSeats: number,
+  ): { chrom: Chromosome; fitness: number } {
     // Build initial population
     let population: Chromosome[] = [];
     population.push(this.seedFromConstraints(ids, totalSeats));
@@ -116,7 +111,6 @@ export class ClassroomOptimizer {
       population.push(chrom);
     }
 
-    // Run GA
     let bestFitness = -Infinity;
     let bestChrom: Chromosome = population[0];
     let stagnation = 0;
@@ -159,6 +153,37 @@ export class ClassroomOptimizer {
 
       population = nextGen;
     }
+
+    return { chrom: bestChrom, fitness: bestFitness };
+  }
+
+  optimize(): OptimizationResult {
+    const t0 = performance.now();
+    const warnings: string[] = [];
+
+    const studentMap = new Map(this.students.map((s) => [s.id, s]));
+    const totalSeats = this.slots.length;
+    let ids = this.students.map((s) => s.id);
+
+    if (ids.length > totalSeats) {
+      warnings.push(
+        `Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`,
+      );
+      ids = ids.slice(0, totalSeats);
+    }
+
+    // Multi-start: run the GA `multiStart` times with fresh
+    // random populations and keep the best result. The GA gets stuck
+    // in local optima sometimes; an extra restart costs ~200ms per
+    // start for typical classes but doubles result reliability.
+    const starts = Math.max(1, Math.min(10, this.config.multiStart ?? 1));
+    let best: { chrom: Chromosome; fitness: number } | null = null;
+    for (let s = 0; s < starts; s++) {
+      const candidate = this.runSingleStart(ids, studentMap, totalSeats);
+      if (!best || candidate.fitness > best.fitness) best = candidate;
+    }
+    const bestChrom = best!.chrom;
+    const bestFitness = best!.fitness;
 
     const computationTimeMs = performance.now() - t0;
 
