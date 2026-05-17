@@ -35,6 +35,13 @@ export interface Student {
   has_mobility_issues: boolean;
   primary_language?: string;
   is_bilingual: boolean;
+  /** Optional teacher-supplied photo (data URL or absolute URL). Stays
+   *  in IndexedDB with the rest of the roster — never uploaded anywhere. */
+  photo_url?: string;
+  /** Free-text teacher observation (e.g. "rough morning, lots of
+   *  energy", "needs help with reading comprehension"). Persists with
+   *  the student record. */
+  notes?: string;
 }
 
 // Seating types
@@ -96,6 +103,11 @@ export interface GeneticConfig {
   mutationRate: number;
   tournamentSize: number;
   earlyStopPatience: number;
+  /** Number of independent GA restarts. 1 = fastest, 3 = balanced
+   *  (recommended), 5+ = highest quality for the same problem.
+   *  Optional for back-compat with persisted projects from before
+   *  multi-start landed. */
+  multiStart?: number;
 }
 
 export interface SeatingConstraints {

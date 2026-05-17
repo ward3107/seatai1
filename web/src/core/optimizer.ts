@@ -23,23 +23,45 @@ import { generateSlots, type LayoutDef, type Slot } from './layouts';
 
 type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+/** Pluggable RNG so tests can seed it for deterministic runs. Defaults
+ *  to Math.random in production. */
+export type Rng = () => number;
+
+function makeShuffle(rng: Rng) {
+  return <T,>(arr: T[]): T[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
 }
 
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function makePickRandom(rng: Rng) {
+  return <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
+}
+
+/** A small, fast, deterministic PRNG (mulberry32) — exported so tests
+ *  and consumers can produce reproducible optimization runs. */
+export function mulberry32(seed: number): Rng {
+  let t = seed >>> 0;
+  return () => {
+    t = (t + 0x6d2b79f5) >>> 0;
+    let r = t;
+    r = Math.imul(r ^ (r >>> 15), r | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 export class ClassroomOptimizer {
   private students: Student[];
   private slots: Slot[];
   private layoutDef: LayoutDef;
+  private rng: Rng = Math.random;
+  private shuffle = makeShuffle(this.rng);
+  private pickRandom = makePickRandom(this.rng);
   private weights: ObjectiveWeights = {
     academic_balance: 0.3,
     behavioral_balance: 0.3,
@@ -89,34 +111,35 @@ export class ClassroomOptimizer {
     this.layoutDef = def;
     this.slots = generateSlots(def);
   }
+  /** Inject a custom RNG (e.g. a seeded PRNG for tests). Affects shuffle,
+   *  tournament selection, crossover, and mutation. */
+  setRng(rng: Rng) {
+    this.rng = rng;
+    this.shuffle = makeShuffle(rng);
+    this.pickRandom = makePickRandom(rng);
+  }
 
   // ── Main entry point ──────────────────────────────────────────────────────
 
-  optimize(): OptimizationResult {
-    const t0 = performance.now();
-    const warnings: string[] = [];
-
-    const studentMap = new Map(this.students.map((s) => [s.id, s]));
-    const totalSeats = this.slots.length;
-    let ids = this.students.map((s) => s.id);
-
-    if (ids.length > totalSeats) {
-      warnings.push(
-        `Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`,
-      );
-      ids = ids.slice(0, totalSeats);
-    }
-
+  /**
+   * Run the genetic algorithm one full time and return the best
+   * chromosome it produced with its fitness. Pure (no class-state
+   * mutation), so the multi-start wrapper can call it repeatedly.
+   */
+  private runSingleStart(
+    ids: string[],
+    studentMap: Map<string, Student>,
+    totalSeats: number,
+  ): { chrom: Chromosome; fitness: number } {
     // Build initial population
     let population: Chromosome[] = [];
     population.push(this.seedFromConstraints(ids, totalSeats));
     while (population.length < this.config.populationSize) {
-      const chrom = shuffle(ids);
+      const chrom = this.shuffle(ids);
       while (chrom.length < totalSeats) chrom.push('');
       population.push(chrom);
     }
 
-    // Run GA
     let bestFitness = -Infinity;
     let bestChrom: Chromosome = population[0];
     let stagnation = 0;
@@ -144,13 +167,13 @@ export class ClassroomOptimizer {
         const parentB = this.tournamentSelect(scored);
 
         let child: Chromosome;
-        if (Math.random() < this.config.crossoverRate) {
+        if (this.rng() < this.config.crossoverRate) {
           child = this.orderCrossover(parentA, parentB);
         } else {
           child = [...parentA];
         }
 
-        if (Math.random() < this.config.mutationRate) {
+        if (this.rng() < this.config.mutationRate) {
           this.swapMutate(child);
         }
 
@@ -159,6 +182,37 @@ export class ClassroomOptimizer {
 
       population = nextGen;
     }
+
+    return { chrom: bestChrom, fitness: bestFitness };
+  }
+
+  optimize(): OptimizationResult {
+    const t0 = performance.now();
+    const warnings: string[] = [];
+
+    const studentMap = new Map(this.students.map((s) => [s.id, s]));
+    const totalSeats = this.slots.length;
+    let ids = this.students.map((s) => s.id);
+
+    if (ids.length > totalSeats) {
+      warnings.push(
+        `Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`,
+      );
+      ids = ids.slice(0, totalSeats);
+    }
+
+    // Multi-start: run the GA `multiStart` times with fresh
+    // random populations and keep the best result. The GA gets stuck
+    // in local optima sometimes; an extra restart costs ~200ms per
+    // start for typical classes but doubles result reliability.
+    const starts = Math.max(1, Math.min(10, this.config.multiStart ?? 1));
+    let best: { chrom: Chromosome; fitness: number } | null = null;
+    for (let s = 0; s < starts; s++) {
+      const candidate = this.runSingleStart(ids, studentMap, totalSeats);
+      if (!best || candidate.fitness > best.fitness) best = candidate;
+    }
+    const bestChrom = best!.chrom;
+    const bestFitness = best!.fitness;
 
     const computationTimeMs = performance.now() - t0;
 
@@ -207,7 +261,7 @@ export class ClassroomOptimizer {
       }
     }
 
-    const remaining = shuffle(ids.filter((id) => !placed.has(id)));
+    const remaining = this.shuffle(ids.filter((id) => !placed.has(id)));
     let ri = 0;
     for (let i = 0; i < totalSeats && ri < remaining.length; i++) {
       if (chrom[i] === '') chrom[i] = remaining[ri++];
@@ -416,9 +470,9 @@ export class ClassroomOptimizer {
   private tournamentSelect(
     scored: { chrom: Chromosome; fitness: number }[],
   ): Chromosome {
-    let best = pickRandom(scored);
+    let best = this.pickRandom(scored);
     for (let i = 1; i < this.config.tournamentSize; i++) {
-      const cand = pickRandom(scored);
+      const cand = this.pickRandom(scored);
       if (cand.fitness > best.fitness) best = cand;
     }
     return [...best.chrom];
@@ -431,8 +485,8 @@ export class ClassroomOptimizer {
     parentB: Chromosome,
   ): Chromosome {
     const len = parentA.length;
-    const start = Math.floor(Math.random() * len);
-    const end = start + Math.floor(Math.random() * (len - start));
+    const start = Math.floor(this.rng() * len);
+    const end = start + Math.floor(this.rng() * (len - start));
 
     const child: string[] = new Array(len).fill('');
     const used = new Set<string>();
@@ -459,8 +513,8 @@ export class ClassroomOptimizer {
 
   private swapMutate(chrom: Chromosome) {
     const len = chrom.length;
-    const i = Math.floor(Math.random() * len);
-    const j = Math.floor(Math.random() * len);
+    const i = Math.floor(this.rng() * len);
+    const j = Math.floor(this.rng() * len);
     [chrom[i], chrom[j]] = [chrom[j], chrom[i]];
   }
 

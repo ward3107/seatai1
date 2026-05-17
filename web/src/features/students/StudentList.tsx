@@ -147,15 +147,23 @@ export default function StudentList() {
               )}
               onClick={() => setDetailsTarget(student.id)}
             >
-              {/* Avatar */}
-              <div className={clsx(
-                'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0',
-                student.gender === 'male' ? 'bg-blue-400'
-                  : student.gender === 'female' ? 'bg-pink-400'
-                  : 'bg-purple-400'
-              )}>
-                {student.name.charAt(0) || '?'}
-              </div>
+              {/* Avatar — photo if set, otherwise initial-on-color */}
+              {student.photo_url ? (
+                <img
+                  src={student.photo_url}
+                  alt=""
+                  className="w-8 h-8 rounded-full object-cover shrink-0 border border-white"
+                />
+              ) : (
+                <div className={clsx(
+                  'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0',
+                  student.gender === 'male' ? 'bg-blue-400'
+                    : student.gender === 'female' ? 'bg-pink-400'
+                    : 'bg-purple-400'
+                )}>
+                  {student.name.charAt(0) || '?'}
+                </div>
+              )}
 
               {/* Info */}
               <div className="flex-1 min-w-0">

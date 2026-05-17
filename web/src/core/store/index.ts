@@ -46,6 +46,14 @@ interface AppState {
    *  moment a NEW result arrives. Used for the "show what moved"
    *  highlight. Cleared when result itself is cleared. */
   previousPositions: Record<string, { row: number; col: number }> | null;
+
+  /** Rolling history of optimization runs. Capped at 20 entries so
+   *  storage stays small. Used to surface "who has this student sat
+   *  with recently?" insights in the detail drawer. */
+  resultHistory: Array<{
+    timestamp: string;
+    positions: Record<string, { row: number; col: number }>;
+  }>;
   showMovementDiff: boolean;
   setOptimizing: (value: boolean) => void;
   setResult: (result: OptimizationResult | null) => void;
@@ -108,6 +116,26 @@ interface AppState {
   uiScale: 'sm' | 'md' | 'lg';
   setUiScale: (scale: 'sm' | 'md' | 'lg') => void;
 
+  /** Color theme. 'system' follows the OS preference. */
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+
+  /** Whether the welcome-tips modal has been dismissed.
+   *  Persisted so it never auto-pops twice for the same teacher. */
+  welcomeTipsDismissed: boolean;
+  setWelcomeTipsDismissed: (v: boolean) => void;
+
+  /** Optional client-side LLM integration. Off by default. The API
+   *  key is stored only in this browser's IndexedDB — no server, no
+   *  telemetry. */
+  aiSettings: {
+    enabled: boolean;
+    apiKey: string;
+    model: string;
+  };
+  setAiSettings: (s: { enabled: boolean; apiKey: string; model: string }) => void;
+  forgetApiKey: () => void;
+
   // Whether the results stack (metrics + explanation) starts collapsed so
   // the seating map dominates the viewport.
   resultsCollapsed: boolean;
@@ -136,6 +164,10 @@ const defaultConfig: GeneticConfig = {
   mutationRate: 0.2,
   tournamentSize: 3,
   earlyStopPatience: 20,
+  // 3 independent starts strikes a good balance: noticeably better
+  // results than 1 (especially on conflict-heavy classes), still
+  // sub-second for typical 30-student rosters.
+  multiStart: 3,
 };
 
 const defaultConstraints: SeatingConstraints = {
@@ -213,6 +245,7 @@ export const useStore = create<AppState>()(
       isOptimizing: false,
       result: null,
       previousPositions: null,
+      resultHistory: [],
       showMovementDiff: false,
       setOptimizing: (value) =>
         set((state) => {
@@ -230,6 +263,22 @@ export const useStore = create<AppState>()(
             state.previousPositions = null;
           }
           state.result = result;
+
+          // Append to rolling result history (capped at 20 entries) so
+          // the rotation tracker can answer "who has this student sat
+          // with recently?". Skip the append when clearing (result is
+          // null) — that's a state reset, not a new run.
+          if (result) {
+            const positions: Record<string, { row: number; col: number }> = {};
+            for (const [id, p] of Object.entries(result.student_positions)) {
+              positions[id] = { row: p.row, col: p.col };
+            }
+            state.resultHistory = [
+              { timestamp: new Date().toISOString(), positions },
+              ...state.resultHistory,
+            ].slice(0, 20);
+          }
+
           // New optimization clears undo history
           state.history = [];
           state.historyFuture = [];
@@ -382,7 +431,10 @@ export const useStore = create<AppState>()(
         }),
 
       // UI Language
-      uiLanguage: 'en',
+      // Default to Hebrew per product brief — most teachers using
+      // SeatAI in the field are Hebrew-speaking. Users can switch
+      // immediately from the language picker in the header.
+      uiLanguage: 'he',
       setUiLanguage: (lang) =>
         set((state) => { state.uiLanguage = lang; }),
 
@@ -390,6 +442,26 @@ export const useStore = create<AppState>()(
       uiScale: 'md',
       setUiScale: (scale) =>
         set((state) => { state.uiScale = scale; }),
+
+      theme: 'system',
+      setTheme: (theme) =>
+        set((state) => { state.theme = theme; }),
+
+      welcomeTipsDismissed: false,
+      setWelcomeTipsDismissed: (v) =>
+        set((state) => { state.welcomeTipsDismissed = v; }),
+
+      aiSettings: { enabled: false, apiKey: '', model: 'claude-haiku-4-5-20251001' },
+      setAiSettings: (s) =>
+        set((state) => {
+          // Defense in depth: trim whitespace even if the input already trimmed
+          // on type — catches paste-then-edit and programmatic callers.
+          state.aiSettings = { ...s, apiKey: s.apiKey.trim() };
+        }),
+      forgetApiKey: () =>
+        set((state) => {
+          state.aiSettings = { ...state.aiSettings, apiKey: '' };
+        }),
 
       // Collapsed results stack
       resultsCollapsed: false,
@@ -488,6 +560,10 @@ export const useStore = create<AppState>()(
         currentProjectId: state.currentProjectId,
         uiLanguage: state.uiLanguage,
         uiScale: state.uiScale,
+        theme: state.theme,
+        welcomeTipsDismissed: state.welcomeTipsDismissed,
+        aiSettings: state.aiSettings,
+        resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
       }),
     }

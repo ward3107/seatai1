@@ -15,13 +15,21 @@ sign-in, no internet required after first load.
 ## Features
 
 - **Multi-layout** — rows, clusters, U-shape, circle, and custom variable-row layouts
-- **Genetic optimizer** — runs in a Web Worker so the UI never freezes
-- **Drag-and-drop** — swap students by dragging or clicking
-- **Constraints** — front-row, back-row, keep-together, and keep-apart rules
+- **Multi-start genetic optimizer** — runs in a Web Worker so the UI never freezes. Fast / Balanced / Best quality presets.
+- **Drag-and-drop** — swap students by dragging, clicking, or keyboard arrows
+- **Click any student** — opens an AI-reasoning drawer explaining why they were placed where they are: strengths, tradeoffs, neighbor analysis, rotation history
+- **Optional LLM explanations** — opt-in, browser-direct integration using the teacher's own API key
+- **Constraints** — front-row, back-row, keep-together, keep-apart, on-aisle, near-window, peer-mentor pairs
+- **Student personalization** — photos and free-text teacher notes per student
+- **CSV import + export** — including a downloadable template; export to CSV, JSON, PDF, image
+- **Three sample classes** — Small / Standard / Large pre-built rosters for instant demo
 - **Undo / redo** — every seating change is reversible (Ctrl+Z / Ctrl+Y)
 - **Multi-class** — save and switch between classroom projects
-- **Offline-first** — data persists to IndexedDB
-- **Export** — PDF, image, and printable seating chart
+- **Visual diff** — highlight which students moved between optimization runs
+- **Rotation tracker** — see when each student last sat next to each of their neighbors
+- **Light / dark / system theme** with adjustable text size
+- **Offline-first PWA** — installable, data persists to IndexedDB
+- **Mobile + tablet responsive** — sidebar collapses into a drawer on small screens
 - **RTL** — Hebrew and Arabic layouts
 
 ---
@@ -30,7 +38,7 @@ sign-in, no internet required after first load.
 
 ### Prerequisites
 
-- **Node.js 18+** — [nodejs.org](https://nodejs.org)
+- **Node.js 20+** — [nodejs.org](https://nodejs.org)
 
 ### Installation
 

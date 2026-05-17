@@ -141,19 +141,28 @@ export default memo(function SeatCard({
 
       {student ? (
         <>
-          {/* Avatar */}
-          <div
-            className={clsx(
-              'w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm',
-              student.gender === 'male'
-                ? 'bg-blue-400'
-                : student.gender === 'female'
-                ? 'bg-pink-400'
-                : 'bg-purple-400'
-            )}
-          >
-            {student.name.charAt(0).toUpperCase()}
-          </div>
+          {/* Avatar — photo if set, otherwise initial-on-color */}
+          {student.photo_url ? (
+            <img
+              src={student.photo_url}
+              alt=""
+              className="w-9 h-9 rounded-full object-cover shadow-sm border border-white"
+              draggable={false}
+            />
+          ) : (
+            <div
+              className={clsx(
+                'w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm',
+                student.gender === 'male'
+                  ? 'bg-blue-400'
+                  : student.gender === 'female'
+                  ? 'bg-pink-400'
+                  : 'bg-purple-400'
+              )}
+            >
+              {student.name.charAt(0).toUpperCase()}
+            </div>
+          )}
 
           {/* First name */}
           <p className="mt-1 text-xs font-medium text-gray-700 text-center truncate w-full leading-tight px-1">

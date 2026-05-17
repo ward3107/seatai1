@@ -20,15 +20,19 @@ import LayoutPanel from '../features/layout/LayoutPanel';
 const PrintView = lazy(() => import('../features/print/PrintView'));
 import OnboardingView from '../features/onboarding/OnboardingView';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
+import WelcomeTipsModal from '../components/WelcomeTipsModal';
+import UserGuide from '../components/UserGuide';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
+import { useTheme } from '../hooks/useTheme';
 import { useDeviceCheck } from '../hooks/useDeviceCheck';
 import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
+import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
-import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 
 const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
   sm: 'text-sm',
@@ -56,9 +60,18 @@ function App() {
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
+  useTheme();
   const { isPhone } = useDeviceCheck();
   const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
+  const welcomeTipsDismissed = useStore((s) => s.welcomeTipsDismissed);
+  const [showTips, setShowTips] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  // Auto-show the tips modal once: when the user has students loaded
+  // for the first time AND hasn't dismissed before.
+  useEffect(() => {
+    if (!welcomeTipsDismissed && students.length > 0) setShowTips(true);
+  }, [welcomeTipsDismissed, students.length]);
 
   const canUndo = history.length > 0;
   const canRedo = historyFuture.length > 0;
@@ -313,6 +326,15 @@ function App() {
                 {t('app.print')}
               </button>
             )}
+            <button
+              onClick={() => setShowGuide(true)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              aria-label={t('guide.title')}
+              title={t('guide.title')}
+            >
+              <HelpCircle size={18} className="text-gray-500 dark:text-slate-400" aria-hidden="true" />
+            </button>
+            <ThemeToggle />
             <TextSizeToggle />
             <LanguageSelector />
             <ExportButton />
@@ -401,6 +423,12 @@ function App() {
       {/* Student detail drawer — opens when a student is clicked from
           the grid, the 3D view, or the sidebar student list. */}
       <StudentDetailPanel />
+
+      {/* Welcome tips — auto-pops on first roster load (one time only). */}
+      <WelcomeTipsModal open={showTips} onClose={() => setShowTips(false)} />
+
+      {/* Comprehensive user guide — opens from the help button in the header. */}
+      <UserGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }

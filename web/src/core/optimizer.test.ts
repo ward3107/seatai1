@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ClassroomOptimizer } from './optimizer';
+import { ClassroomOptimizer, mulberry32 } from './optimizer';
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints } from '../types';
 
 describe('ClassroomOptimizer', () => {
@@ -278,6 +278,120 @@ describe('ClassroomOptimizer', () => {
       expect(diversity).toBeLessThanOrEqual(100);
       expect(special_needs).toBeGreaterThanOrEqual(0);
       expect(special_needs).toBeLessThanOrEqual(100);
+    });
+  });
+
+  describe('Multi-start', () => {
+    it('runs successfully with multiStart undefined (back-compat with old configs)', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({ ...config, multiStart: undefined });
+      const result = optimizer.optimize();
+      expect(result.fitness_score).toBeGreaterThan(0);
+      expect(result.layout.seats.filter((s) => !s.is_empty).length).toBe(students.length);
+    });
+
+    it('runs successfully with multiStart=3', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({ ...config, multiStart: 3 });
+      const result = optimizer.optimize();
+      expect(result.fitness_score).toBeGreaterThan(0);
+    });
+
+    it('clamps multiStart=0 to 1 (still produces a valid result)', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({ ...config, multiStart: 0 });
+      const result = optimizer.optimize();
+      expect(result.fitness_score).toBeGreaterThan(0);
+    });
+
+    it('clamps multiStart=100 to 10 (no runaway loop)', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setConfig({ ...config, multiStart: 100, maxGenerations: 10 });
+      const start = performance.now();
+      const result = optimizer.optimize();
+      const elapsed = performance.now() - start;
+      expect(result.fitness_score).toBeGreaterThan(0);
+      // Generous ceiling: 10 starts × tiny config should finish well under 5s.
+      expect(elapsed).toBeLessThan(5000);
+    });
+
+    it('multiStart=5 wins or ties single-start most of the time', () => {
+      // Statistical claim: with 5 independent restarts the GA should hit a
+      // local optimum at least as good as a lone run. Allow ~20% noise:
+      // multi-start must win or tie in ≥ 4 of 5 trials.
+      let wins = 0;
+      for (let i = 0; i < 5; i++) {
+        const single = new ClassroomOptimizer(students, 3, 4);
+        single.setConfig({ ...config, multiStart: 1 });
+        const singleResult = single.optimize();
+
+        const multi = new ClassroomOptimizer(students, 3, 4);
+        multi.setConfig({ ...config, multiStart: 5 });
+        const multiResult = multi.optimize();
+
+        if (multiResult.fitness_score >= singleResult.fitness_score) wins++;
+      }
+      expect(wins).toBeGreaterThanOrEqual(4);
+    });
+
+    it('produces identical results across runs when seeded with the same RNG', () => {
+      // Determinism check: same seed + same input must yield identical
+      // student_positions. This is the bedrock guarantee that lets us
+      // ship "reproducible runs" features later.
+      const opt1 = new ClassroomOptimizer(students, 3, 4);
+      opt1.setConfig({ ...config, multiStart: 3 });
+      opt1.setRng(mulberry32(12345));
+      const r1 = opt1.optimize();
+
+      const opt2 = new ClassroomOptimizer(students, 3, 4);
+      opt2.setConfig({ ...config, multiStart: 3 });
+      opt2.setRng(mulberry32(12345));
+      const r2 = opt2.optimize();
+
+      expect(r1.fitness_score).toBe(r2.fitness_score);
+      expect(r1.student_positions).toEqual(r2.student_positions);
+    });
+
+    it('different seeds yield different search trajectories', () => {
+      // Sanity check that the seed actually affects the output — guards
+      // against accidentally ignoring the RNG.
+      const opt1 = new ClassroomOptimizer(students, 5, 6);
+      opt1.setConfig({ ...config, multiStart: 1, maxGenerations: 20 });
+      opt1.setRng(mulberry32(1));
+      const r1 = opt1.optimize();
+
+      const opt2 = new ClassroomOptimizer(students, 5, 6);
+      opt2.setConfig({ ...config, multiStart: 1, maxGenerations: 20 });
+      opt2.setRng(mulberry32(99999));
+      const r2 = opt2.optimize();
+
+      // With only 4 students in a 5x6 grid the search space is huge —
+      // different seeds essentially never converge on the same layout.
+      expect(r1.student_positions).not.toEqual(r2.student_positions);
+    });
+
+    it('actually performs N independent restarts (Math.random call-count scales)', () => {
+      // Each restart rebuilds the population via shuffle() and runs the GA
+      // loop, both of which consume Math.random. multiStart=5 should call
+      // Math.random meaningfully more often than multiStart=1 on the same
+      // input. We assert "at least 2x" — well below the true ~5x ratio,
+      // leaves headroom for early-stop variance.
+      const original = Math.random;
+      let count1 = 0;
+      let count5 = 0;
+
+      Math.random = (() => { count1++; return original(); }) as typeof Math.random;
+      const opt1 = new ClassroomOptimizer(students, 3, 4);
+      opt1.setConfig({ ...config, multiStart: 1, maxGenerations: 20, earlyStopPatience: 100 });
+      opt1.optimize();
+
+      Math.random = (() => { count5++; return original(); }) as typeof Math.random;
+      const opt5 = new ClassroomOptimizer(students, 3, 4);
+      opt5.setConfig({ ...config, multiStart: 5, maxGenerations: 20, earlyStopPatience: 100 });
+      opt5.optimize();
+
+      Math.random = original;
+      expect(count5).toBeGreaterThan(count1 * 2);
     });
   });
 

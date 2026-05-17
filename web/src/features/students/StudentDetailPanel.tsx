@@ -8,7 +8,7 @@
  * `explainPlacement()` and renders. No mutations.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   X,
   Heart,
@@ -35,6 +35,8 @@ import {
   type ExplanationLine,
   type NeighborBreakdown,
 } from '../../utils/explainPlacement';
+import { aiExplainPlacement } from '../../utils/aiExplain';
+import { getNeighborHistory, relativeTime } from '../../utils/rotationHistory';
 
 const TONE_STYLES: Record<ExplanationLine['tone'], string> = {
   positive: 'bg-emerald-50 border-emerald-200 text-emerald-900',
@@ -90,14 +92,30 @@ export default function StudentDetailPanel() {
   const result = useStore((s) => s.result);
   const layoutDef = useStore((s) => s.layoutDef);
   const constraints = useStore((s) => s.constraints);
+  const aiSettings = useStore((s) => s.aiSettings);
+  const resultHistory = useStore((s) => s.resultHistory);
   const { t } = useLanguage();
+
+  // AI-generated paragraph (one per student per drawer open). Lives
+  // locally — never persisted. Clears when the drawer closes.
+  const [aiText, setAiText] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string>('');
 
   const open = !!detailsTargetStudentId;
   const student = open
     ? students.find((s) => s.id === detailsTargetStudentId) ?? null
     : null;
 
-  // Close on Escape
+  // Close on Escape; also reset the AI text whenever the drawer closes
+  // or the targeted student changes so the cached result doesn't bleed
+  // across students.
+  useEffect(() => {
+    setAiText('');
+    setAiError('');
+    setAiLoading(false);
+  }, [detailsTargetStudentId]);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -112,6 +130,16 @@ export default function StudentDetailPanel() {
   const explanation = result
     ? explainPlacement(student, result, layoutDef, students, constraints)
     : null;
+
+  // Per-neighbor history lookup: who has this student already sat
+  // next to in past optimizations, and how recently? Indexed by other
+  // student's id for O(1) lookup in the render loop.
+  const historyByPeer = new Map(
+    getNeighborHistory(student.id, layoutDef, resultHistory).map((e) => [
+      e.otherId,
+      e,
+    ]),
+  );
 
   return (
     <>
@@ -138,18 +166,26 @@ export default function StudentDetailPanel() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={clsx(
-                'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0',
-                student.gender === 'male'
-                  ? 'bg-blue-400'
-                  : student.gender === 'female'
-                    ? 'bg-pink-400'
-                    : 'bg-purple-400',
-              )}
-            >
-              {student.name.charAt(0).toUpperCase()}
-            </div>
+            {student.photo_url ? (
+              <img
+                src={student.photo_url}
+                alt=""
+                className="w-12 h-12 rounded-full object-cover shadow-sm flex-shrink-0 border border-white"
+              />
+            ) : (
+              <div
+                className={clsx(
+                  'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0',
+                  student.gender === 'male'
+                    ? 'bg-blue-400'
+                    : student.gender === 'female'
+                      ? 'bg-pink-400'
+                      : 'bg-purple-400',
+                )}
+              >
+                {student.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0">
               <h2
                 id="student-detail-title"
@@ -189,6 +225,62 @@ export default function StudentDetailPanel() {
 
         {/* Body */}
         <div className="flex-1 overflow-auto p-4 space-y-5">
+          {/* AI summary — opt-in. Shows a button when not yet
+              generated, a loading indicator while in flight, then the
+              generated paragraph. Errors surface inline without
+              breaking the rest of the drawer. */}
+          {aiSettings.enabled && aiSettings.apiKey && explanation && (
+            <section className="bg-gradient-to-br from-primary-50 to-accent-50 dark:from-slate-700 dark:to-slate-800 rounded-xl p-3 border border-primary-200 dark:border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide">
+                  {t('detail.ai_summary')}
+                </span>
+              </div>
+              {aiText ? (
+                <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                  {aiText}
+                </p>
+              ) : aiLoading ? (
+                <p className="text-sm text-gray-500 italic">{t('detail.ai_loading')}</p>
+              ) : aiError ? (
+                <div>
+                  <p className="text-sm text-red-700 dark:text-red-300 mb-2">{aiError}</p>
+                  <button
+                    type="button"
+                    onClick={() => { setAiError(''); setAiText(''); }}
+                    className="text-xs text-primary-600 underline"
+                  >
+                    {t('detail.ai_try_again')}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!explanation) return;
+                    setAiLoading(true);
+                    setAiError('');
+                    try {
+                      const text = await aiExplainPlacement(
+                        { apiKey: aiSettings.apiKey, model: aiSettings.model },
+                        student,
+                        explanation,
+                      );
+                      setAiText(text);
+                    } catch (err) {
+                      setAiError(err instanceof Error ? err.message : String(err));
+                    } finally {
+                      setAiLoading(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-primary-300 dark:border-slate-600 rounded-lg text-xs font-medium text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  {t('detail.ai_generate')}
+                </button>
+              )}
+            </section>
+          )}
+
           {/* Profile */}
           <section>
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
@@ -218,6 +310,18 @@ export default function StudentDetailPanel() {
               </div>
             </div>
           </section>
+
+          {/* Teacher notes */}
+          {student.notes && student.notes.trim().length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                {t('detail.notes')}
+              </h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap bg-amber-50 border border-amber-200 rounded-xl p-3">
+                {student.notes}
+              </p>
+            </section>
+          )}
 
           {/* Special needs */}
           {(student.special_needs.length > 0 ||
@@ -327,18 +431,26 @@ export default function StudentDetailPanel() {
                           key={n.student.id}
                           className="flex items-start gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100"
                         >
-                          <div
-                            className={clsx(
-                              'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0',
-                              n.student.gender === 'male'
-                                ? 'bg-blue-400'
-                                : n.student.gender === 'female'
-                                  ? 'bg-pink-400'
-                                  : 'bg-purple-400',
-                            )}
-                          >
-                            {n.student.name.charAt(0).toUpperCase()}
-                          </div>
+                          {n.student.photo_url ? (
+                            <img
+                              src={n.student.photo_url}
+                              alt=""
+                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white"
+                            />
+                          ) : (
+                            <div
+                              className={clsx(
+                                'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0',
+                                n.student.gender === 'male'
+                                  ? 'bg-blue-400'
+                                  : n.student.gender === 'female'
+                                    ? 'bg-pink-400'
+                                    : 'bg-purple-400',
+                              )}
+                            >
+                              {n.student.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-gray-800 truncate">
@@ -369,6 +481,23 @@ export default function StudentDetailPanel() {
                                   <ArrowUpRight size={9} /> {t('detail.mixed_gender')}
                                 </span>
                               )}
+                              {/* Rotation freshness — how recently this pair sat together. */}
+                              {(() => {
+                                const hist = historyByPeer.get(n.student.id);
+                                if (!hist || hist.timesAdjacent <= 1) {
+                                  // Only one run = this very one; no rotation insight yet.
+                                  return null;
+                                }
+                                const rel = relativeTime(hist.lastAdjacentAt);
+                                return (
+                                  <span
+                                    className="inline-flex items-center gap-1 text-violet-600"
+                                    title={t('detail.rotation_tooltip', { count: hist.timesAdjacent })}
+                                  >
+                                    🔄 {t('detail.last_together')} {rel}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
                         </li>
