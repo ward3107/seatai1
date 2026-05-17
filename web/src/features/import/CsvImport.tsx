@@ -26,7 +26,7 @@ const TEMPLATE_EXAMPLE = [
 const VALID_GENDERS = ['male', 'female', 'other'];
 const VALID_ACADEMIC = ['advanced', 'proficient', 'basic', 'below_basic'];
 const VALID_BEHAVIOR = ['excellent', 'good', 'average', 'challenging'];
-const MAX_ROSTER = 200;
+export const MAX_ROSTER = 200;
 
 function parseBool(v: string): boolean {
   return v.trim().toLowerCase() === 'true' || v.trim() === '1' || v.trim().toLowerCase() === 'yes';
@@ -102,7 +102,7 @@ function parseStudent(
   };
 }
 
-function parseCsv(
+export function parseCsv(
   text: string,
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): { students: Student[]; errors: string[]; warnings: string[] } {
