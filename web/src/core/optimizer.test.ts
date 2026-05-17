@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ClassroomOptimizer } from './optimizer';
+import { ClassroomOptimizer, mulberry32 } from './optimizer';
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints } from '../types';
 
 describe('ClassroomOptimizer', () => {
@@ -332,6 +332,42 @@ describe('ClassroomOptimizer', () => {
         if (multiResult.fitness_score >= singleResult.fitness_score) wins++;
       }
       expect(wins).toBeGreaterThanOrEqual(4);
+    });
+
+    it('produces identical results across runs when seeded with the same RNG', () => {
+      // Determinism check: same seed + same input must yield identical
+      // student_positions. This is the bedrock guarantee that lets us
+      // ship "reproducible runs" features later.
+      const opt1 = new ClassroomOptimizer(students, 3, 4);
+      opt1.setConfig({ ...config, multiStart: 3 });
+      opt1.setRng(mulberry32(12345));
+      const r1 = opt1.optimize();
+
+      const opt2 = new ClassroomOptimizer(students, 3, 4);
+      opt2.setConfig({ ...config, multiStart: 3 });
+      opt2.setRng(mulberry32(12345));
+      const r2 = opt2.optimize();
+
+      expect(r1.fitness_score).toBe(r2.fitness_score);
+      expect(r1.student_positions).toEqual(r2.student_positions);
+    });
+
+    it('different seeds yield different search trajectories', () => {
+      // Sanity check that the seed actually affects the output — guards
+      // against accidentally ignoring the RNG.
+      const opt1 = new ClassroomOptimizer(students, 5, 6);
+      opt1.setConfig({ ...config, multiStart: 1, maxGenerations: 20 });
+      opt1.setRng(mulberry32(1));
+      const r1 = opt1.optimize();
+
+      const opt2 = new ClassroomOptimizer(students, 5, 6);
+      opt2.setConfig({ ...config, multiStart: 1, maxGenerations: 20 });
+      opt2.setRng(mulberry32(99999));
+      const r2 = opt2.optimize();
+
+      // With only 4 students in a 5x6 grid the search space is huge —
+      // different seeds essentially never converge on the same layout.
+      expect(r1.student_positions).not.toEqual(r2.student_positions);
     });
 
     it('actually performs N independent restarts (Math.random call-count scales)', () => {

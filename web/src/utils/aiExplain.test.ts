@@ -53,6 +53,29 @@ describe('aiExplainPlacement', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it('treats whitespace-only API keys as missing (no network call)', async () => {
+    await expect(
+      aiExplainPlacement({ apiKey: '   \n\t  ', model: 'claude' }, student, explanation),
+    ).rejects.toThrow('Missing API key.');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('trims whitespace around the API key before sending', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ content: [{ type: 'text', text: 'ok' }] }),
+    });
+    await aiExplainPlacement(
+      { apiKey: '  sk-ant-trimmed-key  ', model: 'claude' },
+      student,
+      explanation,
+    );
+    const [, init] = fetchSpy.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({
+      'x-api-key': 'sk-ant-trimmed-key',
+    });
+  });
+
   it('returns trimmed text on success', async () => {
     fetchSpy.mockResolvedValue({
       ok: true,

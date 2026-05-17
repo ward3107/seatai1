@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
 
 // ─── Main SettingsPanel ────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ export default function SettingsPanel() {
     weights, setWeights,
     config, setConfig,
     setStudents, setResult,
-    aiSettings, setAiSettings,
+    aiSettings, setAiSettings, forgetApiKey,
   } = useStore();
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -195,10 +195,20 @@ export default function SettingsPanel() {
                     <button
                       type="button"
                       onClick={() => setShowApiKey((v) => !v)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
+                      className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
                       aria-label={showApiKey ? t('settings.ai_hide_key') : t('settings.ai_show_key')}
                     >
                       {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={forgetApiKey}
+                      disabled={!aiSettings.apiKey}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400"
+                      aria-label={t('settings.ai_forget_key')}
+                      title={t('settings.ai_forget_key')}
+                    >
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

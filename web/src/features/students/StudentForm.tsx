@@ -10,6 +10,12 @@ const SPECIAL_NEED_TYPES = [
   'Wheelchair', 'ESL', 'Autism', 'Dyscalculia', 'Other',
 ];
 
+// Only raster formats — rejects SVG (script injection vector) and other
+// non-image MIME types that some browsers' `image/*` accept attribute
+// will still surface.
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB before resize
+
 /**
  * Resize an uploaded image to a max dimension and re-encode as JPEG.
  * Keeps IndexedDB storage manageable — a full-size phone photo can be
@@ -64,6 +70,7 @@ export default function StudentForm() {
   const [isAdding, setIsAdding] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingStudent) {
@@ -162,6 +169,14 @@ export default function StudentForm() {
             {t('students.photo')}
           </label>
           <div className="relative w-16 h-16">
+            {photoError && (
+              <p
+                className="absolute -bottom-4 left-0 right-0 text-[10px] text-red-600 whitespace-nowrap"
+                role="alert"
+              >
+                {photoError}
+              </p>
+            )}
             {form.photo_url ? (
               <>
                 <img
@@ -186,17 +201,27 @@ export default function StudentForm() {
                 <ImagePlus size={20} />
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_PHOTO_TYPES.join(',')}
                   className="sr-only"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    setPhotoError(null);
+                    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+                      setPhotoError(t('students.photo_error_type'));
+                      e.target.value = '';
+                      return;
+                    }
+                    if (file.size > MAX_PHOTO_BYTES) {
+                      setPhotoError(t('students.photo_error_size'));
+                      e.target.value = '';
+                      return;
+                    }
                     try {
                       const dataUrl = await shrinkPhoto(file);
                       setForm({ ...form, photo_url: dataUrl });
                     } catch {
-                      // Silently ignore — user can try again. Don't surface
-                      // file-decode errors as scary messages.
+                      setPhotoError(t('students.photo_error_decode'));
                     } finally {
                       // Reset the input so re-selecting the same file works.
                       e.target.value = '';

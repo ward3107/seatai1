@@ -134,6 +134,7 @@ interface AppState {
     model: string;
   };
   setAiSettings: (s: { enabled: boolean; apiKey: string; model: string }) => void;
+  forgetApiKey: () => void;
 
   // Whether the results stack (metrics + explanation) starts collapsed so
   // the seating map dominates the viewport.
@@ -452,7 +453,15 @@ export const useStore = create<AppState>()(
 
       aiSettings: { enabled: false, apiKey: '', model: 'claude-haiku-4-5-20251001' },
       setAiSettings: (s) =>
-        set((state) => { state.aiSettings = s; }),
+        set((state) => {
+          // Defense in depth: trim whitespace even if the input already trimmed
+          // on type — catches paste-then-edit and programmatic callers.
+          state.aiSettings = { ...s, apiKey: s.apiKey.trim() };
+        }),
+      forgetApiKey: () =>
+        set((state) => {
+          state.aiSettings = { ...state.aiSettings, apiKey: '' };
+        }),
 
       // Collapsed results stack
       resultsCollapsed: false,

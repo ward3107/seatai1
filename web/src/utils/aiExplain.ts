@@ -35,7 +35,8 @@ export async function aiExplainPlacement(
   student: Student,
   explanation: PlacementExplanation,
 ): Promise<string> {
-  if (!config.apiKey) throw new Error('Missing API key.');
+  const apiKey = config.apiKey.trim();
+  if (!apiKey) throw new Error('Missing API key.');
 
   // Compact, structured representation — no PII beyond what the
   // teacher entered locally. Names are included because explanations
@@ -88,7 +89,7 @@ export async function aiExplainPlacement(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': config.apiKey,
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       // Required for browser-origin requests. Anthropic recommends
       // proxying server-side for production; this app explicitly trades
