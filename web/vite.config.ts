@@ -42,7 +42,10 @@ export default defineConfig({
     }),
   ],
   build: {
-    target: 'esnext',
+    // Locked to es2022 so the output stays predictable across Vite/esbuild
+    // upgrades. Anything newer (top-level await, decorators) is unsupported.
+    // The corresponding browser floor lives in package.json `browserslist`.
+    target: 'es2022',
     sourcemap: true,
   },
   server: {
