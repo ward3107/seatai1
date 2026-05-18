@@ -59,6 +59,28 @@ npm test              # run the test suite
 npm run lint          # ESLint check
 ```
 
+## Browser support
+
+SeatAI is a modern, no-backend single-page app. It targets evergreen
+browsers and requires features that are only available on recent
+versions:
+
+| Browser | Minimum version | Released |
+|---|---|---|
+| Chrome / Edge | 98 | Feb 2022 |
+| Firefox | 114 | May 2023 |
+| Safari (macOS / iOS / iPadOS) | 15.4 | Mar 2022 |
+| Samsung Internet | 17 | 2022 |
+
+These floors are encoded in `web/package.json` (`browserslist`) and the
+Vite build target (`es2022`). The hard requirements driving them are
+`structuredClone` (Safari 15.4+, FF 94+) and ES-module Web Workers
+(Firefox 114+) used by the optimizer.
+
+Internet Explorer and pre-Chromium Edge are not supported. The PWA
+install prompt requires Chrome / Edge / Samsung Internet; Safari users
+can still add to home screen via the share menu.
+
 ## How It Works
 
 ### The Algorithm
