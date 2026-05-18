@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface Props {
   open: boolean;
@@ -26,6 +27,7 @@ interface Props {
 export default function WelcomeTipsModal({ open, onClose }: Props) {
   const setWelcomeTipsDismissed = useStore((s) => s.setWelcomeTipsDismissed);
   const { t } = useLanguage();
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +58,9 @@ export default function WelcomeTipsModal({ open, onClose }: Props) {
       aria-labelledby="welcome-tips-title"
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
+        ref={trapRef}
+        tabIndex={-1}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">

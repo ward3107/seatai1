@@ -202,6 +202,11 @@
     "photo_error_type": "השתמשו ב-JPEG, PNG, WebP או GIF.",
     "photo_error_size": "התמונה גדולה מדי (מקסימום 10 מ\"ב).",
     "photo_error_decode": "לא ניתן לקרוא את התמונה — נסו קובץ אחר.",
+    "clear_search": "נקה חיפוש",
+    "unnamed": "תלמיד ללא שם",
+    "open_details_for": "פתח פרטים של {{name}}",
+    "edit_student": "ערוך את {{name}}",
+    "remove_student": "הסר את {{name}}",
     "notes": "הערות מורה",
     "notes_placeholder": "תצפיות פרטיות, למשל \"מתקשה להתרכז אחרי הצהריים\". נשאר רק במכשיר הזה.",
     "gender": "מגדר",
@@ -565,5 +570,14 @@
     "max_fitness": "כושר מקסימלי",
     "improvement": "שיפור",
     "avg_fitness": "כושר ממוצע"
+  },
+  "a11y": {
+    "seat_row": "שורה",
+    "seat_col": "עמודה",
+    "seat_empty": "ריק",
+    "seat_locked": "נעול",
+    "optimization_started": "האופטימיזציה החלה",
+    "optimization_complete": "האופטימיזציה הסתיימה, ציון {{score}} אחוז",
+    "optimization_failed": "האופטימיזציה נכשלה: {{error}}"
   }
 }

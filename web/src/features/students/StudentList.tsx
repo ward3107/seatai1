@@ -93,6 +93,7 @@ export default function StudentList() {
             {query && (
               <button
                 onClick={() => setQuery('')}
+                aria-label={t('students.clear_search')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X size={13} />
@@ -139,13 +140,27 @@ export default function StudentList() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.15 }}
+              // Whole row is keyboard-clickable. Using role=button + key
+              // handler instead of <button> because the row already has
+              // nested action buttons (Edit / Remove), and button-in-button
+              // is invalid HTML.
+              role="button"
+              tabIndex={0}
+              aria-label={t('students.open_details_for', { name: student.name || t('students.unnamed') })}
               className={clsx(
                 'flex items-center gap-2.5 p-2.5 rounded-lg cursor-pointer transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
                 selectedStudentId === student.id
                   ? 'bg-primary-100 border-2 border-primary-300'
                   : 'bg-white hover:bg-gray-100 border-2 border-transparent'
               )}
               onClick={() => setDetailsTarget(student.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setDetailsTarget(student.id);
+                }
+              }}
             >
               {/* Avatar — photo if set, otherwise initial-on-color */}
               {student.photo_url ? (
@@ -184,16 +199,16 @@ export default function StudentList() {
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedStudentId(student.id); }}
                   className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                  title="Edit"
+                  aria-label={t('students.edit_student', { name: student.name || t('students.unnamed') })}
                 >
-                  <Edit2 size={13} className="text-gray-500" />
+                  <Edit2 size={13} className="text-gray-500" aria-hidden="true" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeStudent(student.id); }}
                   className="p-1.5 hover:bg-red-100 rounded transition-colors"
-                  title="Remove"
+                  aria-label={t('students.remove_student', { name: student.name || t('students.unnamed') })}
                 >
-                  <Trash2 size={13} className="text-red-500" />
+                  <Trash2 size={13} className="text-red-500" aria-hidden="true" />
                 </button>
               </div>
             </motion.div>

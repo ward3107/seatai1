@@ -61,6 +61,24 @@ function App() {
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
   useTheme();
+
+  // Off-screen live region: announces the optimization lifecycle to
+  // screen-reader users. The visible button + score chip already convey
+  // the same info to sighted users.
+  const [a11yAnnouncement, setA11yAnnouncement] = useState('');
+  useEffect(() => {
+    if (isOptimizing) setA11yAnnouncement(t('a11y.optimization_started'));
+  }, [isOptimizing, t]);
+  useEffect(() => {
+    if (result && !isOptimizing) {
+      setA11yAnnouncement(
+        t('a11y.optimization_complete', { score: getDisplayScorePct(result) }),
+      );
+    }
+  }, [result, isOptimizing, t]);
+  useEffect(() => {
+    if (error) setA11yAnnouncement(t('a11y.optimization_failed', { error }));
+  }, [error, t]);
   const { isPhone } = useDeviceCheck();
   const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
@@ -138,6 +156,11 @@ function App() {
 
   return (
     <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
+      {/* Screen-reader-only live region for optimization lifecycle events. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {a11yAnnouncement}
+      </div>
+
       {/* Backdrop — visible only when the sidebar is open on small screens. */}
       {sidebarOpen && (
         <button
@@ -228,23 +251,24 @@ function App() {
             <button
               onClick={optimize}
               disabled={!wasmReady || isOptimizing || students.length < 2}
+              aria-busy={isOptimizing}
               className="w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
             >
               {isOptimizing ? (
                 <>
-                  <RefreshCw size={20} className="animate-spin" />
+                  <RefreshCw size={20} className="animate-spin" aria-hidden="true" />
                   {t('app.optimizing')}
                 </>
               ) : (
                 <>
-                  <Play size={20} />
+                  <Play size={20} aria-hidden="true" />
                   {t('app.optimize_seating')}
                 </>
               )}
             </button>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                 {error}
               </div>
             )}

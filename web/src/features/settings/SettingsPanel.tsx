@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2 } from 'lucide-react';
@@ -17,6 +17,9 @@ export default function SettingsPanel() {
 
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+
+  const panelId = useId();
+  const fieldId = (key: string) => `${panelId}-${key}`;
 
   const resetToDemo = () => {
     setStudents(sampleStudents);
@@ -52,16 +55,18 @@ export default function SettingsPanel() {
           {/* Layout */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{t('settings.rows')}</label>
+              <label htmlFor={fieldId('rows')} className="block text-sm font-medium text-gray-600 mb-1">{t('settings.rows')}</label>
               <input
+                id={fieldId('rows')}
                 type="number" min="1" max="20" value={rows}
                 onChange={(e) => setRows(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{t('settings.columns')}</label>
+              <label htmlFor={fieldId('cols')} className="block text-sm font-medium text-gray-600 mb-1">{t('settings.columns')}</label>
               <input
+                id={fieldId('cols')}
                 type="number" min="1" max="20" value={cols}
                 onChange={(e) => setCols(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
@@ -100,16 +105,18 @@ export default function SettingsPanel() {
             <label className="block text-sm font-medium text-gray-600 mb-2">{t('settings.algorithm')}</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">{t('settings.population')}</label>
+                <label htmlFor={fieldId('population')} className="block text-xs text-gray-500 mb-1">{t('settings.population')}</label>
                 <input
+                  id={fieldId('population')}
                   type="number" min="10" max="500" value={config.populationSize}
                   onChange={(e) => setConfig({ ...config, populationSize: Number(e.target.value) })}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">{t('settings.generations')}</label>
+                <label htmlFor={fieldId('generations')} className="block text-xs text-gray-500 mb-1">{t('settings.generations')}</label>
                 <input
+                  id={fieldId('generations')}
                   type="number" min="10" max="500" value={config.maxGenerations}
                   onChange={(e) => setConfig({ ...config, maxGenerations: Number(e.target.value) })}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
@@ -177,11 +184,12 @@ export default function SettingsPanel() {
             {aiSettings.enabled && (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label htmlFor={fieldId('api-key')} className="block text-xs text-gray-500 mb-1">
                     {t('settings.ai_api_key')}
                   </label>
                   <div className="relative">
                     <input
+                      id={fieldId('api-key')}
                       type={showApiKey ? 'text' : 'password'}
                       value={aiSettings.apiKey}
                       autoComplete="off"
@@ -213,10 +221,11 @@ export default function SettingsPanel() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label htmlFor={fieldId('model')} className="block text-xs text-gray-500 mb-1">
                     {t('settings.ai_model')}
                   </label>
                   <select
+                    id={fieldId('model')}
                     value={aiSettings.model}
                     onChange={(e) =>
                       setAiSettings({ ...aiSettings, model: e.target.value })

@@ -30,6 +30,7 @@ import {
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
   explainPlacement,
   type ExplanationLine,
@@ -103,6 +104,7 @@ export default function StudentDetailPanel() {
   const [aiError, setAiError] = useState<string>('');
 
   const open = !!detailsTargetStudentId;
+  const trapRef = useFocusTrap<HTMLElement>(open);
   const student = open
     ? students.find((s) => s.id === detailsTargetStudentId) ?? null
     : null;
@@ -153,14 +155,17 @@ export default function StudentDetailPanel() {
 
       {/* Drawer — right side on md+, bottom sheet on mobile */}
       <aside
+        ref={trapRef}
+        tabIndex={-1}
         className={clsx(
-          'fixed z-50 bg-white shadow-2xl overflow-hidden flex flex-col',
+          'fixed z-50 bg-white shadow-2xl overflow-hidden flex flex-col focus:outline-none',
           // Mobile (default): bottom sheet
           'inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl',
           // md+: right-side drawer
           'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:top-0 md:max-h-none md:w-[440px] md:max-w-[90vw] md:rounded-t-none md:rounded-l-2xl',
         )}
         aria-labelledby="student-detail-title"
+        aria-modal="true"
         role="dialog"
       >
         {/* Header */}

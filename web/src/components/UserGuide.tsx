@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '../hooks/useLanguage';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface Props {
   open: boolean;
@@ -65,6 +66,7 @@ export default function UserGuide({ open, onClose }: Props) {
   // Track which sections are expanded. Default: first one open so the
   // user immediately sees the structure.
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['getting_started']));
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!open) return;
@@ -95,7 +97,9 @@ export default function UserGuide({ open, onClose }: Props) {
       aria-labelledby="user-guide-title"
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden"
+        ref={trapRef}
+        tabIndex={-1}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

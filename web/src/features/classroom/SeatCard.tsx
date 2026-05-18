@@ -19,6 +19,11 @@ interface Props {
   isMoved?: boolean;
   heatMapMode: HeatMapMode;
   interactionMode: 'drag' | 'click';
+  /** Accessible label built by the parent so it can include the row/col
+   *  number, student name (or "empty"), and lock state in the user's
+   *  language. Screen readers announce this when the seat receives
+   *  focus. */
+  ariaLabel: string;
   onSeatClick: (seatKey: string) => void;
   onContextMenu: (e: React.MouseEvent, seatKey: string) => void;
   onMouseEnter: () => void;
@@ -35,6 +40,7 @@ export default memo(function SeatCard({
   isMoved,
   heatMapMode,
   interactionMode,
+  ariaLabel,
   onSeatClick,
   onContextMenu,
   onMouseEnter,
@@ -60,7 +66,7 @@ export default memo(function SeatCard({
   });
 
   // Merge drag + drop refs
-  const setRef = (node: HTMLDivElement | null) => {
+  const setRef = (node: HTMLButtonElement | null) => {
     setDragRef(node);
     setDropRef(node);
   };
@@ -81,7 +87,8 @@ export default memo(function SeatCard({
     icons.push('👁️');
 
   return (
-    <div
+    <button
+      type="button"
       ref={setRef}
       data-seat-key={seatKey}
       onClick={() => onSeatClick(seatKey)}
@@ -89,9 +96,18 @@ export default memo(function SeatCard({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       {...(canDrag ? { ...attributes, ...listeners } : {})}
+      // Override dnd-kit's aria-pressed (which reflects drag state)
+      // with our selection state — more useful to screen-reader users.
+      // Spread comes first so these wins.
+      aria-label={ariaLabel}
+      aria-pressed={isSelected}
       className={clsx(
         'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[88px]',
-        'border-2 transition-all duration-150 select-none',
+        'border-2 transition-all duration-150 select-none text-left',
+        // Tailwind reset for native button (no inherited bg/colors)
+        'bg-transparent appearance-none',
+        // Keyboard focus ring — visible only on keyboard nav
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
 
         // Empty seat
         seat.is_empty && 'border-dashed border-gray-300 bg-gray-50 cursor-default',
@@ -185,6 +201,6 @@ export default memo(function SeatCard({
           <span className="text-gray-300 text-[9px]">—</span>
         </div>
       )}
-    </div>
+    </button>
   );
 })
