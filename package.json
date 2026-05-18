@@ -10,6 +10,7 @@
     "dev": "cd web && npm run dev",
     "build": "cd web && npm run build",
     "test": "cd web && npm test",
+    "test:e2e": "cd web && npm run test:e2e",
     "lint": "cd web && npm run lint",
     "clean": "rm -rf web/dist"
   },
