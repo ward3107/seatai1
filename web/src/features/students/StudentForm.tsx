@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { generateId, createEmptyStudent } from '../../utils/sampleData';
@@ -71,6 +71,9 @@ export default function StudentForm() {
   const [showRelations, setShowRelations] = useState(false);
   const [showSpecialNeeds, setShowSpecialNeeds] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const formId = useId();
+  const fieldId = (key: string) => `${formId}-${key}`;
 
   useEffect(() => {
     if (editingStudent) {
@@ -235,8 +238,9 @@ export default function StudentForm() {
 
         {/* Name */}
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
+          <label htmlFor={fieldId('name')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
           <input
+            id={fieldId('name')}
             type="text"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -250,8 +254,9 @@ export default function StudentForm() {
       {/* Gender + Language */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.gender')}</label>
+          <label htmlFor={fieldId('gender')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.gender')}</label>
           <select
+            id={fieldId('gender')}
             value={form.gender}
             onChange={(e) => setForm({ ...form, gender: e.target.value as Gender })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -262,8 +267,9 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.language')}</label>
+          <label htmlFor={fieldId('language')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.language')}</label>
           <select
+            id={fieldId('language')}
             value={form.primary_language ?? ''}
             onChange={(e) => setForm({ ...form, primary_language: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -277,8 +283,9 @@ export default function StudentForm() {
       {/* Academic */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.academic_level')}</label>
+          <label htmlFor={fieldId('academic-level')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.academic_level')}</label>
           <select
+            id={fieldId('academic-level')}
             value={form.academic_level}
             onChange={(e) => setForm({ ...form, academic_level: e.target.value as AcademicLevel })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -290,8 +297,9 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
+          <label htmlFor={fieldId('academic-score')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
           <input
+            id={fieldId('academic-score')}
             type="number" min="0" max="100"
             value={form.academic_score}
             onChange={(e) => setForm({ ...form, academic_score: Number(e.target.value) })}
@@ -303,8 +311,9 @@ export default function StudentForm() {
       {/* Behavior */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.behavior_level')}</label>
+          <label htmlFor={fieldId('behavior-level')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.behavior_level')}</label>
           <select
+            id={fieldId('behavior-level')}
             value={form.behavior_level}
             onChange={(e) => setForm({ ...form, behavior_level: e.target.value as BehaviorLevel })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -316,8 +325,9 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
+          <label htmlFor={fieldId('behavior-score')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
           <input
+            id={fieldId('behavior-score')}
             type="number" min="0" max="100"
             value={form.behavior_score}
             onChange={(e) => setForm({ ...form, behavior_score: Number(e.target.value) })}
@@ -525,10 +535,11 @@ export default function StudentForm() {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={fieldId('notes')} className="block text-sm font-medium text-gray-700 mb-1">
           {t('students.notes')}
         </label>
         <textarea
+          id={fieldId('notes')}
           value={form.notes ?? ''}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           placeholder={t('students.notes_placeholder')}

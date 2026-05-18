@@ -64,6 +64,7 @@ export default function GridControls({
         <button
           onClick={undo}
           disabled={history.length === 0}
+          aria-label={t('gridControls.undo')}
           title={t('gridControls.undo')}
           className={clsx(
             'p-2 rounded-lg transition-all flex items-center gap-1',
@@ -72,11 +73,12 @@ export default function GridControls({
               : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-gray-900'
           )}
         >
-          <Undo2 size={15} />
+          <Undo2 size={15} aria-hidden="true" />
         </button>
         <button
           onClick={redo}
           disabled={historyFuture.length === 0}
+          aria-label={t('gridControls.redo')}
           title={t('gridControls.redo')}
           className={clsx(
             'p-2 rounded-lg transition-all flex items-center gap-1',
@@ -85,7 +87,7 @@ export default function GridControls({
               : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-gray-900'
           )}
         >
-          <Redo2 size={15} />
+          <Redo2 size={15} aria-hidden="true" />
         </button>
         {history.length > 0 && (
           <span className="text-[11px] text-gray-400 ml-1">

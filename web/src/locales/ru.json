@@ -202,6 +202,11 @@
     "photo_error_type": "Используйте JPEG, PNG, WebP или GIF.",
     "photo_error_size": "Файл слишком большой (макс. 10 МБ).",
     "photo_error_decode": "Не удалось прочитать изображение — попробуйте другой файл.",
+    "clear_search": "Очистить поиск",
+    "unnamed": "Ученик без имени",
+    "open_details_for": "Открыть подробности: {{name}}",
+    "edit_student": "Редактировать {{name}}",
+    "remove_student": "Удалить {{name}}",
     "notes": "Заметки учителя",
     "notes_placeholder": "Личные наблюдения, например «трудно сосредоточиться после обеда». Остаются только на этом устройстве.",
     "gender": "Пол",
@@ -565,5 +570,14 @@
     "max_fitness": "Макс. пригодность",
     "improvement": "Улучшение",
     "avg_fitness": "Средн. пригодность"
+  },
+  "a11y": {
+    "seat_row": "Ряд",
+    "seat_col": "Колонка",
+    "seat_empty": "пусто",
+    "seat_locked": "закреплено",
+    "optimization_started": "Оптимизация началась",
+    "optimization_complete": "Оптимизация завершена, оценка {{score}} процентов",
+    "optimization_failed": "Оптимизация не удалась: {{error}}"
   }
 }

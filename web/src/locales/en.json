@@ -202,6 +202,11 @@
     "photo_error_type": "Use JPEG, PNG, WebP, or GIF.",
     "photo_error_size": "Image too large (max 10 MB).",
     "photo_error_decode": "Couldn't read that image — try a different file.",
+    "clear_search": "Clear search",
+    "unnamed": "Unnamed student",
+    "open_details_for": "Open details for {{name}}",
+    "edit_student": "Edit {{name}}",
+    "remove_student": "Remove {{name}}",
     "notes": "Teacher notes",
     "notes_placeholder": "Private observations, e.g. \"needs help focusing after lunch\". Stays on this device only.",
     "gender": "Gender",
@@ -565,5 +570,14 @@
     "max_fitness": "Max Fitness",
     "improvement": "Improvement",
     "avg_fitness": "Avg Fitness"
+  },
+  "a11y": {
+    "seat_row": "Row",
+    "seat_col": "Column",
+    "seat_empty": "empty",
+    "seat_locked": "locked",
+    "optimization_started": "Optimization started",
+    "optimization_complete": "Optimization complete, score {{score}} percent",
+    "optimization_failed": "Optimization failed: {{error}}"
   }
 }

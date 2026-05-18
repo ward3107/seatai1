@@ -202,6 +202,11 @@
     "photo_error_type": "استخدم JPEG أو PNG أو WebP أو GIF.",
     "photo_error_size": "الصورة كبيرة جدًا (الحد الأقصى 10 ميجابايت).",
     "photo_error_decode": "تعذّر قراءة الصورة — جرّب ملفًا آخر.",
+    "clear_search": "مسح البحث",
+    "unnamed": "طالب بدون اسم",
+    "open_details_for": "افتح تفاصيل {{name}}",
+    "edit_student": "تحرير {{name}}",
+    "remove_student": "إزالة {{name}}",
     "notes": "ملاحظات المعلم",
     "notes_placeholder": "ملاحظات خاصة، مثل \"يحتاج مساعدة للتركيز بعد الغداء\". تبقى على هذا الجهاز فقط.",
     "gender": "الجنس",
@@ -565,5 +570,14 @@
     "max_fitness": "الحد الأقصى للملاءمة",
     "improvement": "التحسين",
     "avg_fitness": "متوسط الملاءمة"
+  },
+  "a11y": {
+    "seat_row": "صف",
+    "seat_col": "عمود",
+    "seat_empty": "فارغ",
+    "seat_locked": "مقفل",
+    "optimization_started": "بدأت عملية التحسين",
+    "optimization_complete": "اكتملت عملية التحسين، النتيجة {{score}} بالمئة",
+    "optimization_failed": "فشلت عملية التحسين: {{error}}"
   }
 }

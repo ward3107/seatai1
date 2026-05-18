@@ -1,6 +1,7 @@
 import {
   DndContext,
   DragOverlay,
+  KeyboardSensor,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -203,9 +204,26 @@ export default function ClassroomGrid() {
       : new Set<string>();
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
+  // KeyboardSensor gives keyboard-only users a way to swap students:
+  // Tab to a seat, Space to pick up, Arrow keys to move, Space to drop
+  // (Escape cancels). dnd-kit announces each step via its built-in
+  // live region.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor),
+  );
+
+  // Build a screen-reader-friendly label for each seat. Parent owns it
+  // because only the parent has access to the user's language.
+  const seatAriaLabel = useCallback(
+    (seat: Seat, student: Student | null, isLocked: boolean): string => {
+      const rowCol = `${t('a11y.seat_row')} ${seat.position.row + 1}, ${t('a11y.seat_col')} ${seat.position.col + 1}`;
+      const occupant = student ? student.name : t('a11y.seat_empty');
+      const locked = isLocked ? `, ${t('a11y.seat_locked')}` : '';
+      return `${rowCol}, ${occupant}${locked}`;
+    },
+    [t],
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -521,6 +539,7 @@ export default function ClassroomGrid() {
                         isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                         heatMapMode={heatMapMode}
                         interactionMode={interactionMode}
+                        ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
                         onSeatClick={handleSeatClick}
                         onContextMenu={handleContextMenu}
                         onMouseEnter={() => {
@@ -668,6 +687,7 @@ export default function ClassroomGrid() {
                         isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                                   heatMapMode={heatMapMode}
                                   interactionMode={interactionMode}
+                                  ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
                                   onSeatClick={handleSeatClick}
                                   onContextMenu={handleContextMenu}
                                   onMouseEnter={() => {
@@ -714,6 +734,7 @@ export default function ClassroomGrid() {
                         isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                                 heatMapMode={heatMapMode}
                                 interactionMode={interactionMode}
+                                ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
                                 onSeatClick={handleSeatClick}
                                 onContextMenu={handleContextMenu}
                                 onMouseEnter={() => {
