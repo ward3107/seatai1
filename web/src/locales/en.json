@@ -369,6 +369,25 @@
     "algorithmConfig": "Algorithm Configuration",
     "algorithmDesc": "Fine-tune the genetic algorithm parameters"
   },
+  "compare": {
+    "title": "Compare arrangements",
+    "button": "Compare",
+    "hint": "Generate an alternative arrangement with the same settings and compare it side by side. Nothing changes until you accept it.",
+    "current": "Current",
+    "alternative": "Alternative",
+    "generate": "Generate alternative",
+    "regenerate": "Generate another",
+    "generating": "Generating…",
+    "no_alternative": "No alternative yet",
+    "use_alternative": "Use alternative",
+    "keep_current": "Keep current",
+    "close": "Close comparison",
+    "metric": "Metric",
+    "change": "Change",
+    "better": "Better than current",
+    "worse": "Worse than current",
+    "same": "No change"
+  },
   "export": {
     "title": "Export seating chart",
     "button": "Export",

@@ -23,6 +23,12 @@ import { generateSlots, type LayoutDef, type Slot } from './layouts';
 
 type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
 
+/** Penalty scale applied when "freshen seating" (rotation avoidance) is on.
+ *  Tuned to be comparable to a single objective term (~0.3) so it nudges
+ *  rotation without overriding hard constraints (which use ±1). Shared by
+ *  the optimizer hook and the compare panel so both runs behave identically. */
+export const ROTATION_STRENGTH = 0.35;
+
 /** Pluggable RNG so tests can seed it for deterministic runs. Defaults
  *  to Math.random in production. */
 export type Rng = () => number;

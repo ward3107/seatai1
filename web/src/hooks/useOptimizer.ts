@@ -1,14 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
-import { ClassroomOptimizer } from '../core/optimizer';
+import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
 import { slotCount } from '../core/layouts';
 import { getRecentPairPenalties } from '../utils/rotationHistory';
 import type { OptimizationResult } from '../types';
-
-/** Penalty scale applied when "freshen seating" is on. Tuned to be
- *  comparable to a single objective term (~0.3) so it nudges rotation
- *  without overriding hard constraints (which use ±1). */
-const ROTATION_STRENGTH = 0.35;
 
 type WorkerOut =
   | { type: 'ready' }
