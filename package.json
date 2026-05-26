@@ -6,6 +6,9 @@
   "workspaces": [
     "web"
   ],
+  "overrides": {
+    "flatted": "^3.4.2"
+  },
   "scripts": {
     "dev": "cd web && npm run dev",
     "build": "cd web && npm run build",
