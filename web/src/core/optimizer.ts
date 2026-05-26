@@ -82,6 +82,12 @@ export class ClassroomOptimizer {
     front_row_ids: [],
     back_row_ids: [],
   };
+  /** Rotation avoidance: canonical pair key ("idA|idB", ids sorted) →
+   *  penalty weight in (0, 1] for pairs who recently sat together. Empty
+   *  unless the teacher enables "freshen seating". */
+  private recentPairPenalties: Record<string, number> = {};
+  /** How strongly to avoid recently-adjacent pairs. 0 disables the term. */
+  private avoidRecentStrength = 0;
 
   constructor(
     students: Student[],
@@ -106,6 +112,12 @@ export class ClassroomOptimizer {
   }
   setConstraints(c: SeatingConstraints) {
     this.constraints = { ...c };
+  }
+  /** Enable rotation avoidance. `penalties` comes from
+   *  `getRecentPairPenalties()`; `strength` scales the penalty (0 = off). */
+  setRotationAvoidance(penalties: Record<string, number>, strength: number) {
+    this.recentPairPenalties = penalties ?? {};
+    this.avoidRecentStrength = Math.max(0, strength);
   }
   setLayout(def: LayoutDef) {
     this.layoutDef = def;
@@ -338,6 +350,17 @@ export class ClassroomOptimizer {
       // Incompatible adjacency penalty
       if (neighbors.some((n) => student.incompatible_ids.includes(n.id))) {
         score -= 0.5;
+      }
+
+      // Rotation avoidance — discourage seating a pair next to each other
+      // again if they recently were. Counted once per unordered pair
+      // (student.id < neighbor.id) to match how the penalty table is built.
+      if (this.avoidRecentStrength > 0) {
+        for (const n of neighbors) {
+          if (student.id >= n.id) continue;
+          const p = this.recentPairPenalties[`${student.id}|${n.id}`];
+          if (p) score -= this.avoidRecentStrength * p;
+        }
       }
     }
 

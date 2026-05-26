@@ -18,6 +18,10 @@ type InMessage = {
   weights: ObjectiveWeights;
   config: GeneticConfig;
   constraints: SeatingConstraints;
+  /** Rotation avoidance: pair-key → penalty weight (from getRecentPairPenalties). */
+  recentPairPenalties?: Record<string, number>;
+  /** Strength of the rotation penalty; 0 disables it. */
+  avoidRecentStrength?: number;
 };
 
 type OutMessage =
@@ -29,7 +33,10 @@ type OutMessage =
 self.postMessage({ type: 'ready' } satisfies OutMessage);
 
 self.onmessage = async (e: MessageEvent<InMessage>) => {
-  const { type, students, rows, cols, layoutDef, weights, config, constraints } = e.data;
+  const {
+    type, students, rows, cols, layoutDef, weights, config, constraints,
+    recentPairPenalties, avoidRecentStrength,
+  } = e.data;
   if (type !== 'optimize') return;
 
   try {
@@ -39,6 +46,9 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
     optimizer.setWeights(weights);
     optimizer.setConfig(config);
     optimizer.setConstraints(constraints);
+    if (avoidRecentStrength && recentPairPenalties) {
+      optimizer.setRotationAvoidance(recentPairPenalties, avoidRecentStrength);
+    }
 
     const result = optimizer.optimize();
 

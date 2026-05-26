@@ -71,6 +71,12 @@ interface AppState {
   constraints: SeatingConstraints;
   setConstraints: (constraints: SeatingConstraints) => void;
 
+  /** "Freshen seating": when on, the optimizer penalizes re-seating
+   *  students next to neighbors they recently sat with, so repeated runs
+   *  rotate the room. Opt-in; only has an effect once a run history exists. */
+  avoidRecentNeighbors: boolean;
+  setAvoidRecentNeighbors: (v: boolean) => void;
+
   // UI State
   selectedStudentId: string | null;
   setSelectedStudentId: (id: string | null) => void;
@@ -303,6 +309,12 @@ export const useStore = create<AppState>()(
       setConstraints: (constraints) =>
         set((state) => {
           state.constraints = constraints;
+        }),
+
+      avoidRecentNeighbors: false,
+      setAvoidRecentNeighbors: (v) =>
+        set((state) => {
+          state.avoidRecentNeighbors = v;
         }),
 
       // UI
@@ -552,6 +564,7 @@ export const useStore = create<AppState>()(
         weights: state.weights,
         config: state.config,
         constraints: state.constraints,
+        avoidRecentNeighbors: state.avoidRecentNeighbors,
         lockedSeats: state.lockedSeats,
         heatMapMode: state.heatMapMode,
         zoomLevel: state.zoomLevel,

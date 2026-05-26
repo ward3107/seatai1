@@ -346,6 +346,8 @@
     "quality_balanced": "Balanced",
     "quality_best": "Best",
     "quality_hint": "Higher quality runs the optimizer several times and keeps the best result. Recommended for conflict-heavy classes.",
+    "rotation_title": "Freshen seating (avoid recent neighbors)",
+    "rotation_hint": "When on, re-running the optimizer avoids seating students next to neighbors they recently sat with, so the room rotates over time.",
     "ai_title": "AI explanations (optional)",
     "ai_description": "Use a language model to write a teacher-friendly paragraph for each student. Your API key stays in this browser; the AI call goes directly to Anthropic.",
     "ai_enable": "Enable AI explanations",
