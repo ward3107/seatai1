@@ -26,6 +26,15 @@ export default function PrintView({ onClose }: Props) {
 
   const studentMap = new Map(students.map(s => [s.id, s]));
 
+  // Reserved desk/obstacle cells (rows layout only) so the printed table
+  // shows them instead of a misleading empty seat.
+  const blockedAt = new Map<string, 'desk' | 'obstacle'>();
+  if (layoutDef.type === 'rows') {
+    for (const c of layoutDef.blockedCells ?? []) {
+      blockedAt.set(`${c.row}|${c.col}`, c.kind);
+    }
+  }
+
   // Non-grid layouts (clusters, U-shape, circle) don't fit a row/col table,
   // so we render them with absolute positioning from each seat's
   // normalized x/y instead. Rows + custom-rows still use the table — they
@@ -169,6 +178,22 @@ export default function PrintView({ onClose }: Props) {
                         {rowIdx + 1}
                       </td>
                       {rowSeats.map((name, colIdx) => {
+                        const blockedKind = blockedAt.get(`${rowIdx}|${colIdx}`);
+                        if (blockedKind) {
+                          return (
+                            <td key={colIdx} className="p-1">
+                              <div
+                                className={`border-2 rounded-lg p-2 text-center min-h-[56px] flex items-center justify-center text-[10px] font-semibold ${
+                                  blockedKind === 'desk'
+                                    ? 'border-amber-300 bg-amber-50 text-amber-700'
+                                    : 'border-gray-300 bg-gray-100 text-gray-500'
+                                }`}
+                              >
+                                {blockedKind === 'desk' ? 'TEACHER' : '✕'}
+                              </div>
+                            </td>
+                          );
+                        }
                         const student = name
                           ? students.find(s => s.name === name) ?? null
                           : null;

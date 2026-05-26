@@ -231,6 +231,29 @@ describe('ClassroomOptimizer', () => {
       expect(distance).toBeGreaterThan(1); // Not adjacent
     });
 
+    it('never seats a student on a blocked (desk/obstacle) cell', () => {
+      const optimizer = new ClassroomOptimizer(students, {
+        type: 'rows',
+        rows: 3,
+        cols: 3,
+        blockedCells: [
+          { row: 0, col: 1, kind: 'desk' },
+          { row: 1, col: 1, kind: 'obstacle' },
+        ],
+      });
+      const result = optimizer.optimize();
+      // 9 - 2 blocked = 7 seats; none at the blocked coordinates.
+      expect(result.layout.seats).toHaveLength(7);
+      for (const seat of result.layout.seats) {
+        const blocked =
+          (seat.position.row === 0 && seat.position.col === 1) ||
+          (seat.position.row === 1 && seat.position.col === 1);
+        expect(blocked).toBe(false);
+      }
+      // All 4 students still placed (7 seats ≥ 4 students).
+      expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(4);
+    });
+
     it('rotation avoidance is inert when strength is 0', () => {
       // A penalty table with zero strength must not change the contract:
       // every student still gets a seat and a valid result is returned.

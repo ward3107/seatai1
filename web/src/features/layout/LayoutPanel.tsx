@@ -6,11 +6,13 @@ import {
   Plus,
   Minus,
   RotateCcw,
+  User,
+  Ban,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { slotCount, type LayoutDef } from '../../core/layouts';
+import { slotCount, type LayoutDef, type CellKind } from '../../core/layouts';
 import LayoutThumbnail from '../../components/LayoutThumbnail';
 
 type LayoutType = LayoutDef['type'];
@@ -126,6 +128,26 @@ export default function LayoutPanel() {
     });
   };
 
+  // ── Desk / obstacle editor (rows layout only) ──────────────────────────────
+  const blocked = layoutDef.blockedCells ?? [];
+  const kindAt = (r: number, c: number): CellKind | null =>
+    blocked.find((b) => b.row === r && b.col === c)?.kind ?? null;
+
+  // Each click advances seat → obstacle → desk → seat. Only one desk is
+  // allowed, so promoting a cell to desk demotes any previous desk.
+  const cycleCell = (r: number, c: number) => {
+    const cur = kindAt(r, c);
+    const next: CellKind | null =
+      cur === null ? 'obstacle' : cur === 'obstacle' ? 'desk' : null;
+    let cells = blocked.filter((b) => !(b.row === r && b.col === c));
+    if (next === 'desk') cells = cells.filter((b) => b.kind !== 'desk');
+    if (next) cells = [...cells, { row: r, col: c, kind: next }];
+    setLayoutDef({ ...layoutDef, blockedCells: cells });
+  };
+
+  const clearFeatures = () =>
+    setLayoutDef({ ...layoutDef, blockedCells: [] });
+
   return (
     <div className="bg-gray-50 rounded-xl overflow-hidden">
       <button
@@ -222,6 +244,86 @@ export default function LayoutPanel() {
                   onChange={(e) => setCols(Number(e.target.value))}
                   className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Desk & obstacles — rows layout only (regular grid). */}
+          {layoutDef.type === 'rows' && (
+            <div className="space-y-2 border-t border-gray-200 pt-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-600">
+                  {t('layout.features_title')}
+                </span>
+                {blocked.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFeatures}
+                    className="text-[11px] text-red-600 hover:text-red-800 underline focus:outline-none focus:ring-1 focus:ring-red-500 rounded"
+                  >
+                    {t('layout.features_clear')}
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-gray-500 leading-snug">
+                {t('layout.features_hint')}
+              </p>
+
+              <div
+                className="inline-grid gap-1 mx-auto"
+                style={{ gridTemplateColumns: `repeat(${layoutDef.cols}, minmax(0, 1fr))` }}
+                role="group"
+                aria-label={t('layout.features_title')}
+              >
+                {Array.from({ length: layoutDef.rows }).map((_, r) =>
+                  Array.from({ length: layoutDef.cols }).map((__, c) => {
+                    const kind = kindAt(r, c);
+                    const label =
+                      kind === 'desk'
+                        ? t('layout.feature_desk')
+                        : kind === 'obstacle'
+                          ? t('layout.feature_obstacle')
+                          : t('layout.feature_seat');
+                    return (
+                      <button
+                        key={`${r}-${c}`}
+                        type="button"
+                        onClick={() => cycleCell(r, c)}
+                        aria-label={`${t('layout.row')} ${r + 1}, ${c + 1}: ${label}`}
+                        title={label}
+                        className={clsx(
+                          'w-7 h-7 rounded flex items-center justify-center border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
+                          kind === 'desk'
+                            ? 'bg-amber-400 border-amber-500 text-white'
+                            : kind === 'obstacle'
+                              ? 'bg-gray-400 border-gray-500 text-white'
+                              : 'bg-white border-gray-300 hover:border-primary-400',
+                        )}
+                      >
+                        {kind === 'desk' ? (
+                          <User size={13} aria-hidden="true" />
+                        ) : kind === 'obstacle' ? (
+                          <Ban size={13} aria-hidden="true" />
+                        ) : null}
+                      </button>
+                    );
+                  }),
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-3 text-[10px] text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-white border border-gray-300" />
+                  {t('layout.feature_seat')}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-amber-400 border border-amber-500" />
+                  {t('layout.feature_desk')}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-gray-400 border border-gray-500" />
+                  {t('layout.feature_obstacle')}
+                </span>
               </div>
             </div>
           )}

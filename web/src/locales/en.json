@@ -122,6 +122,12 @@
     "gender_homogeneous": "All neighbors share this student's gender — diversity is weaker here."
   },
   "layout": {
+    "features_title": "Desk & obstacles",
+    "features_hint": "Tap a cell to cycle it: seat → obstacle → teacher's desk. Blocked cells are left empty when seating students.",
+    "features_clear": "Clear",
+    "feature_seat": "Seat",
+    "feature_desk": "Teacher's desk",
+    "feature_obstacle": "Obstacle",
     "title": "Classroom Layout",
     "seats": "seats",
     "rows": "Rows",

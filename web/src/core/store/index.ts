@@ -236,7 +236,9 @@ export const useStore = create<AppState>()(
             prev.cols !== def.cols ||
             prev.clusterSize !== def.clusterSize ||
             JSON.stringify(prev.customRowSizes ?? []) !==
-              JSON.stringify(def.customRowSizes ?? []);
+              JSON.stringify(def.customRowSizes ?? []) ||
+            JSON.stringify(prev.blockedCells ?? []) !==
+              JSON.stringify(def.blockedCells ?? []);
           state.layoutDef = def;
           state.rows = def.rows;
           state.cols = def.cols;

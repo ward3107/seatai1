@@ -142,6 +142,7 @@ export interface ClassProject {
     cols: number;
     customRowSizes?: number[];
     clusterSize?: number;
+    blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
   };
   weights: ObjectiveWeights;
   config: GeneticConfig;
