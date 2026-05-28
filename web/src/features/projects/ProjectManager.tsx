@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Pencil, DownloadCloud, UploadCloud, AlertTriangle } from 'lucide-react';
 import type { ClassProject } from '../../types';
@@ -86,6 +87,19 @@ export default function ProjectManager() {
     setPendingRestore(null);
     setRestoreError('');
   };
+
+  // Escape closes the destructive restore confirmation. The focus trap is
+  // applied to the dialog itself further down.
+  useEffect(() => {
+    if (!pendingRestore) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPendingRestore(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [pendingRestore]);
+
+  const restoreDialogRef = useFocusTrap<HTMLDivElement>(!!pendingRestore);
 
   const handleSave = () => {
     const name = saveName.trim() || currentProject?.name || `${t('projects.class')} ${new Date().toLocaleDateString()}`;
@@ -318,10 +332,12 @@ export default function ProjectManager() {
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
           />
           <div
+            ref={restoreDialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="restore-confirm-title"
-            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(420px,92vw)] bg-white rounded-2xl shadow-2xl p-5 space-y-3"
+            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(420px,92vw)] bg-white rounded-2xl shadow-2xl p-5 space-y-3 focus:outline-none"
           >
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
