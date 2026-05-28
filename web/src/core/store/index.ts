@@ -154,6 +154,11 @@ interface AppState {
   loadProject: (id: string) => void;
   deleteProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
+
+  /** Replace the entire persistable state from a validated backup. The
+   *  current AI API key is preserved (backups never carry the key) and
+   *  any transient UI is reset so the new data renders cleanly. */
+  restoreFromBackup: (data: import('../../features/projects/backup').BackupData) => void;
 }
 
 const defaultWeights: ObjectiveWeights = {
@@ -553,6 +558,43 @@ export const useStore = create<AppState>()(
             p.name = name;
             p.updatedAt = new Date().toISOString();
           }
+        }),
+
+      restoreFromBackup: (data) =>
+        set((state) => {
+          state.students = data.students;
+          state.rows = data.rows;
+          state.cols = data.cols;
+          state.layoutDef = data.layoutDef;
+          state.weights = data.weights;
+          state.config = data.config;
+          state.constraints = data.constraints;
+          if (typeof data.avoidRecentNeighbors === 'boolean') {
+            state.avoidRecentNeighbors = data.avoidRecentNeighbors;
+          }
+          state.projects = data.projects;
+          state.currentProjectId = data.currentProjectId;
+          state.result = data.result ?? null;
+          state.resultHistory = data.resultHistory ?? [];
+          if (data.uiLanguage) state.uiLanguage = data.uiLanguage;
+          if (data.uiScale) state.uiScale = data.uiScale;
+          if (data.theme) state.theme = data.theme;
+          // AI settings: copy enabled/model if the backup has them, but
+          // preserve the in-browser API key. Backups never carry secrets.
+          if (data.aiEnabled !== undefined || data.aiModel) {
+            state.aiSettings = {
+              enabled: data.aiEnabled ?? state.aiSettings.enabled,
+              model: data.aiModel ?? state.aiSettings.model,
+              apiKey: state.aiSettings.apiKey,
+            };
+          }
+          // Reset transient UI so the restored data renders cleanly.
+          state.history = [];
+          state.historyFuture = [];
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.previousPositions = null;
+          state.detailsTargetStudentId = null;
         }),
     })),
     {
