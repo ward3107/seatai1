@@ -7,6 +7,7 @@ import {
   KeyboardIcon,
   Lock,
   Lightbulb,
+  ShieldCheck,
 } from 'lucide-react';
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
@@ -93,6 +94,16 @@ export default function WelcomeTipsModal({ open, onClose }: Props) {
               </p>
             </li>
           ))}
+          {/* Privacy reassurance — the single most important sentence a
+              teacher needs to see before trusting the app with a roster. */}
+          <li className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
+              <ShieldCheck size={14} aria-hidden="true" />
+            </div>
+            <p className="text-sm text-emerald-900 dark:text-emerald-100 leading-snug">
+              {t('app.privacy_local_only')}
+            </p>
+          </li>
         </ul>
 
         <div className="p-5 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-2">

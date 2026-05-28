@@ -1,10 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
+import { useLanguage } from '../../hooks/useLanguage';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 
 interface Props {
   onClose: () => void;
+}
+
+/** First initial + period — keeps the chart layout-recognisable while
+ *  hiding student identities. "Alice Smith" → "A.". */
+function toInitials(name: string): string {
+  const first = name.trim().charAt(0);
+  return first ? `${first.toUpperCase()}.` : '?';
 }
 
 export default function PrintView({ onClose }: Props) {
@@ -14,6 +22,12 @@ export default function PrintView({ onClose }: Props) {
   const cols = useStore((s) => s.cols);
   const layoutDef = useStore((s) => s.layoutDef);
   const printRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
+
+  // Privacy-friendly mode for sharing the chart with substitutes,
+  // volunteers, or parents — replaces every name with a first-initial.
+  const [anonymize, setAnonymize] = useState(false);
+  const displayName = (name: string) => (anonymize ? toInitials(name) : name);
 
   // Close on Escape
   useEffect(() => {
@@ -75,6 +89,15 @@ export default function PrintView({ onClose }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">
+              <input
+                type="checkbox"
+                checked={anonymize}
+                onChange={(e) => setAnonymize(e.target.checked)}
+                className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              {t('print.anonymize')}
+            </label>
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
@@ -152,13 +175,15 @@ export default function PrintView({ onClose }: Props) {
                       {student ? (
                         <>
                           <span className="text-[11px] font-semibold text-gray-800 leading-tight">
-                            {student.name}
+                            {displayName(student.name)}
                           </span>
-                          <span className="text-[9px] text-gray-400">
-                            {student.academic_level === 'advanced' ? '▲' : student.academic_level === 'below_basic' ? '▼' : ''}
-                            {student.has_mobility_issues ? ' ♿' : ''}
-                            {student.requires_front_row && !student.has_mobility_issues ? ' ⭐' : ''}
-                          </span>
+                          {!anonymize && (
+                            <span className="text-[9px] text-gray-400">
+                              {student.academic_level === 'advanced' ? '▲' : student.academic_level === 'below_basic' ? '▼' : ''}
+                              {student.has_mobility_issues ? ' ♿' : ''}
+                              {student.requires_front_row && !student.has_mobility_issues ? ' ⭐' : ''}
+                            </span>
+                          )}
                         </>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
@@ -219,9 +244,9 @@ export default function PrintView({ onClose }: Props) {
                               {name ? (
                                 <>
                                   <span className="text-xs font-semibold text-gray-800 leading-tight text-center">
-                                    {name}
+                                    {displayName(name)}
                                   </span>
-                                  {student && (
+                                  {student && !anonymize && (
                                     <span className="text-[10px] text-gray-400">
                                       {student.academic_level === 'advanced' ? '▲'
                                         : student.academic_level === 'below_basic' ? '▼'
@@ -247,10 +272,14 @@ export default function PrintView({ onClose }: Props) {
 
             {/* Legend */}
             <div className="mt-6 flex flex-wrap gap-4 justify-center text-xs text-gray-500">
-              <span>▲ Advanced</span>
-              <span>▼ Below basic</span>
-              <span>♿ Mobility needs</span>
-              <span>⭐ Front row required</span>
+              {!anonymize && (
+                <>
+                  <span>▲ Advanced</span>
+                  <span>▼ Below basic</span>
+                  <span>♿ Mobility needs</span>
+                  <span>⭐ Front row required</span>
+                </>
+              )}
               <span className="text-purple-600">Purple border = special needs</span>
             </div>
 

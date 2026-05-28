@@ -14,7 +14,9 @@
     "undo": "בטל (Ctrl+Z)",
     "redo": "בצע שוב (Ctrl+Y)",
     "history_controls": "פקדי היסטוריה",
-    "text_size": "גודל טקסט"
+    "text_size": "גודל טקסט",
+    "privacy_local_only": "כל הנתונים נשארים במכשיר הזה — בלי שרתים, בלי חשבונות, בלי מעקב.",
+    "privacy_badge": "מקומי בלבד"
   },
   "theme": {
     "label": "ערכת צבעים",
@@ -394,6 +396,9 @@
     "worse": "גרוע יותר מהנוכחי",
     "same": "ללא שינוי"
   },
+  "print": {
+    "anonymize": "אנונימי (ראשי תיבות בלבד)"
+  },
   "export": {
     "title": "ייצא מפת מושבים",
     "button": "ייצוא",
@@ -408,6 +413,18 @@
     "filename": "מפת-מושבים"
   },
   "projects": {
+    "backup_section_title": "גיבוי ושחזור",
+    "backup_hint": "שומר הכל (תלמידים, פרויקטים, הגדרות) לקובץ json יחיד כדי שתוכלו לשמור עותק מחוץ לדפדפן.",
+    "backup_button": "גבה הכול",
+    "restore_button": "שחזר מגיבוי",
+    "restore_confirm_title": "להחליף את הנתונים הנוכחיים?",
+    "restore_confirm_body": "פעולה זו תחליף את התלמידים והפרויקטים הנוכחיים בגיבוי מ-{{date}} ({{students}} תלמידים, {{projects}} פרויקטים).",
+    "restore_confirm_yes": "החלף נתונים",
+    "restore_confirm_no": "ביטול",
+    "restore_error_invalid_json": "לא ניתן לקרוא את הקובץ (לא JSON תקין).",
+    "restore_error_wrong_schema": "הקובץ אינו גיבוי SeatAI.",
+    "restore_error_unsupported_version": "הגיבוי הזה נוצר בגרסה חדשה יותר של SeatAI.",
+    "restore_error_missing_fields": "בקובץ הגיבוי חסרים נתונים נדרשים.",
     "title": "פרויקטים",
     "class": "כיתה",
     "class_placeholder": "שם כיתה…",
