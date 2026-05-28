@@ -27,6 +27,17 @@ export type LayoutType =
   | 'circle'
   | 'custom-rows';
 
+/** A grid cell occupied by something other than a student — the teacher's
+ *  desk or a fixed obstacle (pillar, cabinet, door). Such cells are removed
+ *  from the assignable seat list, so the optimizer never seats a student
+ *  there and treats the seats on either side as non-adjacent. */
+export type CellKind = 'desk' | 'obstacle';
+export interface BlockedCell {
+  row: number;
+  col: number;
+  kind: CellKind;
+}
+
 export interface LayoutDef {
   type: LayoutType;
   rows: number;
@@ -35,6 +46,10 @@ export interface LayoutDef {
   customRowSizes?: number[];
   /** For 'clusters': pod size (e.g. 2 → 2x2 pods of 4 students). Defaults to 2. */
   clusterSize?: number;
+  /** Cells reserved for the teacher's desk / obstacles. Honored by the
+   *  grid layouts ('rows', 'custom-rows'); ignored by the non-grid layouts
+   *  where a (row, col) cell isn't meaningful. */
+  blockedCells?: BlockedCell[];
 }
 
 export interface Slot {
@@ -54,6 +69,20 @@ export interface Slot {
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
+}
+
+/** Drop any cells the teacher reserved for a desk/obstacle, then renumber
+ *  the surviving slots 0..n-1 so chromosome indices stay contiguous. Run
+ *  before neighbor computation so the removed cells are never linked. */
+function applyBlocked(
+  partial: Omit<Slot, 'neighbors'>[],
+  def: LayoutDef,
+): Omit<Slot, 'neighbors'>[] {
+  if (!def.blockedCells || def.blockedCells.length === 0) return partial;
+  const blocked = new Set(def.blockedCells.map((c) => `${c.row}|${c.col}`));
+  return partial
+    .filter((s) => !blocked.has(`${s.row}|${s.col}`))
+    .map((s, i) => ({ ...s, index: i }));
 }
 
 function buildGridNeighbors(slots: Omit<Slot, 'neighbors'>[]): number[][] {
@@ -108,8 +137,9 @@ function rowsLayout(def: LayoutDef): Slot[] {
       });
     }
   }
-  const neighbors = buildGridNeighbors(partial);
-  return partial.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
+  const filtered = applyBlocked(partial, def);
+  const neighbors = buildGridNeighbors(filtered);
+  return filtered.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
 }
 
 // ── Custom-rows layout (variable seats per row) ──────────────────────────────
@@ -146,8 +176,9 @@ function customRowsLayout(def: LayoutDef): Slot[] {
   const cellW = 1 / Math.max(1, maxCols - 1);
   const cellH = 1 / Math.max(1, rows - 1);
   const threshold = Math.hypot(cellW, cellH) * 1.05;
-  const neighbors = buildDistanceNeighbors(partial, threshold);
-  return partial.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
+  const filtered = applyBlocked(partial, def);
+  const neighbors = buildDistanceNeighbors(filtered, threshold);
+  return filtered.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
 }
 
 // ── Clusters layout (pods of N×N around the room) ────────────────────────────

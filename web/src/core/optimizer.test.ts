@@ -216,6 +216,54 @@ describe('ClassroomOptimizer', () => {
       expect(distance).toBeGreaterThan(1); // Not adjacent
     });
 
+    it('separates a recently-adjacent pair when rotation avoidance is on', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(42));
+      // Strong penalty on the (1,4) pair, well above the objective scale, so
+      // the GA prefers any arrangement that keeps them apart.
+      optimizer.setRotationAvoidance({ '1|4': 1 }, 2);
+
+      const result = optimizer.optimize();
+      const pos1 = result.student_positions['1'];
+      const pos4 = result.student_positions['4'];
+      const distance =
+        Math.abs(pos1.row - pos4.row) + Math.abs(pos1.col - pos4.col);
+      expect(distance).toBeGreaterThan(1); // Not adjacent
+    });
+
+    it('never seats a student on a blocked (desk/obstacle) cell', () => {
+      const optimizer = new ClassroomOptimizer(students, {
+        type: 'rows',
+        rows: 3,
+        cols: 3,
+        blockedCells: [
+          { row: 0, col: 1, kind: 'desk' },
+          { row: 1, col: 1, kind: 'obstacle' },
+        ],
+      });
+      const result = optimizer.optimize();
+      // 9 - 2 blocked = 7 seats; none at the blocked coordinates.
+      expect(result.layout.seats).toHaveLength(7);
+      for (const seat of result.layout.seats) {
+        const blocked =
+          (seat.position.row === 0 && seat.position.col === 1) ||
+          (seat.position.row === 1 && seat.position.col === 1);
+        expect(blocked).toBe(false);
+      }
+      // All 4 students still placed (7 seats ≥ 4 students).
+      expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(4);
+    });
+
+    it('rotation avoidance is inert when strength is 0', () => {
+      // A penalty table with zero strength must not change the contract:
+      // every student still gets a seat and a valid result is returned.
+      const optimizer = new ClassroomOptimizer(students, 2, 2);
+      optimizer.setRotationAvoidance({ '1|4': 1 }, 0);
+      const result = optimizer.optimize();
+      const assigned = result.layout.seats.filter((s) => !s.is_empty);
+      expect(assigned.length).toBe(students.length);
+    });
+
     it('keeps front_row_ids in row 0 across GA evolution (not just seeding)', () => {
       // Alice has no accessibility flags — the only reason for her to be in
       // row 0 is the front_row_ids rule. Previously this was used only to

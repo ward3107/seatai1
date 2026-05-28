@@ -18,6 +18,7 @@ import LayoutPanel from '../features/layout/LayoutPanel';
 // PrintView pulls in html2canvas indirectly (the user only sees it after
 // clicking Print), so defer its load.
 const PrintView = lazy(() => import('../features/print/PrintView'));
+import ComparePanel from '../features/compare/ComparePanel';
 import OnboardingView from '../features/onboarding/OnboardingView';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import WelcomeTipsModal from '../components/WelcomeTipsModal';
@@ -32,7 +33,7 @@ import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
-import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp, HelpCircle, GitCompare } from 'lucide-react';
 
 const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
   sm: 'text-sm',
@@ -82,6 +83,7 @@ function App() {
   const { isPhone } = useDeviceCheck();
   const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const welcomeTipsDismissed = useStore((s) => s.welcomeTipsDismissed);
   const [showTips, setShowTips] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -342,6 +344,17 @@ function App() {
 
             {result && (
               <button
+                onClick={() => setShowCompare(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                title={t('compare.title')}
+              >
+                <GitCompare size={15} className="text-gray-500" />
+                <span className="hidden sm:inline">{t('compare.button')}</span>
+              </button>
+            )}
+
+            {result && (
+              <button
                 onClick={() => setShowPrint(true)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                 title={t('app.print_title')}
@@ -443,6 +456,8 @@ function App() {
           <PrintView onClose={() => setShowPrint(false)} />
         </Suspense>
       )}
+
+      <ComparePanel open={showCompare} onClose={() => setShowCompare(false)} />
 
       {/* Student detail drawer — opens when a student is clicked from
           the grid, the 3D view, or the sidebar student list. */}

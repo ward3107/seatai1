@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getNeighborHistory, relativeTime } from './rotationHistory';
+import {
+  getNeighborHistory,
+  getRecentPairPenalties,
+  relativeTime,
+} from './rotationHistory';
 import type { LayoutDef } from '../core/layouts';
 
 const layout3x3: LayoutDef = { type: 'rows', rows: 3, cols: 3 };
@@ -146,6 +150,73 @@ describe('getNeighborHistory', () => {
     const result = getNeighborHistory('a', layout3x3, history);
     const ids = result.map((r) => r.otherId).sort();
     expect(ids).toEqual(['e', 'n', 's', 'w']);
+  });
+});
+
+describe('getRecentPairPenalties', () => {
+  it('returns {} for empty history', () => {
+    expect(getRecentPairPenalties(layout3x3, [])).toEqual({});
+  });
+
+  it('weights the most recent run at 1 and keys the pair canonically', () => {
+    const history = [
+      {
+        timestamp: '2026-05-12T09:00:00Z',
+        positions: positionsAt([['b', 0, 1], ['a', 0, 0]]),
+      },
+    ];
+    const p = getRecentPairPenalties(layout3x3, history);
+    // Key is sorted regardless of seating order: "a|b", not "b|a".
+    expect(p).toEqual({ 'a|b': 1 });
+  });
+
+  it('decays older runs (0.5^index)', () => {
+    const history = [
+      // newest: a/b NOT adjacent
+      {
+        timestamp: '2026-05-12T09:00:00Z',
+        positions: positionsAt([['a', 0, 0], ['b', 2, 2]]),
+      },
+      // one run back: a/b adjacent → 0.5^1
+      {
+        timestamp: '2026-05-11T09:00:00Z',
+        positions: positionsAt([['a', 0, 0], ['b', 0, 1]]),
+      },
+    ];
+    const p = getRecentPairPenalties(layout3x3, history);
+    expect(p['a|b']).toBeCloseTo(0.5, 5);
+  });
+
+  it('accumulates across runs and caps at 1', () => {
+    const adjacent = {
+      timestamp: '2026-05-12T09:00:00Z',
+      positions: positionsAt([['a', 0, 0], ['b', 0, 1]]),
+    };
+    // Same pair adjacent in 4 consecutive runs: 1 + .5 + .25 + .125 > 1 → capped.
+    const history = [adjacent, adjacent, adjacent, adjacent];
+    const p = getRecentPairPenalties(layout3x3, history);
+    expect(p['a|b']).toBe(1);
+  });
+
+  it('honors the maxSnapshots window', () => {
+    const adjacent = {
+      timestamp: '2026-05-12T09:00:00Z',
+      positions: positionsAt([['a', 0, 0], ['b', 0, 1]]),
+    };
+    const history = [adjacent, adjacent, adjacent];
+    // Only look at the single most recent snapshot.
+    const p = getRecentPairPenalties(layout3x3, history, { maxSnapshots: 1 });
+    expect(p['a|b']).toBe(1);
+  });
+
+  it('ignores non-adjacent pairs', () => {
+    const history = [
+      {
+        timestamp: '2026-05-12T09:00:00Z',
+        positions: positionsAt([['a', 0, 0], ['b', 2, 2]]),
+      },
+    ];
+    expect(getRecentPairPenalties(layout3x3, history)).toEqual({});
   });
 });
 

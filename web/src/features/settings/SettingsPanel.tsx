@@ -11,6 +11,7 @@ export default function SettingsPanel() {
     weights, setWeights,
     config, setConfig,
     setStudents, setResult,
+    avoidRecentNeighbors, setAvoidRecentNeighbors,
     aiSettings, setAiSettings, forgetApiKey,
   } = useStore();
   const [showApiKey, setShowApiKey] = useState(false);
@@ -158,6 +159,22 @@ export default function SettingsPanel() {
             </div>
             <p className="text-[10px] text-gray-500 mt-1">
               {t('settings.quality_hint')}
+            </p>
+          </div>
+
+          {/* Rotation — "freshen seating" between runs */}
+          <div className="border-t border-gray-200 pt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={avoidRecentNeighbors}
+                onChange={(e) => setAvoidRecentNeighbors(e.target.checked)}
+                className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <span className="font-medium text-gray-600">{t('settings.rotation_title')}</span>
+            </label>
+            <p className="text-[10px] text-gray-500 mt-1">
+              {t('settings.rotation_hint')}
             </p>
           </div>
 

@@ -122,6 +122,12 @@
     "gender_homogeneous": "All neighbors share this student's gender — diversity is weaker here."
   },
   "layout": {
+    "features_title": "Desk & obstacles",
+    "features_hint": "Tap a cell to cycle it: seat → obstacle → teacher's desk. Blocked cells are left empty when seating students.",
+    "features_clear": "Clear",
+    "feature_seat": "Seat",
+    "feature_desk": "Teacher's desk",
+    "feature_obstacle": "Obstacle",
     "title": "Classroom Layout",
     "seats": "seats",
     "rows": "Rows",
@@ -346,6 +352,8 @@
     "quality_balanced": "Balanced",
     "quality_best": "Best",
     "quality_hint": "Higher quality runs the optimizer several times and keeps the best result. Recommended for conflict-heavy classes.",
+    "rotation_title": "Freshen seating (avoid recent neighbors)",
+    "rotation_hint": "When on, re-running the optimizer avoids seating students next to neighbors they recently sat with, so the room rotates over time.",
     "ai_title": "AI explanations (optional)",
     "ai_description": "Use a language model to write a teacher-friendly paragraph for each student. Your API key stays in this browser; the AI call goes directly to Anthropic.",
     "ai_enable": "Enable AI explanations",
@@ -366,6 +374,25 @@
     "weightsDesc": "Adjust the importance of each optimization factor",
     "algorithmConfig": "Algorithm Configuration",
     "algorithmDesc": "Fine-tune the genetic algorithm parameters"
+  },
+  "compare": {
+    "title": "Compare arrangements",
+    "button": "Compare",
+    "hint": "Generate an alternative arrangement with the same settings and compare it side by side. Nothing changes until you accept it.",
+    "current": "Current",
+    "alternative": "Alternative",
+    "generate": "Generate alternative",
+    "regenerate": "Generate another",
+    "generating": "Generating…",
+    "no_alternative": "No alternative yet",
+    "use_alternative": "Use alternative",
+    "keep_current": "Keep current",
+    "close": "Close comparison",
+    "metric": "Metric",
+    "change": "Change",
+    "better": "Better than current",
+    "worse": "Worse than current",
+    "same": "No change"
   },
   "export": {
     "title": "Export seating chart",

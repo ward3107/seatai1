@@ -47,6 +47,20 @@ export default defineConfig({
     // The corresponding browser floor lives in package.json `browserslist`.
     target: 'es2022',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        // Split large, independently-versioned vendor libraries into their
+        // own chunks. They change far less often than app code, so browsers
+        // keep them cached across deploys, and the initial parse cost drops.
+        // jspdf / html2canvas are intentionally absent — they're already
+        // dynamic-imported on demand from the export path.
+        manualChunks: {
+          'vendor-motion': ['framer-motion'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/utilities'],
+          'vendor-db': ['dexie', 'dexie-react-hooks'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,

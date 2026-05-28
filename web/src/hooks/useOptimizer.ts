@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
-import { ClassroomOptimizer } from '../core/optimizer';
+import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
 import { slotCount } from '../core/layouts';
+import { getRecentPairPenalties } from '../utils/rotationHistory';
 import type { OptimizationResult } from '../types';
 
 type WorkerOut =
@@ -27,6 +28,8 @@ export function useOptimizer() {
   const weights = useStore((s) => s.weights);
   const config = useStore((s) => s.config);
   const constraints = useStore((s) => s.constraints);
+  const avoidRecentNeighbors = useStore((s) => s.avoidRecentNeighbors);
+  const resultHistory = useStore((s) => s.resultHistory);
   const isOptimizing = useStore((s) => s.isOptimizing);
   const setOptimizing = useStore((s) => s.setOptimizing);
   const setResult = useStore((s) => s.setResult);
@@ -100,6 +103,15 @@ export function useOptimizer() {
     setOptimizing(true);
     setError(null);
 
+    // Rotation avoidance is opt-in and only meaningful once we have past
+    // runs to compare against. Compute the pair-penalty table here so both
+    // the worker and the main-thread fallback share it.
+    const recentPairPenalties =
+      avoidRecentNeighbors && resultHistory.length > 0
+        ? getRecentPairPenalties(layoutDef, resultHistory)
+        : {};
+    const avoidRecentStrength = avoidRecentNeighbors ? ROTATION_STRENGTH : 0;
+
     // Use worker if available
     if (workerRef.current) {
       return new Promise<OptimizationResult | null>((resolve) => {
@@ -113,6 +125,8 @@ export function useOptimizer() {
           weights,
           config,
           constraints,
+          recentPairPenalties,
+          avoidRecentStrength,
         });
       });
     }
@@ -124,6 +138,7 @@ export function useOptimizer() {
       optimizer.setWeights(weights);
       optimizer.setConfig(config);
       optimizer.setConstraints(constraints);
+      optimizer.setRotationAvoidance(recentPairPenalties, avoidRecentStrength);
       const result = await Promise.resolve().then(() => optimizer.optimize());
       setResult(result);
       setOptimizing(false);
@@ -133,7 +148,7 @@ export function useOptimizer() {
       setOptimizing(false);
       return null;
     }
-  }, [students, rows, cols, layoutDef, weights, config, constraints, setOptimizing, setResult]);
+  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, setOptimizing, setResult]);
 
   return { wasmReady, isOptimizing, error, initWasm, optimize };
 }

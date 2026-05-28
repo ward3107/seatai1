@@ -21,9 +21,10 @@ import {
   Globe,
   Accessibility,
   RefreshCw,
+  Ban,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense, Fragment } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -81,6 +82,27 @@ function emptySeatsFromLayout(def: LayoutDef): Seat[] {
     student_id: undefined,
     is_empty: true,
   }));
+}
+
+/** Non-interactive tile for a teacher's desk / obstacle cell in the
+ *  row-based renderer. Sized to sit alongside seat cards. */
+function DecoTile({ kind, label }: { kind: 'desk' | 'obstacle'; label: string }) {
+  return (
+    <div
+      role="img"
+      aria-label={label}
+      title={label}
+      className={clsx(
+        'rounded-lg min-h-[88px] w-[72px] flex flex-col items-center justify-center gap-1 border-2 select-none shrink-0',
+        kind === 'desk'
+          ? 'bg-amber-100 border-amber-300 text-amber-700'
+          : 'bg-gray-100 border-gray-300 text-gray-500',
+      )}
+    >
+      {kind === 'desk' ? <User size={18} aria-hidden="true" /> : <Ban size={18} aria-hidden="true" />}
+      <span className="text-[10px] font-medium text-center leading-tight px-1">{label}</span>
+    </div>
+  );
 }
 
 function groupIntoDesks(rowSeats: Seat[]): Seat[][] {
@@ -166,14 +188,30 @@ export default function ClassroomGrid() {
 
   useSeatingHistory();
 
-  const seats = useMemo(
-    () =>
-      result?.layout.seats ??
-      (layoutDef.type === 'rows'
-        ? createEmptyGrid(rows, cols)
-        : emptySeatsFromLayout(layoutDef)),
-    [result, layoutDef, rows, cols],
-  );
+  const seats = useMemo(() => {
+    if (result?.layout.seats) return result.layout.seats;
+    // For a plain rows grid with no reserved cells, the cheap builder is
+    // fine. As soon as the teacher reserves desk/obstacle cells we route
+    // through the layout generator so the empty state drops those cells too
+    // (otherwise a blocked cell would show both an empty seat and a tile).
+    if (layoutDef.type === 'rows' && !layoutDef.blockedCells?.length) {
+      return createEmptyGrid(rows, cols);
+    }
+    return emptySeatsFromLayout(layoutDef);
+  }, [result, layoutDef, rows, cols]);
+
+  // Desk / obstacle tiles to draw inline in the row renderer, grouped by
+  // row. Only the 'rows' layout supports reserved cells.
+  const decorationsByRow = useMemo(() => {
+    const map = new Map<number, { col: number; kind: 'desk' | 'obstacle' }[]>();
+    if (layoutDef.type === 'rows') {
+      for (const cell of layoutDef.blockedCells ?? []) {
+        if (!map.has(cell.row)) map.set(cell.row, []);
+        map.get(cell.row)!.push({ col: cell.col, kind: cell.kind });
+      }
+    }
+    return map;
+  }, [layoutDef]);
 
   // Non-grid layouts (clusters, u-shape, circle) need absolute positioning
   // because their seats aren't on a regular grid. custom-rows still works
@@ -399,6 +437,38 @@ export default function ClassroomGrid() {
         return seat?.student_id ? (studentMap.get(seat.student_id) ?? null) : null;
       })()
     : null;
+
+  // Shared SeatCard renderer — the three row layouts (pairs, plain rows,
+  // and the mixed rows-with-decorations path) all render seats identically;
+  // only their wrappers differ.
+  const renderSeatCard = (seat: Seat) => {
+    const sk = `${seat.position.row}-${seat.position.col}`;
+    const student = seat.student_id ? (studentMap.get(seat.student_id) ?? null) : null;
+    return (
+      <SeatCard
+        seat={seat}
+        student={student}
+        seatKey={sk}
+        isLocked={lockedSeats.includes(sk)}
+        isSelected={selectedSeatKey === sk}
+        isViolated={violations.has(sk)}
+        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
+        heatMapMode={heatMapMode}
+        interactionMode={interactionMode}
+        ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
+        onSeatClick={handleSeatClick}
+        onContextMenu={handleContextMenu}
+        onMouseEnter={() => {
+          setHoveredSeatKey(sk);
+          if (student) setHoveredStudent(student);
+        }}
+        onMouseLeave={() => {
+          setHoveredSeatKey(null);
+          setHoveredStudent(null);
+        }}
+      />
+    );
+  };
 
   // ── Build row groups ──────────────────────────────────────────────────────
   const rowMap = new Map<number, Seat[]>();
@@ -634,14 +704,18 @@ export default function ClassroomGrid() {
                   (a, b) => a.position.col - b.position.col
                 );
                 const isPairs = viewMode === 'pairs';
-                const desks = isPairs ? groupIntoDesks(sortedSeats) : null;
+                const rowDecos = decorationsByRow.get(rowIndex) ?? [];
+                const hasDecos = rowDecos.length > 0;
+                // Reserved cells break the regular grid, so a row containing
+                // any falls back to one col-sorted sequence (no pair grouping).
+                const desks = isPairs && !hasDecos ? groupIntoDesks(sortedSeats) : null;
 
                 return (
                   <div
                     key={rowIndex}
                     className={clsx(
                       'flex justify-center items-start',
-                      isPairs ? 'gap-6' : 'gap-2'
+                      isPairs && !hasDecos ? 'gap-6' : 'gap-2'
                     )}
                   >
                     {/* Row number label */}
@@ -649,7 +723,41 @@ export default function ClassroomGrid() {
                       {rowIndex + 1}
                     </span>
 
-                    {isPairs && desks
+                    {hasDecos
+                      ? /* ── Rows with reserved cells: seats + desk/obstacle tiles, col-sorted ── */
+                        [
+                          ...sortedSeats.map((seat) => ({
+                            sortCol: seat.position.col,
+                            node: (
+                              <motion.div
+                                key={`seat-${seat.position.row}-${seat.position.col}`}
+                                layout
+                                initial={{ opacity: 0, scale: 0.85 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                              >
+                                {renderSeatCard(seat)}
+                              </motion.div>
+                            ),
+                          })),
+                          ...rowDecos.map((d) => ({
+                            sortCol: d.col,
+                            node: (
+                              <DecoTile
+                                key={`deco-${rowIndex}-${d.col}`}
+                                kind={d.kind}
+                                label={
+                                  d.kind === 'desk'
+                                    ? t('layout.feature_desk')
+                                    : t('layout.feature_obstacle')
+                                }
+                              />
+                            ),
+                          })),
+                        ]
+                          .sort((a, b) => a.sortCol - b.sortCol)
+                          .map((item) => item.node)
+                      : isPairs && desks
                       ? /* ── Pairs layout: seats grouped in 2-seat desk units ── */
                         desks.map((deskSeats, deskIdx) => (
                           <motion.div
@@ -670,85 +778,30 @@ export default function ClassroomGrid() {
                                 : 'border-amber-200 bg-amber-50'
                             )}
                           >
-                            {deskSeats.map((seat) => {
-                              const sk = `${seat.position.row}-${seat.position.col}`;
-                              const student = seat.student_id
-                                ? (studentMap.get(seat.student_id) ?? null)
-                                : null;
-                              return (
-                                <SeatCard
-                                  key={sk}
-                                  seat={seat}
-                                  student={student}
-                                  seatKey={sk}
-                                  isLocked={lockedSeats.includes(sk)}
-                                  isSelected={selectedSeatKey === sk}
-                                  isViolated={violations.has(sk)}
-                        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
-                                  heatMapMode={heatMapMode}
-                                  interactionMode={interactionMode}
-                                  ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
-                                  onSeatClick={handleSeatClick}
-                                  onContextMenu={handleContextMenu}
-                                  onMouseEnter={() => {
-                                    setHoveredSeatKey(sk);
-                                    if (student) setHoveredStudent(student);
-                                  }}
-                                  onMouseLeave={() => {
-                                    setHoveredSeatKey(null);
-                                    setHoveredStudent(null);
-                                  }}
-                                />
-                              );
-                            })}
+                            {deskSeats.map((seat) => (
+                              <Fragment key={`${seat.position.row}-${seat.position.col}`}>
+                                {renderSeatCard(seat)}
+                              </Fragment>
+                            ))}
                           </motion.div>
                         ))
                       : /* ── Rows layout: individual seats in a straight row ── */
-                        sortedSeats.map((seat, seatIdx) => {
-                          const sk = `${seat.position.row}-${seat.position.col}`;
-                          const student = seat.student_id
-                            ? (studentMap.get(seat.student_id) ?? null)
-                            : null;
-                          return (
-                            <motion.div
-                              key={sk}
-                              layout
-                              initial={{ opacity: 0, scale: 0.85 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{
-                                type: 'spring',
-                                stiffness: 300,
-                                damping: 25,
-                                delay: result
-                                  ? (rowIndex * cols + seatIdx) * 0.012
-                                  : 0,
-                              }}
-                            >
-                              <SeatCard
-                                seat={seat}
-                                student={student}
-                                seatKey={sk}
-                                isLocked={lockedSeats.includes(sk)}
-                                isSelected={selectedSeatKey === sk}
-                                isViolated={violations.has(sk)}
-                        isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
-                                heatMapMode={heatMapMode}
-                                interactionMode={interactionMode}
-                                ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
-                                onSeatClick={handleSeatClick}
-                                onContextMenu={handleContextMenu}
-                                onMouseEnter={() => {
-                                  setHoveredSeatKey(sk);
-                                  if (student) setHoveredStudent(student);
-                                }}
-                                onMouseLeave={() => {
-                                  setHoveredSeatKey(null);
-                                  setHoveredStudent(null);
-                                }}
-                              />
-                            </motion.div>
-                          );
-                        })}
+                        sortedSeats.map((seat, seatIdx) => (
+                          <motion.div
+                            key={`${seat.position.row}-${seat.position.col}`}
+                            layout
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 300,
+                              damping: 25,
+                              delay: result ? (rowIndex * cols + seatIdx) * 0.012 : 0,
+                            }}
+                          >
+                            {renderSeatCard(seat)}
+                          </motion.div>
+                        ))}
 
                     {/* Spacer to balance row label */}
                     <span className="w-8 shrink-0" />

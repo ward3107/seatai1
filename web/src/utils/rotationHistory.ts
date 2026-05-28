@@ -71,6 +71,59 @@ export function getNeighborHistory(
   return Array.from(seen.values());
 }
 
+/**
+ * Build a penalty table the optimizer can use to *avoid* re-seating
+ * students who recently sat next to each other ("freshen the seating").
+ *
+ * Returns a plain object keyed by a canonical unordered pair id
+ * (`"idA|idB"` with the two ids sorted) → penalty weight in (0, 1].
+ * Recent runs weigh more than older ones: the most recent snapshot
+ * contributes `1`, the next `decay`, then `decay²`, … A pair seen in
+ * several recent runs accumulates (capped at 1).
+ *
+ * Plain object (not a Map) so it survives `postMessage` to the worker
+ * unchanged regardless of structured-clone quirks.
+ */
+export function getRecentPairPenalties(
+  layoutDef: LayoutDef,
+  resultHistory: Array<{
+    timestamp: string;
+    positions: Record<string, { row: number; col: number }>;
+  }>,
+  options?: { maxSnapshots?: number; decay?: number },
+): Record<string, number> {
+  const maxSnapshots = options?.maxSnapshots ?? 5;
+  const decay = options?.decay ?? 0.5;
+  const penalties: Record<string, number> = {};
+  if (resultHistory.length === 0) return penalties;
+
+  const slots = generateSlots(layoutDef);
+  const slotByCoord = new Map<string, number>();
+  for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
+
+  resultHistory.slice(0, maxSnapshots).forEach((snapshot, i) => {
+    const weight = Math.pow(decay, i); // i = 0 is the most recent run
+    const idBySlot = new Map<number, string>();
+    for (const [id, p] of Object.entries(snapshot.positions)) {
+      const idx = slotByCoord.get(`${p.row}|${p.col}`);
+      if (idx !== undefined) idBySlot.set(idx, id);
+    }
+    for (const slot of slots) {
+      const a = idBySlot.get(slot.index);
+      if (!a) continue;
+      for (const nIdx of slot.neighbors) {
+        const b = idBySlot.get(nIdx);
+        // Count each unordered pair once (a < b) to avoid double-weighting.
+        if (!b || a >= b) continue;
+        const key = `${a}|${b}`;
+        penalties[key] = Math.min(1, (penalties[key] ?? 0) + weight);
+      }
+    }
+  });
+
+  return penalties;
+}
+
 /** Human-friendly "2 days ago" / "just now" formatter. Pure, no
  *  external dependency. Returns null for invalid input. */
 export function relativeTime(iso: string | null, now: Date = new Date()): string | null {

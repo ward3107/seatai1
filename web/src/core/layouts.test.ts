@@ -21,6 +21,57 @@ describe('generateSlots', () => {
     });
   });
 
+  describe('blocked cells (desk / obstacles)', () => {
+    it('removes blocked cells from the seat list and renumbers contiguously', () => {
+      const slots = generateSlots({
+        type: 'rows',
+        rows: 3,
+        cols: 3,
+        blockedCells: [
+          { row: 0, col: 1, kind: 'desk' },
+          { row: 1, col: 1, kind: 'obstacle' },
+        ],
+      });
+      expect(slots).toHaveLength(7); // 9 - 2
+      // No surviving slot sits on a blocked cell.
+      expect(slots.find((s) => s.row === 0 && s.col === 1)).toBeUndefined();
+      expect(slots.find((s) => s.row === 1 && s.col === 1)).toBeUndefined();
+      // Indices are contiguous 0..n-1 so they remain valid chromosome positions.
+      expect([...slots.map((s) => s.index)].sort((a, b) => a - b)).toEqual([
+        0, 1, 2, 3, 4, 5, 6,
+      ]);
+    });
+
+    it('does not link seats across a blocked cell as neighbors', () => {
+      // Row 0: col 0 and col 2 flank a blocked col 1 → they must NOT be neighbors.
+      const slots = generateSlots({
+        type: 'rows',
+        rows: 1,
+        cols: 3,
+        blockedCells: [{ row: 0, col: 1, kind: 'obstacle' }],
+      });
+      expect(slots).toHaveLength(2);
+      const left = slots.find((s) => s.col === 0)!;
+      const right = slots.find((s) => s.col === 2)!;
+      expect(left.neighbors).not.toContain(right.index);
+      expect(right.neighbors).not.toContain(left.index);
+    });
+
+    it('slotCount reflects the reduced seat count', () => {
+      expect(
+        slotCount({
+          type: 'rows',
+          rows: 4,
+          cols: 5,
+          blockedCells: [
+            { row: 0, col: 0, kind: 'desk' },
+            { row: 2, col: 3, kind: 'obstacle' },
+          ],
+        }),
+      ).toBe(18); // 20 - 2
+    });
+  });
+
   describe('clusters layout', () => {
     it('rounds class size up to a multiple of the pod size', () => {
       // 3x3 with podSize=2 → rounds up to 4x4 = 16 seats
