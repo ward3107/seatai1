@@ -34,6 +34,56 @@ sign-in, no internet required after first load.
 
 ---
 
+## For schools & IT
+
+SeatAI is built to be deployable inside a school with **zero data flowing
+off the device**. The whole thing is a static web app — there is no
+backend, no API to call, and no account to create.
+
+### Data & privacy
+
+- **Local-only.** Every roster, note, photo, and saved seating plan lives in
+  the teacher's own browser via IndexedDB. Nothing is sent to a server.
+- **No accounts.** No login, no email, no signup. Open the URL and you're
+  working.
+- **No tracking.** No analytics, no telemetry, no third-party scripts.
+- **Optional AI explanations** are off by default. If a teacher turns them
+  on, the API key they enter is stored only in their browser and the call
+  goes **direct from their browser** to the LLM provider — SeatAI's host
+  never sees the key or the prompt.
+- **Backup.** Because the data lives on the device, teachers should use the
+  built-in "Backup all data" button in the Projects panel periodically to
+  keep an off-browser copy (a single `.json` they can email themselves or
+  drop on a shared drive). The Restore button reads the same file back.
+
+### Sharing charts safely
+
+The print view has an **Anonymize (initials only)** toggle that swaps
+every student's name for a first-initial before printing, for handing a
+chart to a substitute, parent volunteer, or specialist who shouldn't see
+the full roster.
+
+### Deployment
+
+The production build (`npm run build`) emits a `dist/` folder of plain
+HTML, CSS, JS, and a service worker. Host it on anything that serves
+static files — the school's own web server, an S3/Cloud bucket, Vercel
+(`vercel.json` is included), GitHub Pages, or a USB drive. After the first
+load the PWA cache means the app works fully offline; teachers can install
+it as a desktop/tablet app from the browser address bar.
+
+### Browser support floor
+
+Locked at the build level: Chrome 98+, Edge 98+, Firefox 114+, Safari 15.4+,
+iOS Safari 15.4+. School devices on those versions or newer will work.
+
+### Languages
+
+English, Hebrew (RTL), Arabic (RTL), and Russian — all four are
+fully translated.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
