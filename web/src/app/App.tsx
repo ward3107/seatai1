@@ -415,7 +415,7 @@ function App() {
                       </span>
                       <span className="text-gray-400 hidden sm:inline">·</span>
                       <span className="text-gray-500 hidden sm:inline">
-                        {result.computation_time_ms}ms · {result.generations}{' '}
+                        {Math.round(result.computation_time_ms)}ms · {result.generations}{' '}
                         {t('optimization.generations')}
                       </span>
                     </div>
