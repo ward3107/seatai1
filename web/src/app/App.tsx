@@ -25,10 +25,8 @@ import WelcomeTipsModal from '../components/WelcomeTipsModal';
 import UserGuide from '../components/UserGuide';
 import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
-import MobileBlockScreen from '../components/MobileBlockScreen';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
-import { useDeviceCheck } from '../hooks/useDeviceCheck';
 import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
@@ -80,7 +78,6 @@ function App() {
   useEffect(() => {
     if (error) setA11yAnnouncement(t('a11y.optimization_failed', { error }));
   }, [error, t]);
-  const { isPhone } = useDeviceCheck();
   const shouldReduceMotion = useReducedMotion();
   const [showPrint, setShowPrint] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
@@ -108,15 +105,13 @@ function App() {
 
   // Initialize WASM on mount
   useEffect(() => {
-    if (isPhone) return;
     initWasm();
-  }, [initWasm, isPhone]);
+  }, [initWasm]);
 
   // Keyboard shortcuts: Ctrl/Cmd+Z (undo), Ctrl/Cmd+Shift+Z or Ctrl+Y (redo),
   // Ctrl/Cmd+Enter (run optimization). Skip when focus is in a text field so
   // we don't fight the browser's native undo on inputs.
   useEffect(() => {
-    if (isPhone) return;
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
@@ -150,11 +145,7 @@ function App() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isPhone, canUndo, canRedo, undo, redo, wasmReady, isOptimizing, students.length, optimize]);
-
-  if (isPhone) {
-    return <MobileBlockScreen />;
-  }
+  }, [canUndo, canRedo, undo, redo, wasmReady, isOptimizing, students.length, optimize]);
 
   return (
     <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
@@ -297,8 +288,9 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <header className="h-14 bg-white/90 backdrop-blur-sm shadow-sm flex items-center px-4 gap-4">
+        {/* Top Bar — wraps onto a second line on narrow phones instead of
+            overflowing horizontally. */}
+        <header className="min-h-14 bg-white/90 backdrop-blur-sm shadow-sm flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
@@ -330,10 +322,15 @@ function App() {
             </button>
           </div>
 
-          <div className="flex-1" />
+          {/* Spacer only grows once everything fits on one row (sm+). On
+              phones it collapses so the controls sit right after undo/redo
+              and wrap naturally. */}
+          <div className="hidden sm:block sm:flex-1" />
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Student count is also shown in the sidebar, so hide the chip
+                on the narrowest screens to save header space. */}
+            <div className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
               <Users size={16} className="text-gray-500" />
               <span className="text-sm font-medium text-gray-600">
                 {students.length} {t('app.students')}
@@ -370,7 +367,7 @@ function App() {
                 title={t('app.print_title')}
               >
                 <Printer size={15} className="text-gray-500" />
-                {t('app.print')}
+                <span className="hidden sm:inline">{t('app.print')}</span>
               </button>
             )}
             <button
@@ -389,7 +386,7 @@ function App() {
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
           {students.length === 0 ? (
             /* ── Onboarding empty state ── */
             <OnboardingView onOpenSidebar={() => setSidebarOpen(true)} />

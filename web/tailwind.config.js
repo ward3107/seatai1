@@ -13,6 +13,12 @@ export default {
 
   theme: {
     extend: {
+      // Extra-small breakpoint for fine-tuning phone layouts. Tailwind's
+      // smallest default (`sm`) is 640px; `xs` lets us adapt to narrow
+      // phones (~360–480px) without ejecting the whole screens scale.
+      screens: {
+        xs: '400px',
+      },
       colors: {
         primary: {
           50: '#eff6ff',
