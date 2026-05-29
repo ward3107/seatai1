@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SeatAI — ترتيب جلوس أذكى للصفوف المدرسية</title>
+<style>
+  :root{
+    --blue:#3b82f6;--blue-700:#1d4ed8;--purple:#d946ef;--purple-700:#a21caf;
+    --ink:#0f172a;--slate:#475569;--mut:#64748b;--line:#e2e8f0;--bg:#f8fafc;--card:#fff;--emerald:#059669;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"Noto Naskh Arabic","Noto Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .page{width:min(210mm,100%);background:var(--card);margin:0 auto;
+    padding:clamp(16px,4.5vw,18mm);position:relative;}
+  .page + .page{margin-top:18px;}
+  h1,h2,h3{line-height:1.2;margin:0;}
+  p{margin:0 0 10px;}
+  .gradient-text{background:linear-gradient(90deg,var(--blue),var(--purple));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero{background:linear-gradient(135deg,#eff6ff 0%,#fdf4ff 100%);border-radius:22px;
+    padding:clamp(20px,4vw,34px);border:1px solid var(--line);}
+  .brandrow{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .logo{width:54px;height:54px;border-radius:15px;flex:none;
+    background:linear-gradient(135deg,var(--blue),var(--purple));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:30px;
+    box-shadow:0 8px 20px rgba(124,58,237,.28);}
+  .brandname{font-size:24px;font-weight:800;letter-spacing:-.5px;}
+  .brandsub{font-size:12.5px;color:var(--mut);margin-top:1px;}
+  .hero h1{font-size:clamp(26px,5.5vw,38px);font-weight:800;letter-spacing:-.5px;margin-bottom:12px;}
+  .hero .lead{font-size:clamp(14px,2.4vw,15.5px);color:var(--slate);max-width:62ch;}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .pill{font-size:12px;font-weight:600;color:var(--blue-700);background:#fff;
+    border:1px solid #dbeafe;border-radius:999px;padding:6px 12px;}
+  .kicker{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--purple-700);margin-bottom:8px;}
+  h2.section{font-size:clamp(20px,4vw,25px);font-weight:800;letter-spacing:-.3px;margin-bottom:14px;}
+  .section-block{margin-top:30px;}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .panel{border:1px solid var(--line);border-radius:16px;padding:18px 20px;background:#fff;}
+  .panel.warn{background:#fff7ed;border-color:#fed7aa;}
+  .panel.good{background:#ecfdf5;border-color:#a7f3d0;}
+  .panel h3{font-size:15px;font-weight:800;margin-bottom:10px;}
+  .panel ul{margin:0;padding-inline-start:18px;}
+  .panel li{font-size:13px;color:var(--slate);margin-bottom:7px;}
+  .panel.warn h3{color:#c2410c;}
+  .panel.good h3{color:var(--emerald);}
+  .benefits{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .bcard{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:#fff;}
+  .bicon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-size:20px;margin-bottom:10px;background:linear-gradient(135deg,#eff6ff,#fae8ff);}
+  .bcard h3{font-size:14.5px;font-weight:800;margin-bottom:6px;}
+  .bcard p{font-size:12.5px;color:var(--slate);margin:0;}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .step{text-align:center;}
+  .stepnum{width:38px;height:38px;border-radius:50%;margin:0 auto 10px;
+    background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;
+    font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .step h3{font-size:13.5px;font-weight:800;margin-bottom:5px;}
+  .step p{font-size:12px;color:var(--mut);}
+  .privacy{background:linear-gradient(135deg,#064e3b,#065f46);color:#ecfdf5;border-radius:18px;
+    padding:clamp(18px,3.5vw,26px);}
+  .privacy h2{color:#fff;font-size:clamp(18px,3.6vw,22px);font-weight:800;margin-bottom:8px;}
+  .privacy .lead{color:#a7f3d0;font-size:13.5px;margin-bottom:16px;}
+  .privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 26px;}
+  .privacy-item{font-size:13px;color:#d1fae5;display:flex;gap:9px;align-items:flex-start;}
+  .privacy-item b{color:#fff;}
+  .check{color:#6ee7b7;font-weight:800;flex:none;}
+  .aud{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .features{columns:2;column-gap:30px;font-size:12.5px;}
+  .features div{break-inside:avoid;margin-bottom:8px;color:var(--slate);display:flex;gap:8px;}
+  .features .fc{color:var(--blue);font-weight:800;flex:none;}
+  .cta{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-radius:20px;
+    padding:clamp(22px,4vw,30px);text-align:center;margin-top:30px;}
+  .cta h2{color:#fff;font-size:clamp(20px,4vw,24px);font-weight:800;margin-bottom:10px;}
+  .cta p{color:#e0e7ff;font-size:14px;max-width:60ch;margin:0 auto 8px;}
+  .cta .free{font-size:13px;color:#ddd6fe;margin-top:14px;font-weight:600;}
+  .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--mut);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  /* responsive collapses */
+  @media screen and (max-width:760px){
+    .steps{grid-template-columns:repeat(2,1fr);}
+    .aud{grid-template-columns:1fr;}
+  }
+  @media screen and (max-width:560px){
+    .twocol,.benefits,.privacy-grid{grid-template-columns:1fr;}
+    .features{columns:1;}
+  }
+  @media screen and (max-width:380px){
+    .steps{grid-template-columns:1fr;}
+  }
+  @media print{
+    body{background:#fff;}
+    .page{width:auto;min-height:auto;margin:0 auto;padding:13mm 13mm;page-break-after:always;}
+    .page:last-child{page-break-after:auto;}
+    .steps{grid-template-columns:repeat(4,1fr);}
+    .twocol,.benefits,.privacy-grid{grid-template-columns:1fr 1fr;}
+    .aud{grid-template-columns:repeat(3,1fr);}
+    .features{columns:2;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div class="brandrow">
+      <div class="logo">S</div>
+      <div><div class="brandname">SeatAI</div><div class="brandsub">تحسين جلوس الطلاب في الصف بالذكاء الاصطناعي</div></div>
+    </div>
+    <h1>مخطّط جلوس <span class="gradient-text">يُرتّب نفسه</span> — في ثوانٍ.</h1>
+    <p class="lead">يحوّل SeatAI واحدة من أكثر المهام إرهاقًا في التدريس — ترتيب الصف بحيث يُهيّأ كل طالب للنجاح — إلى قرار بنقرة واحدة. يوازن المستوى الدراسي والسلوك والصداقات والتنوّع والاحتياجات الخاصة دفعةً واحدة، ويشرح كل اختيار بلغة واضحة.</p>
+    <div class="pills"><span class="pill">يعمل 100% في المتصفّح</span><span class="pill">بلا حسابات · بلا سحابة · بلا تتبّع</span><span class="pill">يعمل دون اتصال</span><span class="pill">مجاني ومفتوح المصدر (MIT)</span><span class="pill">العربية · עברית · English · Русский</span></div>
+  </div>
+
+  <div class="section-block">
+    <div class="kicker">التحدّي اليومي</div>
+    <h2 class="section">مخططات الجلوس بطيئة ويدوية ويسهل الخطأ فيها</h2>
+    <div class="twocol">
+      <div class="panel warn"><h3>⏳ الطريقة اليدوية اليوم</h3><ul><li>يقضي المعلّمون 30–60 دقيقة وأكثر لكل صف في تحريك الأسماء على الورق أو الملصقات.</li><li>الموازنة بين مَن لا يجلس مع مَن، والصداقات والنظر والتركيز عبءٌ ذهنيّ كبير.</li><li>تُنسى متطلبات الاحتياجات الخاصة (الصف الأمامي، منطقة هادئة، الحركة، متعلّمو اللغة) تحت الضغط.</li><li>كل فصل دراسي أو طالب جديد أو مشكلة سلوك يعني البدء من جديد.</li><li>يبقى المخطط في ذهن معلّم واحد، ويصعب تسليمه لمعلّم بديل.</li></ul></div>
+      <div class="panel good"><h3>✅ مع SeatAI</h3><ul><li>مخطط متوازن يحترم كل القواعد — في ثوانٍ، لا في أمسية كاملة.</li><li>يُطبَّق كل قيد تلقائيًا، ولا يُنسى شيء.</li><li>لكل موضع سببٌ واضح يمكن للمعلّم الدفاع عنه.</li><li>نقرة واحدة لإعادة الترتيب أو التدوير أو التعديل عند أي تغيير.</li><li>طباعة مخطط مجهول الأسماء للمعلّم البديل بنقرة واحدة.</li></ul></div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="kicker">كيف يعمل</div>
+    <h2 class="section">من قائمة الصف إلى مخطط مُحسَّن في أربع خطوات</h2>
+    <div class="steps">
+    <div class="step"><div class="stepnum">1</div>
+      <h3>أضف الصف</h3><p>اكتب الطلاب، أو استورد ملف CSV، أو حمّل صفًا تجريبيًا للتجربة فورًا.</p></div>
+    <div class="step"><div class="stepnum">2</div>
+      <h3>حدّد الغرفة والقواعد</h3><p>اختر تخطيطًا وأضف قواعد — الفصل بينهم، الصف الأمامي، الإرشاد.</p></div>
+    <div class="step"><div class="stepnum">3</div>
+      <h3>التحسين</h3><p>خوارزمية جينية تبحث في آلاف الترتيبات عن الأنسب.</p></div>
+    <div class="step"><div class="stepnum">4</div>
+      <h3>المراجعة والطباعة</h3><p>اضبط بالسحب والإفلات، وشاهد سبب كل مقعد، ثم صدّر واطبع.</p></div></div>
+  </div>
+
+  <div class="foot"><span>SeatAI · تحسين جلوس الصف</span><span>صفحة 1 من 2 · نظرة عامة للمدارس</span></div>
+</div>
+
+<div class="page">
+  <div class="kicker">لماذا تعتمده المدارس</div>
+  <h2 class="section">ست طرق يساعد بها SeatAI مدرستك</h2>
+  <div class="benefits">
+    <div class="bcard"><div class="bicon">⏱️</div>
+      <h3>يعيد للمعلّمين وقتهم</h3><p>يستبدل ساعة من العمل اليدوي بنقرات قليلة — وقتٌ يعود للتدريس والتخطيط.</p></div>
+    <div class="bcard"><div class="bicon">🧭</div>
+      <h3>صفوف أهدأ وأفضل إدارة</h3><p>يفصل بين الطلاب المتنازعين ويوازن السلوك في الغرفة — تشويش أقل بالتصميم.</p></div>
+    <div class="bcard"><div class="bicon">♿</div>
+      <h3>الدمج والإنصاف مُدمَجان</h3><p>احتياجات الصف الأمامي والمنطقة الهادئة والحركة ومتعلّمي اللغة قواعد يحترمها المُحسِّن دائمًا.</p></div>
+    <div class="bcard"><div class="bicon">🔒</div>
+      <h3>بيانات الطلاب لا تغادر الجهاز</h3><p>بلا خوادم أو حسابات أو تحليلات — جوابٌ نظيف لأسئلة حماية البيانات.</p></div>
+    <div class="bcard"><div class="bicon">💸</div>
+      <h3>بلا تكلفة وبلا عبء تقني</h3><p>تطبيق مجاني ومفتوح المصدر وثابت بلا خادم — ويعمل كليًا دون اتصال.</p></div>
+    <div class="bcard"><div class="bicon">📋</div>
+      <h3>قرارات متّسقة وقابلة للتبرير</h3><p>لكل موضع مبرّر موثّق — لأولياء الأمور والزملاء والإدارة.</p></div></div>
+
+  <div class="section-block"><div class="privacy">
+    <h2>🛡️ الخصوصية وتقنية المعلومات: الموافقة السهلة</h2>
+    <p class="lead">صُمِّم SeatAI بحيث لا يوجد ما يُسرَّب ولا ما يُجهَّز.</p>
+    <div class="privacy-grid">
+    <div class="privacy-item"><span class="check">✓</span><span><b>بيانات محلية فقط.</b> القوائم والملاحظات والصور تبقى في المتصفّح (IndexedDB).</span></div>
+    <div class="privacy-item"><span class="check">✓</span><span><b>بلا حسابات.</b> بلا تسجيل دخول أو بريد أو اشتراك — افتح الرابط واعمل.</span></div>
+    <div class="privacy-item"><span class="check">✓</span><span><b>بلا تتبّع.</b> بلا تحليلات أو قياس أو نصوص طرف ثالث.</span></div>
+    <div class="privacy-item"><span class="check">✓</span><span><b>بلا خادم.</b> HTML/CSS/JS ثابت فقط — استضِفه في أي مكان.</span></div>
+    <div class="privacy-item"><span class="check">✓</span><span><b>الذكاء الاصطناعي اختياري.</b> المفتاح يبقى محليًا والطلب يخرج من المتصفّح مباشرةً.</span></div>
+    <div class="privacy-item"><span class="check">✓</span><span><b>طباعة مجهولة.</b> مفتاح واحد يطبع الأحرف الأولى فقط للبدلاء والزوّار.</span></div></div>
+  </div></div>
+
+  <div class="section-block">
+    <div class="kicker">لمن هو</div>
+    <h2 class="section">قيمة على كل مستوى</h2>
+    <div class="aud">
+    <div class="panel"><h3>👩‍🏫 المعلّمون</h3><ul><li>نهاية لعناء مخطط الجلوس</li><li>مواضع مُبرَّرة وواثقة</li><li>تدوير الجلوس بنقرة كل فصل</li><li>ضبط دقيق بالسحب</li></ul></div>
+    <div class="panel"><h3>🏫 قادة المدرسة</h3><ul><li>يدعم أهداف الدمج والسلوك</li><li>اتّساق بين الصفوف</li><li>بلا تكلفة ترخيص للميزانية</li><li>قرارات موثّقة وقابلة للتبرير</li></ul></div>
+    <div class="panel"><h3>💻 تقنية المعلومات والبيانات</h3><ul><li>لا شيء لاستضافته أو تأمينه</li><li>بيانات الطلاب لا تغادر الجهاز</li><li>انشره وانسَه — يعمل دون اتصال</li><li>دعم المتصفّحات الحديثة</li></ul></div></div>
+  </div>
+
+  <div class="section-block">
+    <div class="kicker">كل شيء مُضمَّن</div>
+    <h2 class="section">حقيبة أدوات كاملة — بلا إضافات وبلا باقات</h2>
+    <div class="features"><div><span class="fc">✓</span> تخطيطات صفوف، عناقيد، حرف U، دائرة وصفوف مخصّصة</div><div><span class="fc">✓</span> محرّك جيني متعدّد البدايات (سريع / متوازن / الأفضل)</div><div><span class="fc">✓</span> تبديل المقاعد بالسحب أو النقر أو مفاتيح الأسهم</div><div><span class="fc">✓</span> قواعد الجمع / الفصل وأزواج الإرشاد</div><div><span class="fc">✓</span> قيود الصف الأمامي والخلفي والممر والنافذة</div><div><span class="fc">✓</span> مراعاة الاحتياجات الخاصة ومتعلّمي اللغة</div><div><span class="fc">✓</span> صور وملاحظات معلّم لكل طالب</div><div><span class="fc">✓</span> شروح المواضع بلغة واضحة واختياريًا بالذكاء الاصطناعي</div><div><span class="fc">✓</span> استيراد/تصدير CSV · PDF · صورة · طباعة</div><div><span class="fc">✓</span> مشاريع متعدّدة الصفوف مع نسخ احتياطي واستعادة</div><div><span class="fc">✓</span> تراجع / إعادة لكل إجراء</div><div><span class="fc">✓</span> متتبّع تدوير الجلوس</div><div><span class="fc">✓</span> مقارنة بصرية ومقارنة A/B بين المخططات</div><div><span class="fc">✓</span> خرائط حرارية: الجنس، التعارضات، الدرجات</div><div><span class="fc">✓</span> عرض الصف ثنائي وثلاثي الأبعاد</div><div><span class="fc">✓</span> سمة فاتحة/داكنة وحجم نص قابل للتعديل</div><div><span class="fc">✓</span> تطبيق PWA قابل للتثبيت والعمل دون اتصال</div><div><span class="fc">✓</span> إتاحة كاملة للوحة المفاتيح وقارئ الشاشة</div><div><span class="fc">✓</span> العربية والعبرية والإنجليزية والروسية (وRTL)</div><div><span class="fc">✓</span> يعمل على الحاسوب واللوحي والهاتف</div></div>
+  </div>
+
+  <div class="cta">
+    <h2>جرّبه مع صفّك خلال دقيقتين</h2>
+    <p>افتح SeatAI، وحمّل صفًا تجريبيًا أو استورد قائمتك، ثم انقر «تحسين». بلا تثبيت، وبلا اشتراك، ولا تغادر أي بيانات الغرفة.</p>
+    <div class="free">مجاني ومفتوح المصدر برخصة MIT · انشره في المدرسة كلها بلا تكلفة</div>
+  </div>
+
+  <div class="foot"><span>SeatAI · تحسين جلوس الصف</span><span>صفحة 2 من 2 · نظرة عامة للمدارس</span></div>
+</div>
+</body></html>
