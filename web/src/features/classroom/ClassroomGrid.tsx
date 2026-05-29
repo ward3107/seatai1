@@ -480,7 +480,7 @@ export default function ClassroomGrid() {
 
   return (
     <div
-      className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6"
+      className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 sm:p-6"
       onClick={() => setContextMenu(null)}
     >
       {/* Toolbar */}
@@ -860,8 +860,13 @@ export default function ClassroomGrid() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.1 }}
-            className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 py-1.5 min-w-[190px]"
-            style={{ top: contextMenu.y, left: contextMenu.x }}
+            className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 py-1.5 min-w-[190px] max-w-[calc(100vw-1rem)]"
+            // Clamp to the viewport so a long-press near a screen edge (common
+            // on phones) doesn't open the menu off-screen.
+            style={{
+              top: Math.min(contextMenu.y, window.innerHeight - 120),
+              left: Math.min(contextMenu.x, window.innerWidth - 206),
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -896,7 +901,7 @@ export default function ClassroomGrid() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.15 }}
-            className="fixed bottom-4 right-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 z-50"
+            className="fixed bottom-4 right-4 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 z-50"
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
