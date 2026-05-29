@@ -195,6 +195,14 @@ export default memo(function SeatCard({
               ))}
             </div>
           )}
+
+          {/* Score badge — in the academic/behavior heat-maps the colour
+              alone isn't accessible (red↔green), so show the number too. */}
+          {(heatMapMode === 'academic' || heatMapMode === 'behavior') && (
+            <span className="mt-0.5 px-1 rounded bg-white/80 text-[10px] font-semibold tabular-nums text-gray-700 leading-tight">
+              {heatMapMode === 'academic' ? student.academic_score : student.behavior_score}
+            </span>
+          )}
         </>
       ) : (
         <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
