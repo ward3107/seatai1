@@ -1,4 +1,16 @@
 {
+  "conflicts": {
+    "title": "Check these rules before optimizing",
+    "together_and_apart": "{{a}} and {{b}} are set to both sit together and stay apart.",
+    "mentor_and_apart": "{{a}} mentors {{b}}, but they're also set to stay apart.",
+    "front_and_back": "{{name}} is required at both the front and the back.",
+    "self_pair": "{{name}} is paired with themselves — that rule has no effect.",
+    "front_overflow": "{{need}} students need a front-row seat but the layout only has {{have}}.",
+    "back_overflow": "{{need}} students need a back-row seat but the layout only has {{have}}.",
+    "aisle_overflow": "{{need}} students need an aisle seat but the layout only has {{have}}.",
+    "not_enough_seats": "You have {{students}} students but only {{seats}} seats.",
+    "stale_reference": "A rule still refers to a student who's no longer in the class."
+  },
   "app": {
     "title": "SeatAI",
     "subtitle": "AI-Powered Classroom Seating",
@@ -346,6 +358,16 @@
     "columns": "Columns",
     "load_demo": "Load Demo Data (30 students)",
     "objective_weights": "Objective Weights",
+    "weights_hint": "Higher means the optimizer cares more about it. These are independent priorities, not a split of 100%.",
+    "presets_label": "Priority presets",
+    "preset_balanced": "Balanced",
+    "preset_balanced_desc": "Weigh academics, behaviour, diversity and special needs evenly.",
+    "preset_behavior": "Behaviour focus",
+    "preset_behavior_desc": "Prioritise spreading out behaviour for a calmer room.",
+    "preset_academic": "Academic mixing",
+    "preset_academic_desc": "Prioritise mixing ability levels so students support each other.",
+    "preset_inclusion": "Inclusion first",
+    "preset_inclusion_desc": "Prioritise special-needs placement (front row, quiet areas).",
     "weight_academic": "Academic",
     "weight_behavioral": "Behavioral",
     "weight_diversity": "Diversity",
