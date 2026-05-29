@@ -286,8 +286,10 @@ function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      {/* Main Content — min-w-0 lets this flex child shrink below its
+          content width so the seating grid's horizontal scroll stays
+          inside the content area instead of widening the whole page. */}
+      <main className="flex-1 flex flex-col min-w-0">
         {/* Top Bar — wraps onto a second line on narrow phones instead of
             overflowing horizontally. */}
         <header className="min-h-14 bg-white/90 backdrop-blur-sm shadow-sm flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
