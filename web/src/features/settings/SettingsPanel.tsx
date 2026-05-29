@@ -3,6 +3,42 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
+import type { ObjectiveWeights } from '../../types';
+
+// Quick-pick priority profiles. Each sets all four objective weights at once
+// so teachers can pick an intent ("focus on behaviour") without reasoning
+// about raw percentages; the sliders below still allow fine-tuning.
+const WEIGHT_PRESETS: {
+  key: string;
+  labelKey: string;
+  descKey: string;
+  weights: ObjectiveWeights;
+}[] = [
+  {
+    key: 'balanced',
+    labelKey: 'settings.preset_balanced',
+    descKey: 'settings.preset_balanced_desc',
+    weights: { academic_balance: 0.3, behavioral_balance: 0.3, diversity: 0.2, special_needs: 0.2 },
+  },
+  {
+    key: 'behavior',
+    labelKey: 'settings.preset_behavior',
+    descKey: 'settings.preset_behavior_desc',
+    weights: { academic_balance: 0.2, behavioral_balance: 0.5, diversity: 0.15, special_needs: 0.15 },
+  },
+  {
+    key: 'academic',
+    labelKey: 'settings.preset_academic',
+    descKey: 'settings.preset_academic_desc',
+    weights: { academic_balance: 0.5, behavioral_balance: 0.2, diversity: 0.15, special_needs: 0.15 },
+  },
+  {
+    key: 'inclusion',
+    labelKey: 'settings.preset_inclusion',
+    descKey: 'settings.preset_inclusion_desc',
+    weights: { academic_balance: 0.2, behavioral_balance: 0.2, diversity: 0.15, special_needs: 0.45 },
+  },
+];
 
 // ─── Main SettingsPanel ────────────────────────────────────────────────────────
 export default function SettingsPanel() {
@@ -77,7 +113,34 @@ export default function SettingsPanel() {
 
           {/* Objective Weights */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">{t('settings.objective_weights')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('settings.objective_weights')}</label>
+            <p className="text-[10px] text-gray-500 mb-2">{t('settings.weights_hint')}</p>
+
+            {/* Quick presets — set all four priorities at once. */}
+            <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label={t('settings.presets_label')}>
+              {WEIGHT_PRESETS.map((preset) => {
+                const active = (Object.keys(preset.weights) as (keyof typeof weights)[])
+                  .every((k) => Math.abs((weights[k] ?? 0) - preset.weights[k]) < 0.001);
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => setWeights({ ...preset.weights })}
+                    aria-pressed={active}
+                    title={t(preset.descKey)}
+                    className={
+                      'px-2.5 py-1 text-[11px] rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ' +
+                      (active
+                        ? 'bg-primary-50 border-primary-400 text-primary-700 font-medium'
+                        : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400')
+                    }
+                  >
+                    {t(preset.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="space-y-2">
               {[
                 { key: 'academic_balance', label: t('settings.weight_academic') },

@@ -13,6 +13,7 @@ import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
+import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
 import LayoutPanel from '../features/layout/LayoutPanel';
 
 // PrintView pulls in html2canvas indirectly (the user only sees it after
@@ -241,6 +242,11 @@ function App() {
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-200 space-y-2">
+            {/* Surface impossible / contradictory rules before optimizing. */}
+            <ErrorBoundary name="Constraint Warnings" inline>
+              <ConstraintWarnings />
+            </ErrorBoundary>
+
             <button
               onClick={optimize}
               disabled={!wasmReady || isOptimizing || students.length < 2}
