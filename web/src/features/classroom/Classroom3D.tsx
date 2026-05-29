@@ -16,7 +16,7 @@
  * floating outside the floor for any other dimensions.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { Box, RotateCw, RotateCcw, Move } from 'lucide-react';
 import clsx from 'clsx';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -94,6 +94,18 @@ function SeatCard3D({
         height: SEAT_D,
       }}
     >
+      {/* Soft contact shadow on the floor for depth */}
+      <div
+        className="absolute inset-x-0 rounded-[50%] bg-black/20 blur-[3px]"
+        style={{
+          height: SEAT_D * 0.7,
+          top: SEAT_D * 0.2,
+          transform: 'rotateX(90deg) translateZ(-2px)',
+          transformOrigin: 'center center',
+        }}
+        aria-hidden="true"
+      />
+
       {/* Desk slab — sits flat on the floor, in front of the chair */}
       {!seat.is_empty && (
         <div
@@ -119,6 +131,21 @@ function SeatCard3D({
           transformOrigin: 'center center',
         }}
       />
+
+      {/* Chair back — a low slab standing at the rear edge of the pad,
+          giving each seat a recognisable chair silhouette in 3D. */}
+      {!seat.is_empty && (
+        <div
+          className={clsx('absolute left-2 right-2 rounded-t-md bg-gradient-to-b border border-white/40', seatFill)}
+          style={{
+            height: 18,
+            bottom: 2,
+            transform: 'translateZ(0)',
+            transformOrigin: 'bottom center',
+          }}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Standing label (faces the camera) — initial + first name */}
       {student && (
@@ -160,72 +187,105 @@ export default function Classroom3D({
   const [autoRotate, setAutoRotate] = useState(false);
   const [spin, setSpin] = useState(0);
 
-  // Mouse-driven free camera. When the user drags or scrolls, these
-  // override the preset until the user clicks a preset again.
+  // Free camera. When the user drags / pinches / scrolls, these override the
+  // preset until they tap a preset again.
   // - dragRotX / dragRotY are offsets in degrees added to the preset.
-  // - zoom is a scale factor (0.5..2.0).
+  // - zoom is a scale factor (0.3..2.5).
   const [dragRotX, setDragRotX] = useState(0);
   const [dragRotY, setDragRotY] = useState(0);
   const [zoom, setZoom] = useState(1);
-  const dragStateRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    startRotX: number;
-    startRotY: number;
-  } | null>(null);
+  // Auto-fit zoom so the whole room fits the stage on any screen / class size.
+  // Once the user manually zooms we stop overriding it.
+  const [autoFit, setAutoFit] = useState(1);
+  const userZoomedRef = useRef(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  const ZMIN = 0.3, ZMAX = 2.5;
+  const clampZoom = (z: number) => Math.max(ZMIN, Math.min(ZMAX, z));
+
+  // Active touch/mouse pointers, keyed by id. One pointer = orbit, two = pinch.
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const orbitRef = useRef<{ id: number; startX: number; startY: number; startRotX: number; startRotY: number } | null>(null);
+  const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null);
+
+  const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    Math.hypot(a.x - b.x, a.y - b.y);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      // Don't hijack clicks on student labels — those are <button>s and
-      // their own click handler runs first. Mouse drag on empty stage
-      // = orbit camera.
+      // Don't hijack taps on student labels — those are <button>s.
       if ((e.target as HTMLElement).closest('button')) return;
       const el = e.currentTarget as HTMLElement;
       el.setPointerCapture(e.pointerId);
-      // Stop auto-rotate while the user is actively driving the camera.
       setAutoRotate(false);
-      dragStateRef.current = {
-        pointerId: e.pointerId,
-        startX: e.clientX,
-        startY: e.clientY,
-        startRotX: dragRotX,
-        startRotY: dragRotY,
-      };
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const pts = [...pointersRef.current.values()];
+      if (pts.length === 2) {
+        // Begin pinch — suspend orbit.
+        orbitRef.current = null;
+        pinchRef.current = { startDist: dist(pts[0], pts[1]), startZoom: zoom };
+      } else if (pts.length === 1) {
+        orbitRef.current = {
+          id: e.pointerId,
+          startX: e.clientX,
+          startY: e.clientY,
+          startRotX: dragRotX,
+          startRotY: dragRotY,
+        };
+      }
     },
-    [dragRotX, dragRotY],
+    [dragRotX, dragRotY, zoom],
   );
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
-    const drag = dragStateRef.current;
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    const dx = e.clientX - drag.startX;
-    const dy = e.clientY - drag.startY;
-    // Horizontal drag = yaw, vertical drag = pitch. Clamp pitch so the
-    // user can't flip the room upside down (looks broken since shadows
-    // / depth are baked in).
-    setDragRotY(drag.startRotY + dx * 0.4);
-    setDragRotX(Math.max(-85, Math.min(85, drag.startRotX - dy * 0.4)));
+    if (!pointersRef.current.has(e.pointerId)) return;
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = [...pointersRef.current.values()];
+
+    if (pts.length >= 2 && pinchRef.current) {
+      // Pinch-to-zoom (two fingers).
+      const d = dist(pts[0], pts[1]);
+      if (pinchRef.current.startDist > 0) {
+        userZoomedRef.current = true;
+        setZoom(clampZoom((pinchRef.current.startZoom * d) / pinchRef.current.startDist));
+      }
+      return;
+    }
+
+    const orbit = orbitRef.current;
+    if (!orbit || orbit.id !== e.pointerId) return;
+    const dx = e.clientX - orbit.startX;
+    const dy = e.clientY - orbit.startY;
+    // Horizontal drag = yaw, vertical drag = pitch (clamped so the room
+    // can't flip upside-down).
+    setDragRotY(orbit.startRotY + dx * 0.4);
+    setDragRotX(Math.max(-85, Math.min(85, orbit.startRotX - dy * 0.4)));
   }, []);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
-    const drag = dragStateRef.current;
-    if (drag && drag.pointerId === e.pointerId) {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      dragStateRef.current = null;
-    }
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (orbitRef.current?.id === e.pointerId) orbitRef.current = null;
   }, []);
 
   const onWheel = useCallback((e: React.WheelEvent) => {
     // Trackpad / wheel: zoom the room.
     e.preventDefault();
-    setZoom((z) => Math.max(0.5, Math.min(2.0, z - e.deltaY * 0.001)));
+    userZoomedRef.current = true;
+    setZoom((z) => clampZoom(z - e.deltaY * 0.001));
   }, []);
+
+  const nudgeZoom = (factor: number) => {
+    userZoomedRef.current = true;
+    setZoom((z) => clampZoom(z * factor));
+  };
 
   const resetCamera = () => {
     setDragRotX(0);
     setDragRotY(0);
-    setZoom(1);
+    userZoomedRef.current = false;
+    setZoom(autoFit);
   };
 
   useEffect(() => {
@@ -246,6 +306,30 @@ export default function Classroom3D({
 
   const floorW = cols * SEAT_W + (cols - 1) * GAP_X + FLOOR_PAD * 2;
   const floorD = rows * SEAT_D + (rows - 1) * GAP_Z + FLOOR_PAD * 2;
+
+  // Auto-fit: pick a zoom so the whole room fits the stage on any screen or
+  // class size. Re-runs when the room or the stage resizes; we only push it
+  // into `zoom` until the user takes manual control (pinch / wheel / buttons).
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const compute = () => {
+      const sw = stage.clientWidth;
+      const sh = stage.clientHeight;
+      if (!sw || !sh) return;
+      // The room is tilted, so its on-screen footprint is smaller than the
+      // raw floor; a margin factor keeps a comfortable border around it.
+      const fit = Math.min(sw / floorW, sh / floorD) * 1.15;
+      const clamped = Math.max(ZMIN, Math.min(1.3, fit));
+      setAutoFit(clamped);
+      if (!userZoomedRef.current) setZoom(clamped);
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(stage);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [floorW, floorD]);
 
   // Combine the picked preset with the user's drag offsets.
   const { rotX: presetRotX, rotY: presetRotY } = PRESETS[preset];
@@ -329,12 +413,12 @@ export default function Classroom3D({
           Larger by default (min 640px, up to 75vh) so the room feels
           like a room and not a thumbnail. */}
       <div
-        className="relative bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 rounded-2xl overflow-hidden border border-gray-200 touch-none"
+        ref={stageRef}
+        className="relative bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 rounded-2xl overflow-hidden border border-gray-200 touch-none cursor-grab active:cursor-grabbing"
         style={{
-          height: 'min(720px, 75vh)',
+          height: 'min(640px, 70vh)',
           perspective: '1200px',
           perspectiveOrigin: '50% 38%',
-          cursor: dragStateRef.current ? 'grabbing' : 'grab',
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -342,13 +426,35 @@ export default function Classroom3D({
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
       >
+        {/* Zoom buttons — essential on touch where there's no scroll wheel. */}
+        <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={() => nudgeZoom(1.2)}
+            className="w-9 h-9 rounded-full bg-white/90 shadow-md border border-gray-200 text-gray-700 text-xl leading-none flex items-center justify-center hover:bg-white active:scale-95 transition"
+            aria-label={t('classroom.zoom_in') ?? 'Zoom in'}
+            title={t('classroom.zoom_in') ?? 'Zoom in'}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => nudgeZoom(1 / 1.2)}
+            className="w-9 h-9 rounded-full bg-white/90 shadow-md border border-gray-200 text-gray-700 text-xl leading-none flex items-center justify-center hover:bg-white active:scale-95 transition"
+            aria-label={t('classroom.zoom_out') ?? 'Zoom out'}
+            title={t('classroom.zoom_out') ?? 'Zoom out'}
+          >
+            −
+          </button>
+        </div>
+
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
             transformStyle: 'preserve-3d',
             transform: `scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY + spin}deg)`,
             transition:
-              autoRotate || dragStateRef.current
+              autoRotate || pointersRef.current.size > 0
                 ? 'none'
                 : 'transform 0.45s ease-out',
           }}
@@ -365,6 +471,24 @@ export default function Classroom3D({
                 'repeating-linear-gradient(90deg, #fde68a 0 80px, #fcd34d 80px 81px), linear-gradient(135deg, #fef3c7, #fde68a)',
               backgroundBlendMode: 'multiply',
               border: '4px solid #fbbf24',
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Back wall — a vertical plane behind the last row, anchoring the
+              room so it reads as a space rather than floating desks. */}
+          <div
+            className="absolute rounded-lg"
+            style={{
+              width: floorW,
+              height: 150,
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, -50%) translate3d(0, -75px, ${-floorD / 2}px)`,
+              transformOrigin: 'center center',
+              background: 'linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%)',
+              boxShadow: 'inset 0 -20px 40px rgba(99,102,241,0.08)',
+              border: '1px solid #c7d2fe',
             }}
             aria-hidden="true"
           />

@@ -56,7 +56,7 @@ export default function MetricsPanel() {
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <Clock size={14} />
-            <span>{result.computation_time_ms}ms</span>
+            <span>{Math.round(result.computation_time_ms)}ms</span>
           </div>
           <div className="flex items-center gap-1">
             <Zap size={14} />

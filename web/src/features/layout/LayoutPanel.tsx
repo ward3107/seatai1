@@ -66,6 +66,58 @@ const PRESETS: PresetInfo[] = [
   },
 ];
 
+/** Number field flanked by big −/+ touch targets, so rows/cols are easy to
+ *  change on a phone (the bare number-input spinners are too small to tap). */
+function Stepper({
+  value,
+  min,
+  max,
+  onChange,
+  decLabel,
+  incLabel,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+  decLabel: string;
+  incLabel: string;
+}) {
+  const btn =
+    'w-9 h-9 shrink-0 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-95 transition';
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onChange(value - 1)}
+        disabled={value <= min}
+        aria-label={decLabel}
+        className={btn}
+      >
+        <Minus size={16} aria-hidden="true" />
+      </button>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full min-w-0 px-2 py-1.5 border border-gray-300 rounded text-sm text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        disabled={value >= max}
+        aria-label={incLabel}
+        className={btn}
+      >
+        <Plus size={16} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 export default function LayoutPanel() {
   const { layoutDef, setLayoutDef, students } = useStore();
   const { t } = useLanguage();
@@ -223,26 +275,26 @@ export default function LayoutPanel() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   {t('settings.rows')}
                 </label>
-                <input
-                  type="number"
+                <Stepper
+                  value={layoutDef.rows}
                   min={1}
                   max={20}
-                  value={layoutDef.rows}
-                  onChange={(e) => setRows(Number(e.target.value))}
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={setRows}
+                  decLabel={t('layout.fewer_rows')}
+                  incLabel={t('layout.more_rows')}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   {t('settings.columns')}
                 </label>
-                <input
-                  type="number"
+                <Stepper
+                  value={layoutDef.cols}
                   min={1}
                   max={20}
-                  value={layoutDef.cols}
-                  onChange={(e) => setCols(Number(e.target.value))}
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={setCols}
+                  decLabel={t('layout.fewer_cols')}
+                  incLabel={t('layout.more_cols')}
                 />
               </div>
             </div>

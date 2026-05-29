@@ -24,7 +24,7 @@ import {
   Ban,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense, Fragment } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect, lazy, Suspense, Fragment } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -49,6 +49,74 @@ function LazyFallback() {
 }
 
 // ─── helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Scales its children so the seating grid always fits the available width,
+ * then lets the user's manual zoom multiply on top. Crucially it also sizes
+ * its own box to the *scaled* dimensions, so a shrunk grid no longer reserves
+ * its full natural width — that's what stops the last column clipping / the
+ * page scrolling sideways on phones.
+ *
+ * `zoom` is the user's manual zoom (1 = fit-to-width). Values > 1 intentionally
+ * overflow into a scroll; values ≤ 1 shrink further.
+ */
+function FitZoom({ zoom, children }: { zoom: number; children: React.ReactNode }) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [box, setBox] = useState<{ w?: number; h?: number }>({});
+
+  useLayoutEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const measure = () => {
+      // scrollWidth/Height are layout sizes, unaffected by the CSS transform,
+      // so reading them here never feeds back into the observed size.
+      const natW = inner.scrollWidth;
+      const natH = inner.scrollHeight;
+      const availW = outer.clientWidth;
+      if (!natW || !availW) return;
+      const fit = Math.min(1, availW / natW);
+      const s = fit * zoom;
+      setScale(s);
+      setBox({ w: natW * s, h: natH * s });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(outer);
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [zoom, children]);
+
+  return (
+    <div ref={outerRef} className="w-full flex justify-center overflow-x-auto">
+      {/* The box reserves only the *scaled* footprint and clips the inner's
+          (unscaled) layout overflow, so a shrunk grid neither scrolls nor
+          clips real content. When the user zooms in past fit, box.w exceeds
+          the container and the outer scrolls instead. */}
+      <div style={{ width: box.w, height: box.h, overflow: 'hidden', position: 'relative' }}>
+        <div
+          ref={innerRef}
+          style={{
+            // Absolutely anchored to the physical top-left so the transform
+            // origin is correct in both LTR and RTL (an inline-block would be
+            // right-anchored under dir="rtl", breaking the scale origin).
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            transition: 'transform 0.2s ease',
+            width: 'max-content',
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function createEmptyGrid(rows: number, cols: number): Seat[] {
   const seats: Seat[] = [];
@@ -689,14 +757,10 @@ export default function ClassroomGrid() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* Zoomable grid wrapper */}
-        <div
-          style={{
-            transform: `scale(${zoomLevel})`,
-            transformOrigin: 'top center',
-            transition: 'transform 0.2s ease',
-          }}
-        >
+        {/* Zoomable grid wrapper — auto-fits to width, then the user's zoom
+            multiplies on top, so the whole class is visible by default
+            (especially on phones) instead of clipping the last column. */}
+        <FitZoom zoom={zoomLevel}>
           <div ref={gridContainerRef} id="seating-grid-export" className="relative">
             <div className="flex flex-col gap-3">
               {sortedRows.map(([rowIndex, rowSeats]) => {
@@ -820,7 +884,7 @@ export default function ClassroomGrid() {
               />
             )}
           </div>
-        </div>
+        </FitZoom>
 
         {/* Drag ghost */}
         <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
