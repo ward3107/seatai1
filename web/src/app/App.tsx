@@ -86,9 +86,12 @@ function App() {
   const [showTips, setShowTips] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   // Auto-show the tips modal once: when the user has students loaded
-  // for the first time AND hasn't dismissed before.
+  // for the first time AND hasn't dismissed before. Skipped on small
+  // screens, where a full-screen modal over a phone is intrusive and the
+  // seating map matters more — the Help button still opens the full guide.
   useEffect(() => {
-    if (!welcomeTipsDismissed && students.length > 0) setShowTips(true);
+    const roomy = typeof window === 'undefined' || window.innerWidth >= 768;
+    if (roomy && !welcomeTipsDismissed && students.length > 0) setShowTips(true);
   }, [welcomeTipsDismissed, students.length]);
 
   const canUndo = history.length > 0;
