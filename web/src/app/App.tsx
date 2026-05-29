@@ -33,7 +33,7 @@ import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
-import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp, HelpCircle, GitCompare } from 'lucide-react';
+import { Menu, X, Play, RefreshCw, Users, Printer, Undo2, Redo2, ChevronDown, ChevronUp, HelpCircle, GitCompare, ShieldCheck } from 'lucide-react';
 
 const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
   sm: 'text-sm',
@@ -281,6 +281,16 @@ function App() {
                 {t('app.loading_optimizer')}
               </div>
             )}
+
+            {/* Quiet privacy reassurance — always visible so IT and
+                teachers know what they're trusting at a glance. */}
+            <div
+              className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700"
+              title={t('app.privacy_local_only')}
+            >
+              <ShieldCheck size={11} aria-hidden="true" />
+              <span>{t('app.privacy_badge')}</span>
+            </div>
           </div>
         </div>
       </aside>

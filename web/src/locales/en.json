@@ -14,7 +14,9 @@
     "undo": "Undo (Ctrl+Z)",
     "redo": "Redo (Ctrl+Y)",
     "history_controls": "History controls",
-    "text_size": "Text size"
+    "text_size": "Text size",
+    "privacy_local_only": "All data stays on this device — no servers, no accounts, no tracking.",
+    "privacy_badge": "Local-only"
   },
   "theme": {
     "label": "Color theme",
@@ -394,6 +396,9 @@
     "worse": "Worse than current",
     "same": "No change"
   },
+  "print": {
+    "anonymize": "Anonymize (initials only)"
+  },
   "export": {
     "title": "Export seating chart",
     "button": "Export",
@@ -408,6 +413,18 @@
     "filename": "seating-chart"
   },
   "projects": {
+    "backup_section_title": "Backup & restore",
+    "backup_hint": "Saves everything (students, projects, settings) to a single .json file so you can keep a copy off-browser.",
+    "backup_button": "Backup all data",
+    "restore_button": "Restore from backup",
+    "restore_confirm_title": "Replace your current data?",
+    "restore_confirm_body": "This will replace your current students and projects with the backup from {{date}} ({{students}} students, {{projects}} projects).",
+    "restore_confirm_yes": "Replace data",
+    "restore_confirm_no": "Cancel",
+    "restore_error_invalid_json": "Couldn't read the file (not valid JSON).",
+    "restore_error_wrong_schema": "This file isn't a SeatAI backup.",
+    "restore_error_unsupported_version": "This backup was made by a newer version of SeatAI.",
+    "restore_error_missing_fields": "The backup file is missing required data.",
     "title": "Projects",
     "class": "Class",
     "class_placeholder": "Class name…",

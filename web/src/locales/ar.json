@@ -14,7 +14,9 @@
     "undo": "تراجع (Ctrl+Z)",
     "redo": "إعادة (Ctrl+Y)",
     "history_controls": "عناصر التحكم في السجل",
-    "text_size": "حجم الخط"
+    "text_size": "حجم الخط",
+    "privacy_local_only": "تبقى جميع البيانات على هذا الجهاز — بلا خوادم ولا حسابات ولا تتبّع.",
+    "privacy_badge": "محلي فقط"
   },
   "theme": {
     "label": "نظام الألوان",
@@ -394,6 +396,9 @@
     "worse": "أسوأ من الحالي",
     "same": "لا تغيير"
   },
+  "print": {
+    "anonymize": "إخفاء الهوية (الأحرف الأولى فقط)"
+  },
   "export": {
     "title": "تصدير خطة المقاعد",
     "button": "تصدير",
@@ -408,6 +413,18 @@
     "filename": "خطة-المقاعد"
   },
   "projects": {
+    "backup_section_title": "النسخ الاحتياطي والاستعادة",
+    "backup_hint": "يحفظ كل شيء (الطلاب، المشاريع، الإعدادات) في ملف json واحد للاحتفاظ بنسخة خارج المتصفح.",
+    "backup_button": "نسخ احتياطي للكل",
+    "restore_button": "استعادة من نسخة احتياطية",
+    "restore_confirm_title": "استبدال البيانات الحالية؟",
+    "restore_confirm_body": "سيستبدل هذا الطلاب والمشاريع الحالية بالنسخة الاحتياطية من {{date}} ({{students}} طالب، {{projects}} مشروع).",
+    "restore_confirm_yes": "استبدال البيانات",
+    "restore_confirm_no": "إلغاء",
+    "restore_error_invalid_json": "تعذّر قراءة الملف (ليس JSON صالحًا).",
+    "restore_error_wrong_schema": "هذا الملف ليس نسخة احتياطية لـ SeatAI.",
+    "restore_error_unsupported_version": "تم إنشاء هذه النسخة الاحتياطية بإصدار أحدث من SeatAI.",
+    "restore_error_missing_fields": "النسخة الاحتياطية تفتقد بيانات مطلوبة.",
     "title": "المشاريع",
     "class": "فصل",
     "class_placeholder": "اسم الفصل…",
