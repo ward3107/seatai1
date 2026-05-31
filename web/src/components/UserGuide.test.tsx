@@ -18,16 +18,16 @@ describe('UserGuide', () => {
 
   it('matches snapshot when open', () => {
     const { container } = render(<UserGuide open onClose={() => {}} />);
-    // Trimmed snapshot — the structure (12 sections, ids, icons, the
+    // Trimmed snapshot — the structure (11 sections, ids, icons, the
     // privacy note we added) is the contract we're locking down.
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it('includes all 12 documented section ids', () => {
+  it('includes all 11 documented section ids', () => {
     const { container } = render(<UserGuide open onClose={() => {}} />);
     const expected = [
       'getting_started', 'layouts', 'optimize', 'constraints',
-      'editing', 'understanding', 'view_3d', 'export',
+      'editing', 'understanding', 'export',
       'personalize', 'ai', 'projects', 'accessibility',
     ];
     for (const id of expected) {

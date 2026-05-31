@@ -26,8 +26,7 @@ import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
 import type { Seat, Student } from '../../types';
 
-// Both views are heavy and conditional — only loaded when the user opts in.
-const Classroom3D = lazy(() => import('./Classroom3D'));
+// The timeline is heavy and conditional — only loaded when the user opts in.
 const OptimizationTimeline = lazy(() => import('./OptimizationTimeline'));
 
 // ─── main component ─────────────────────────────────────────────────────────
@@ -379,18 +378,7 @@ export default function ClassroomGrid() {
         </div>
       )}
 
-      {/* 3D View */}
-      {viewMode === '3d' ? (
-        <Suspense fallback={<LazyFallback />}>
-          <Classroom3D
-            seats={seats}
-            students={students}
-            rows={rows}
-            cols={cols}
-            onStudentClick={(studentId: string) => setDetailsTarget(studentId)}
-          />
-        </Suspense>
-      ) : isAbsoluteLayout ? (
+      {isAbsoluteLayout ? (
         /* ── Free-positioning renderer for clusters / u-shape / circle ── */
         <>
           <div className="flex justify-center mb-4">
