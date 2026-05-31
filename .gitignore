@@ -45,3 +45,9 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Playwright e2e artifacts
+web/playwright-report/
+web/test-results/
+playwright-report/
+test-results/

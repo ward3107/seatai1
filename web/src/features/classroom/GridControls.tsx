@@ -11,7 +11,6 @@ import {
   EyeOff,
   AlignJustify,
   Columns2,
-  Box,
   History,
 } from 'lucide-react';
 import { useStore } from '../../core/store';
@@ -161,21 +160,6 @@ export default function GridControls({
       </div>
 
       <div className="w-px h-5 bg-gray-300" />
-
-      {/* ── 3D View ── */}
-      <button
-        onClick={() => setViewMode(viewMode === '3d' ? 'rows' : '3d')}
-        title={viewMode === '3d' ? t('gridControls.2d_view') : t('gridControls.3d_view')}
-        className={clsx(
-          'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
-          viewMode === '3d'
-            ? 'bg-indigo-100 text-indigo-600 border border-indigo-200'
-            : 'text-gray-500 hover:bg-white hover:shadow-sm'
-        )}
-      >
-        <Box size={15} />
-        <span className="hidden sm:inline">{viewMode === '3d' ? t('gridControls.2d') : t('gridControls.3d')}</span>
-      </button>
 
       {/* ── Timeline ── */}
       <button

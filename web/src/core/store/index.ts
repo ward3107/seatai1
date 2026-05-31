@@ -15,7 +15,7 @@ import type {
 import type { LayoutDef } from '../layouts';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
-export type ViewMode = 'rows' | 'pairs' | 'clusters' | '3d';
+export type ViewMode = 'rows' | 'pairs' | 'clusters';
 
 interface AppState {
   // Students
