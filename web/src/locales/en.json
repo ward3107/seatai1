@@ -11,6 +11,23 @@
     "not_enough_seats": "You have {{students}} students but only {{seats}} seats.",
     "stale_reference": "A rule still refers to a student who's no longer in the class."
   },
+  "rotation": {
+    "title": "Term rotation planner",
+    "description": "Generate a series of seating charts so students sit next to different classmates each period. Switch between periods to print or export any week.",
+    "periods_label": "Periods",
+    "fewer": "Fewer periods",
+    "more": "More periods",
+    "generate": "Generate rotation plan",
+    "regenerate": "Regenerate plan",
+    "generating": "Generating…",
+    "generating_progress": "Generating {{current}} of {{total}}…",
+    "clear": "Clear plan",
+    "coverage": "{{unique}} unique pairings · {{repeats}} repeats across the term",
+    "need_students": "Add at least 2 students to plan a rotation.",
+    "too_many_students": "More students than seats — adjust the layout first.",
+    "generate_failed": "Could not generate the plan. Please try again.",
+    "period_label": "Week"
+  },
   "app": {
     "title": "SeatAI",
     "subtitle": "AI-Powered Classroom Seating",

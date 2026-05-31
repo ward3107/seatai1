@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   getNeighborHistory,
   getRecentPairPenalties,
+  getRotationStats,
   relativeTime,
 } from './rotationHistory';
 import type { LayoutDef } from '../core/layouts';
@@ -259,5 +260,51 @@ describe('relativeTime', () => {
   it('clamps future dates to "just now" (no negative seconds)', () => {
     const iso = new Date(NOW.getTime() + 5 * 60_000).toISOString();
     expect(relativeTime(iso, NOW)).toBe('just now');
+  });
+});
+
+describe('getRotationStats', () => {
+  // Two students in a 1x2 layout (the only pair) sit adjacent every period.
+  const layout1x2: LayoutDef = { type: 'rows', rows: 1, cols: 2 };
+
+  it('reports zero pairs for an empty plan', () => {
+    expect(getRotationStats(layout3x3, [])).toEqual({
+      uniquePairs: 0,
+      repeatPairings: 0,
+      periods: 0,
+    });
+  });
+
+  it('counts a single period with no repeats', () => {
+    const stats = getRotationStats(layout3x3, [
+      { positions: positionsAt([['a', 0, 0], ['b', 0, 1], ['c', 0, 2]]) },
+    ]);
+    // a-b and b-c are adjacent; a-c is not (cols 0 and 2 in a row layout).
+    expect(stats.uniquePairs).toBe(2);
+    expect(stats.repeatPairings).toBe(0);
+    expect(stats.periods).toBe(1);
+  });
+
+  it('flags a repeated pairing across periods', () => {
+    const stats = getRotationStats(layout1x2, [
+      { positions: positionsAt([['a', 0, 0], ['b', 0, 1]]) },
+      { positions: positionsAt([['a', 0, 1], ['b', 0, 0]]) }, // same pair, swapped seats
+    ]);
+    expect(stats.uniquePairs).toBe(1);
+    expect(stats.repeatPairings).toBe(1); // the pair repeated in period 2
+    expect(stats.periods).toBe(2);
+  });
+
+  it('rewards a rotation that freshens neighbours', () => {
+    // 1x3 row: period 1 pairs (a,b)+(b,c); period 2 pairs (b,a)... we instead
+    // rotate so the previously-apart pair (a,c) becomes adjacent.
+    const layout1x3: LayoutDef = { type: 'rows', rows: 1, cols: 3 };
+    const stats = getRotationStats(layout1x3, [
+      { positions: positionsAt([['a', 0, 0], ['b', 0, 1], ['c', 0, 2]]) }, // a-b, b-c
+      { positions: positionsAt([['b', 0, 0], ['a', 0, 1], ['c', 0, 2]]) }, // b-a (repeat), a-c (new)
+    ]);
+    // pairs seen: a-b (both periods), b-c (p1), a-c (p2) => 3 unique, 1 repeat
+    expect(stats.uniquePairs).toBe(3);
+    expect(stats.repeatPairings).toBe(1);
   });
 });

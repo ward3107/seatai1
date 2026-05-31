@@ -48,6 +48,7 @@ export default function ProjectManager() {
       currentProjectId: s.currentProjectId,
       result: s.result,
       resultHistory: s.resultHistory,
+      rotationPlan: s.rotationPlan,
       uiLanguage: s.uiLanguage,
       uiScale: s.uiScale,
       theme: s.theme,

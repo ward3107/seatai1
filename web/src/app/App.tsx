@@ -13,6 +13,7 @@ import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
+import RotationPanel from '../features/rotation/RotationPanel';
 import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
 import LayoutPanel from '../features/layout/LayoutPanel';
 
@@ -236,6 +237,10 @@ function App() {
 
             <ErrorBoundary name="Seating Rules" inline>
               <ConstraintsPanel />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Rotation Planner" inline>
+              <RotationPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Settings" inline>
@@ -478,7 +483,7 @@ function App() {
       <ComparePanel open={showCompare} onClose={() => setShowCompare(false)} />
 
       {/* Student detail drawer — opens when a student is clicked from
-          the grid, the 3D view, or the sidebar student list. */}
+          the grid or the sidebar student list. */}
       <StudentDetailPanel />
 
       {/* Welcome tips — auto-pops on first roster load (one time only). */}
