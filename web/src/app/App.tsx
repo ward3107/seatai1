@@ -11,6 +11,7 @@ import ExplanationPanel from '../features/results/ExplanationPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
+import GoogleClassroomImport from '../features/import/GoogleClassroomImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
@@ -28,6 +29,7 @@ import LanguageSelector from '../components/LanguageSelector';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
+import { useLtiImport } from '../hooks/useLtiImport';
 import { getDisplayScorePct } from '../utils/seatingUtils';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
@@ -61,6 +63,8 @@ function App() {
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
   const { t } = useLanguage();
   useTheme();
+  // Import a roster handed over by the LTI launch (URL fragment), if any.
+  useLtiImport();
 
   // Off-screen live region: announces the optimization lifecycle to
   // screen-reader users. The visible button + score chip already convey
@@ -220,6 +224,10 @@ function App() {
 
             <ErrorBoundary name="CSV Import" inline>
               <CsvImport />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Google Classroom Import" inline>
+              <GoogleClassroomImport />
             </ErrorBoundary>
 
             <ErrorBoundary name="Student List" inline>

@@ -35,6 +35,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
+        // Never let the SPA shell hijack the LTI serverless endpoints — those
+        // navigations must reach the functions, not be served index.html.
+        navigateFallbackDenylist: [/^\/api\//],
       },
       // Auto-skip waiting so the user picks up the latest version
       // without having to manually refresh after a deploy.
