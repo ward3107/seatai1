@@ -11,6 +11,70 @@
     "not_enough_seats": "יש {{students}} תלמידים אך רק {{seats}} מושבים.",
     "stale_reference": "כלל עדיין מתייחס לתלמיד/ה שכבר אינו/ה בכיתה."
   },
+  "rotation": {
+    "title": "מתכנן רוטציית מושבים",
+    "description": "צרו סדרת מפות מושבים כך שתלמידים ישבו ליד חברים שונים בכל תקופה. עברו בין התקופות כדי להדפיס או לייצא כל שבוע.",
+    "periods_label": "תקופות",
+    "fewer": "פחות תקופות",
+    "more": "יותר תקופות",
+    "generate": "צור תוכנית רוטציה",
+    "regenerate": "צור תוכנית מחדש",
+    "generating": "מייצר…",
+    "generating_progress": "מייצר {{current}} מתוך {{total}}…",
+    "clear": "נקה תוכנית",
+    "coverage": "{{unique}} צמדים ייחודיים · {{repeats}} חזרות לאורך התקופה",
+    "need_students": "הוסיפו לפחות 2 תלמידים כדי לתכנן רוטציה.",
+    "too_many_students": "יש יותר תלמידים מאשר מושבים — התאימו קודם את הפריסה.",
+    "generate_failed": "לא ניתן ליצור את התוכנית. נסו שוב.",
+    "period_label": "שבוע"
+  },
+  "arrangements": {
+    "title": "סידורים שמורים",
+    "description": "שמרו את הסידור הנוכחי תחת שם ועברו בין כמה סידורים לכיתה הזו — למשל 'תוכנית א', 'מערך מבחן', 'יום עבודה בקבוצות'.",
+    "name_placeholder": "תנו שם לסידור",
+    "default_name": "סידור",
+    "save": "שמור",
+    "optimize_first": "מטבו קודם מפת מושבים, ואז שמרו אותה כאן.",
+    "active": "מוצג",
+    "rename": "שנה שם",
+    "delete": "מחק"
+  },
+  "questionnaire": {
+    "title": "שאלון תלמידים",
+    "step_badge": "שלב 1",
+    "intro": "לפני המיטוב, אספו את העדפות הישיבה של כל תלמיד ולמי הם רוצים לשבת קרוב. אפשר למלא יחד עם התלמידים, או לדלג ולהסתמך על מידע שהמורה הזין.",
+    "add_students_first": "הוסיפו קודם את התלמידים — ואז תוכלו לאסוף כאן את ההעדפות שלהם.",
+    "consent_label": "יש לי הרשאה לאסוף את המידע הזה.",
+    "consent_hint": "ודאו שיש לכם את ההסכמה שבית הספר דורש (למשל הסכמת הורים) לפני סקירת תלמידים.",
+    "consent_required": "סמנו את תיבת ההרשאה כדי להתחיל.",
+    "skip_peers": "התלמידים עדיין לא מכירים זה את זה (דלגו על שאלת השכנים)",
+    "progress": "{{done}} מתוך {{total}} תלמידים נסקרו",
+    "reset": "איפוס",
+    "start": "התחל שאלון",
+    "continue": "המשך שאלון",
+    "review": "סקור תשובות",
+    "close": "סגור",
+    "student_of": "תלמיד {{current}} מתוך {{total}}",
+    "q_seatmates": "ליד מי היית רוצה לשבת?",
+    "q_seatmates_hint": "בחרו עד {{max}} חברים לכיתה.",
+    "no_other_students": "אין עדיין תלמידים אחרים לבחירה.",
+    "q_focus": "איפה אתה מתרכז הכי טוב?",
+    "focus_front": "מלפנים",
+    "focus_middle": "באמצע",
+    "focus_back": "מאחור",
+    "q_noise": "האם רעש מפריע לך?",
+    "noise_yes": "כן",
+    "noise_somewhat": "קצת",
+    "noise_no": "לא",
+    "q_window": "מעדיף מקום ליד חלון?",
+    "q_board": "צריך לראות את הלוח בבירור?",
+    "yes": "כן",
+    "no": "לא",
+    "back": "חזור",
+    "skip": "דלג",
+    "save_next": "שמור והמשך",
+    "finish": "שמור וסיים"
+  },
   "app": {
     "title": "SeatAI",
     "subtitle": "מיטוב מושבים ממוכן באמצעות AI",
@@ -366,7 +430,11 @@
       "behavioralGood": "תאימות התנהגותית - תלמידים מתאימים יושבים יחד",
       "diversityGood": "גיוון טוב - מגדרים מעורבים מקדמים סביבה כוללת",
       "specialNeedsGood": "כל הצרכים המיוחדים מתקיימים"
-    }
+    },
+    "near_optimal_note": "סידור כמעט-אופטימלי — {{reason}} לאחר {{generations}} דורות ב-{{ms}} מ״ש. תוצאה היוריסטית חזקה, לא אופטימום מתמטי מוכח.",
+    "stop_generations": "הגיע למגבלת הדורות",
+    "stop_converged": "התכנס",
+    "stop_time": "הגיע לתקציב הזמן"
   },
   "settings": {
     "title": "הגדרות",
@@ -417,7 +485,13 @@
     "weights": "משקול יעדים",
     "weightsDesc": "התאם את חשיבות כל גורם מיטוב",
     "algorithmConfig": "תצורת אלגוריתם",
-    "algorithmDesc": "כוון פרמטרים של האלגוריתם הגנטי"
+    "algorithmDesc": "כוון פרמטרים של האלגוריתם הגנטי",
+    "stopping": "תנאי עצירה",
+    "patience": "עצירה אחרי N דורות ללא שיפור",
+    "time_limit": "תקציב זמן (שניות, 0 = ללא)",
+    "stopping_hint": "החיפוש נעצר במגבלה הראשונה שמושגת — דורות, רצף ללא שיפור, או תקציב הזמן.",
+    "exam_title": "מצב מבחן / מניעת העתקות",
+    "exam_hint": "מפזר תלמידים ומפריד חברים ושכנים ברמה דומה כדי למנוע העתקות. דורס את יעדי האיזון כשהוא פעיל."
   },
   "compare": {
     "title": "השוואת סידורים",
@@ -607,7 +681,13 @@
     "hide_timeline": "הסתר ציר זמן של אופטימיזציה",
     "timeline": "ציר זמן",
     "zoom_in": "הגדלה",
-    "zoom_out": "הקטנה"
+    "zoom_out": "הקטנה",
+    "badges": "סטטוס",
+    "show_badges": "הצג סטטוס כללים",
+    "hide_badges": "הסתר סטטוס כללים",
+    "tags": "תוויות",
+    "show_tags": "הצג תוויות נתונים",
+    "hide_tags": "הסתר תוויות נתונים"
   },
   "a11y": {
     "seat_row": "שורה",
@@ -617,6 +697,30 @@
     "optimization_started": "האופטימיזציה החלה",
     "optimization_complete": "האופטימיזציה הסתיימה, ציון {{score}} אחוז",
     "optimization_failed": "האופטימיזציה נכשלה: {{error}}"
+  },
+  "seatstatus": {
+    "ok": "כל כללי הישיבה מתקיימים",
+    "needs_front": "{{name}} זקוק/ה למושב בשורה הקדמית",
+    "incompatible_near": "{{name}} יושב/ת ליד {{other}} (יש להרחיק)",
+    "apart_violated": "יש להרחיק בין {{a}} ל-{{b}}",
+    "together_violated": "{{a}} ו-{{b}} צריכים לשבת יחד",
+    "mentor_violated": "{{mentee}} צריך/ה לשבת ליד החונך {{mentor}}",
+    "front_violated": "{{name}} צריך/ה לשבת בשורה הקדמית",
+    "back_violated": "{{name}} צריך/ה לשבת בשורה האחורית"
+  },
+  "oneRoster": {
+    "title": "OneRoster / ייצוא ממערכת",
+    "hint": "העלה את קובצי ה-CSV בתקן OneRoster מהמערכת שלך — תומך ב-ClassLink, ‏PowerSchool ו-Infinite Campus. הניתוח מתבצע בדפדפן; דבר אינו מועלה.",
+    "drop_here": "גרור לכאן קובצי OneRoster CSV, או לחץ לבחירה",
+    "choose_class": "בחר כיתה",
+    "import_roster": "ייבוא רשימה",
+    "no_classes": "לא נמצאו כיתות עם תלמידים בקבצים אלו.",
+    "imported_from": "יובאו {{count}} תלמידים מתוך {{class}}.",
+    "error": "קריאת קובצי ה-OneRoster נכשלה.",
+    "error_no_users": "חסר users.csv (רשימת התלמידים).",
+    "error_no_enrollments": "חסר enrollments.csv (מי בכל כיתה).",
+    "warn_unrecognised_file": "קובץ לא מזוהה דולג: {{file}}",
+    "warn_unreadable_file": "לא ניתן לקרוא את הקובץ: {{file}}"
   },
   "googleImport": {
     "title": "Google Classroom",

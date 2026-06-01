@@ -11,6 +11,70 @@
     "not_enough_seats": "You have {{students}} students but only {{seats}} seats.",
     "stale_reference": "A rule still refers to a student who's no longer in the class."
   },
+  "rotation": {
+    "title": "Term rotation planner",
+    "description": "Generate a series of seating charts so students sit next to different classmates each period. Switch between periods to print or export any week.",
+    "periods_label": "Periods",
+    "fewer": "Fewer periods",
+    "more": "More periods",
+    "generate": "Generate rotation plan",
+    "regenerate": "Regenerate plan",
+    "generating": "Generating…",
+    "generating_progress": "Generating {{current}} of {{total}}…",
+    "clear": "Clear plan",
+    "coverage": "{{unique}} unique pairings · {{repeats}} repeats across the term",
+    "need_students": "Add at least 2 students to plan a rotation.",
+    "too_many_students": "More students than seats — adjust the layout first.",
+    "generate_failed": "Could not generate the plan. Please try again.",
+    "period_label": "Week"
+  },
+  "arrangements": {
+    "title": "Saved arrangements",
+    "description": "Save the current seating under a name and switch between several arrangements for this class — e.g. 'Plan A', 'Exam layout', 'Group-work day'.",
+    "name_placeholder": "Name this arrangement",
+    "default_name": "Arrangement",
+    "save": "Save",
+    "optimize_first": "Optimize a seating chart first, then save it here.",
+    "active": "Showing",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "questionnaire": {
+    "title": "Student questionnaire",
+    "step_badge": "Step 1",
+    "intro": "Before optimizing, gather each student's seating preferences and who they'd like to sit near. You can fill this in with students, or skip it and rely on teacher-entered info.",
+    "add_students_first": "Add your students first — then you can collect their preferences here.",
+    "consent_label": "I have permission to collect this information.",
+    "consent_hint": "Confirm you have the consent your school requires (e.g. parental consent) before surveying students.",
+    "consent_required": "Tick the permission box to begin.",
+    "skip_peers": "Students don't know each other yet (skip the seatmate question)",
+    "progress": "{{done}} of {{total}} students surveyed",
+    "reset": "Reset",
+    "start": "Start questionnaire",
+    "continue": "Continue questionnaire",
+    "review": "Review answers",
+    "close": "Close",
+    "student_of": "Student {{current}} of {{total}}",
+    "q_seatmates": "Who would you like to sit near?",
+    "q_seatmates_hint": "Pick up to {{max}} classmates.",
+    "no_other_students": "No other students to choose from yet.",
+    "q_focus": "Where do you focus best?",
+    "focus_front": "Front",
+    "focus_middle": "Middle",
+    "focus_back": "Back",
+    "q_noise": "Does noise distract you?",
+    "noise_yes": "Yes",
+    "noise_somewhat": "A little",
+    "noise_no": "No",
+    "q_window": "Prefer a window seat?",
+    "q_board": "Need to see the board clearly?",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "skip": "Skip",
+    "save_next": "Save & next",
+    "finish": "Save & finish"
+  },
   "app": {
     "title": "SeatAI",
     "subtitle": "AI-Powered Classroom Seating",
@@ -366,7 +430,11 @@
       "behavioralGood": "Behavioral compatibility - compatible students are seated together",
       "diversityGood": "Good diversity - mixed genders promote inclusive environment",
       "specialNeedsGood": "All special needs accommodations are met"
-    }
+    },
+    "near_optimal_note": "Near-optimal plan — {{reason}} after {{generations}} generations in {{ms}}ms. A strong heuristic result, not a proven mathematical optimum.",
+    "stop_generations": "reached the generation limit",
+    "stop_converged": "converged",
+    "stop_time": "hit the time budget"
   },
   "settings": {
     "title": "Settings",
@@ -417,7 +485,13 @@
     "weights": "Objective Weights",
     "weightsDesc": "Adjust the importance of each optimization factor",
     "algorithmConfig": "Algorithm Configuration",
-    "algorithmDesc": "Fine-tune the genetic algorithm parameters"
+    "algorithmDesc": "Fine-tune the genetic algorithm parameters",
+    "stopping": "Stopping criteria",
+    "patience": "Stop after N gens, no gain",
+    "time_limit": "Time budget (sec, 0 = off)",
+    "stopping_hint": "The search stops at whichever limit comes first — generations, the no-improvement streak, or the time budget.",
+    "exam_title": "Exam / anti-cheating mode",
+    "exam_hint": "Spreads students out and separates friends and similar-ability neighbours to discourage copying. Overrides the balance objectives while on."
   },
   "compare": {
     "title": "Compare arrangements",
@@ -607,7 +681,13 @@
     "hide_timeline": "Hide optimization timeline",
     "timeline": "Timeline",
     "zoom_in": "Zoom in",
-    "zoom_out": "Zoom out"
+    "zoom_out": "Zoom out",
+    "badges": "Status",
+    "show_badges": "Show constraint status",
+    "hide_badges": "Hide constraint status",
+    "tags": "Tags",
+    "show_tags": "Show data tags",
+    "hide_tags": "Hide data tags"
   },
   "a11y": {
     "seat_row": "Row",
@@ -617,6 +697,30 @@
     "optimization_started": "Optimization started",
     "optimization_complete": "Optimization complete, score {{score}} percent",
     "optimization_failed": "Optimization failed: {{error}}"
+  },
+  "seatstatus": {
+    "ok": "All seating rules satisfied",
+    "needs_front": "{{name}} needs a front-row seat",
+    "incompatible_near": "{{name}} is seated next to {{other}} (keep-apart)",
+    "apart_violated": "{{a}} and {{b}} should be kept apart",
+    "together_violated": "{{a}} and {{b}} should sit together",
+    "mentor_violated": "{{mentee}} should sit next to mentor {{mentor}}",
+    "front_violated": "{{name}} should be in the front row",
+    "back_violated": "{{name}} should be in the back row"
+  },
+  "oneRoster": {
+    "title": "OneRoster / SIS export",
+    "hint": "Upload your SIS’s OneRoster CSV files — works with ClassLink, PowerSchool and Infinite Campus. Parsed in your browser; nothing is uploaded.",
+    "drop_here": "Drop OneRoster CSV files here, or click to choose",
+    "choose_class": "Choose a class",
+    "import_roster": "Import roster",
+    "no_classes": "No classes with students were found in those files.",
+    "imported_from": "Imported {{count}} students from {{class}}.",
+    "error": "Couldn’t read those OneRoster files.",
+    "error_no_users": "Missing users.csv (the student list).",
+    "error_no_enrollments": "Missing enrollments.csv (who is in which class).",
+    "warn_unrecognised_file": "Ignored unrecognised file: {{file}}",
+    "warn_unreadable_file": "Could not read file: {{file}}"
   },
   "googleImport": {
     "title": "Google Classroom",

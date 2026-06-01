@@ -71,6 +71,16 @@ export default function MetricsPanel() {
           {getDisplayScorePct(result)}%
         </div>
         <p className="text-sm text-gray-500 mt-1">{t('optimization.overall_fitness_score')}</p>
+        {/* Honest framing — the GA finds a strong (near-optimal) plan via a
+            heuristic search; it isn't a proven mathematical optimum. We say so
+            plainly and show how the search actually terminated. */}
+        <p className="text-[11px] text-gray-400 mt-1.5 max-w-md mx-auto">
+          {t('optimization.near_optimal_note', {
+            reason: t(`optimization.stop_${result.stop_reason ?? 'generations'}`),
+            generations: result.generations,
+            ms: Math.round(result.computation_time_ms),
+          })}
+        </p>
       </div>
 
       {/* Metrics Grid */}
