@@ -11,6 +11,7 @@ import ExplanationPanel from '../features/results/ExplanationPanel';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
+import OneRosterImport from '../features/import/OneRosterImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import RotationPanel from '../features/rotation/RotationPanel';
@@ -226,6 +227,10 @@ function App() {
 
             <ErrorBoundary name="CSV Import" inline>
               <CsvImport />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="OneRoster Import" inline>
+              <OneRosterImport />
             </ErrorBoundary>
 
             <ErrorBoundary name="Student List" inline>

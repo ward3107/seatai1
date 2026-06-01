@@ -29,6 +29,15 @@ type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
  *  the optimizer hook and the compare panel so both runs behave identically. */
 export const ROTATION_STRENGTH = 0.35;
 
+/** Exam / anti-cheating mode tuning. Each occupied neighbour costs
+ *  EXAM_SPACING (so the GA leaves empty buffer seats and spreads the
+ *  class out), a same-ability neighbour adds EXAM_SAME_LEVEL (similar
+ *  students are the easiest to copy from), and an adjacent friend adds
+ *  EXAM_FRIEND. Tuned to dominate the soft balance terms they replace. */
+export const EXAM_SPACING = 0.5;
+export const EXAM_SAME_LEVEL = 0.4;
+export const EXAM_FRIEND = 0.6;
+
 /** Pluggable RNG so tests can seed it for deterministic runs. Defaults
  *  to Math.random in production. */
 export type Rng = () => number;
@@ -94,6 +103,8 @@ export class ClassroomOptimizer {
   private recentPairPenalties: Record<string, number> = {};
   /** How strongly to avoid recently-adjacent pairs. 0 disables the term. */
   private avoidRecentStrength = 0;
+  /** Exam / anti-cheating mode — see EXAM_* constants. */
+  private examMode = false;
 
   constructor(
     students: Student[],
@@ -115,6 +126,11 @@ export class ClassroomOptimizer {
   }
   setConfig(c: GeneticConfig) {
     this.config = { ...c };
+    this.examMode = !!c.examMode;
+  }
+  /** Toggle exam / anti-cheating mode directly (config also carries it). */
+  setExamMode(on: boolean) {
+    this.examMode = on;
   }
   setConstraints(c: SeatingConstraints) {
     this.constraints = { ...c };
@@ -148,7 +164,13 @@ export class ClassroomOptimizer {
     ids: string[],
     studentMap: Map<string, Student>,
     totalSeats: number,
-  ): { chrom: Chromosome; fitness: number } {
+    deadline: number | null,
+  ): {
+    chrom: Chromosome;
+    fitness: number;
+    generations: number;
+    stopReason: 'generations' | 'converged' | 'time';
+  } {
     // Build initial population
     let population: Chromosome[] = [];
     population.push(this.seedFromConstraints(ids, totalSeats));
@@ -161,8 +183,13 @@ export class ClassroomOptimizer {
     let bestFitness = -Infinity;
     let bestChrom: Chromosome = population[0];
     let stagnation = 0;
+    // Generations actually executed and the reason we stopped. Default to
+    // hitting the configured cap; overwritten if we bail early.
+    let generations = 0;
+    let stopReason: 'generations' | 'converged' | 'time' = 'generations';
 
     for (let gen = 0; gen < this.config.maxGenerations; gen++) {
+      generations = gen + 1;
       const scored = population.map((chrom) => ({
         chrom,
         fitness: this.fitness(chrom, studentMap),
@@ -177,7 +204,15 @@ export class ClassroomOptimizer {
         stagnation++;
       }
 
-      if (stagnation >= this.config.earlyStopPatience) break;
+      if (stagnation >= this.config.earlyStopPatience) {
+        stopReason = 'converged';
+        break;
+      }
+      // Wall-clock budget — stop mid-search and return the best so far.
+      if (deadline !== null && performance.now() >= deadline) {
+        stopReason = 'time';
+        break;
+      }
 
       const nextGen: Chromosome[] = [scored[0].chrom]; // elitism
       while (nextGen.length < this.config.populationSize) {
@@ -201,7 +236,7 @@ export class ClassroomOptimizer {
       population = nextGen;
     }
 
-    return { chrom: bestChrom, fitness: bestFitness };
+    return { chrom: bestChrom, fitness: bestFitness, generations, stopReason };
   }
 
   optimize(): OptimizationResult {
@@ -219,14 +254,24 @@ export class ClassroomOptimizer {
       ids = ids.slice(0, totalSeats);
     }
 
+    // Optional wall-clock budget shared across all starts. When set, no
+    // new generation runs once the deadline passes; whatever we've found
+    // so far is returned. A guaranteed minimum of one start always runs.
+    const deadline =
+      this.config.timeLimitMs && this.config.timeLimitMs > 0
+        ? t0 + this.config.timeLimitMs
+        : null;
+
     // Multi-start: run the GA `multiStart` times with fresh
     // random populations and keep the best result. The GA gets stuck
     // in local optima sometimes; an extra restart costs ~200ms per
     // start for typical classes but doubles result reliability.
     const starts = Math.max(1, Math.min(10, this.config.multiStart ?? 1));
-    let best: { chrom: Chromosome; fitness: number } | null = null;
+    let best: ReturnType<ClassroomOptimizer['runSingleStart']> | null = null;
     for (let s = 0; s < starts; s++) {
-      const candidate = this.runSingleStart(ids, studentMap, totalSeats);
+      // Always run the first start; skip later starts once out of time.
+      if (s > 0 && deadline !== null && performance.now() >= deadline) break;
+      const candidate = this.runSingleStart(ids, studentMap, totalSeats, deadline);
       if (!best || candidate.fitness > best.fitness) best = candidate;
     }
     const bestChrom = best!.chrom;
@@ -243,7 +288,10 @@ export class ClassroomOptimizer {
       student_positions: studentPositions,
       fitness_score: bestFitness,
       objective_scores: objectiveScores,
-      generations: this.config.maxGenerations,
+      // Report the real work done by the winning start, not the configured
+      // cap — so the UI can say "converged after N generations" honestly.
+      generations: best!.generations,
+      stop_reason: best!.stopReason,
       computation_time_ms: computationTimeMs,
       warnings,
       algorithm: 'genetic',
@@ -308,6 +356,29 @@ export class ClassroomOptimizer {
         const ns = studentMap.get(nid);
         if (ns) neighbors.push(ns);
       }
+
+      // Exam / anti-cheating mode replaces the social-balance objectives:
+      // we want students spread apart, not clustered by ability. Handled
+      // before the "no neighbours" short-circuit because an isolated seat
+      // is the ideal outcome here, not a no-op.
+      if (this.examMode) {
+        // Every occupied neighbour is a copying opportunity — penalise it
+        // so the GA leaves empty buffer seats and disperses the class.
+        score -= EXAM_SPACING * neighbors.length;
+        for (const n of neighbors) {
+          // Similar-ability neighbours are the easiest to copy from.
+          if (n.academic_level === student.academic_level) score -= EXAM_SAME_LEVEL;
+          // Friends and known-incompatible pairs must not sit together.
+          if (student.friends_ids.includes(n.id)) score -= EXAM_FRIEND;
+          if (student.incompatible_ids.includes(n.id)) score -= 0.5;
+        }
+        // Accessibility still matters during exams — keep front-row / mobility.
+        if (student.requires_front_row || student.has_mobility_issues) {
+          score += this.weights.special_needs * (slot.isFront ? 1 : -0.5);
+        }
+        continue;
+      }
+
       if (neighbors.length === 0) continue;
 
       // Academic balance
