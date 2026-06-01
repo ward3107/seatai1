@@ -604,10 +604,10 @@ export default function ExplanationPanel() {
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-800 text-sm">
-              {isPairsMode ? 'Why These Pairs?' : 'Why This Seating?'}
+              {isPairsMode ? t('explanation.why_these_pairs') : t('explanation.why_this_seating')}
             </p>
             <p className="text-xs text-gray-500">
-              {isPairsMode ? 'Practical reasons for each pairing' : 'Practical reasons for each placement'}
+              {isPairsMode ? t('explanation.practical_reasons_pairing') : t('explanation.practical_reasons_placement')}
             </p>
           </div>
           {warnCount > 0 && (

@@ -36,6 +36,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { useLtiImport } from '../hooks/useLtiImport';
 import { getDisplayScorePct } from '../utils/seatingUtils';
+import { slotCount } from '../core/layouts';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
@@ -50,6 +51,7 @@ const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
 function App() {
   const {
     students,
+    layoutDef,
     sidebarOpen,
     setSidebarOpen,
     result,
@@ -283,7 +285,7 @@ function App() {
 
             <button
               onClick={optimize}
-              disabled={!wasmReady || isOptimizing || students.length < 2}
+              disabled={!wasmReady || isOptimizing || students.length < 2 || students.length > slotCount(layoutDef)}
               aria-busy={isOptimizing}
               className="w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
             >

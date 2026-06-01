@@ -128,6 +128,9 @@ export default memo(function SeatCard({
       // with our selection state — more useful to screen-reader users.
       // Spread comes first so these wins.
       aria-label={ariaLabel}
+      // Full name on hover — the visible label shows the first name only and
+      // truncates on small/zoomed-out grids, so this recovers the full name.
+      title={student ? student.name : undefined}
       aria-pressed={isSelected}
       className={clsx(
         'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[88px]',

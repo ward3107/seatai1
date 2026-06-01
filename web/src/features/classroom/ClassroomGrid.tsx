@@ -484,6 +484,10 @@ export default function ClassroomGrid() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
+            {/* Horizontal scroll wrapper: on narrow screens the room keeps a
+                usable minimum width and scrolls, instead of collapsing so the
+                seats stack on top of each other (clusters / U-shape / circle). */}
+            <div className="overflow-x-auto pb-2">
             <div
               style={{
                 transform: `scale(${zoomLevel})`,
@@ -497,7 +501,8 @@ export default function ClassroomGrid() {
                 className="relative mx-auto bg-amber-50/30 border-2 border-amber-200 rounded-2xl"
                 style={{
                   // Aspect ratio close to a classroom — wider than tall.
-                  width: 'min(820px, 100%)',
+                  // Floored so seats keep breathing room on phones (scrolls).
+                  width: 'clamp(700px, 100%, 820px)',
                   aspectRatio: '5 / 4',
                 }}
               >
@@ -589,6 +594,7 @@ export default function ClassroomGrid() {
                   />
                 )}
               </div>
+            </div>
             </div>
 
             <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>

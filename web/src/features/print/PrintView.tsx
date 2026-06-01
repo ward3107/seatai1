@@ -82,9 +82,9 @@ export default function PrintView({ onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 print:hidden">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">Seating Chart</h2>
+            <h2 className="text-lg font-bold text-gray-800">{t('print.title')}</h2>
             <p className="text-sm text-gray-500">
-              {students.length} students · Score: {getDisplayScorePct(result)}% ·{' '}
+              {students.length} {t('app.students')} · {t('app.score')}: {getDisplayScorePct(result)}% ·{' '}
               {new Date().toLocaleDateString()}
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function PrintView({ onClose }: Props) {
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
             >
               <Printer size={16} />
-              Print
+              {t('print.print_button')}
             </button>
             <button
               onClick={onClose}
@@ -119,9 +119,9 @@ export default function PrintView({ onClose }: Props) {
           <div id="print-content">
             {/* Print header (shown only when printing) */}
             <div className="hidden print:block mb-6 text-center">
-              <h1 className="text-2xl font-bold">SeatAI — Classroom Seating Chart</h1>
+              <h1 className="text-2xl font-bold">{t('print.chart_title')}</h1>
               <p className="text-sm text-gray-500 mt-1">
-                {students.length} students · Score: {getDisplayScorePct(result)}% ·{' '}
+                {students.length} {t('app.students')} · {t('app.score')}: {getDisplayScorePct(result)}% ·{' '}
                 {new Date().toLocaleDateString()}
               </p>
             </div>
@@ -129,15 +129,16 @@ export default function PrintView({ onClose }: Props) {
             {/* Teacher label */}
             <div className="flex justify-center mb-4">
               <div className="px-8 py-1.5 border-2 border-gray-400 rounded text-sm font-semibold text-gray-600 bg-gray-50">
-                TEACHER / BOARD
+                {t('print.teacher_board')}
               </div>
             </div>
 
             {/* Seating chart — absolute positioning for non-grid layouts */}
             {isAbsoluteLayout ? (
+              <div className="overflow-x-auto">
               <div
                 className="relative mx-auto bg-amber-50/30 border-2 border-amber-200 rounded-2xl"
-                style={{ width: 'min(720px, 100%)', aspectRatio: '5 / 4' }}
+                style={{ width: 'clamp(640px, 100%, 720px)', aspectRatio: '5 / 4' }}
               >
                 {result.layout.seats.map((seat) => {
                   const student = seat.student_id
@@ -192,6 +193,7 @@ export default function PrintView({ onClose }: Props) {
                   );
                 })}
               </div>
+              </div>
             ) : (
             <div className="overflow-auto">
               <table className="w-full border-collapse mx-auto" style={{ maxWidth: `${cols * 120}px` }}>
@@ -214,7 +216,7 @@ export default function PrintView({ onClose }: Props) {
                                     : 'border-gray-300 bg-gray-100 text-gray-500'
                                 }`}
                               >
-                                {blockedKind === 'desk' ? 'TEACHER' : '✕'}
+                                {blockedKind === 'desk' ? t('print.teacher_short') : '✕'}
                               </div>
                             </td>
                           );
@@ -274,19 +276,19 @@ export default function PrintView({ onClose }: Props) {
             <div className="mt-6 flex flex-wrap gap-4 justify-center text-xs text-gray-500">
               {!anonymize && (
                 <>
-                  <span>▲ Advanced</span>
-                  <span>▼ Below basic</span>
-                  <span>♿ Mobility needs</span>
-                  <span>⭐ Front row required</span>
+                  <span>▲ {t('print.legend_advanced')}</span>
+                  <span>▼ {t('print.legend_below_basic')}</span>
+                  <span>♿ {t('print.legend_mobility')}</span>
+                  <span>⭐ {t('print.legend_front_row')}</span>
                 </>
               )}
-              <span className="text-purple-600">Purple border = special needs</span>
+              <span className="text-purple-600">{t('print.legend_special_needs')}</span>
             </div>
 
             {/* Warnings */}
             {result.warnings.length > 0 && (
               <div className="mt-4 p-3 border border-yellow-300 bg-yellow-50 rounded-lg">
-                <p className="text-xs font-semibold text-yellow-800 mb-1">Warnings</p>
+                <p className="text-xs font-semibold text-yellow-800 mb-1">{t('print.warnings')}</p>
                 {result.warnings.map((w, i) => (
                   <p key={i} className="text-xs text-yellow-700">• {w}</p>
                 ))}

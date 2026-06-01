@@ -94,6 +94,8 @@
     "subtitle": "ترتيب المقاعد الدراسي مدعوم بالذكاء الاصطناعي",
     "optimizing": "جارٍ التحسين...",
     "optimize_seating": "تحسين ترتيب المقاعد",
+    "too_many_students": "عدد الطلاب كبير جدًا ({{students}}) مقارنة بالمقاعد المتاحة ({{seats}})",
+    "add_two_students": "أضف طالبين على الأقل",
     "loading_optimizer": "جارٍ تحميل المحسّن...",
     "students": "طلاب",
     "score": "الدرجة",
@@ -528,7 +530,18 @@
     "same": "لا تغيير"
   },
   "print": {
-    "anonymize": "إخفاء الهوية (الأحرف الأولى فقط)"
+    "anonymize": "إخفاء الهوية (الأحرف الأولى فقط)",
+    "title": "مخطط الجلوس",
+    "print_button": "طباعة",
+    "teacher_board": "المعلم / السبورة",
+    "teacher_short": "المعلم",
+    "chart_title": "SeatAI — مخطط جلوس الصف",
+    "legend_advanced": "متقدم",
+    "legend_below_basic": "دون الأساسي",
+    "legend_mobility": "احتياجات الحركة",
+    "legend_front_row": "يتطلب الصف الأمامي",
+    "legend_special_needs": "إطار بنفسجي = احتياجات خاصة",
+    "warnings": "تحذيرات"
   },
   "export": {
     "title": "تصدير خطة المقاعد",
@@ -657,6 +670,10 @@
     "row_seat": "الصف {{row}} · المقعد {{seat}}",
     "no_match": "لا يوجد طلاب يطابقون \"{{search}}\"",
     "issues": "مشاكل",
+    "why_this_seating": "لماذا هذا الترتيب؟",
+    "why_these_pairs": "لماذا هذه الأزواج؟",
+    "practical_reasons_placement": "أسباب عملية لكل موضع",
+    "practical_reasons_pairing": "أسباب عملية لكل إقران",
     "reason_front_row_accessibility": "موضع في الصف الأمامي (متطلب إمكانية الوصول)",
     "reason_accessible_seat": "موضع في مقعد يمكن الوصول إليه (الصفوف 1–2)",
     "reason_front_row_teacher": "الصف الأمامي مخصص بواسطة قاعدة المعلم",

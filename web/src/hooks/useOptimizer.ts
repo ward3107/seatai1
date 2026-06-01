@@ -3,6 +3,7 @@ import { useStore } from '../core/store';
 import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
 import { slotCount } from '../core/layouts';
 import { getRecentPairPenalties } from '../utils/rotationHistory';
+import { useLanguage } from './useLanguage';
 import type { OptimizationResult } from '../types';
 
 type WorkerOut =
@@ -33,6 +34,7 @@ export function useOptimizer() {
   const isOptimizing = useStore((s) => s.isOptimizing);
   const setOptimizing = useStore((s) => s.setOptimizing);
   const setResult = useStore((s) => s.setResult);
+  const { t } = useLanguage();
 
   // ── Initialize (just mark ready - worker will run optimizations) ─────────────
   const initWasm = useCallback(async () => {
@@ -91,12 +93,12 @@ export function useOptimizer() {
   // ── Run optimisation ─────────────────────────────────────────────────────
   const optimize = useCallback(async (): Promise<OptimizationResult | null> => {
     if (students.length < 2) {
-      setError('Add at least 2 students');
+      setError(t('app.add_two_students'));
       return null;
     }
     const seats = slotCount(layoutDef);
     if (students.length > seats) {
-      setError(`Too many students (${students.length}) for available seats (${seats})`);
+      setError(t('app.too_many_students', { students: students.length, seats }));
       return null;
     }
 
@@ -148,7 +150,7 @@ export function useOptimizer() {
       setOptimizing(false);
       return null;
     }
-  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, setOptimizing, setResult]);
+  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, setOptimizing, setResult, t]);
 
   return { wasmReady, isOptimizing, error, initWasm, optimize };
 }

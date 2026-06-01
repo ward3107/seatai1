@@ -94,6 +94,8 @@
     "subtitle": "מיטוב מושבים ממוכן באמצעות AI",
     "optimizing": "ממטב...",
     "optimize_seating": "מטב סידור מושבים",
+    "too_many_students": "יותר מדי תלמידים ({{students}}) למספר המושבים הזמינים ({{seats}})",
+    "add_two_students": "הוסיפו לפחות 2 תלמידים",
     "loading_optimizer": "טוען ממטב...",
     "students": "תלמידים",
     "score": "ניקוד",
@@ -528,7 +530,18 @@
     "same": "ללא שינוי"
   },
   "print": {
-    "anonymize": "אנונימי (ראשי תיבות בלבד)"
+    "anonymize": "אנונימי (ראשי תיבות בלבד)",
+    "title": "מפת הושבה",
+    "print_button": "הדפסה",
+    "teacher_board": "מורה / לוח",
+    "teacher_short": "מורה",
+    "chart_title": "SeatAI — מפת הושבה לכיתה",
+    "legend_advanced": "מתקדם",
+    "legend_below_basic": "מתחת לבסיסי",
+    "legend_mobility": "צרכי ניידות",
+    "legend_front_row": "נדרש בשורה הראשונה",
+    "legend_special_needs": "מסגרת סגולה = צרכים מיוחדים",
+    "warnings": "אזהרות"
   },
   "export": {
     "title": "ייצא מפת מושבים",
@@ -657,6 +670,10 @@
     "row_seat": "שורה {{row}} · מושב {{seat}}",
     "no_match": "אין תלמידים שמתאימים ל-\"{{search}}\"",
     "issues": "בעיות",
+    "why_this_seating": "למה הסידור הזה?",
+    "why_these_pairs": "למה הזוגות האלה?",
+    "practical_reasons_placement": "סיבות מעשיות לכל מיקום",
+    "practical_reasons_pairing": "סיבות מעשיות לכל זוג",
     "reason_front_row_accessibility": "מוקם בשורה הקדמית (דרישת נגישות)",
     "reason_accessible_seat": "מוקם במושב נגיש (שורות 1–2)",
     "reason_front_row_teacher": "שורה קדמית הוקצתה על ידי כלל מורה",
