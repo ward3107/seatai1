@@ -39,7 +39,11 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
       const natH = inner.scrollHeight;
       const availW = outer.clientWidth;
       if (!natW || !availW) return;
-      const fit = Math.min(1, availW / natW);
+      // On phones we only ever shrink to fit (cap 1). On wider screens we let
+      // the map grow to fill the available width — up to 1.6× — so a small
+      // class isn't stranded as a tiny island on a big desktop monitor.
+      const maxUp = availW >= 700 ? 1.6 : 1;
+      const fit = Math.min(maxUp, availW / natW);
       const s = fit * zoom;
       setScale(s);
       setBox({ w: natW * s, h: natH * s });
