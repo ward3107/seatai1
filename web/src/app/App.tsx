@@ -13,6 +13,9 @@ import ExportButton from '../features/export/ExportButton';
 import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
+import RotationPanel from '../features/rotation/RotationPanel';
+import QuestionnairePanel from '../features/questionnaire/QuestionnairePanel';
+import QuestionnaireModal from '../features/questionnaire/QuestionnaireModal';
 import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
 import LayoutPanel from '../features/layout/LayoutPanel';
 
@@ -56,6 +59,8 @@ function App() {
     uiScale,
     resultsCollapsed,
     setResultsCollapsed,
+    questionnaireOpen,
+    setQuestionnaireOpen,
   } = useStore();
 
   const { wasmReady, isOptimizing, error, initWasm, optimize } = useOptimizer();
@@ -230,12 +235,20 @@ function App() {
               <StudentForm />
             </ErrorBoundary>
 
+            <ErrorBoundary name="Questionnaire" inline>
+              <QuestionnairePanel />
+            </ErrorBoundary>
+
             <ErrorBoundary name="Layout" inline>
               <LayoutPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Seating Rules" inline>
               <ConstraintsPanel />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Rotation Planner" inline>
+              <RotationPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Settings" inline>
@@ -477,8 +490,10 @@ function App() {
 
       <ComparePanel open={showCompare} onClose={() => setShowCompare(false)} />
 
+      <QuestionnaireModal open={questionnaireOpen} onClose={() => setQuestionnaireOpen(false)} />
+
       {/* Student detail drawer — opens when a student is clicked from
-          the grid, the 3D view, or the sidebar student list. */}
+          the grid or the sidebar student list. */}
       <StudentDetailPanel />
 
       {/* Welcome tips — auto-pops on first roster load (one time only). */}

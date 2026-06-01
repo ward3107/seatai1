@@ -148,4 +148,26 @@ export interface ClassProject {
   config: GeneticConfig;
   constraints: SeatingConstraints;
   result: OptimizationResult | null;
+  /** Optional saved term-rotation plan (a sequence of seating periods).
+   *  Added after the initial schema, so older projects simply omit it. */
+  rotationPlan?: RotationPlan | null;
+}
+
+/** One period (e.g. a week) inside a term rotation plan — a full
+ *  optimization result the teacher can view, print, and export like any
+ *  other chart. */
+export interface RotationPeriod {
+  id: string;
+  /** Human-facing label, e.g. "Week 1". */
+  label: string;
+  result: OptimizationResult;
+  createdAt: string;
+}
+
+/** A term rotation plan: an ordered list of seating periods generated so
+ *  that students progressively sit next to different classmates. */
+export interface RotationPlan {
+  id: string;
+  createdAt: string;
+  periods: RotationPeriod[];
 }

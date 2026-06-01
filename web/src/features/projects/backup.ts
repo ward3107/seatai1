@@ -23,6 +23,7 @@ import type {
   SeatingConstraints,
   ClassProject,
   OptimizationResult,
+  RotationPlan,
 } from '../../types';
 import type { LayoutDef } from '../../core/layouts';
 
@@ -45,6 +46,8 @@ export interface BackupData {
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
   }>;
+  /** Optional saved term rotation plan. */
+  rotationPlan?: RotationPlan | null;
   /** Optional UI preferences. The restoring browser can choose to keep
    *  its own — we treat them as suggestions rather than requirements. */
   uiLanguage?: 'en' | 'he' | 'ar' | 'ru';
@@ -81,6 +84,7 @@ export function buildBackup(state: {
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
   }>;
+  rotationPlan?: RotationPlan | null;
   uiLanguage?: 'en' | 'he' | 'ar' | 'ru';
   uiScale?: 'sm' | 'md' | 'lg';
   theme?: 'light' | 'dark' | 'system';
@@ -103,6 +107,7 @@ export function buildBackup(state: {
       currentProjectId: state.currentProjectId,
       result: state.result,
       resultHistory: state.resultHistory,
+      rotationPlan: state.rotationPlan,
       uiLanguage: state.uiLanguage,
       uiScale: state.uiScale,
       theme: state.theme,
