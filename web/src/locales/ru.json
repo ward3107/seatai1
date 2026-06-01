@@ -721,5 +721,18 @@
     "error_no_enrollments": "Отсутствует enrollments.csv (кто в каком классе).",
     "warn_unrecognised_file": "Пропущен нераспознанный файл: {{file}}",
     "warn_unreadable_file": "Не удалось прочитать файл: {{file}}"
+  },
+  "googleImport": {
+    "title": "Google Classroom",
+    "not_configured": "Добавьте идентификатор клиента Google OAuth (VITE_GOOGLE_CLIENT_ID), чтобы включить импорт списка класса из Google Classroom одним щелчком.",
+    "connect": "Подключить Google Classroom",
+    "connecting": "Подключение…",
+    "choose_course": "Выберите класс",
+    "import_roster": "Импортировать список",
+    "importing": "Импорт…",
+    "no_courses": "Активные классы для этого аккаунта не найдены.",
+    "error": "Не удалось импортировать из Google Classroom.",
+    "privacy_note": "Работает в вашем браузере — имена учеников идут из Google прямо на это устройство и никогда не попадают на сервер SeatAI.",
+    "imported_from": "Импортировано учеников: {{count}} из «{{class}}»."
   }
 }

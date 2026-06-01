@@ -721,5 +721,18 @@
     "error_no_enrollments": "Missing enrollments.csv (who is in which class).",
     "warn_unrecognised_file": "Ignored unrecognised file: {{file}}",
     "warn_unreadable_file": "Could not read file: {{file}}"
+  },
+  "googleImport": {
+    "title": "Google Classroom",
+    "not_configured": "Add a Google OAuth client ID (VITE_GOOGLE_CLIENT_ID) to enable one-click roster import from Google Classroom.",
+    "connect": "Connect Google Classroom",
+    "connecting": "Connecting…",
+    "choose_course": "Choose a class",
+    "import_roster": "Import roster",
+    "importing": "Importing…",
+    "no_courses": "No active classes found for this account.",
+    "error": "Couldn't import from Google Classroom.",
+    "privacy_note": "Runs in your browser — student names go from Google straight to this device, never to a SeatAI server.",
+    "imported_from": "Imported {{count}} students from {{class}}."
   }
 }

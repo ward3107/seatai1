@@ -721,5 +721,18 @@
     "error_no_enrollments": "الملف enrollments.csv مفقود (مَن في كل صف).",
     "warn_unrecognised_file": "تم تجاهل ملف غير معروف: {{file}}",
     "warn_unreadable_file": "تعذّرت قراءة الملف: {{file}}"
+  },
+  "googleImport": {
+    "title": "Google Classroom",
+    "not_configured": "أضِف مُعرّف عميل OAuth من Google‏ (VITE_GOOGLE_CLIENT_ID) لتفعيل استيراد قائمة الطلاب بنقرة واحدة من Google Classroom.",
+    "connect": "الاتصال بـ Google Classroom",
+    "connecting": "جارٍ الاتصال…",
+    "choose_course": "اختر صفًا",
+    "import_roster": "استيراد القائمة",
+    "importing": "جارٍ الاستيراد…",
+    "no_courses": "لا توجد صفوف نشطة لهذا الحساب.",
+    "error": "تعذّر الاستيراد من Google Classroom.",
+    "privacy_note": "يعمل في متصفحك — تنتقل أسماء الطلاب من Google مباشرةً إلى هذا الجهاز، ولا تصل أبدًا إلى خادم SeatAI.",
+    "imported_from": "تم استيراد {{count}} طالبًا من {{class}}."
   }
 }

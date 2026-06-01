@@ -721,5 +721,18 @@
     "error_no_enrollments": "חסר enrollments.csv (מי בכל כיתה).",
     "warn_unrecognised_file": "קובץ לא מזוהה דולג: {{file}}",
     "warn_unreadable_file": "לא ניתן לקרוא את הקובץ: {{file}}"
+  },
+  "googleImport": {
+    "title": "Google Classroom",
+    "not_configured": "הוסף מזהה לקוח של Google‏ (VITE_GOOGLE_CLIENT_ID) כדי לאפשר ייבוא רשימת תלמידים בלחיצה אחת מ-Google Classroom.",
+    "connect": "התחברות ל-Google Classroom",
+    "connecting": "מתחבר…",
+    "choose_course": "בחר כיתה",
+    "import_roster": "ייבוא רשימה",
+    "importing": "מייבא…",
+    "no_courses": "לא נמצאו כיתות פעילות בחשבון זה.",
+    "error": "ייבוא מ-Google Classroom נכשל.",
+    "privacy_note": "פועל בדפדפן שלך — שמות התלמידים עוברים מ-Google ישירות למכשיר הזה, ואף פעם לא לשרת של SeatAI.",
+    "imported_from": "יובאו {{count}} תלמידים מתוך {{class}}."
   }
 }
