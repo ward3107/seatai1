@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   surveyToStudentPatch,
   applyWindowPreference,
+  applyMentorPreference,
   answersFromStudent,
   emptyAnswers,
   MAX_SEATMATES,
@@ -83,6 +84,45 @@ describe('applyWindowPreference', () => {
   it('returns the same reference when already present and still preferred (no-op)', () => {
     const c = { ...baseConstraints, near_window_ids: ['s1'] };
     expect(applyWindowPreference(c, 's1', true)).toBe(c);
+  });
+});
+
+describe('applyMentorPreference', () => {
+  it('adds a mentor pair (mentor-first) for the student as mentee', () => {
+    const next = applyMentorPreference(baseConstraints, 's1', 'helper1');
+    expect(next.peer_mentor_pairs).toEqual([['helper1', 's1']]);
+  });
+
+  it('replaces an existing mentor for the same mentee', () => {
+    const c = { ...baseConstraints, peer_mentor_pairs: [['old', 's1']] as [string, string][] };
+    const next = applyMentorPreference(c, 's1', 'new');
+    expect(next.peer_mentor_pairs).toEqual([['new', 's1']]);
+  });
+
+  it('does not disturb other students\' mentor pairs', () => {
+    const c = { ...baseConstraints, peer_mentor_pairs: [['m', 's2']] as [string, string][] };
+    const next = applyMentorPreference(c, 's1', 'helper1');
+    expect(next.peer_mentor_pairs).toEqual([['m', 's2'], ['helper1', 's1']]);
+  });
+
+  it('clears the mentor when helper is null', () => {
+    const c = { ...baseConstraints, peer_mentor_pairs: [['old', 's1']] as [string, string][] };
+    expect(applyMentorPreference(c, 's1', null).peer_mentor_pairs).toEqual([]);
+  });
+
+  it('ignores a self-nominated mentor', () => {
+    expect(applyMentorPreference(baseConstraints, 's1', 's1')).toBe(baseConstraints);
+  });
+
+  it('returns the same reference when nothing changes', () => {
+    expect(applyMentorPreference(baseConstraints, 's1', null)).toBe(baseConstraints);
+    const c = { ...baseConstraints, peer_mentor_pairs: [['m', 's1']] as [string, string][] };
+    expect(applyMentorPreference(c, 's1', 'm')).toBe(c);
+  });
+
+  it('round-trips via answersFromStudent', () => {
+    const c = { ...baseConstraints, peer_mentor_pairs: [['m', 's1']] as [string, string][] };
+    expect(answersFromStudent(makeStudent(), c).helper).toBe('m');
   });
 });
 

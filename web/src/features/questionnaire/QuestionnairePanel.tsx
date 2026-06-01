@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, ChevronDown, ChevronUp, Play, RotateCcw } from 'lucide-react';
+import { ClipboardList, ChevronDown, ChevronUp, Play, RotateCcw, Smartphone } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 
@@ -14,11 +14,15 @@ export default function QuestionnairePanel() {
   const [open, setOpen] = useState(false);
 
   const students = useStore((s) => s.students);
-  const { consentAck, surveyedIds, skipPeers } = useStore((s) => s.questionnaire);
+  const { consentAck, surveyedIds, skipPeers, peerSurveyEnabled, simpleMode } = useStore((s) => s.questionnaire);
   const setConsent = useStore((s) => s.setQuestionnaireConsent);
   const setSkipPeers = useStore((s) => s.setQuestionnaireSkipPeers);
+  const setPeerEnabled = useStore((s) => s.setQuestionnairePeerEnabled);
+  const setSimpleMode = useStore((s) => s.setQuestionnaireSimpleMode);
   const resetQuestionnaire = useStore((s) => s.resetQuestionnaire);
   const setQuestionnaireOpen = useStore((s) => s.setQuestionnaireOpen);
+
+  const peerEnabled = peerSurveyEnabled ?? true;
 
   const total = students.length;
   const done = surveyedIds.filter((id) => students.some((s) => s.id === id)).length;
@@ -65,16 +69,38 @@ export default function QuestionnairePanel() {
                 </span>
               </label>
 
-              {/* Cold-start toggle */}
-              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={skipPeers}
-                  onChange={(e) => setSkipPeers(e.target.checked)}
-                  className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
-                />
-                {t('questionnaire.skip_peers')}
-              </label>
+              {/* Options */}
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={peerEnabled}
+                    onChange={(e) => setPeerEnabled(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                  />
+                  {t('questionnaire.peer_enabled')}
+                </label>
+                {peerEnabled && (
+                  <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer pl-5">
+                    <input
+                      type="checkbox"
+                      checked={skipPeers}
+                      onChange={(e) => setSkipPeers(e.target.checked)}
+                      className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                    />
+                    {t('questionnaire.skip_peers')}
+                  </label>
+                )}
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!simpleMode}
+                    onChange={(e) => setSimpleMode(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                  />
+                  {t('questionnaire.simple_mode')}
+                </label>
+              </div>
 
               {/* Progress */}
               <div className="flex items-center justify-between text-[11px] text-gray-500">
@@ -100,6 +126,14 @@ export default function QuestionnairePanel() {
               >
                 <Play size={15} />
                 {complete ? t('questionnaire.review') : done > 0 ? t('questionnaire.continue') : t('questionnaire.start')}
+              </button>
+              <button
+                onClick={() => setQuestionnaireOpen(true, true)}
+                disabled={!consentAck}
+                className="w-full py-2 px-3 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Smartphone size={15} />
+                {t('questionnaire.student_mode')}
               </button>
               {!consentAck && (
                 <p className="text-[10px] text-amber-600">{t('questionnaire.consent_required')}</p>

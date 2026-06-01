@@ -73,7 +73,15 @@
     "back": "Back",
     "skip": "Skip",
     "save_next": "Save & next",
-    "finish": "Save & finish"
+    "finish": "Save & finish",
+    "submit": "Submit",
+    "student_mode": "Student fill mode",
+    "pick_your_name": "Tap your name",
+    "done": "Done",
+    "q_helper": "Is there a classmate who helps you with schoolwork?",
+    "q_helper_hint": "Pick one (optional).",
+    "peer_enabled": "Ask students who they'd like to sit near",
+    "simple_mode": "Simple mode (larger text for younger students)"
   },
   "app": {
     "title": "SeatAI",
