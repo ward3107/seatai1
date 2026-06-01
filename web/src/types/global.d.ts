@@ -151,6 +151,8 @@ export interface ClassProject {
   /** Optional saved term-rotation plan (a sequence of seating periods).
    *  Added after the initial schema, so older projects simply omit it. */
   rotationPlan?: RotationPlan | null;
+  /** Optional named seating arrangements saved within this class. */
+  savedArrangements?: SavedArrangement[];
 }
 
 /** One period (e.g. a week) inside a term rotation plan — a full
@@ -170,4 +172,15 @@ export interface RotationPlan {
   id: string;
   createdAt: string;
   periods: RotationPeriod[];
+}
+
+/** A named, saved seating arrangement the teacher can return to. Unlike a
+ *  project (a whole class) or a rotation plan (a generated term sequence),
+ *  this is a single snapshot of one optimization result kept under a label
+ *  — e.g. "Plan A", "Exam layout", "Group-work day". */
+export interface SavedArrangement {
+  id: string;
+  name: string;
+  createdAt: string;
+  result: OptimizationResult;
 }
