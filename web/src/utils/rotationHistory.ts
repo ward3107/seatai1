@@ -124,6 +124,58 @@ export function getRecentPairPenalties(
   return penalties;
 }
 
+/**
+ * Summarise how well a term rotation plan spreads students around.
+ *
+ * Walks each period's seating, collects the set of adjacent (unordered)
+ * student pairs, and reports:
+ *  - `uniquePairs`   — distinct pairs that sat together at least once
+ *  - `repeatPairings` — how many adjacencies were repeats of a pairing
+ *                       already seen in an earlier period (0 = every
+ *                       neighbour was fresh across the whole term)
+ *  - `periods`       — number of periods analysed
+ *
+ * Pure and layout-aware (rebuilds adjacency per period from the slots),
+ * so it works for rows / clusters / U-shape / circle alike.
+ */
+export function getRotationStats(
+  layoutDef: LayoutDef,
+  periods: Array<{ positions: Record<string, { row: number; col: number }> }>,
+): { uniquePairs: number; repeatPairings: number; periods: number } {
+  const slots = generateSlots(layoutDef);
+  const slotByCoord = new Map<string, number>();
+  for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
+
+  const seenCount = new Map<string, number>();
+  let repeatPairings = 0;
+
+  for (const period of periods) {
+    const idBySlot = new Map<number, string>();
+    for (const [id, p] of Object.entries(period.positions)) {
+      const idx = slotByCoord.get(`${p.row}|${p.col}`);
+      if (idx !== undefined) idBySlot.set(idx, id);
+    }
+    // Collect this period's pairs once (a < b), then fold into the totals.
+    const periodPairs = new Set<string>();
+    for (const slot of slots) {
+      const a = idBySlot.get(slot.index);
+      if (!a) continue;
+      for (const nIdx of slot.neighbors) {
+        const b = idBySlot.get(nIdx);
+        if (!b || a >= b) continue;
+        periodPairs.add(`${a}|${b}`);
+      }
+    }
+    for (const key of periodPairs) {
+      const prior = seenCount.get(key) ?? 0;
+      if (prior > 0) repeatPairings += 1;
+      seenCount.set(key, prior + 1);
+    }
+  }
+
+  return { uniquePairs: seenCount.size, repeatPairings, periods: periods.length };
+}
+
 /** Human-friendly "2 days ago" / "just now" formatter. Pure, no
  *  external dependency. Returns null for invalid input. */
 export function relativeTime(iso: string | null, now: Date = new Date()): string | null {
