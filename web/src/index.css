@@ -22,7 +22,11 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Light, airy brand gradient (indigo-50 → violet-50). The old saturated
+     purple washed out dark panel text and any content sitting directly on
+     the background (e.g. the onboarding heading). */
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  background-attachment: fixed;
 }
 
 /*
@@ -32,20 +36,34 @@ body {
  * layers on top of this.
  */
 @media (min-width: 1024px) {
-  :root { font-size: 17px; }
+  :root { font-size: 18px; }
 }
 @media (min-width: 1536px) {
-  :root { font-size: 18px; }
+  :root { font-size: 19px; }
 }
 
 /*
- * Light mode contrast: the faintest grey (Tailwind gray-400, ~2.9:1 on
- * white) is hard to read for hints, labels, and icons. Lift it to gray-500
- * (~4.6:1, passes AA) in light mode only — dark mode handles greys above.
+ * Light-mode polish.
+ *
+ * 1. Crisp panels: the translucent white surfaces (white/80–95 + blur)
+ *    looked muddy over the background — make them solid white so text is
+ *    sharp and high-contrast.
+ * 2. Darker grey ramp: shift the three most common text greys one step
+ *    darker so hints, labels, and secondary text read clearly while
+ *    keeping the visual hierarchy.
  */
-html:not(.dark) .text-gray-400 {
-  color: rgb(107 114 128); /* gray-500 */
+html:not(.dark) .bg-white\/80,
+html:not(.dark) .bg-white\/90,
+html:not(.dark) .bg-white\/95 {
+  background-color: #fff;
 }
+
+/* :where() keeps these at single-class specificity so they override the base
+   utility (later in the cascade) but still yield to `hover:`/`focus:`
+   variants and the dark-mode remaps below. */
+:where(html:not(.dark)) .text-gray-400 { color: rgb(107 114 128); } /* gray-500 */
+:where(html:not(.dark)) .text-gray-500 { color: rgb(75 85 99); }    /* gray-600 */
+:where(html:not(.dark)) .text-gray-600 { color: rgb(55 65 81); }    /* gray-700 */
 
 /*
  * Dark mode — the root `dark` class is set by the useTheme() hook
