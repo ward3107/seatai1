@@ -167,15 +167,16 @@ export default function StudentDetailPanel() {
           'fixed z-50 bg-white shadow-2xl overflow-hidden flex flex-col focus:outline-none',
           // Mobile (default): bottom sheet
           'inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl',
-          // md+: right-side drawer
-          'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:top-0 md:max-h-none md:w-[440px] md:max-w-[90vw] md:rounded-t-none md:rounded-l-2xl',
+          // md+: right-side drawer — wider on larger screens so the
+          // reasoning/history content has room to breathe.
+          'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:top-0 md:max-h-none md:w-[540px] lg:w-[640px] md:max-w-[92vw] md:rounded-t-none md:rounded-l-2xl',
         )}
         aria-labelledby="student-detail-title"
         aria-modal="true"
         role="dialog"
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 flex items-start justify-between gap-3">
+        <div className="shrink-0 p-4 border-b border-gray-200 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {student.photo_url ? (
               <img
@@ -234,8 +235,9 @@ export default function StudentDetailPanel() {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-auto p-4 space-y-5">
+        {/* Body — min-h-0 lets this flex child actually scroll instead of
+            overflowing the (overflow-hidden) drawer. */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-5">
           {/* AI summary — opt-in. Shows a button when not yet
               generated, a loading indicator while in flight, then the
               generated paragraph. Errors surface inline without
