@@ -12,6 +12,7 @@ import type {
   SeatingConstraints,
   ClassProject,
   RotationPlan,
+  SavedArrangement,
 } from '../../types';
 import type { LayoutDef } from '../layouts';
 
@@ -90,6 +91,19 @@ interface AppState {
   /** Show a specific period's seating on the grid without touching the
    *  rolling run history. */
   viewRotationPeriod: (periodId: string) => void;
+
+  /** Named seating arrangements saved within the current class. Lets the
+   *  teacher keep several alternatives ("Plan A", "Exam layout") and switch
+   *  between them. Persisted and carried in project snapshots. */
+  savedArrangements: SavedArrangement[];
+  /** Which saved arrangement is currently shown on the grid, or null. */
+  activeArrangementId: string | null;
+  /** Save the current `result` under a name. No-op when there's no result. */
+  saveArrangement: (name: string) => void;
+  /** Show a saved arrangement on the grid (without touching run history). */
+  loadArrangement: (id: string) => void;
+  deleteArrangement: (id: string) => void;
+  renameArrangement: (id: string, name: string) => void;
 
   /** Step-1 questionnaire progress. `consentAck` records that the teacher
    *  has confirmed they have permission to collect this data; `surveyedIds`
@@ -225,6 +239,8 @@ export const useStore = create<AppState>()(
           state.students.push(student);
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
+          state.savedArrangements = [];
+          state.activeArrangementId = null;
         }),
       updateStudent: (id, updates) =>
         set((state) => {
@@ -238,12 +254,16 @@ export const useStore = create<AppState>()(
           state.students = state.students.filter((s: Student) => s.id !== id);
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
+          state.savedArrangements = [];
+          state.activeArrangementId = null;
         }),
       setStudents: (students) =>
         set((state) => {
           state.students = students;
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
+          state.savedArrangements = [];
+          state.activeArrangementId = null;
         }),
 
       // Layout
@@ -288,6 +308,9 @@ export const useStore = create<AppState>()(
             // the new room shape, so drop it too.
             state.rotationPlan = null;
             state.activeRotationPeriodId = null;
+            // Likewise saved arrangements snapshot specific seat positions.
+            state.savedArrangements = [];
+            state.activeArrangementId = null;
           }
         }),
 
@@ -420,6 +443,45 @@ export const useStore = create<AppState>()(
           state.result = period.result;
           state.history = [];
           state.historyFuture = [];
+        }),
+
+      savedArrangements: [],
+      activeArrangementId: null,
+      saveArrangement: (name) =>
+        set((state) => {
+          if (!state.result) return;
+          const id = `arr_${Date.now()}`;
+          state.savedArrangements.push({
+            id,
+            name,
+            createdAt: new Date().toISOString(),
+            result: structuredClone(current(state.result)) as OptimizationResult,
+          });
+          state.activeArrangementId = id;
+        }),
+      loadArrangement: (id) =>
+        set((state) => {
+          const arr = state.savedArrangements.find((a) => a.id === id);
+          if (!arr) return;
+          // Capture current positions so the "what moved" highlight shows the
+          // shift to the loaded arrangement.
+          if (state.result) {
+            state.previousPositions = state.result.student_positions;
+          }
+          state.activeArrangementId = id;
+          state.result = structuredClone(arr.result) as OptimizationResult;
+          state.history = [];
+          state.historyFuture = [];
+        }),
+      deleteArrangement: (id) =>
+        set((state) => {
+          state.savedArrangements = state.savedArrangements.filter((a) => a.id !== id);
+          if (state.activeArrangementId === id) state.activeArrangementId = null;
+        }),
+      renameArrangement: (id, name) =>
+        set((state) => {
+          const arr = state.savedArrangements.find((a) => a.id === id);
+          if (arr) arr.name = name;
         }),
 
       // UI
@@ -611,6 +673,7 @@ export const useStore = create<AppState>()(
             rotationPlan: state.rotationPlan
               ? structuredClone(current(state.rotationPlan))
               : null,
+            savedArrangements: structuredClone(current(state.savedArrangements)),
           };
           if (existing) {
             Object.assign(existing, snapshot, { name, updatedAt: now });
@@ -644,6 +707,8 @@ export const useStore = create<AppState>()(
           state.result = p.result;
           state.rotationPlan = p.rotationPlan ?? null;
           state.activeRotationPeriodId = null;
+          state.savedArrangements = p.savedArrangements ?? [];
+          state.activeArrangementId = null;
           state.history = [];
           state.historyFuture = [];
         }),
@@ -681,6 +746,8 @@ export const useStore = create<AppState>()(
           state.resultHistory = data.resultHistory ?? [];
           state.rotationPlan = data.rotationPlan ?? null;
           state.activeRotationPeriodId = null;
+          state.savedArrangements = data.savedArrangements ?? [];
+          state.activeArrangementId = null;
           if (data.uiLanguage) state.uiLanguage = data.uiLanguage;
           if (data.uiScale) state.uiScale = data.uiScale;
           if (data.theme) state.theme = data.theme;
@@ -728,6 +795,7 @@ export const useStore = create<AppState>()(
         resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
         rotationPlan: state.rotationPlan,
+        savedArrangements: state.savedArrangements,
         questionnaire: state.questionnaire,
       }),
     }

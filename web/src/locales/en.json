@@ -28,6 +28,17 @@
     "generate_failed": "Could not generate the plan. Please try again.",
     "period_label": "Week"
   },
+  "arrangements": {
+    "title": "Saved arrangements",
+    "description": "Save the current seating under a name and switch between several arrangements for this class — e.g. 'Plan A', 'Exam layout', 'Group-work day'.",
+    "name_placeholder": "Name this arrangement",
+    "default_name": "Arrangement",
+    "save": "Save",
+    "optimize_first": "Optimize a seating chart first, then save it here.",
+    "active": "Showing",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
   "questionnaire": {
     "title": "Student questionnaire",
     "step_badge": "Step 1",

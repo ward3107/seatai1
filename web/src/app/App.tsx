@@ -14,6 +14,7 @@ import CsvImport from '../features/import/CsvImport';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import RotationPanel from '../features/rotation/RotationPanel';
+import ArrangementsPanel from '../features/arrangements/ArrangementsPanel';
 import QuestionnairePanel from '../features/questionnaire/QuestionnairePanel';
 import QuestionnaireModal from '../features/questionnaire/QuestionnaireModal';
 import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
@@ -249,6 +250,10 @@ function App() {
 
             <ErrorBoundary name="Rotation Planner" inline>
               <RotationPanel />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Saved Arrangements" inline>
+              <ArrangementsPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Settings" inline>

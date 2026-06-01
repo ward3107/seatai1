@@ -49,6 +49,7 @@ export default function ProjectManager() {
       result: s.result,
       resultHistory: s.resultHistory,
       rotationPlan: s.rotationPlan,
+      savedArrangements: s.savedArrangements,
       uiLanguage: s.uiLanguage,
       uiScale: s.uiScale,
       theme: s.theme,
