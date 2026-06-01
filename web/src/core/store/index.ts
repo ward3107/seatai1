@@ -109,12 +109,26 @@ interface AppState {
    *  has confirmed they have permission to collect this data; `surveyedIds`
    *  tracks which students have been through the survey; `skipPeers` is the
    *  cold-start toggle (class doesn't know each other yet). */
-  questionnaire: { consentAck: boolean; surveyedIds: string[]; skipPeers: boolean };
+  questionnaire: {
+    consentAck: boolean;
+    surveyedIds: string[];
+    /** Cold-start: class doesn't know each other yet → skip peer question. */
+    skipPeers: boolean;
+    /** Per-school compliance switch: when false the peer-nomination items are
+     *  removed entirely (some districts disallow peer surveys). Defaults on. */
+    peerSurveyEnabled?: boolean;
+    /** Young-student mode: larger text, simpler layout in the survey. */
+    simpleMode?: boolean;
+  };
   /** Transient: whether the guided questionnaire modal is open. */
   questionnaireOpen: boolean;
-  setQuestionnaireOpen: (v: boolean) => void;
+  /** Transient: kiosk "student fill" mode (name picker, blank answers). */
+  questionnaireStudentMode: boolean;
+  setQuestionnaireOpen: (v: boolean, studentMode?: boolean) => void;
   setQuestionnaireConsent: (v: boolean) => void;
   setQuestionnaireSkipPeers: (v: boolean) => void;
+  setQuestionnairePeerEnabled: (v: boolean) => void;
+  setQuestionnaireSimpleMode: (v: boolean) => void;
   markStudentSurveyed: (id: string) => void;
   resetQuestionnaire: () => void;
 
@@ -411,11 +425,13 @@ export const useStore = create<AppState>()(
             state.activeRotationPeriodId = null;
           }
         }),
-      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false },
+      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false, peerSurveyEnabled: true, simpleMode: false },
       questionnaireOpen: false,
-      setQuestionnaireOpen: (v) =>
+      questionnaireStudentMode: false,
+      setQuestionnaireOpen: (v, studentMode = false) =>
         set((state) => {
           state.questionnaireOpen = v;
+          state.questionnaireStudentMode = v ? studentMode : false;
         }),
       setQuestionnaireConsent: (v) =>
         set((state) => {
@@ -424,6 +440,14 @@ export const useStore = create<AppState>()(
       setQuestionnaireSkipPeers: (v) =>
         set((state) => {
           state.questionnaire.skipPeers = v;
+        }),
+      setQuestionnairePeerEnabled: (v) =>
+        set((state) => {
+          state.questionnaire.peerSurveyEnabled = v;
+        }),
+      setQuestionnaireSimpleMode: (v) =>
+        set((state) => {
+          state.questionnaire.simpleMode = v;
         }),
       markStudentSurveyed: (id) =>
         set((state) => {

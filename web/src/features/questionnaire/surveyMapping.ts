@@ -21,6 +21,8 @@ export interface SurveyAnswers {
   preferWindow: boolean | null;
   /** B6 — needs to see/hear the board clearly. */
   needBoardClear: boolean | null;
+  /** B2 — a classmate who helps this student with schoolwork (mentor). */
+  helper: string | null;
 }
 
 export function emptyAnswers(): SurveyAnswers {
@@ -30,6 +32,7 @@ export function emptyAnswers(): SurveyAnswers {
     noise: null,
     preferWindow: null,
     needBoardClear: null,
+    helper: null,
   };
 }
 
@@ -45,12 +48,16 @@ export function answersFromStudent(
   constraints: SeatingConstraints,
 ): SurveyAnswers {
   const nearWindow = constraints.near_window_ids ?? [];
+  // The student's mentor is whoever is listed as their helper (mentor →
+  // mentee, so we match on the mentee slot).
+  const mentorPair = (constraints.peer_mentor_pairs ?? []).find(([, mentee]) => mentee === student.id);
   return {
     seatmates: (student.friends_ids ?? []).slice(0, MAX_SEATMATES),
     focusZone: student.requires_front_row ? 'front' : null,
     noise: student.requires_quiet_area ? 'yes' : null,
     preferWindow: nearWindow.includes(student.id) ? true : null,
     needBoardClear: student.requires_front_row ? true : null,
+    helper: mentorPair ? mentorPair[0] : null,
   };
 }
 
@@ -94,4 +101,29 @@ export function applyWindowPreference(
     return { ...constraints, near_window_ids: current.filter((id) => id !== studentId) };
   }
   return constraints;
+}
+
+/**
+ * Set (or clear) the student's mentor in the constraints' peer-mentor pairs.
+ * Pairs are stored mentor-first (`[mentor, mentee]`); this replaces any
+ * existing pairing where the student is the mentee. A null/self helper just
+ * clears it. Returns the same reference when nothing changes.
+ */
+export function applyMentorPreference(
+  constraints: SeatingConstraints,
+  studentId: string,
+  helperId: string | null,
+): SeatingConstraints {
+  // A self-nominated (or empty) helper means "no mentor".
+  const effective = helperId && helperId !== studentId ? helperId : null;
+  const pairs = constraints.peer_mentor_pairs ?? [];
+  const existing = pairs.find(([, mentee]) => mentee === studentId);
+
+  // No-op cases: nothing to clear, or the same mentor is already set.
+  if (!effective && !existing) return constraints;
+  if (effective && existing && existing[0] === effective) return constraints;
+
+  const without = pairs.filter(([, mentee]) => mentee !== studentId);
+  const next: [string, string][] = effective ? [...without, [effective, studentId]] : without;
+  return { ...constraints, peer_mentor_pairs: next };
 }
