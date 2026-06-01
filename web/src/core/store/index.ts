@@ -91,6 +91,19 @@ interface AppState {
    *  rolling run history. */
   viewRotationPeriod: (periodId: string) => void;
 
+  /** Step-1 questionnaire progress. `consentAck` records that the teacher
+   *  has confirmed they have permission to collect this data; `surveyedIds`
+   *  tracks which students have been through the survey; `skipPeers` is the
+   *  cold-start toggle (class doesn't know each other yet). */
+  questionnaire: { consentAck: boolean; surveyedIds: string[]; skipPeers: boolean };
+  /** Transient: whether the guided questionnaire modal is open. */
+  questionnaireOpen: boolean;
+  setQuestionnaireOpen: (v: boolean) => void;
+  setQuestionnaireConsent: (v: boolean) => void;
+  setQuestionnaireSkipPeers: (v: boolean) => void;
+  markStudentSurveyed: (id: string) => void;
+  resetQuestionnaire: () => void;
+
   // UI State
   selectedStudentId: string | null;
   setSelectedStudentId: (id: string | null) => void;
@@ -367,6 +380,31 @@ export const useStore = create<AppState>()(
             state.activeRotationPeriodId = null;
           }
         }),
+      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false },
+      questionnaireOpen: false,
+      setQuestionnaireOpen: (v) =>
+        set((state) => {
+          state.questionnaireOpen = v;
+        }),
+      setQuestionnaireConsent: (v) =>
+        set((state) => {
+          state.questionnaire.consentAck = v;
+        }),
+      setQuestionnaireSkipPeers: (v) =>
+        set((state) => {
+          state.questionnaire.skipPeers = v;
+        }),
+      markStudentSurveyed: (id) =>
+        set((state) => {
+          if (!state.questionnaire.surveyedIds.includes(id)) {
+            state.questionnaire.surveyedIds.push(id);
+          }
+        }),
+      resetQuestionnaire: () =>
+        set((state) => {
+          state.questionnaire.surveyedIds = [];
+        }),
+
       viewRotationPeriod: (periodId) =>
         set((state) => {
           const plan = state.rotationPlan;
@@ -690,6 +728,7 @@ export const useStore = create<AppState>()(
         resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
         rotationPlan: state.rotationPlan,
+        questionnaire: state.questionnaire,
       }),
     }
   )
