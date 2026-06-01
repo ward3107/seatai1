@@ -24,7 +24,8 @@ import { FitZoom, DecoTile, HeatMapLegend, LazyFallback } from './gridParts';
 import { createEmptyGrid, emptySeatsFromLayout, groupIntoDesks } from './gridHelpers';
 import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
-import type { Seat, Student } from '../../types';
+import { getConstraintStatus } from '../../core/seatStatus';
+import type { Seat, Student, OptimizationResult } from '../../types';
 
 // The timeline is heavy and conditional — only loaded when the user opts in.
 const OptimizationTimeline = lazy(() => import('./OptimizationTimeline'));
@@ -46,6 +47,9 @@ export default function ClassroomGrid() {
   const selectedSeatKey = useStore((s) => s.selectedSeatKey);
   const showRelations = useStore((s) => s.showRelations);
   const showTimeline = useStore((s) => s.showTimeline);
+  const showConstraintBadges = useStore((s) => s.showConstraintBadges);
+  const showSeatTags = useStore((s) => s.showSeatTags);
+  const constraints = useStore((s) => s.constraints);
   const setSelectedSeat = useStore((s) => s.setSelectedSeat);
   const setShowRelations = useStore((s) => s.setShowRelations);
   const swapStudents = useStore((s) => s.swapStudents);
@@ -102,6 +106,31 @@ export default function ClassroomGrid() {
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
   const violations = useMemo(() => result ? getViolations(result, students) : new Set<string>(), [result, students]);
 
+  // Full per-seat constraint status (✓ / ⚠ badges + tooltips). Only computed
+  // when the teacher turns the badges on, so it costs nothing by default.
+  const constraintStatus = useMemo(
+    () =>
+      showConstraintBadges && result
+        ? getConstraintStatus(result, students, constraints, layoutDef)
+        : null,
+    [showConstraintBadges, result, students, constraints, layoutDef],
+  );
+
+  // Translate a seat's broken-rule reasons into a single tooltip string.
+  const constraintTitleFor = useCallback(
+    (sk: string): string | undefined => {
+      const st = constraintStatus?.get(sk);
+      if (!st) return undefined;
+      if (!st.violated) return t('seatstatus.ok');
+      return st.reasons.map((r) => t(r.key, r.params)).join(' · ');
+    },
+    [constraintStatus, t],
+  );
+
+  // Seat currently hovered as a drop target during a drag — drives the live
+  // red/green tinting that previews whether the swap keeps rules satisfied.
+  const [overSeatKey, setOverSeatKey] = useState<string | null>(null);
+
   // Set of student IDs whose row/col changed between the previous and
   // current optimization run. Only computed when the user has the
   // "show movement" toggle on AND both a current result and a previous
@@ -144,14 +173,21 @@ export default function ClassroomGrid() {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveDragSeatKey(event.active.id as string);
+    setOverSeatKey(null);
     setSelectedSeat(null);
     setContextMenu(null);
   }, [setSelectedSeat]);
+
+  // Track the hovered drop target so we can preview constraint validity.
+  const handleDragOver = useCallback((event: { over: { id: string | number } | null }) => {
+    setOverSeatKey(event.over ? (event.over.id as string) : null);
+  }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveDragSeatKey(null);
+      setOverSeatKey(null);
       if (!over || active.id === over.id) return;
       const src = active.id as string;
       const tgt = over.id as string;
@@ -160,6 +196,37 @@ export default function ClassroomGrid() {
     },
     [lockedSeats, swapStudents]
   );
+
+  // Would swapping the dragged student into `tgtKey` keep every rule for the
+  // two affected seats satisfied? Returns 'valid' / 'invalid' (null when we
+  // can't tell — no result, or badges off). Recomputed only when the hover
+  // target changes, so it's cheap.
+  const dropPreview = useMemo<'valid' | 'invalid' | null>(() => {
+    if (!showConstraintBadges || !result || !activeDragSeatKey || !overSeatKey) return null;
+    if (activeDragSeatKey === overSeatKey) return null;
+    // Simulate the swap on a shallow clone and re-check the two seats.
+    const sim: OptimizationResult = {
+      ...result,
+      layout: {
+        ...result.layout,
+        seats: result.layout.seats.map((s) => ({ ...s, position: { ...s.position } })),
+      },
+    };
+    const [ar, ac] = activeDragSeatKey.split('-').map(Number);
+    const [br, bc] = overSeatKey.split('-').map(Number);
+    const seatA = sim.layout.seats.find((s) => s.position.row === ar && s.position.col === ac);
+    const seatB = sim.layout.seats.find((s) => s.position.row === br && s.position.col === bc);
+    if (!seatA || !seatB) return null;
+    const tmp = seatA.student_id;
+    seatA.student_id = seatB.student_id;
+    seatA.is_empty = seatB.student_id === undefined;
+    seatB.student_id = tmp;
+    seatB.is_empty = tmp === undefined;
+    const st = getConstraintStatus(sim, students, constraints, layoutDef);
+    const aBad = st.get(activeDragSeatKey)?.violated;
+    const bBad = st.get(overSeatKey)?.violated;
+    return aBad || bBad ? 'invalid' : 'valid';
+  }, [showConstraintBadges, result, activeDragSeatKey, overSeatKey, students, constraints, layoutDef]);
 
   const setDetailsTarget = useStore((s) => s.setDetailsTarget);
 
@@ -332,6 +399,16 @@ export default function ClassroomGrid() {
         isViolated={violations.has(sk)}
         isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
         heatMapMode={heatMapMode}
+        constraintStatus={
+          constraintStatus && seat.student_id
+            ? constraintStatus.get(sk)?.violated
+              ? 'violated'
+              : 'ok'
+            : undefined
+        }
+        constraintTitle={constraintStatus && seat.student_id ? constraintTitleFor(sk) : undefined}
+        showTags={showSeatTags}
+        dropPreview={sk === overSeatKey ? dropPreview : null}
         interactionMode={interactionMode}
         ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
         onSeatClick={handleSeatClick}
@@ -404,6 +481,7 @@ export default function ClassroomGrid() {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
             <div
@@ -475,6 +553,16 @@ export default function ClassroomGrid() {
                         isViolated={violations.has(sk)}
                         isMoved={!!seat.student_id && movedStudentIds.has(seat.student_id)}
                         heatMapMode={heatMapMode}
+                        constraintStatus={
+                          constraintStatus && seat.student_id
+                            ? constraintStatus.get(sk)?.violated
+                              ? 'violated'
+                              : 'ok'
+                            : undefined
+                        }
+                        constraintTitle={constraintStatus && seat.student_id ? constraintTitleFor(sk) : undefined}
+                        showTags={showSeatTags}
+                        dropPreview={sk === overSeatKey ? dropPreview : null}
                         interactionMode={interactionMode}
                         ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
                         onSeatClick={handleSeatClick}
@@ -554,6 +642,7 @@ export default function ClassroomGrid() {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         {/* Zoomable grid wrapper — auto-fits to width, then the user's zoom

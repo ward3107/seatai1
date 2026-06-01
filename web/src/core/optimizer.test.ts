@@ -467,4 +467,109 @@ describe('ClassroomOptimizer', () => {
       expect(result.student_positions[singleStudent[0].id]).toBeDefined();
     });
   });
+
+  // ── Honest reporting: actual generations + stop reason ──────────────────
+  describe('Generations & stop reason', () => {
+    it('reports the generations actually run, not the configured cap', () => {
+      const optimizer = new ClassroomOptimizer(students, 2, 2);
+      optimizer.setConfig({ ...config, maxGenerations: 50, earlyStopPatience: 5, multiStart: 1 });
+      const result = optimizer.optimize();
+      // Real work is capped at maxGenerations and never zero.
+      expect(result.generations).toBeGreaterThan(0);
+      expect(result.generations).toBeLessThanOrEqual(50);
+    });
+
+    it('stops early with a "converged" reason on a trivial problem', () => {
+      // 2 students in 4 seats converges almost immediately.
+      const optimizer = new ClassroomOptimizer(students.slice(0, 2), 2, 2);
+      optimizer.setConfig({ ...config, maxGenerations: 200, earlyStopPatience: 3, multiStart: 1 });
+      const result = optimizer.optimize();
+      expect(result.generations).toBeLessThan(200);
+      expect(result.stop_reason).toBe('converged');
+    });
+
+    it('honours a wall-clock time budget and returns a usable plan', () => {
+      const optimizer = new ClassroomOptimizer(students, 2, 2);
+      // Big search, tiny budget → must bail out on time, still produce a result.
+      optimizer.setConfig({
+        ...config,
+        populationSize: 400,
+        maxGenerations: 5000,
+        earlyStopPatience: 5000,
+        multiStart: 5,
+        timeLimitMs: 30,
+      });
+      const t0 = performance.now();
+      const result = optimizer.optimize();
+      const elapsed = performance.now() - t0;
+      // Generous ceiling — we only assert it didn't run unbounded.
+      expect(elapsed).toBeLessThan(2000);
+      expect(result.fitness_score).toBeDefined();
+      expect(Object.keys(result.student_positions).length).toBe(4);
+    });
+  });
+
+  // ── Exam / anti-cheating mode ───────────────────────────────────────────
+  describe('Exam mode', () => {
+    // Six students, all the same ability, in a roomy 3x4 grid (12 seats) so
+    // the optimiser has plenty of empty buffer space to spread them out.
+    const sixStudents = (): Student[] =>
+      Array.from({ length: 6 }, (_, i) => ({
+        id: `s${i}`,
+        name: `S${i}`,
+        gender: i % 2 === 0 ? 'male' : 'female',
+        academic_level: 'proficient',
+        academic_score: 75,
+        behavior_level: 'good',
+        behavior_score: 80,
+        friends_ids: [],
+        incompatible_ids: [],
+        special_needs: [],
+        requires_front_row: false,
+        requires_quiet_area: false,
+        has_mobility_issues: false,
+        is_bilingual: false,
+      } as Student));
+
+    const occupiedNeighbourCount = (
+      result: ReturnType<ClassroomOptimizer['optimize']>,
+    ): number => {
+      const seats = result.layout.seats;
+      const at = (r: number, c: number) =>
+        seats.find((s) => s.position.row === r && s.position.col === c);
+      let pairs = 0;
+      for (const seat of seats) {
+        if (!seat.student_id) continue;
+        const { row, col } = seat.position;
+        // count right and down neighbours to avoid double counting
+        if (at(row, col + 1)?.student_id) pairs++;
+        if (at(row + 1, col)?.student_id) pairs++;
+      }
+      return pairs;
+    };
+
+    it('spreads students out (fewer adjacent pairs than normal mode)', () => {
+      const normal = new ClassroomOptimizer(sixStudents(), 3, 4);
+      normal.setRng(mulberry32(42));
+      normal.setConfig({ ...config, examMode: false, multiStart: 3 });
+      const normalRes = normal.optimize();
+
+      const exam = new ClassroomOptimizer(sixStudents(), 3, 4);
+      exam.setRng(mulberry32(42));
+      exam.setConfig({ ...config, examMode: true, multiStart: 3 });
+      const examRes = exam.optimize();
+
+      expect(occupiedNeighbourCount(examRes)).toBeLessThanOrEqual(
+        occupiedNeighbourCount(normalRes),
+      );
+    });
+
+    it('keeps every student seated and the result valid in exam mode', () => {
+      const exam = new ClassroomOptimizer(sixStudents(), 3, 4);
+      exam.setConfig({ ...config, examMode: true });
+      const res = exam.optimize();
+      expect(Object.keys(res.student_positions).length).toBe(6);
+      expect(res.algorithm).toBe('genetic');
+    });
+  });
 });

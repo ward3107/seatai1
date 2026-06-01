@@ -12,6 +12,8 @@ import {
   AlignJustify,
   Columns2,
   History,
+  ShieldCheck,
+  Tags,
 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -52,6 +54,10 @@ export default function GridControls({
   const setViewMode = useStore((s) => s.setViewMode);
   const showTimeline = useStore((s) => s.showTimeline);
   const setShowTimeline = useStore((s) => s.setShowTimeline);
+  const showConstraintBadges = useStore((s) => s.showConstraintBadges);
+  const setShowConstraintBadges = useStore((s) => s.setShowConstraintBadges);
+  const showSeatTags = useStore((s) => s.showSeatTags);
+  const setShowSeatTags = useStore((s) => s.setShowSeatTags);
   const { t } = useLanguage();
   const heatMapOptions = getHeatMapOptions(t);
 
@@ -240,6 +246,38 @@ export default function GridControls({
       >
         {showRelations ? <Eye size={15} /> : <EyeOff size={15} />}
         <span className="hidden sm:inline">{t('gridControls.relations')}</span>
+      </button>
+
+      {/* ── Constraint status badges ── */}
+      <button
+        onClick={() => setShowConstraintBadges(!showConstraintBadges)}
+        title={showConstraintBadges ? t('gridControls.hide_badges') : t('gridControls.show_badges')}
+        aria-pressed={showConstraintBadges}
+        className={clsx(
+          'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
+          showConstraintBadges
+            ? 'bg-green-100 text-green-600 border border-green-200'
+            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+        )}
+      >
+        <ShieldCheck size={15} />
+        <span className="hidden sm:inline">{t('gridControls.badges')}</span>
+      </button>
+
+      {/* ── Per-seat data tags ── */}
+      <button
+        onClick={() => setShowSeatTags(!showSeatTags)}
+        title={showSeatTags ? t('gridControls.hide_tags') : t('gridControls.show_tags')}
+        aria-pressed={showSeatTags}
+        className={clsx(
+          'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
+          showSeatTags
+            ? 'bg-indigo-100 text-indigo-600 border border-indigo-200'
+            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+        )}
+      >
+        <Tags size={15} />
+        <span className="hidden sm:inline">{t('gridControls.tags')}</span>
       </button>
 
     </div>

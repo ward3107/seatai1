@@ -92,6 +92,14 @@ interface AppState {
   showRelations: boolean;
   showTimeline: boolean;             // show optimization timeline panel
 
+  /** Show a green ✓ / red ⚠ constraint-status badge on every occupied
+   *  seat (and live red/green tinting on drop targets while dragging). */
+  showConstraintBadges: boolean;
+  /** Show compact data tags (ability / behaviour / IEP) on each seat card. */
+  showSeatTags: boolean;
+  setShowConstraintBadges: (v: boolean) => void;
+  setShowSeatTags: (v: boolean) => void;
+
   /** Student whose detail drawer is currently open, or null. */
   detailsTargetStudentId: string | null;
   setDetailsTarget: (id: string | null) => void;
@@ -349,6 +357,13 @@ export const useStore = create<AppState>()(
 
       showRelations: false,
       showTimeline: false,
+
+      showConstraintBadges: false,
+      showSeatTags: false,
+      setShowConstraintBadges: (v) =>
+        set((state) => { state.showConstraintBadges = v; }),
+      setShowSeatTags: (v) =>
+        set((state) => { state.showSeatTags = v; }),
 
       toggleLockSeat: (seatKey) =>
         set((state) => {
@@ -622,6 +637,8 @@ export const useStore = create<AppState>()(
         aiSettings: state.aiSettings,
         resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
+        showConstraintBadges: state.showConstraintBadges,
+        showSeatTags: state.showSeatTags,
       }),
     }
   )

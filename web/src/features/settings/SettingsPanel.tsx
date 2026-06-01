@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2, ShieldAlert } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
 import type { ObjectiveWeights } from '../../types';
 
@@ -189,6 +189,44 @@ export default function SettingsPanel() {
             </div>
           </div>
 
+          {/* Stopping criteria — when the GA should give up searching */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              {t('settings.stopping')}
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor={fieldId('patience')} className="block text-xs text-gray-500 mb-1">
+                  {t('settings.patience')}
+                </label>
+                <input
+                  id={fieldId('patience')}
+                  type="number" min="3" max="200" value={config.earlyStopPatience}
+                  onChange={(e) =>
+                    setConfig({ ...config, earlyStopPatience: Math.max(3, Number(e.target.value)) })
+                  }
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor={fieldId('timelimit')} className="block text-xs text-gray-500 mb-1">
+                  {t('settings.time_limit')}
+                </label>
+                <input
+                  id={fieldId('timelimit')}
+                  type="number" min="0" max="60" step="0.5"
+                  value={config.timeLimitMs ? config.timeLimitMs / 1000 : 0}
+                  onChange={(e) => {
+                    const secs = Math.max(0, Number(e.target.value));
+                    setConfig({ ...config, timeLimitMs: secs > 0 ? Math.round(secs * 1000) : undefined });
+                  }}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1">{t('settings.stopping_hint')}</p>
+          </div>
+
           {/* Quality / speed tradeoff — multi-start GA */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -222,6 +260,23 @@ export default function SettingsPanel() {
             </div>
             <p className="text-[10px] text-gray-500 mt-1">
               {t('settings.quality_hint')}
+            </p>
+          </div>
+
+          {/* Exam / anti-cheating mode */}
+          <div className="border-t border-gray-200 pt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!config.examMode}
+                onChange={(e) => setConfig({ ...config, examMode: e.target.checked })}
+                className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <ShieldAlert size={14} className="text-rose-500" />
+              <span className="font-medium text-gray-600">{t('settings.exam_title')}</span>
+            </label>
+            <p className="text-[10px] text-gray-500 mt-1">
+              {t('settings.exam_hint')}
             </p>
           </div>
 
