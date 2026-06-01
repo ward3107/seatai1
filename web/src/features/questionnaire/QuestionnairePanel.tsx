@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { ClipboardList, ChevronDown, ChevronUp, Play, RotateCcw, Smartphone } from 'lucide-react';
+import { ClipboardList, ChevronDown, ChevronUp, Play, RotateCcw, Smartphone, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useLanguage, LANG_FONTS } from '../../hooks/useLanguage';
+import { printHandout } from './printHandout';
+import { MAX_SEATMATES } from './surveyMapping';
 
 /**
  * Step-1 entry point for the student questionnaire. Frames the survey as the
@@ -10,7 +12,7 @@ import { useLanguage } from '../../hooks/useLanguage';
  * QuestionnaireModal (opened via the store's `questionnaireOpen` flag).
  */
 export default function QuestionnairePanel() {
-  const { t } = useLanguage();
+  const { t, uiLanguage, isRTL } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const students = useStore((s) => s.students);
@@ -134,6 +136,23 @@ export default function QuestionnairePanel() {
               >
                 <Smartphone size={15} />
                 {t('questionnaire.student_mode')}
+              </button>
+              <button
+                onClick={() =>
+                  printHandout(students, {
+                    peersOn: peerEnabled && !skipPeers,
+                    maxSeatmates: MAX_SEATMATES,
+                    isRTL,
+                    lang: uiLanguage,
+                    fontFamily: LANG_FONTS[uiLanguage],
+                    t,
+                  })
+                }
+                disabled={total === 0}
+                className="w-full py-2 px-3 text-indigo-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-indigo-100/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Printer size={15} />
+                {t('questionnaire.handout_button')}
               </button>
               {!consentAck && (
                 <p className="text-[10px] text-amber-600">{t('questionnaire.consent_required')}</p>

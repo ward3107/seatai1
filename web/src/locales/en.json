@@ -81,7 +81,13 @@
     "q_helper": "Is there a classmate who helps you with schoolwork?",
     "q_helper_hint": "Pick one (optional).",
     "peer_enabled": "Ask students who they'd like to sit near",
-    "simple_mode": "Simple mode (larger text for younger students)"
+    "simple_mode": "Simple mode (larger text for younger students)",
+    "handout_button": "Print blank handout",
+    "handout_instructions": "Fill this in and hand it back to your teacher.",
+    "handout_name": "Name",
+    "handout_date": "Date",
+    "handout_roster": "Your classmates",
+    "print_btn": "Print"
   },
   "app": {
     "title": "SeatAI",
@@ -159,6 +165,7 @@
     "front_required": "Front-row seating required",
     "quiet_area": "Quiet area preferred",
     "why_this_seat": "Why this seat",
+    "from_questionnaire": "Based on this student's questionnaire",
     "strengths": "Strengths",
     "weaknesses": "Tradeoffs to watch",
     "neighbors": "Adjacent peers",

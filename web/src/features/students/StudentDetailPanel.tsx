@@ -26,6 +26,7 @@ import {
   Languages,
   Activity,
   BookOpen,
+  ClipboardList,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
@@ -95,6 +96,7 @@ export default function StudentDetailPanel() {
   const constraints = useStore((s) => s.constraints);
   const aiSettings = useStore((s) => s.aiSettings);
   const resultHistory = useStore((s) => s.resultHistory);
+  const surveyedIds = useStore((s) => s.questionnaire.surveyedIds);
   const { t } = useLanguage();
 
   // AI-generated paragraph (one per student per drawer open). Lives
@@ -132,6 +134,10 @@ export default function StudentDetailPanel() {
   const explanation = result
     ? explainPlacement(student, result, layoutDef, students, constraints)
     : null;
+
+  // True when this student filled out the Step-1 questionnaire — lets us show
+  // that the placement reflects what they actually asked for.
+  const surveyed = surveyedIds.includes(student.id);
 
   // Per-neighbor history lookup: who has this student already sat
   // next to in past optimizations, and how recently? Indexed by other
@@ -386,6 +392,11 @@ export default function StudentDetailPanel() {
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                     <Sparkles size={12} /> {t('detail.why_this_seat')}
                   </h3>
+                  {surveyed && (
+                    <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2.5 py-1">
+                      <ClipboardList size={11} /> {t('detail.from_questionnaire')}
+                    </p>
+                  )}
                   <ul className="space-y-1.5">
                     {explanation.reasons.map((r, i) => (
                       <Line key={i} line={r} t={t} />
