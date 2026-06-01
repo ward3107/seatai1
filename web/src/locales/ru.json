@@ -94,6 +94,8 @@
     "subtitle": "ИИ-оптимизация рассадки учеников",
     "optimizing": "Оптимизация...",
     "optimize_seating": "Оптимизировать рассадку",
+    "too_many_students": "Слишком много учеников ({{students}}) для доступных мест ({{seats}})",
+    "add_two_students": "Добавьте хотя бы 2 учеников",
     "loading_optimizer": "Загрузка оптимизатора...",
     "students": "учеников",
     "score": "Оценка",
@@ -528,7 +530,18 @@
     "same": "Без изменений"
   },
   "print": {
-    "anonymize": "Анонимизировать (только инициалы)"
+    "anonymize": "Анонимизировать (только инициалы)",
+    "title": "Схема рассадки",
+    "print_button": "Печать",
+    "teacher_board": "УЧИТЕЛЬ / ДОСКА",
+    "teacher_short": "УЧИТЕЛЬ",
+    "chart_title": "SeatAI — Схема рассадки класса",
+    "legend_advanced": "Продвинутый",
+    "legend_below_basic": "Ниже базового",
+    "legend_mobility": "Потребности в передвижении",
+    "legend_front_row": "Требуется первый ряд",
+    "legend_special_needs": "Фиолетовая рамка = особые потребности",
+    "warnings": "Предупреждения"
   },
   "export": {
     "title": "Экспорт рассадки",
@@ -657,6 +670,10 @@
     "row_seat": "Ряд {{row}} · Место {{seat}}",
     "no_match": "Нет учеников, соответствующих \"{{search}}\"",
     "issues": "проблем(ы)",
+    "why_this_seating": "Почему такая рассадка?",
+    "why_these_pairs": "Почему такие пары?",
+    "practical_reasons_placement": "Практические причины для каждого размещения",
+    "practical_reasons_pairing": "Практические причины для каждой пары",
     "reason_front_row_accessibility": "Размещен в переднем ряду (требование доступности)",
     "reason_accessible_seat": "Размещен на доступном месте (ряды 1–2)",
     "reason_front_row_teacher": "Передний ряд назначен правилом учителя",

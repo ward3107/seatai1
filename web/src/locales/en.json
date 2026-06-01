@@ -94,6 +94,8 @@
     "subtitle": "AI-Powered Classroom Seating",
     "optimizing": "Optimizing...",
     "optimize_seating": "Optimize Seating",
+    "too_many_students": "Too many students ({{students}}) for available seats ({{seats}})",
+    "add_two_students": "Add at least 2 students",
     "loading_optimizer": "Loading optimizer...",
     "students": "students",
     "score": "Score",
@@ -528,7 +530,18 @@
     "same": "No change"
   },
   "print": {
-    "anonymize": "Anonymize (initials only)"
+    "anonymize": "Anonymize (initials only)",
+    "title": "Seating Chart",
+    "print_button": "Print",
+    "teacher_board": "TEACHER / BOARD",
+    "teacher_short": "TEACHER",
+    "chart_title": "SeatAI — Classroom Seating Chart",
+    "legend_advanced": "Advanced",
+    "legend_below_basic": "Below basic",
+    "legend_mobility": "Mobility needs",
+    "legend_front_row": "Front row required",
+    "legend_special_needs": "Purple border = special needs",
+    "warnings": "Warnings"
   },
   "export": {
     "title": "Export seating chart",
@@ -657,6 +670,10 @@
     "row_seat": "Row {{row}} · Seat {{seat}}",
     "no_match": "No students match \"{{search}}\"",
     "issues": "issue(s)",
+    "why_this_seating": "Why This Seating?",
+    "why_these_pairs": "Why These Pairs?",
+    "practical_reasons_placement": "Practical reasons for each placement",
+    "practical_reasons_pairing": "Practical reasons for each pairing",
     "reason_front_row_accessibility": "Placed in front row (accessibility requirement)",
     "reason_accessible_seat": "Placed in accessible seat (rows 1–2)",
     "reason_front_row_teacher": "Front row assigned by teacher rule",
