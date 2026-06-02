@@ -261,9 +261,9 @@ export default function StudentForm() {
             onChange={(e) => setForm({ ...form, gender: e.target.value as Gender })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
+            <option value="male">{t('students.gender_male')}</option>
+            <option value="female">{t('students.gender_female')}</option>
+            <option value="other">{t('students.gender_other')}</option>
           </select>
         </div>
         <div>
@@ -274,7 +274,7 @@ export default function StudentForm() {
             onChange={(e) => setForm({ ...form, primary_language: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
-            <option value="">— select —</option>
+            <option value="">{t('students.select_option')}</option>
             {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
@@ -290,10 +290,10 @@ export default function StudentForm() {
             onChange={(e) => setForm({ ...form, academic_level: e.target.value as AcademicLevel })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
-            <option value="advanced">Advanced</option>
-            <option value="proficient">Proficient</option>
-            <option value="basic">Basic</option>
-            <option value="below_basic">Below Basic</option>
+            <option value="advanced">{t('students.level_advanced')}</option>
+            <option value="proficient">{t('students.level_proficient')}</option>
+            <option value="basic">{t('students.level_basic')}</option>
+            <option value="below_basic">{t('students.level_below_basic')}</option>
           </select>
         </div>
         <div>
@@ -318,10 +318,10 @@ export default function StudentForm() {
             onChange={(e) => setForm({ ...form, behavior_level: e.target.value as BehaviorLevel })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
-            <option value="excellent">Excellent</option>
-            <option value="good">Good</option>
-            <option value="average">Average</option>
-            <option value="challenging">Challenging</option>
+            <option value="excellent">{t('students.behavior_excellent')}</option>
+            <option value="good">{t('students.behavior_good')}</option>
+            <option value="average">{t('students.behavior_average')}</option>
+            <option value="challenging">{t('students.behavior_challenging')}</option>
           </select>
         </div>
         <div>

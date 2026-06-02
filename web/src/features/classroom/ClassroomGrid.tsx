@@ -103,6 +103,14 @@ export default function ClassroomGrid() {
     layoutDef.type === 'u-shape' ||
     layoutDef.type === 'circle';
 
+  // In the free-positioning layouts the seats sit on a fixed-size room, so a
+  // large class (e.g. a 30-seat circle) would otherwise pack the cards on top
+  // of each other. Shrink each card as the seat count grows so they keep their
+  // spacing. Floored so cards stay tappable/readable; the room also scrolls.
+  const seatScale = isAbsoluteLayout
+    ? Math.max(0.6, Math.min(1, Math.sqrt(18 / Math.max(seats.length, 1))))
+    : 1;
+
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
   const violations = useMemo(() => result ? getViolations(result, students) : new Set<string>(), [result, students]);
 
@@ -538,7 +546,7 @@ export default function ClassroomGrid() {
                         left: `${left}%`,
                         top: `${top}%`,
                         width: '88px',
-                        transform: 'translate(-50%, -50%)',
+                        transform: `translate(-50%, -50%) scale(${seatScale})`,
                       }}
                       onMouseEnter={() => {
                         setHoveredSeatKey(sk);

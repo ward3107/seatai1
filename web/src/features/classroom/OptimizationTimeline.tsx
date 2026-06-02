@@ -191,12 +191,12 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
 
         <div className="flex items-center justify-center gap-2">
           {/* Rewind */}
-          <button onClick={handleRewind} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Go to start">
+          <button onClick={handleRewind} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.go_to_start')}>
             <SkipBack size={16} className="text-gray-600" />
           </button>
 
           {/* Step back */}
-          <button onClick={handleSkipBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Step back">
+          <button onClick={handleSkipBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.step_back')}>
             <Rewind size={16} className="text-gray-600" />
           </button>
 
@@ -209,18 +209,18 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
                 ? 'bg-orange-500 text-white hover:bg-orange-600'
                 : 'bg-primary-500 text-white hover:bg-primary-600'
             )}
-            title={isPlaying ? 'Pause' : 'Play'}
+            title={isPlaying ? t('classroom.pause') : t('classroom.play')}
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
           </button>
 
           {/* Step forward */}
-          <button onClick={handleSkipForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Step forward">
+          <button onClick={handleSkipForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.step_forward')}>
             <FastForward size={16} className="text-gray-600" />
           </button>
 
           {/* Fast forward */}
-          <button onClick={handleFastForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Go to end">
+          <button onClick={handleFastForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.go_to_end')}>
             <SkipForward size={16} className="text-gray-600" />
           </button>
         </div>

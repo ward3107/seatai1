@@ -5,6 +5,7 @@ import { Lock, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react'
 import type { Seat, Student } from '../../types';
 import type { HeatMapMode } from '../../core/store';
 import { getHeatMapColor } from '../../utils/seatingUtils';
+import { useLanguage } from '../../hooks/useLanguage';
 
 /** Short level → label/colour for the optional per-seat data tags. */
 const ACADEMIC_TAG: Record<string, { short: string; cls: string }> = {
@@ -74,6 +75,7 @@ export default memo(function SeatCard({
   onMouseEnter,
   onMouseLeave,
 }: Props) {
+  const { t } = useLanguage();
   const isDragMode = interactionMode === 'drag';
   const canDrag = !!student && !isLocked && isDragMode;
 
@@ -184,7 +186,7 @@ export default memo(function SeatCard({
       {isMoved && (
         <div
           className="absolute top-1 left-1 text-amber-600 pointer-events-none bg-amber-100 rounded-full p-0.5"
-          title="Moved from previous run"
+          title={t('classroom.moved_from_previous')}
         >
           <ArrowRightLeft size={9} />
         </div>
@@ -264,7 +266,7 @@ export default memo(function SeatCard({
               {ACADEMIC_TAG[student.academic_level] && (
                 <span
                   className={clsx('px-1 rounded text-[9px] font-bold', ACADEMIC_TAG[student.academic_level].cls)}
-                  title={`Academic: ${student.academic_level}`}
+                  title={`${t('classroom.academic_label')}: ${t(`students.level_${student.academic_level}`)}`}
                 >
                   {ACADEMIC_TAG[student.academic_level].short}
                 </span>
@@ -272,7 +274,7 @@ export default memo(function SeatCard({
               {BEHAVIOR_TAG[student.behavior_level] && (
                 <span
                   className={clsx('px-1 rounded text-[9px] font-bold', BEHAVIOR_TAG[student.behavior_level].cls)}
-                  title={`Behaviour: ${student.behavior_level}`}
+                  title={`${t('classroom.behaviour_label')}: ${t(`students.behavior_${student.behavior_level}`)}`}
                 >
                   {BEHAVIOR_TAG[student.behavior_level].short}
                 </span>
@@ -280,7 +282,7 @@ export default memo(function SeatCard({
               {student.special_needs?.length > 0 && (
                 <span
                   className="px-1 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700"
-                  title="Has IEP / special-needs plan"
+                  title={t('classroom.has_iep')}
                 >
                   IEP
                 </span>

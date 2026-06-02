@@ -26,7 +26,7 @@ browser — no server, no sign-in, IndexedDB for persistence.
 | **Drag & Drop** | @dnd-kit 6 | Accessible drag-drop |
 | **Storage** | Dexie.js 4 | IndexedDB wrapper |
 | **Export** | jsPDF + html2canvas | PDF + image export |
-| **Testing** | Vitest | Unit tests (currently 129 tests) |
+| **Testing** | Vitest | Unit tests (currently 281 tests) |
 | **i18n** | en / he / ar / ru | RTL supported; minimal translation system |
 
 ---
@@ -241,7 +241,7 @@ The repo has a `vercel.json` at the root that sets the build command to
 ## Testing Approach
 
 - Unit tests with Vitest + Testing Library, co-located with source.
-- 129 tests currently passing. Run with `npm test` from `web/`.
+- 281 tests currently passing. Run with `npm test` from `web/`.
 
 ---
 
