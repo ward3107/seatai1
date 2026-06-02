@@ -58,6 +58,12 @@ export default function PrintView({ onClose }: Props) {
     layoutDef.type === 'u-shape' ||
     layoutDef.type === 'circle';
 
+  // Shrink seat tiles as the class grows so a large circle/cluster doesn't
+  // overlap on the printed page (matches the on-screen grid behaviour).
+  const seatScale = isAbsoluteLayout
+    ? Math.max(0.6, Math.min(1, Math.sqrt(18 / Math.max(result.layout.seats.length, 1))))
+    : 1;
+
   // Build grid: rows × cols with student name (or empty)
   const grid: (string | null)[][] = Array.from({ length: rows }, () =>
     Array(cols).fill(null)
@@ -171,6 +177,7 @@ export default function PrintView({ onClose }: Props) {
                       style={{
                         left: `calc(${6 + px * 88}% - 40px)`,
                         top: `calc(${6 + py * 88}% - 24px)`,
+                        transform: `scale(${seatScale})`,
                       }}
                     >
                       {student ? (
