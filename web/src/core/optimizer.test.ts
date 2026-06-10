@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ClassroomOptimizer, mulberry32 } from './optimizer';
+import { generateSlots } from './layouts';
 import type { OptimizeProgress } from './optimizer';
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints } from '../types';
 
@@ -308,6 +309,81 @@ describe('ClassroomOptimizer', () => {
 
       const result = optimizer.optimize();
       expect(result.student_positions['2'].row).toBe(2); // last row of 3
+    });
+  });
+
+  describe('Locked seats (pinning)', () => {
+    const layout = { type: 'rows', rows: 3, cols: 4 } as const;
+
+    function slotAt(row: number, col: number): number {
+      return generateSlots(layout).find((s) => s.row === row && s.col === col)!.index;
+    }
+
+    it('keeps pinned students at their exact seats', () => {
+      const optimizer = new ClassroomOptimizer(students, layout);
+      optimizer.setRng(mulberry32(7));
+      optimizer.setPinned(
+        new Map([
+          [slotAt(0, 0), '1'], // Alice front-left
+          [slotAt(2, 3), '2'], // Bob back-right
+        ]),
+      );
+      const result = optimizer.optimize();
+      expect(result.student_positions['1']).toMatchObject({ row: 0, col: 0 });
+      expect(result.student_positions['2']).toMatchObject({ row: 2, col: 3 });
+      // Everyone is still placed.
+      expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(students.length);
+    });
+
+    it('lets unpinned students take the pinned-free seats', () => {
+      const optimizer = new ClassroomOptimizer(students, layout);
+      optimizer.setRng(mulberry32(3));
+      optimizer.setPinned(new Map([[slotAt(0, 0), '1']]));
+      const result = optimizer.optimize();
+      // Pinned student fixed; the others must not be sitting on the pinned seat.
+      for (const id of ['2', '3', '4']) {
+        const p = result.student_positions[id];
+        expect(p.row === 0 && p.col === 0).toBe(false);
+      }
+    });
+
+    it('overrides a conflicting front_row rule (an explicit lock wins)', () => {
+      const optimizer = new ClassroomOptimizer(students, layout);
+      optimizer.setRng(mulberry32(11));
+      optimizer.setConstraints({
+        separate_pairs: [],
+        keep_together_pairs: [],
+        front_row_ids: ['1'], // rule says Alice up front…
+        back_row_ids: [],
+      });
+      optimizer.setPinned(new Map([[slotAt(2, 1), '1']])); // …but she's locked to the back
+      const result = optimizer.optimize();
+      expect(result.student_positions['1']).toMatchObject({ row: 2, col: 1 });
+    });
+
+    it('ignores pins for unknown students or out-of-range slots', () => {
+      const optimizer = new ClassroomOptimizer(students, layout);
+      optimizer.setRng(mulberry32(5));
+      optimizer.setPinned(
+        new Map([
+          [slotAt(1, 1), '1'], // valid
+          [999, '2'], // slot out of range → ignored
+          [slotAt(0, 0), 'ghost'], // unknown student → ignored
+        ]),
+      );
+      const result = optimizer.optimize();
+      expect(result.student_positions['1']).toMatchObject({ row: 1, col: 1 });
+      expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(students.length);
+    });
+
+    it('is deterministic with a seed: same pins + seed → identical placement', () => {
+      const run = () => {
+        const o = new ClassroomOptimizer(students, layout);
+        o.setRng(mulberry32(99));
+        o.setPinned(new Map([[slotAt(0, 1), '3']]));
+        return o.optimize().student_positions;
+      };
+      expect(run()).toEqual(run());
     });
   });
 

@@ -144,6 +144,15 @@ export class ClassroomOptimizer {
   private avoidRecentStrength = 0;
   /** Exam / anti-cheating mode — see EXAM_* constants. */
   private examMode = false;
+  /** Locked seats: slotIndex → studentId. Those students stay put; the GA
+   *  only rearranges the rest among the unpinned slots. Empty when nothing
+   *  is locked — in which case every pinned-aware operation below reduces to
+   *  its original full-chromosome behaviour, so seeded runs stay bit-for-bit
+   *  reproducible. */
+  private pinned = new Map<number, string>();
+  /** Slot indices the GA is free to fill, ascending. Recomputed per run from
+   *  `pinned`; defaults to every slot. */
+  private freeSlots: number[] = [];
 
   constructor(
     students: Student[],
@@ -187,6 +196,20 @@ export class ClassroomOptimizer {
   setLayout(def: LayoutDef) {
     this.layoutDef = def;
     this.slots = generateSlots(def);
+  }
+  /** Pin students to seats so a re-optimize keeps them in place and only
+   *  rearranges the rest. `pinned` maps slotIndex → studentId; entries whose
+   *  slot or student is out of range are ignored. Pass an empty map (or omit)
+   *  to optimize everything freely. */
+  setPinned(pinned: Map<number, string>) {
+    const valid = new Map<number, string>();
+    const ids = new Set(this.students.map((s) => s.id));
+    for (const [slotIdx, sid] of pinned) {
+      if (slotIdx >= 0 && slotIdx < this.slots.length && ids.has(sid)) {
+        valid.set(slotIdx, sid);
+      }
+    }
+    this.pinned = valid;
   }
   /** Inject a custom RNG (e.g. a seeded PRNG for tests). Affects shuffle,
    *  tournament selection, crossover, and mutation. */
@@ -233,8 +256,7 @@ export class ClassroomOptimizer {
       { chrom: seeded, fitness: this.fitness(seeded, studentMap) },
     ];
     while (scored.length < this.config.populationSize) {
-      const chrom = this.shuffle(ids);
-      while (chrom.length < totalSeats) chrom.push('');
+      const chrom = this.seedRandom(ids, totalSeats);
       scored.push({ chrom, fitness: this.fitness(chrom, studentMap) });
     }
 
@@ -347,13 +369,21 @@ export class ClassroomOptimizer {
 
     const studentMap = new Map(this.students.map((s) => [s.id, s]));
     const totalSeats = this.slots.length;
-    let ids = this.students.map((s) => s.id);
 
-    if (ids.length > totalSeats) {
+    // Pinned students are already seated and never moved or dropped; the GA
+    // pool is everyone else, arranged among the unpinned slots. With nothing
+    // pinned, freeSlots is every slot and `ids` is the whole roster — i.e.
+    // the original behaviour, so seeded runs stay reproducible.
+    this.freeSlots = this.slots.map((s) => s.index).filter((i) => !this.pinned.has(i));
+    const pinnedIds = new Set(this.pinned.values());
+    let ids = this.students.map((s) => s.id).filter((id) => !pinnedIds.has(id));
+
+    if (ids.length > this.freeSlots.length) {
+      const totalStudents = ids.length + pinnedIds.size;
       warnings.push(
-        `Too many students (${ids.length}) for ${totalSeats} seats. Extras will be omitted.`,
+        `Too many students (${totalStudents}) for ${totalSeats} seats. Extras will be omitted.`,
       );
-      ids = ids.slice(0, totalSeats);
+      ids = ids.slice(0, this.freeSlots.length);
     }
 
     // Optional wall-clock budget shared across all starts. When set, no
@@ -475,11 +505,16 @@ export class ClassroomOptimizer {
     const best = [...chrom];
     let bestFitness = this.fitness(best, studentMap);
     let evals = 0;
+    // Only consider swaps between free positions — pinned seats stay put.
+    // With nothing pinned, F is every index so this enumerates every pair.
+    const F = this.freeSlots;
 
     for (let pass = 0; pass < maxPasses && evals < maxEvals; pass++) {
       let improved = false;
-      for (let i = 0; i < best.length - 1 && evals < maxEvals; i++) {
-        for (let j = i + 1; j < best.length && evals < maxEvals; j++) {
+      for (let a = 0; a < F.length - 1 && evals < maxEvals; a++) {
+        for (let b = a + 1; b < F.length && evals < maxEvals; b++) {
+          const i = F[a];
+          const j = F[b];
           // Swapping two empty seats (or identical genes) is a no-op.
           if (best[i] === best[j]) continue;
           [best[i], best[j]] = [best[j], best[i]];
@@ -504,8 +539,19 @@ export class ClassroomOptimizer {
   private seedFromConstraints(ids: string[], totalSeats: number): Chromosome {
     const chrom: Chromosome = new Array(totalSeats).fill('');
     const placed = new Set<string>();
-    const frontSlots = this.slots.filter((s) => s.isFront).map((s) => s.index);
-    const backSlots = this.slots.filter((s) => s.isBack).map((s) => s.index);
+    // Pinned students are placed first — an explicit lock outranks the soft
+    // front/back row preferences below.
+    for (const [slotIdx, sid] of this.pinned) {
+      chrom[slotIdx] = sid;
+      placed.add(sid);
+    }
+    // Only unpinned slots are available to the constraint/random seeding.
+    const frontSlots = this.slots
+      .filter((s) => s.isFront && !this.pinned.has(s.index))
+      .map((s) => s.index);
+    const backSlots = this.slots
+      .filter((s) => s.isBack && !this.pinned.has(s.index))
+      .map((s) => s.index);
 
     for (const sid of this.constraints.front_row_ids) {
       if (!ids.includes(sid)) continue;
@@ -530,8 +576,23 @@ export class ClassroomOptimizer {
 
     const remaining = this.shuffle(ids.filter((id) => !placed.has(id)));
     let ri = 0;
-    for (let i = 0; i < totalSeats && ri < remaining.length; i++) {
+    for (const i of this.freeSlots) {
+      if (ri >= remaining.length) break;
       if (chrom[i] === '') chrom[i] = remaining[ri++];
+    }
+    return chrom;
+  }
+
+  /** Build one random member of the initial population: pinned genes fixed,
+   *  the rest of the roster shuffled into the free slots. With nothing pinned
+   *  this is exactly `shuffle(ids)` padded with empties (same RNG draw). */
+  private seedRandom(ids: string[], totalSeats: number): Chromosome {
+    const chrom: Chromosome = new Array(totalSeats).fill('');
+    for (const [slotIdx, sid] of this.pinned) chrom[slotIdx] = sid;
+    const shuffled = this.shuffle(ids);
+    const F = this.freeSlots;
+    for (let k = 0; k < shuffled.length && k < F.length; k++) {
+      chrom[F[k]] = shuffled[k];
     }
     return chrom;
   }
@@ -791,29 +852,38 @@ export class ClassroomOptimizer {
 
   // ── Crossover (Order Crossover - OX) ──────────────────────────────────────
 
+  // OX runs over the *free* slot positions only: pinned genes are copied
+  // straight into the child and never recombine. With nothing pinned,
+  // `freeSlots` is every index in order, so this is identical (same RNG
+  // draws, same writes) to a plain full-chromosome OX.
   private orderCrossover(
     parentA: Chromosome,
     parentB: Chromosome,
   ): Chromosome {
-    const len = parentA.length;
-    const start = Math.floor(this.rng() * len);
-    const end = start + Math.floor(this.rng() * (len - start));
+    const child: string[] = new Array(parentA.length).fill('');
+    for (const [slotIdx, sid] of this.pinned) child[slotIdx] = sid;
 
-    const child: string[] = new Array(len).fill('');
+    const F = this.freeSlots;
+    const m = F.length;
+    if (m === 0) return child;
+
+    const start = Math.floor(this.rng() * m);
+    const end = start + Math.floor(this.rng() * (m - start));
     const used = new Set<string>();
 
-    for (let i = start; i <= end && i < len; i++) {
-      child[i] = parentA[i];
-      if (parentA[i]) used.add(parentA[i]);
+    for (let k = start; k <= end && k < m; k++) {
+      const gene = parentA[F[k]];
+      child[F[k]] = gene;
+      if (gene) used.add(gene);
     }
 
-    let ci = (end + 1) % len;
-    for (let i = 0; i < len; i++) {
-      const idx = (end + 1 + i) % len;
-      const gene = parentB[idx];
+    let ck = (end + 1) % m;
+    for (let k = 0; k < m; k++) {
+      const idx = (end + 1 + k) % m;
+      const gene = parentB[F[idx]];
       if (gene === '' || !used.has(gene)) {
-        while (child[ci] !== '') ci = (ci + 1) % len;
-        child[ci] = gene;
+        while (child[F[ck]] !== '') ck = (ck + 1) % m;
+        child[F[ck]] = gene;
         if (gene) used.add(gene);
       }
     }
@@ -822,10 +892,14 @@ export class ClassroomOptimizer {
 
   // ── Mutation ──────────────────────────────────────────────────────────────
 
+  // Swap two free positions only — a pinned seat is never disturbed. With
+  // nothing pinned this is the original full-chromosome swap.
   private swapMutate(chrom: Chromosome) {
-    const len = chrom.length;
-    const i = Math.floor(this.rng() * len);
-    const j = Math.floor(this.rng() * len);
+    const F = this.freeSlots;
+    const m = F.length;
+    if (m < 2) return;
+    const i = F[Math.floor(this.rng() * m)];
+    const j = F[Math.floor(this.rng() * m)];
     [chrom[i], chrom[j]] = [chrom[j], chrom[i]];
   }
 

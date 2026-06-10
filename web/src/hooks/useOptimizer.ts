@@ -1,10 +1,42 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
 import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
-import { slotCount } from '../core/layouts';
+import { slotCount, generateSlots } from '../core/layouts';
 import { getRecentPairPenalties } from '../utils/rotationHistory';
 import { useLanguage } from './useLanguage';
-import type { OptimizationResult } from '../types';
+import type { OptimizationResult, ClassroomLayout } from '../types';
+import type { LayoutDef } from '../core/layouts';
+
+/**
+ * Turn the teacher's locked seats into optimizer pins. A lock means "the
+ * student currently sitting here stays here"; we resolve each locked seat
+ * key ("row-col") to its slot index in the current layout and the student
+ * the previous result placed there. Locked-but-empty seats yield no pin.
+ */
+function buildPinned(
+  lockedSeats: string[],
+  result: { layout: ClassroomLayout } | null,
+  layoutDef: LayoutDef,
+): [number, string][] {
+  if (!result || lockedSeats.length === 0) return [];
+  const slotIndexByPos = new Map<string, number>();
+  for (const slot of generateSlots(layoutDef)) {
+    slotIndexByPos.set(`${slot.row}-${slot.col}`, slot.index);
+  }
+  const studentByPos = new Map<string, string>();
+  for (const seat of result.layout.seats) {
+    if (seat.student_id) {
+      studentByPos.set(`${seat.position.row}-${seat.position.col}`, seat.student_id);
+    }
+  }
+  const pins: [number, string][] = [];
+  for (const key of lockedSeats) {
+    const slotIdx = slotIndexByPos.get(key);
+    const sid = studentByPos.get(key);
+    if (slotIdx !== undefined && sid) pins.push([slotIdx, sid]);
+  }
+  return pins;
+}
 
 type WorkerOut =
   | { type: 'ready' }
@@ -40,6 +72,8 @@ export function useOptimizer() {
   const constraints = useStore((s) => s.constraints);
   const avoidRecentNeighbors = useStore((s) => s.avoidRecentNeighbors);
   const resultHistory = useStore((s) => s.resultHistory);
+  const result = useStore((s) => s.result);
+  const lockedSeats = useStore((s) => s.lockedSeats);
   const isOptimizing = useStore((s) => s.isOptimizing);
   const setOptimizing = useStore((s) => s.setOptimizing);
   const setResult = useStore((s) => s.setResult);
@@ -142,6 +176,9 @@ export function useOptimizer() {
         : {};
     const avoidRecentStrength = avoidRecentNeighbors ? ROTATION_STRENGTH : 0;
 
+    // Locked seats are kept in place; the GA only rearranges the rest.
+    const pinned = buildPinned(lockedSeats, result, layoutDef);
+
     // Use worker if available
     if (workerRef.current) {
       return new Promise<OptimizationResult | null>((resolve) => {
@@ -157,6 +194,7 @@ export function useOptimizer() {
           constraints,
           recentPairPenalties,
           avoidRecentStrength,
+          pinned,
         });
       });
     }
@@ -169,16 +207,17 @@ export function useOptimizer() {
       optimizer.setConfig(config);
       optimizer.setConstraints(constraints);
       optimizer.setRotationAvoidance(recentPairPenalties, avoidRecentStrength);
-      const result = await Promise.resolve().then(() => optimizer.optimize());
-      setResult(result);
+      if (pinned.length > 0) optimizer.setPinned(new Map(pinned));
+      const out = await Promise.resolve().then(() => optimizer.optimize());
+      setResult(out);
       setOptimizing(false);
-      return result;
+      return out;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Optimization failed');
       setOptimizing(false);
       return null;
     }
-  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, setOptimizing, setResult, t]);
+  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, result, lockedSeats, setOptimizing, setResult, t]);
 
   // ── Cancel an in-flight run ───────────────────────────────────────────────
   // Asks the worker to stop early; it replies with a normal 'result'
