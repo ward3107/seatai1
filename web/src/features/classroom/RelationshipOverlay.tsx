@@ -1,4 +1,5 @@
 import { useEffect, useState, RefObject } from 'react';
+import { useLanguage } from '../../hooks/useLanguage';
 import type { Student, OptimizationResult } from '../../types';
 import { buildStudentToSeatMap } from '../../utils/seatingUtils';
 
@@ -44,6 +45,7 @@ export default function RelationshipOverlay({
   containerRef,
 }: Props) {
   const [lines, setLines] = useState<LineData[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!activeSeatKey || !result || !containerRef.current) {
@@ -113,11 +115,18 @@ export default function RelationshipOverlay({
 
   if (lines.length === 0) return null;
 
+  const friendCount = lines.filter((l) => l.type === 'friend').length;
+  const conflictCount = lines.length - friendCount;
+
   return (
     <svg
       className="absolute inset-0 w-full h-full pointer-events-none z-10"
       style={{ overflow: 'visible' }}
-      aria-hidden="true"
+      role="img"
+      aria-label={t('a11y.relationship_overlay', {
+        friends: friendCount,
+        conflicts: conflictCount,
+      })}
     >
       <defs>
         <filter id="rel-glow-green" x="-30%" y="-30%" width="160%" height="160%">

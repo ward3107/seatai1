@@ -83,7 +83,12 @@ export function getConstraintStatus(
     const sid = studentAtSlot[slot.index];
     if (!sid) continue;
     const student = byId.get(sid);
-    if (!student) continue;
+    if (!student) {
+      // Stale assignment: the seat references a student who is no longer
+      // on the roster (e.g. removed after the arrangement was computed).
+      flag(slot.row, slot.col, 'seatstatus.student_not_found', { id: sid });
+      continue;
+    }
 
     if ((student.requires_front_row || student.has_mobility_issues) && !slot.isFront) {
       flag(slot.row, slot.col, 'seatstatus.needs_front', { name: student.name });

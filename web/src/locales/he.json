@@ -448,6 +448,10 @@
     "generations": "דורות",
     "time": "זמן חישוב",
     "results_title": "תוצאות מיטוב",
+    "progress": "דור {{generation}} מתוך {{total}}",
+    "ai_summary_title": "סיכום כיתה ב-AI",
+    "ai_summary_generate": "צור סיכום",
+    "ai_summary_hint": "פסקה אחת ידידותית למורים על הסידור הזה — אפשר להדביק במייל לעמיתים או להורים.",
     "show_movement_diff": "סמן תלמידים שעברו מקום מההרצה הקודמת",
     "overall_fitness_score": "ניקוד כושר כללי",
     "notes": "הערות",
@@ -473,7 +477,8 @@
     "near_optimal_note": "סידור כמעט-אופטימלי — {{reason}} לאחר {{generations}} דורות ב-{{ms}} מ״ש. תוצאה היוריסטית חזקה, לא אופטימום מתמטי מוכח.",
     "stop_generations": "הגיע למגבלת הדורות",
     "stop_converged": "התכנס",
-    "stop_time": "הגיע לתקציב הזמן"
+    "stop_time": "הגיע לתקציב הזמן",
+    "stop_cancelled": "בוטל על ידך"
   },
   "settings": {
     "title": "הגדרות",
@@ -750,7 +755,8 @@
     "seat_locked": "נעול",
     "optimization_started": "האופטימיזציה החלה",
     "optimization_complete": "האופטימיזציה הסתיימה, ציון {{score}} אחוז",
-    "optimization_failed": "האופטימיזציה נכשלה: {{error}}"
+    "optimization_failed": "האופטימיזציה נכשלה: {{error}}",
+    "relationship_overlay": "שכבת קשרים: {{friends}} קשרי חברות, {{conflicts}} קשרי קונפליקט"
   },
   "seatstatus": {
     "ok": "כל כללי הישיבה מתקיימים",
@@ -760,7 +766,8 @@
     "together_violated": "{{a}} ו-{{b}} צריכים לשבת יחד",
     "mentor_violated": "{{mentee}} צריך/ה לשבת ליד החונך {{mentor}}",
     "front_violated": "{{name}} צריך/ה לשבת בשורה הקדמית",
-    "back_violated": "{{name}} צריך/ה לשבת בשורה האחורית"
+    "back_violated": "{{name}} צריך/ה לשבת בשורה האחורית",
+    "student_not_found": "התלמיד/ה המשובץ/ת ({{id}}) כבר לא ברשימת הכיתה"
   },
   "oneRoster": {
     "title": "OneRoster / ייצוא ממערכת",

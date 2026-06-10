@@ -448,6 +448,10 @@
     "generations": "поколения",
     "time": "Время вычисления",
     "results_title": "Результаты оптимизации",
+    "progress": "Поколение {{generation}} из {{total}}",
+    "ai_summary_title": "ИИ-сводка по классу",
+    "ai_summary_generate": "Создать сводку",
+    "ai_summary_hint": "Один понятный абзац об этой рассадке — можно вставить в письмо коллегам или родителям.",
     "show_movement_diff": "Подсветить учеников, переместившихся с прошлого запуска",
     "overall_fitness_score": "Общая оценка пригодности",
     "notes": "Примечания",
@@ -473,7 +477,8 @@
     "near_optimal_note": "Почти оптимальный план — {{reason}} после {{generations}} поколений за {{ms}} мс. Сильный эвристический результат, а не доказанный оптимум.",
     "stop_generations": "достигнут предел поколений",
     "stop_converged": "сошлось",
-    "stop_time": "достигнут лимит времени"
+    "stop_time": "достигнут лимит времени",
+    "stop_cancelled": "отменено вами"
   },
   "settings": {
     "title": "Настройки",
@@ -750,7 +755,8 @@
     "seat_locked": "закреплено",
     "optimization_started": "Оптимизация началась",
     "optimization_complete": "Оптимизация завершена, оценка {{score}} процентов",
-    "optimization_failed": "Оптимизация не удалась: {{error}}"
+    "optimization_failed": "Оптимизация не удалась: {{error}}",
+    "relationship_overlay": "Слой связей: дружеских связей — {{friends}}, конфликтных — {{conflicts}}"
   },
   "seatstatus": {
     "ok": "Все правила рассадки соблюдены",
@@ -760,7 +766,8 @@
     "together_violated": "{{a}} и {{b}} должны сидеть вместе",
     "mentor_violated": "{{mentee}} должен сидеть рядом с наставником {{mentor}}",
     "front_violated": "{{name}} должен сидеть в первом ряду",
-    "back_violated": "{{name}} должен сидеть в последнем ряду"
+    "back_violated": "{{name}} должен сидеть в последнем ряду",
+    "student_not_found": "Назначенный ученик ({{id}}) больше не числится в классе"
   },
   "oneRoster": {
     "title": "OneRoster / экспорт из SIS",

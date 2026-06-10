@@ -102,6 +102,41 @@ describe('parseCsv', () => {
     expect(warnings.some((w) => w.includes(`max=${MAX_ROSTER}`))).toBe(true);
   });
 
+  it('parses a quoted field containing a comma as a single value', () => {
+    const csv = [
+      'name,gender,notes',
+      '"Cohen, Alice",female,Strong reader',
+    ].join('\n');
+    const { students, errors, warnings } = parseCsv(csv, t);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(students).toHaveLength(1);
+    expect(students[0].name).toBe('Cohen, Alice');
+    expect(students[0].gender).toBe('female');
+    expect(students[0].notes).toBe('Strong reader');
+  });
+
+  it('unescapes doubled quotes inside a quoted field', () => {
+    const csv = [
+      'name,notes',
+      '"Alice ""The Great""","Says ""hi"", often"',
+    ].join('\n');
+    const { students, errors } = parseCsv(csv, t);
+    expect(errors).toEqual([]);
+    expect(students[0].name).toBe('Alice "The Great"');
+    expect(students[0].notes).toBe('Says "hi", often');
+  });
+
+  it('accepts quoted header cells', () => {
+    const csv = [
+      '"name","gender","academic_score"',
+      'Alice,female,88',
+    ].join('\n');
+    const { students, errors } = parseCsv(csv, t);
+    expect(errors).toEqual([]);
+    expect(students[0]).toMatchObject({ name: 'Alice', gender: 'female', academic_score: 88 });
+  });
+
   it('parses boolean-ish columns from "true"/"1"/"yes"', () => {
     const csv = [
       'name,is_bilingual,requires_front_row,has_mobility_issues,requires_quiet_area',

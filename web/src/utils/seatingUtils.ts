@@ -1,4 +1,4 @@
-import type { Student, OptimizationResult } from '../types';
+import type { Student, OptimizationResult, Seat } from '../types';
 import type { HeatMapMode } from '../core/store';
 
 /**
@@ -6,7 +6,13 @@ import type { HeatMapMode } from '../core/store';
  * A violation is:
  *   - A student who requires the front row but is not in row 0
  *   - A student who has mobility issues but is not in row 0
- *   - A student seated adjacent (horizontally or vertically) to an incompatible student
+ *   - A student seated adjacent to an incompatible student
+ *
+ * Adjacency: horizontal + vertical (row/col ± 1) for grid-shaped layouts,
+ * ring neighbours (including the wrap-around pair) for circle layouts where
+ * `col` is the seat's index around the ring and (row, col) is not a grid.
+ * Candidate positions are validated against the seats that actually exist
+ * in the result's layout — never against assumed rows×cols grid bounds.
  */
 export function getViolations(
   result: OptimizationResult,
@@ -14,7 +20,23 @@ export function getViolations(
 ): Set<string> {
   const violations = new Set<string>();
   const studentMap = new Map(students.map((s) => [s.id, s]));
-  const cols = result.layout.cols;
+
+  // Index the seats that actually exist so neighbour candidates are checked
+  // against the real layout, not assumed grid dimensions.
+  const seatAt = new Map<string, Seat>();
+  for (const seat of result.layout.seats) {
+    seatAt.set(`${seat.position.row}-${seat.position.col}`, seat);
+  }
+
+  const isCircle = result.layout.layout_type === 'circle';
+  // In the circle layout each seat's `col` is its index around the ring.
+  const seatAtRingIndex = new Map<number, Seat>();
+  if (isCircle) {
+    for (const seat of result.layout.seats) {
+      seatAtRingIndex.set(seat.position.col, seat);
+    }
+  }
+  const ringSize = result.layout.seats.length;
 
   for (const seat of result.layout.seats) {
     if (!seat.student_id) continue;
@@ -28,23 +50,24 @@ export function getViolations(
       violations.add(seatKey);
     }
 
-    // Incompatible adjacency (horizontal + vertical neighbours)
-    const neighbours = [
-      { row: seat.position.row, col: seat.position.col - 1 },
-      { row: seat.position.row, col: seat.position.col + 1 },
-      { row: seat.position.row - 1, col: seat.position.col },
-      { row: seat.position.row + 1, col: seat.position.col },
-    ];
+    // Incompatible adjacency
+    const neighbours: (Seat | undefined)[] = isCircle
+      ? [
+          seatAtRingIndex.get((seat.position.col - 1 + ringSize) % ringSize),
+          seatAtRingIndex.get((seat.position.col + 1) % ringSize),
+        ]
+      : [
+          seatAt.get(`${seat.position.row}-${seat.position.col - 1}`),
+          seatAt.get(`${seat.position.row}-${seat.position.col + 1}`),
+          seatAt.get(`${seat.position.row - 1}-${seat.position.col}`),
+          seatAt.get(`${seat.position.row + 1}-${seat.position.col}`),
+        ];
 
-    for (const pos of neighbours) {
-      if (pos.row < 0 || pos.col < 0 || pos.col >= cols) continue;
-      const neighbour = result.layout.seats.find(
-        (s) => s.position.row === pos.row && s.position.col === pos.col
-      );
-      if (!neighbour?.student_id) continue;
+    for (const neighbour of neighbours) {
+      if (!neighbour?.student_id || neighbour === seat) continue;
       if (student.incompatible_ids.includes(neighbour.student_id)) {
         violations.add(seatKey);
-        violations.add(`${pos.row}-${pos.col}`);
+        violations.add(`${neighbour.position.row}-${neighbour.position.col}`);
       }
     }
   }

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Users, Accessibility, Heart, AlertTriangle, Globe } from 'lucide-react';
 import clsx from 'clsx';
+import { useEffect } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import type { Student } from '../../types';
 
@@ -17,6 +18,17 @@ export default function StudentHoverPopup({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
+
+  // Escape closes the popup — keyboard users would otherwise be stuck
+  // with it (the popup only disappears on mouse-leave or the X button).
+  useEffect(() => {
+    if (!student) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [student, onClose]);
 
   return (
     <AnimatePresence>

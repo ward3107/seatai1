@@ -448,6 +448,10 @@
     "generations": "generations",
     "time": "Computation Time",
     "results_title": "Optimization Results",
+    "progress": "Generation {{generation}} of {{total}}",
+    "ai_summary_title": "AI class summary",
+    "ai_summary_generate": "Generate summary",
+    "ai_summary_hint": "One teacher-friendly paragraph about this arrangement — paste it into an email to colleagues or parents.",
     "show_movement_diff": "Highlight students who moved from the previous run",
     "overall_fitness_score": "Overall Fitness Score",
     "notes": "Notes",
@@ -473,7 +477,8 @@
     "near_optimal_note": "Near-optimal plan — {{reason}} after {{generations}} generations in {{ms}}ms. A strong heuristic result, not a proven mathematical optimum.",
     "stop_generations": "reached the generation limit",
     "stop_converged": "converged",
-    "stop_time": "hit the time budget"
+    "stop_time": "hit the time budget",
+    "stop_cancelled": "cancelled by you"
   },
   "settings": {
     "title": "Settings",
@@ -750,7 +755,8 @@
     "seat_locked": "locked",
     "optimization_started": "Optimization started",
     "optimization_complete": "Optimization complete, score {{score}} percent",
-    "optimization_failed": "Optimization failed: {{error}}"
+    "optimization_failed": "Optimization failed: {{error}}",
+    "relationship_overlay": "Relationship overlay: {{friends}} friend connections, {{conflicts}} conflict connections"
   },
   "seatstatus": {
     "ok": "All seating rules satisfied",
@@ -760,7 +766,8 @@
     "together_violated": "{{a}} and {{b}} should sit together",
     "mentor_violated": "{{mentee}} should sit next to mentor {{mentor}}",
     "front_violated": "{{name}} should be in the front row",
-    "back_violated": "{{name}} should be in the back row"
+    "back_violated": "{{name}} should be in the back row",
+    "student_not_found": "Assigned student ({{id}}) is no longer on the roster"
   },
   "oneRoster": {
     "title": "OneRoster / SIS export",

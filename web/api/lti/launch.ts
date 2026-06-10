@@ -14,6 +14,7 @@ import {
   handoffPage,
   toolBaseUrl,
 } from '../_lib/lti';
+import { rateLimit } from '../_lib/rateLimit';
 
 function str(v: unknown): string {
   if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : '';
@@ -21,6 +22,7 @@ function str(v: unknown): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!rateLimit(req, res)) return;
   try {
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');

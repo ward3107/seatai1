@@ -1,14 +1,55 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
-import { BookOpen, Users, Globe, Accessibility, Clock, Zap } from 'lucide-react';
+import { aiSummarizeClass } from '../../utils/aiSummary';
+import { BookOpen, Users, Globe, Accessibility, Clock, Zap, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function MetricsPanel() {
   const result = useStore((s) => s.result);
-  const { t } = useLanguage();
+  const students = useStore((s) => s.students);
+  const constraints = useStore((s) => s.constraints);
+  const layoutDef = useStore((s) => s.layoutDef);
+  const aiSettings = useStore((s) => s.aiSettings);
+  const { t, uiLanguage } = useLanguage();
+
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   if (!result) return null;
+
+  const generateSummary = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const text = await aiSummarizeClass(
+        { apiKey: aiSettings.apiKey, model: aiSettings.model },
+        {
+          studentCount: students.length,
+          layoutType: layoutDef.type,
+          scorePct: getDisplayScorePct(result),
+          objectives: result.objective_scores,
+          constraintCounts: {
+            separate_pairs: constraints.separate_pairs.length,
+            keep_together_pairs: constraints.keep_together_pairs.length,
+            front_row: constraints.front_row_ids.length,
+            back_row: constraints.back_row_ids.length,
+          },
+          warnings: result.warnings,
+          generations: result.generations,
+          stopReason: result.stop_reason ?? 'generations',
+        },
+        uiLanguage,
+      );
+      setAiText(text);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI request failed');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const metrics = [
     {
@@ -139,6 +180,43 @@ export default function MetricsPanel() {
               <li key={i}>{warning}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Whole-class AI summary — only when the teacher has opted in to AI
+          features in Settings. Sends aggregate facts, not the roster. */}
+      {aiSettings.enabled && aiSettings.apiKey && (
+        <div className="mt-4 p-3 bg-violet-50 border border-violet-200 rounded-lg">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-violet-800 flex items-center gap-1.5">
+              <Sparkles size={14} aria-hidden="true" />
+              {t('optimization.ai_summary_title')}
+            </p>
+            <button
+              type="button"
+              onClick={generateSummary}
+              disabled={aiLoading}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+            >
+              {aiLoading ? (
+                <>
+                  <RefreshCw size={12} className="animate-spin" aria-hidden="true" />
+                  {t('students.ai_loading')}
+                </>
+              ) : (
+                t(aiText ? 'students.ai_try_again' : 'optimization.ai_summary_generate')
+              )}
+            </button>
+          </div>
+          {!aiText && !aiError && (
+            <p className="mt-1 text-xs text-violet-600">{t('optimization.ai_summary_hint')}</p>
+          )}
+          {aiError && (
+            <p role="alert" className="mt-2 text-xs text-red-600">{aiError}</p>
+          )}
+          {aiText && (
+            <p className="mt-2 text-sm text-violet-900 whitespace-pre-wrap">{aiText}</p>
+          )}
         </div>
       )}
     </motion.div>
