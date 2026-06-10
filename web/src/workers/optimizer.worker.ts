@@ -25,6 +25,8 @@ type InMessage =
       recentPairPenalties?: Record<string, number>;
       /** Strength of the rotation penalty; 0 disables it. */
       avoidRecentStrength?: number;
+      /** Locked seats to preserve: [slotIndex, studentId] pairs. */
+      pinned?: [number, string][];
     }
   | { type: 'cancel' };
 
@@ -52,7 +54,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
 
   const {
     students, rows, cols, layoutDef, weights, config, constraints,
-    recentPairPenalties, avoidRecentStrength,
+    recentPairPenalties, avoidRecentStrength, pinned,
   } = msg;
   cancelRequested = false;
 
@@ -65,6 +67,9 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
     optimizer.setConstraints(constraints);
     if (avoidRecentStrength && recentPairPenalties) {
       optimizer.setRotationAvoidance(recentPairPenalties, avoidRecentStrength);
+    }
+    if (pinned && pinned.length > 0) {
+      optimizer.setPinned(new Map(pinned));
     }
 
     // optimizeAsync yields the event loop between generation chunks, which
