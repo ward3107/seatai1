@@ -11,8 +11,7 @@
 
 import type { OptimizationResult } from '../types';
 import type { AiExplainConfig } from './aiExplain';
-
-const ANTHROPIC_API_BASE = 'https://api.anthropic.com/v1/messages';
+import { anthropicMessage } from './anthropicClient';
 
 export interface ClassSummaryFacts {
   studentCount: number;
@@ -34,10 +33,8 @@ export async function aiSummarizeClass(
   config: AiExplainConfig,
   facts: ClassSummaryFacts,
   language: string,
+  onChunk?: (text: string) => void,
 ): Promise<string> {
-  const apiKey = config.apiKey.trim();
-  if (!apiKey) throw new Error('Missing API key.');
-
   const systemPrompt =
     'You are an assistant helping a teacher communicate an AI-generated classroom ' +
     'seating arrangement to colleagues, parents, or school leadership. You will ' +
@@ -53,37 +50,12 @@ export async function aiSummarizeClass(
     JSON.stringify(facts, null, 2) +
     '\n```';
 
-  const response = await fetch(ANTHROPIC_API_BASE, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      // Same browser-direct trade-off as aiExplain.ts — there is no server.
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: config.model,
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
+  return anthropicMessage({
+    apiKey: config.apiKey,
+    model: config.model,
+    system: systemPrompt,
+    prompt: userPrompt,
+    maxTokens: 500,
+    onChunk,
   });
-
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const errBody = await response.json();
-      // Same key-redaction defense-in-depth as aiExplain.ts.
-      detail = JSON.stringify(errBody).replace(/sk-[A-Za-z0-9_-]+/g, '<redacted>');
-    } catch {
-      detail = response.statusText;
-    }
-    throw new Error(`AI request failed (${response.status}): ${detail}`);
-  }
-
-  const data: { content?: Array<{ type: string; text?: string }> } = await response.json();
-  const text = data.content?.find((c) => c.type === 'text')?.text;
-  if (!text) throw new Error('AI returned no text.');
-  return text.trim();
 }

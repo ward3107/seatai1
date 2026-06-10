@@ -275,7 +275,16 @@
     "conflict_pair_both": "{{a}} and {{b}} are in both 'separate' and 'sit near' lists.",
     "conflict_front_and_back": "{{name}} is assigned to both the front and back row.",
     "conflict_back_vs_accessibility": "{{name}} requires the front row but is assigned to the back.",
-    "conflict_duplicate_pair": "{{a}} and {{b}} are listed twice."
+    "conflict_duplicate_pair": "{{a}} and {{b}} are listed twice.",
+    "ai_title": "AI rule suggestions",
+    "ai_suggest": "Suggest rules from notes",
+    "ai_hint": "Reads your private student notes and proposes seating rules. Nothing is applied until you accept it.",
+    "ai_none": "No rules suggested — the notes don’t clearly call for any.",
+    "ai_accept": "Accept suggestion",
+    "ai_dismiss": "Dismiss suggestion",
+    "ai_kind_separate": "Separate",
+    "ai_kind_together": "Sit together",
+    "ai_kind_front": "Front row"
   },
   "navigation": {
     "students": "Students",

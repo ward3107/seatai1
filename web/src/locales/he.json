@@ -275,7 +275,16 @@
     "conflict_pair_both": "{{a}} ו-{{b}} מופיעים גם ברשימת 'הפרדה' וגם ברשימת 'ישיבה יחד'.",
     "conflict_front_and_back": "{{name}} משויך גם לשורה הקדמית וגם לאחורית.",
     "conflict_back_vs_accessibility": "{{name}} דורש שורה קדמית אך משויך לשורה האחורית.",
-    "conflict_duplicate_pair": "{{a}} ו-{{b}} מופיעים פעמיים."
+    "conflict_duplicate_pair": "{{a}} ו-{{b}} מופיעים פעמיים.",
+    "ai_title": "הצעות כללים מ-AI",
+    "ai_suggest": "הצע כללים מההערות",
+    "ai_hint": "קורא את ההערות הפרטיות שלך על תלמידים ומציע כללי ישיבה. שום דבר לא מוחל עד שתאשרו.",
+    "ai_none": "לא הוצעו כללים — ההערות לא מצביעות בבירור על צורך.",
+    "ai_accept": "אשר הצעה",
+    "ai_dismiss": "דחה הצעה",
+    "ai_kind_separate": "להפריד",
+    "ai_kind_together": "לשבת יחד",
+    "ai_kind_front": "שורה ראשונה"
   },
   "navigation": {
     "students": "תלמידים",

@@ -23,6 +23,7 @@ export default function MetricsPanel() {
   const generateSummary = async () => {
     setAiLoading(true);
     setAiError(null);
+    setAiText('');
     try {
       const text = await aiSummarizeClass(
         { apiKey: aiSettings.apiKey, model: aiSettings.model },
@@ -42,10 +43,14 @@ export default function MetricsPanel() {
           stopReason: result.stop_reason ?? 'generations',
         },
         uiLanguage,
+        // Stream the paragraph in as it's generated instead of
+        // spinner-then-wall-of-text.
+        (chunk) => setAiText((prev) => (prev ?? '') + chunk),
       );
       setAiText(text);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'AI request failed');
+      setAiText(null);
     } finally {
       setAiLoading(false);
     }
