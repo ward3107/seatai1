@@ -119,6 +119,21 @@ describe('assertSafeNrpsUrl', () => {
     expect(() => assertSafeNrpsUrl('https://192.168.1.1/m')).toThrow(/non-routable/i);
     expect(() => assertSafeNrpsUrl('https://172.16.0.1/m')).toThrow(/non-routable/i);
   });
+
+  it('blocks bracketed IPv6 loopback / ULA / link-local and IPv4-mapped forms', () => {
+    expect(() => assertSafeNrpsUrl('https://[::1]/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://[fd00::1]/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://[fc00::1]/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://[fe80::1]/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://[::ffff:127.0.0.1]/m')).toThrow(/non-routable/i);
+  });
+
+  it('still allows ordinary hostnames that merely start with fc/fd', () => {
+    // The old guard wrongly rejected any host beginning "fc"/"fd"; an IPv6
+    // ULA must contain a colon, so these public names must pass.
+    const url = 'https://fdmoodle.school.edu/members';
+    expect(assertSafeNrpsUrl(url)).toBe(url);
+  });
 });
 
 describe('mapMembersToRoster', () => {

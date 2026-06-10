@@ -125,7 +125,11 @@ export function assertSafeNrpsUrl(raw: string): string {
   if (url.protocol !== 'https:') {
     throw new Error('NRPS URL must use HTTPS');
   }
-  const host = url.hostname.toLowerCase();
+  // url.hostname keeps the brackets on IPv6 literals ("[::1]"), which would
+  // dodge the bare-address checks below — strip them first.
+  let host = url.hostname.toLowerCase();
+  if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1);
+
   const isLoopback =
     host === 'localhost' ||
     host === '::1' ||
@@ -136,7 +140,14 @@ export function assertSafeNrpsUrl(raw: string): string {
     /^192\.168\./.test(host) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(host) || // 172.16.0.0 – 172.31.255.255
     /^169\.254\./.test(host) || // link-local
-    /^(0\.|::$|fc|fd)/.test(host); // 0.0.0.0/8, IPv6 unspecified, IPv6 ULA
+    host === '::' || // IPv6 unspecified
+    /^0\./.test(host) || // 0.0.0.0/8
+    /^(fc|fd)[0-9a-f]{0,2}:/.test(host) || // IPv6 ULA (fc00::/7)
+    /^fe[89ab][0-9a-f]:/.test(host) || // IPv6 link-local (fe80::/10)
+    // IPv4-mapped IPv6 (::ffff:a.b.c.d, normalised to ::ffff:7f00:1 etc.) is
+    // never a legitimate public NRPS endpoint — block the whole class rather
+    // than decode the trailing address.
+    host.startsWith('::ffff:');
   if (isLoopback || isPrivate) {
     throw new Error('NRPS URL points at a non-routable host');
   }
