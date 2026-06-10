@@ -5,6 +5,7 @@ import {
   findPlatform,
   buildAuthRequestUrl,
   validateLaunchClaims,
+  assertSafeNrpsUrl,
   mapMembersToRoster,
   sanitizeRosterPayload,
   type PlatformConfig,
@@ -94,6 +95,29 @@ describe('validateLaunchClaims', () => {
   it('falls back to label, then a default, for the class name', () => {
     expect(validateLaunchClaims({ ...valid, [LTI.CONTEXT]: { label: 'M5' } }).contextTitle).toBe('M5');
     expect(validateLaunchClaims({ ...valid, [LTI.CONTEXT]: {} }).contextTitle).toBe('Imported class');
+  });
+
+  it('rejects an NRPS url that targets a non-routable host (SSRF guard)', () => {
+    const ssrf = (url: string) => ({ ...valid, [LTI.NRPS]: { context_memberships_url: url } });
+    expect(() => validateLaunchClaims(ssrf('http://canvas.test/m'))).toThrow(/HTTPS/i);
+    expect(() => validateLaunchClaims(ssrf('https://127.0.0.1/m'))).toThrow(/non-routable/i);
+    expect(() => validateLaunchClaims(ssrf('https://169.254.169.254/latest/meta-data'))).toThrow(/non-routable/i);
+    expect(() => validateLaunchClaims(ssrf('not a url'))).toThrow(/invalid/i);
+  });
+});
+
+describe('assertSafeNrpsUrl', () => {
+  it('passes public HTTPS endpoints through unchanged', () => {
+    const url = 'https://canvas.test/api/lti/courses/1/names_and_roles';
+    expect(assertSafeNrpsUrl(url)).toBe(url);
+  });
+
+  it('blocks private, loopback and link-local hosts and plain HTTP', () => {
+    expect(() => assertSafeNrpsUrl('http://canvas.test/m')).toThrow(/HTTPS/i);
+    expect(() => assertSafeNrpsUrl('https://localhost/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://10.0.0.5/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://192.168.1.1/m')).toThrow(/non-routable/i);
+    expect(() => assertSafeNrpsUrl('https://172.16.0.1/m')).toThrow(/non-routable/i);
   });
 });
 

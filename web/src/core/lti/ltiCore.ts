@@ -107,6 +107,43 @@ export interface LaunchInfo {
 }
 
 /**
+ * SSRF guard for the NRPS endpoint. The membership URL rides inside the
+ * (platform-signed but attacker-influenceable) id_token and is later fetched
+ * server-side, so a forged or compromised launch could try to point us at
+ * internal services. Require HTTPS and reject loopback / private / link-local
+ * literal hosts. We deliberately do NOT pin to the issuer host — real LMS
+ * deployments often serve NRPS from a sibling subdomain or CDN.
+ * Throws on anything suspicious; returns the URL untouched otherwise.
+ */
+export function assertSafeNrpsUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error('Invalid NRPS URL');
+  }
+  if (url.protocol !== 'https:') {
+    throw new Error('NRPS URL must use HTTPS');
+  }
+  const host = url.hostname.toLowerCase();
+  const isLoopback =
+    host === 'localhost' ||
+    host === '::1' ||
+    host.endsWith('.localhost') ||
+    /^127\./.test(host);
+  const isPrivate =
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) || // 172.16.0.0 – 172.31.255.255
+    /^169\.254\./.test(host) || // link-local
+    /^(0\.|::$|fc|fd)/.test(host); // 0.0.0.0/8, IPv6 unspecified, IPv6 ULA
+  if (isLoopback || isPrivate) {
+    throw new Error('NRPS URL points at a non-routable host');
+  }
+  return raw;
+}
+
+/**
  * Validate the LTI-specific claims of a verified id_token payload and pull out
  * what roster sync needs. Throws with a clear message on anything unexpected.
  * (JWT signature/iss/aud/nonce are checked by the handler before this runs.)
@@ -122,10 +159,11 @@ export function validateLaunchClaims(payload: Record<string, unknown>): LaunchIn
   if (typeof deploymentId !== 'string') throw new Error('Missing deployment id');
 
   const nrps = payload[LTI.NRPS] as { context_memberships_url?: unknown } | undefined;
-  const nrpsUrl = nrps?.context_memberships_url;
-  if (typeof nrpsUrl !== 'string') {
+  const nrpsRaw = nrps?.context_memberships_url;
+  if (typeof nrpsRaw !== 'string') {
     throw new Error('This launch did not grant roster access (NRPS). Enable Names & Roles for the tool.');
   }
+  const nrpsUrl = assertSafeNrpsUrl(nrpsRaw);
 
   const context = payload[LTI.CONTEXT] as { title?: unknown; label?: unknown } | undefined;
   const contextTitle =
