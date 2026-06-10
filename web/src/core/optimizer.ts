@@ -343,6 +343,16 @@ export class ClassroomOptimizer {
   ): number {
     let score = 0;
 
+    // Position lookup: studentId → chromosome index. Built once per call so the
+    // constraint scoring below is O(1) per id instead of an O(seats) indexOf in
+    // a loop that runs for every individual, every generation. IDs are unique
+    // within a valid chromosome, so the first (and only) occurrence wins.
+    const posOf = new Map<string, number>();
+    for (let i = 0; i < chrom.length; i++) {
+      const id = chrom[i];
+      if (id && !posOf.has(id)) posOf.set(id, i);
+    }
+
     for (const slot of this.slots) {
       const sid = chrom[slot.index];
       if (!sid) continue;
@@ -443,41 +453,41 @@ export class ClassroomOptimizer {
 
     // Pair-based constraints
     for (const [a, b] of this.constraints.separate_pairs) {
-      const sa = chrom.indexOf(a);
-      const sb = chrom.indexOf(b);
+      const sa = posOf.get(a) ?? -1;
+      const sb = posOf.get(b) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score -= 1;
     }
     for (const [a, b] of this.constraints.keep_together_pairs) {
-      const sa = chrom.indexOf(a);
-      const sb = chrom.indexOf(b);
+      const sa = posOf.get(a) ?? -1;
+      const sb = posOf.get(b) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score += 0.5;
     }
 
     // Front/back row assignments
     for (const id of this.constraints.front_row_ids) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       if (slot.isFront) score += 1;
       else score -= 0.5 * slot.row;
     }
-    for (const id of this.constraints.back_row_ids) {
-      const pos = chrom.indexOf(id);
-      if (pos === -1) continue;
-      const slot = this.slots[pos];
-      if (slot.isBack) score += 1;
-      else {
-        const maxRow = Math.max(...this.slots.map((s) => s.row));
-        score -= 0.5 * (maxRow - slot.row);
+    if (this.constraints.back_row_ids.length > 0) {
+      const maxRow = Math.max(...this.slots.map((s) => s.row));
+      for (const id of this.constraints.back_row_ids) {
+        const pos = posOf.get(id) ?? -1;
+        if (pos === -1) continue;
+        const slot = this.slots[pos];
+        if (slot.isBack) score += 1;
+        else score -= 0.5 * (maxRow - slot.row);
       }
     }
 
     // Aisle assignments — reward edge-column placement.
     // Anyone in the leftmost or rightmost ~5% of normalized x is "on the aisle".
     for (const id of this.constraints.aisle_ids ?? []) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       const onAisle = slot.x <= 0.05 || slot.x >= 0.95;
@@ -489,7 +499,7 @@ export class ClassroomOptimizer {
     // (UI presents this as "window side". Mirror with `aisle` if you need the
     // other wall.)
     for (const id of this.constraints.near_window_ids ?? []) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       if (slot.x <= 0.1) score += 1;
@@ -499,8 +509,8 @@ export class ClassroomOptimizer {
     // Peer mentor → mentee adjacency. Both must be adjacent; if they are,
     // reward strongly so mentor pairs reliably sit together.
     for (const [mentor, mentee] of this.constraints.peer_mentor_pairs ?? []) {
-      const sa = chrom.indexOf(mentor);
-      const sb = chrom.indexOf(mentee);
+      const sa = posOf.get(mentor) ?? -1;
+      const sb = posOf.get(mentee) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score += 0.75;
       else score -= 0.25;

@@ -72,6 +72,13 @@ export function useOptimizer() {
 
       worker.onerror = (ev) => {
         console.warn('Worker error:', ev.message);
+        // A worker crash must not strand the UI: resolve any in-flight
+        // optimisation and clear the spinner, otherwise `isOptimizing`
+        // stays true forever and the Optimize button never re-enables.
+        setError(ev.message || 'Optimization worker crashed');
+        setOptimizing(false);
+        pendingRef.current?.resolve(null);
+        pendingRef.current = null;
         workerRef.current = null;
       };
 
@@ -79,7 +86,7 @@ export function useOptimizer() {
     } catch (workerErr) {
       console.warn('Worker not available:', workerErr);
     }
-  }, [setResult, setOptimizing]);
+  }, [setResult, setOptimizing, setError]);
 
   // Create worker on mount; tear down on unmount
   useEffect(() => {

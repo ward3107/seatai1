@@ -548,15 +548,9 @@ export default function ClassroomGrid() {
                         width: '88px',
                         transform: `translate(-50%, -50%) scale(${seatScale})`,
                       }}
-                      onMouseEnter={() => {
-                        setHoveredSeatKey(sk);
-                        if (student) setHoveredStudent(student);
-                      }}
-                      onMouseLeave={() => {
-                        setHoveredSeatKey(null);
-                        setHoveredStudent(null);
-                      }}
                     >
+                      {/* Hover handlers live on SeatCard itself — duplicating
+                          them on this wrapper double-fired the state updates. */}
                       <SeatCard
                         seat={seat}
                         student={student}

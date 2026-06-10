@@ -117,7 +117,6 @@ function App() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       useStore.setState({ sidebarOpen: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initialize WASM on mount
