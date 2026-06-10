@@ -3,7 +3,9 @@
  * Extends Vitest's expect with jest-dom matchers
  */
 
-import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
+// `export {}` keeps this file a module so the block below augments (merges
+// with) vitest's types rather than replacing them.
+export {};
 
 declare module 'vitest' {
   interface Assertion<T = any> extends jest.Matchers<void, T> {
@@ -17,7 +19,5 @@ declare module 'vitest' {
     toBeEnabled(): T;
     toBeChecked(): T;
     toBeEmpty(): T;
-    toBeInTheDocument(): T;
-    toBeInTheDocument(): T;
   }
 }

@@ -22,8 +22,7 @@
 
 import type { Student } from '../types';
 import type { PlacementExplanation } from './explainPlacement';
-
-const ANTHROPIC_API_BASE = 'https://api.anthropic.com/v1/messages';
+import { anthropicMessage } from './anthropicClient';
 
 export interface AiExplainConfig {
   apiKey: string;
@@ -34,9 +33,8 @@ export async function aiExplainPlacement(
   config: AiExplainConfig,
   student: Student,
   explanation: PlacementExplanation,
+  onChunk?: (text: string) => void,
 ): Promise<string> {
-  const apiKey = config.apiKey.trim();
-  if (!apiKey) throw new Error('Missing API key.');
 
   // Compact, structured representation — no PII beyond what the
   // teacher entered locally. Names are included because explanations
@@ -85,41 +83,14 @@ export async function aiExplainPlacement(
     JSON.stringify(facts, null, 2) +
     '\n```';
 
-  const response = await fetch(ANTHROPIC_API_BASE, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      // Required for browser-origin requests. Anthropic recommends
-      // proxying server-side for production; this app explicitly trades
-      // that off to stay backend-free.
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: config.model,
-      max_tokens: 400,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
+  // Request/error/redaction plumbing lives in anthropicClient; passing
+  // onChunk through switches the call to SSE streaming.
+  return anthropicMessage({
+    apiKey: config.apiKey,
+    model: config.model,
+    system: systemPrompt,
+    prompt: userPrompt,
+    maxTokens: 400,
+    onChunk,
   });
-
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const errBody = await response.json();
-      // Strip anything that looks like a key from the error body before
-      // surfacing — defense-in-depth in case Anthropic ever echoes
-      // headers back.
-      detail = JSON.stringify(errBody).replace(/sk-[A-Za-z0-9_-]+/g, '<redacted>');
-    } catch {
-      detail = response.statusText;
-    }
-    throw new Error(`AI request failed (${response.status}): ${detail}`);
-  }
-
-  const data: { content?: Array<{ type: string; text?: string }> } = await response.json();
-  const text = data.content?.find((c) => c.type === 'text')?.text;
-  if (!text) throw new Error('AI returned no text.');
-  return text.trim();
 }

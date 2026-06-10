@@ -107,6 +107,54 @@ export interface LaunchInfo {
 }
 
 /**
+ * SSRF guard for the NRPS endpoint. The membership URL rides inside the
+ * (platform-signed but attacker-influenceable) id_token and is later fetched
+ * server-side, so a forged or compromised launch could try to point us at
+ * internal services. Require HTTPS and reject loopback / private / link-local
+ * literal hosts. We deliberately do NOT pin to the issuer host — real LMS
+ * deployments often serve NRPS from a sibling subdomain or CDN.
+ * Throws on anything suspicious; returns the URL untouched otherwise.
+ */
+export function assertSafeNrpsUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error('Invalid NRPS URL');
+  }
+  if (url.protocol !== 'https:') {
+    throw new Error('NRPS URL must use HTTPS');
+  }
+  // url.hostname keeps the brackets on IPv6 literals ("[::1]"), which would
+  // dodge the bare-address checks below — strip them first.
+  let host = url.hostname.toLowerCase();
+  if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1);
+
+  const isLoopback =
+    host === 'localhost' ||
+    host === '::1' ||
+    host.endsWith('.localhost') ||
+    /^127\./.test(host);
+  const isPrivate =
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) || // 172.16.0.0 – 172.31.255.255
+    /^169\.254\./.test(host) || // link-local
+    host === '::' || // IPv6 unspecified
+    /^0\./.test(host) || // 0.0.0.0/8
+    /^(fc|fd)[0-9a-f]{0,2}:/.test(host) || // IPv6 ULA (fc00::/7)
+    /^fe[89ab][0-9a-f]:/.test(host) || // IPv6 link-local (fe80::/10)
+    // IPv4-mapped IPv6 (::ffff:a.b.c.d, normalised to ::ffff:7f00:1 etc.) is
+    // never a legitimate public NRPS endpoint — block the whole class rather
+    // than decode the trailing address.
+    host.startsWith('::ffff:');
+  if (isLoopback || isPrivate) {
+    throw new Error('NRPS URL points at a non-routable host');
+  }
+  return raw;
+}
+
+/**
  * Validate the LTI-specific claims of a verified id_token payload and pull out
  * what roster sync needs. Throws with a clear message on anything unexpected.
  * (JWT signature/iss/aud/nonce are checked by the handler before this runs.)
@@ -122,10 +170,11 @@ export function validateLaunchClaims(payload: Record<string, unknown>): LaunchIn
   if (typeof deploymentId !== 'string') throw new Error('Missing deployment id');
 
   const nrps = payload[LTI.NRPS] as { context_memberships_url?: unknown } | undefined;
-  const nrpsUrl = nrps?.context_memberships_url;
-  if (typeof nrpsUrl !== 'string') {
+  const nrpsRaw = nrps?.context_memberships_url;
+  if (typeof nrpsRaw !== 'string') {
     throw new Error('This launch did not grant roster access (NRPS). Enable Names & Roles for the tool.');
   }
+  const nrpsUrl = assertSafeNrpsUrl(nrpsRaw);
 
   const context = payload[LTI.CONTEXT] as { title?: unknown; label?: unknown } | undefined;
   const contextTitle =

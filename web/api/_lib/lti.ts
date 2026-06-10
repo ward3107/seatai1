@@ -29,6 +29,24 @@ import type { RosterClass } from '../../src/core/roster/types';
 
 const ALG = 'RS256';
 
+/** Per-request ceiling on outbound LMS calls so a slow/hanging platform can't
+ *  pin the serverless function open until it times out at the platform level. */
+const FETCH_TIMEOUT_MS = 10_000;
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function toolBaseUrl(req: VercelRequest): string {
   if (process.env.LTI_TOOL_URL) return process.env.LTI_TOOL_URL.replace(/\/$/, '');
   const proto = (req.headers['x-forwarded-proto'] as string) ?? 'https';
@@ -115,7 +133,7 @@ export async function getNrpsToken(platform: PlatformConfig): Promise<string> {
     client_assertion: assertion,
     scope: NRPS_SCOPE,
   });
-  const res = await fetch(platform.tokenEndpoint, {
+  const res = await fetchWithTimeout(platform.tokenEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
@@ -131,7 +149,7 @@ export async function fetchRoster(launch: LaunchInfo, token: string): Promise<Ro
   let url: string | null = launch.nrpsUrl;
   const members: unknown[] = [];
   for (let page = 0; page < 20 && url; page++) {
-    const res: Response = await fetch(url, {
+    const res: Response = await fetchWithTimeout(url, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.ims.lti-nrps.v2.membershipcontainer+json',

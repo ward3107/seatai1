@@ -98,6 +98,20 @@ describe('getConstraintStatus', () => {
     expect(status.get('0-1')?.violated).toBe(true);
   });
 
+  it('flags a seat whose student_id is no longer on the roster', () => {
+    // 'ghost' sits in seat 0-1 but was removed from the students list.
+    const { result, layout } = rowResult(['a', 'ghost']);
+    const status = getConstraintStatus(result, [student('a')], noConstraints, layout);
+    const ghostSeat = status.get('0-1');
+    expect(ghostSeat?.violated).toBe(true);
+    expect(ghostSeat?.reasons).toContainEqual({
+      key: 'seatstatus.student_not_found',
+      params: { id: 'ghost' },
+    });
+    // The valid student is unaffected.
+    expect(status.get('0-0')?.violated).toBe(false);
+  });
+
   it('flags a front-row student stuck in a back row', () => {
     // 2 rows × 1 col; front-row student placed in the back row.
     const layout: LayoutDef = { type: 'rows', rows: 2, cols: 1 };

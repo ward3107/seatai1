@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ClassroomOptimizer, mulberry32 } from './optimizer';
+import type { OptimizeProgress } from './optimizer';
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints } from '../types';
 
 describe('ClassroomOptimizer', () => {
@@ -570,6 +571,167 @@ describe('ClassroomOptimizer', () => {
       const res = exam.optimize();
       expect(Object.keys(res.student_positions).length).toBe(6);
       expect(res.algorithm).toBe('genetic');
+    });
+  });
+
+  // ── Seeded reproducible runs (config.seed) ────────────────────────────────
+  describe('Seeded runs (config.seed)', () => {
+    it('produces identical seat assignments for the same seed', () => {
+      const run = () => {
+        const opt = new ClassroomOptimizer(students, 3, 4);
+        opt.setConfig({ ...config, multiStart: 2, seed: 1234 });
+        return opt.optimize();
+      };
+      const r1 = run();
+      const r2 = run();
+      expect(r1.fitness_score).toBe(r2.fitness_score);
+      expect(r1.student_positions).toEqual(r2.student_positions);
+    });
+
+    it('different seeds (very likely) produce different assignments', () => {
+      // Roomy 5x6 grid: 4 students in 30 seats. The deterministic polish
+      // step can occasionally pull two seeds into the same local optimum,
+      // so check a handful of seeds and require at least two distinct
+      // outcomes — different seeds must actually steer the search.
+      const run = (seed: number) => {
+        const opt = new ClassroomOptimizer(students, 5, 6);
+        opt.setConfig({ ...config, multiStart: 1, maxGenerations: 20, seed });
+        return opt.optimize();
+      };
+      const outcomes = new Set(
+        [1, 2, 3, 4, 99999].map((seed) => JSON.stringify(run(seed).student_positions)),
+      );
+      expect(outcomes.size).toBeGreaterThan(1);
+    });
+
+    it('a config without seed keeps a previously injected RNG (back-compat)', () => {
+      // setRng() then setConfig() without a seed must not reset the RNG —
+      // this is the pre-existing seeding pathway used elsewhere in tests.
+      const run = () => {
+        const opt = new ClassroomOptimizer(students, 3, 4);
+        opt.setRng(mulberry32(7));
+        opt.setConfig({ ...config });
+        return opt.optimize();
+      };
+      expect(run().student_positions).toEqual(run().student_positions);
+    });
+  });
+
+  // ── Local-search polish (memetic step) ────────────────────────────────────
+  describe('Local-search polish', () => {
+    // The polish step is private; reach in for a focused unit test.
+    type PolishApi = {
+      fitness(c: string[], m: Map<string, Student>): number;
+      localSearchPolish(
+        c: string[],
+        m: Map<string, Student>,
+      ): { chrom: string[]; fitness: number };
+    };
+
+    it('never lowers the fitness of an arrangement', () => {
+      const opt = new ClassroomOptimizer(students, 3, 4);
+      const priv = opt as unknown as PolishApi;
+      const studentMap = new Map(students.map((s) => [s.id, s]));
+      // Deliberately bad arrangement: incompatible pair 1/4 adjacent,
+      // front-row-needing Charlie (3) stuck in the middle.
+      const chrom = ['1', '4', '2', '3', '', '', '', '', '', '', '', ''];
+      const before = priv.fitness(chrom, studentMap);
+      const polished = priv.localSearchPolish([...chrom], studentMap);
+      expect(polished.fitness).toBeGreaterThanOrEqual(before);
+      // Every student is still seated exactly once.
+      expect([...polished.chrom].filter(Boolean).sort()).toEqual(['1', '2', '3', '4']);
+    });
+
+    it('final fitness is >= the best GA fitness observed during the run', () => {
+      const opt = new ClassroomOptimizer(students, 3, 4);
+      opt.setConfig({ ...config, multiStart: 2, seed: 99 });
+      let gaBest = -Infinity;
+      const result = opt.optimize({
+        onProgress: (p) => {
+          gaBest = Math.max(gaBest, p.bestFitness);
+        },
+      });
+      expect(gaBest).toBeGreaterThan(-Infinity);
+      expect(result.fitness_score).toBeGreaterThanOrEqual(gaBest);
+    });
+  });
+
+  // ── Progress streaming & cancellation ─────────────────────────────────────
+  describe('Progress & cancellation', () => {
+    it('streams throttled, monotonic progress plus a final report', () => {
+      const opt = new ClassroomOptimizer(students, 3, 4);
+      opt.setConfig({
+        ...config,
+        maxGenerations: 50,
+        earlyStopPatience: 100, // no early stop — run all 50 generations
+        multiStart: 1,
+        seed: 5,
+      });
+      const reports: OptimizeProgress[] = [];
+      opt.optimize({ onProgress: (p) => reports.push(p) });
+
+      expect(reports.length).toBeGreaterThan(1);
+      // At most one report per ~10 generations, plus the final one.
+      expect(reports.length).toBeLessThanOrEqual(Math.ceil(50 / 10) + 1);
+      for (let i = 1; i < reports.length; i++) {
+        expect(reports[i].generation).toBeGreaterThanOrEqual(reports[i - 1].generation);
+        expect(reports[i].bestFitness).toBeGreaterThanOrEqual(reports[i - 1].bestFitness);
+      }
+      expect(reports[0].totalGenerations).toBe(50);
+      expect(reports[reports.length - 1].generation).toBeLessThanOrEqual(50);
+    });
+
+    it('shouldStop ends the run early and still returns a usable plan', () => {
+      const opt = new ClassroomOptimizer(students, 3, 4);
+      opt.setConfig({
+        ...config,
+        maxGenerations: 500,
+        earlyStopPatience: 1000,
+        multiStart: 1,
+        seed: 5,
+      });
+      let polls = 0;
+      const result = opt.optimize({ shouldStop: () => ++polls >= 5 });
+      expect(result.generations).toBeLessThan(500);
+      expect(result.stop_reason).toBe('cancelled');
+      // Best-so-far is still a complete, valid plan.
+      expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(students.length);
+      expect(Object.keys(result.student_positions)).toHaveLength(students.length);
+    });
+
+    it('optimizeAsync matches optimize for the same seed', async () => {
+      const mk = () => {
+        const opt = new ClassroomOptimizer(students, 3, 4);
+        opt.setConfig({ ...config, multiStart: 2, seed: 77 });
+        return opt;
+      };
+      const syncResult = mk().optimize();
+      const asyncResult = await mk().optimizeAsync({ chunkGenerations: 7 });
+      expect(asyncResult.fitness_score).toBe(syncResult.fitness_score);
+      expect(asyncResult.student_positions).toEqual(syncResult.student_positions);
+    });
+
+    it('optimizeAsync honours shouldStop set between chunks', async () => {
+      const opt = new ClassroomOptimizer(students, 3, 4);
+      opt.setConfig({
+        ...config,
+        maxGenerations: 500,
+        earlyStopPatience: 1000,
+        multiStart: 1,
+        seed: 3,
+      });
+      // The flag flips on the event loop — i.e. during a chunk gap — which
+      // is exactly how the worker's 'cancel' message lands mid-run.
+      let stop = false;
+      setTimeout(() => {
+        stop = true;
+      }, 0);
+      const result = await opt.optimizeAsync({
+        chunkGenerations: 5,
+        shouldStop: () => stop,
+      });
+      expect(result.generations).toBeLessThan(500);
+      expect(Object.keys(result.student_positions)).toHaveLength(students.length);
     });
   });
 });

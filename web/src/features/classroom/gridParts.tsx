@@ -1,6 +1,7 @@
 import { useRef, useState, useLayoutEffect } from 'react';
 import { RefreshCw, User, Ban } from 'lucide-react';
 import clsx from 'clsx';
+import type { Student } from '../../types';
 
 /** Spinner shown while a lazily-loaded view (3D / timeline) fetches. */
 export function LazyFallback() {
@@ -101,6 +102,94 @@ export function DecoTile({ kind, label }: { kind: 'desk' | 'obstacle'; label: st
     >
       {kind === 'desk' ? <User size={18} aria-hidden="true" /> : <Ban size={18} aria-hidden="true" />}
       <span className="text-[10px] font-medium text-center leading-tight px-1">{label}</span>
+    </div>
+  );
+}
+
+/**
+ * Card shown in the DragOverlay while a student is being dragged.
+ * Each layout family keeps its own ghost styling: the absolute room uses a
+ * solid colour card, the row grid uses the white tilted card.
+ */
+export function DragGhost({
+  student,
+  variant,
+}: {
+  student: Student;
+  variant: 'absolute' | 'rows';
+}) {
+  if (variant === 'absolute') {
+    return (
+      <div
+        className={clsx(
+          'w-[88px] min-h-[88px] rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl scale-105',
+          student.gender === 'male'
+            ? 'bg-blue-400'
+            : student.gender === 'female'
+              ? 'bg-pink-400'
+              : 'bg-purple-400',
+        )}
+      >
+        <div className="text-xl">
+          {student.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="text-xs mt-0.5 truncate w-full text-center">
+          {student.name.split(' ')[0]}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={clsx(
+        'w-[88px] h-[88px] rounded-lg border-2 border-indigo-400 bg-white shadow-2xl',
+        'flex flex-col items-center justify-center opacity-95 rotate-2 scale-110'
+      )}
+    >
+      <div
+        className={clsx(
+          'w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm',
+          student.gender === 'male'
+            ? 'bg-blue-400'
+            : student.gender === 'female'
+            ? 'bg-pink-400'
+            : 'bg-purple-400'
+        )}
+      >
+        {student.name.charAt(0).toUpperCase()}
+      </div>
+      <p className="mt-1 text-xs font-medium text-gray-700 truncate max-w-[76px] text-center">
+        {student.name.split(' ')[0]}
+      </p>
+    </div>
+  );
+}
+
+/** Static colour legend shown when no heat-map mode is active. */
+export function StaticLegend({ t }: { t: (key: string) => string }) {
+  return (
+    <div className="mt-5 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+      <div className="flex items-center gap-1.5">
+        <div className="w-3.5 h-3.5 rounded bg-blue-50 border-2 border-blue-200" />
+        {t('classroom.legend_front_row')}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-3.5 h-3.5 rounded-full bg-blue-400" />
+        {t('classroom.legend_male')}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-3.5 h-3.5 rounded-full bg-pink-400" />
+        {t('classroom.legend_female')}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-3.5 h-3.5 rounded bg-red-100 border-2 border-red-400" />
+        {t('classroom.legend_violation')}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[11px]">🔒</span>
+        {t('classroom.legend_locked')}
+      </div>
     </div>
   );
 }

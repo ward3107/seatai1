@@ -14,6 +14,7 @@ import {
   handoffPage,
   toolBaseUrl,
 } from '../_lib/lti';
+import { rateLimit } from '../_lib/rateLimit';
 
 function str(v: unknown): string {
   if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : '';
@@ -21,6 +22,7 @@ function str(v: unknown): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!rateLimit(req, res)) return;
   try {
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
@@ -52,11 +54,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const roster = await fetchRoster(launch, token);
 
     // This transient page is meant to render inside the LMS iframe, so allow
-    // framing for this response only (the SPA itself stays X-Frame-Options: DENY).
-    res.setHeader('Content-Security-Policy', 'frame-ancestors *');
+    // framing for this response only (the SPA itself stays X-Frame-Options:
+    // DENY). Scope framing to the launching platform's origin instead of "*"
+    // so arbitrary sites can't embed this roster-bearing handoff page.
+    let frameAncestors = "'none'";
+    try {
+      frameAncestors = new URL(platform.issuer).origin;
+    } catch {
+      /* issuer is validated at parse time; fall back to 'none' if malformed */
+    }
+    res.setHeader('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(handoffPage(roster, toolBaseUrl(req)));
   } catch (e) {
-    res.status(400).send(`LTI launch failed: ${e instanceof Error ? e.message : 'error'}`);
+    // Log the real cause server-side; return a generic message so internal
+    // details (endpoint URLs, upstream status text) don't leak to the browser.
+    console.error('LTI launch error:', e);
+    res.status(400).send('LTI launch failed: unable to complete authentication.');
   }
 }

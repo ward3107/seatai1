@@ -278,6 +278,8 @@ export default function StudentDetailPanel() {
                         { apiKey: aiSettings.apiKey, model: aiSettings.model },
                         student,
                         explanation,
+                        // Stream the paragraph in as it's generated.
+                        (chunk) => setAiText((prev) => prev + chunk),
                       );
                       setAiText(text);
                     } catch (err) {

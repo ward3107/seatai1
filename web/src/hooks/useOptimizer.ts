@@ -8,16 +8,25 @@ import type { OptimizationResult } from '../types';
 
 type WorkerOut =
   | { type: 'ready' }
-  | { type: 'result'; result: OptimizationResult }
+  | { type: 'progress'; generation: number; totalGenerations: number; bestFitness: number }
+  | { type: 'result'; result: OptimizationResult; cancelled?: boolean }
   | { type: 'error'; error: string };
 
 type PendingPromise = {
   resolve: (r: OptimizationResult | null) => void;
 };
 
+/** Live progress of the in-flight optimization; null when idle. */
+export type OptimizerProgress = {
+  generation: number;
+  totalGenerations: number;
+  bestFitness: number;
+};
+
 export function useOptimizer() {
   const [wasmReady, setWasmReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<OptimizerProgress | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const pendingRef = useRef<PendingPromise | null>(null);
   const loadedRef = useRef(false);
@@ -56,15 +65,25 @@ export function useOptimizer() {
         if (msg.type === 'ready') {
           console.log('✅ Worker ready');
 
+        } else if (msg.type === 'progress') {
+          setProgress({
+            generation: msg.generation,
+            totalGenerations: msg.totalGenerations,
+            bestFitness: msg.bestFitness,
+          });
+
         } else if (msg.type === 'result') {
+          // A cancelled run still delivers the best-so-far plan.
           setResult(msg.result);
           setOptimizing(false);
+          setProgress(null);
           pendingRef.current?.resolve(msg.result);
           pendingRef.current = null;
 
         } else if (msg.type === 'error') {
           setError(msg.error);
           setOptimizing(false);
+          setProgress(null);
           pendingRef.current?.resolve(null);
           pendingRef.current = null;
         }
@@ -72,6 +91,14 @@ export function useOptimizer() {
 
       worker.onerror = (ev) => {
         console.warn('Worker error:', ev.message);
+        // A worker crash must not strand the UI: resolve any in-flight
+        // optimisation and clear the spinner, otherwise `isOptimizing`
+        // stays true forever and the Optimize button never re-enables.
+        setError(ev.message || 'Optimization worker crashed');
+        setOptimizing(false);
+        setProgress(null);
+        pendingRef.current?.resolve(null);
+        pendingRef.current = null;
         workerRef.current = null;
       };
 
@@ -79,7 +106,7 @@ export function useOptimizer() {
     } catch (workerErr) {
       console.warn('Worker not available:', workerErr);
     }
-  }, [setResult, setOptimizing]);
+  }, [setResult, setOptimizing, setError]);
 
   // Create worker on mount; tear down on unmount
   useEffect(() => {
@@ -104,6 +131,7 @@ export function useOptimizer() {
 
     setOptimizing(true);
     setError(null);
+    setProgress(null);
 
     // Rotation avoidance is opt-in and only meaningful once we have past
     // runs to compare against. Compute the pair-penalty table here so both
@@ -152,5 +180,14 @@ export function useOptimizer() {
     }
   }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, setOptimizing, setResult, t]);
 
-  return { wasmReady, isOptimizing, error, initWasm, optimize };
+  // ── Cancel an in-flight run ───────────────────────────────────────────────
+  // Asks the worker to stop early; it replies with a normal 'result'
+  // message carrying the best plan found so far. No-op when nothing is
+  // running (or on the main-thread fallback path, which can't be cancelled).
+  const cancel = useCallback(() => {
+    if (!pendingRef.current || !workerRef.current) return;
+    workerRef.current.postMessage({ type: 'cancel' });
+  }, []);
+
+  return { wasmReady, isOptimizing, error, initWasm, optimize, progress, cancel };
 }

@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import AiRuleSuggestions from './AiRuleSuggestions';
+import type { RuleSuggestion } from '../../utils/aiSuggestRules';
 import type { SeatingConstraints, Student } from '../../types';
 
 type PairField = 'separate_pairs' | 'keep_together_pairs' | 'peer_mentor_pairs';
@@ -477,6 +479,19 @@ export default function ConstraintsPanel() {
       back_row_ids: [],
     });
 
+  // Apply one accepted AI suggestion through the same paths the manual
+  // pickers use (dedupe against existing rules included).
+  const applySuggestion = (s: RuleSuggestion) => {
+    if (s.kind === 'front_row') {
+      if (!constraints.front_row_ids.includes(s.a)) toggleRowId('front_row_ids')(s.a);
+    } else if (s.b) {
+      const field = s.kind === 'separate' ? 'separate_pairs' : 'keep_together_pairs';
+      if (!(constraints[field] ?? []).some((p) => pairsEqual(p, [s.a, s.b!]))) {
+        addPair(field)(s.a, s.b);
+      }
+    }
+  };
+
   return (
     <div className="bg-gray-50 rounded-xl overflow-hidden">
       <button
@@ -537,6 +552,8 @@ export default function ConstraintsPanel() {
                   </ul>
                 </div>
               )}
+
+              <AiRuleSuggestions onApply={applySuggestion} />
 
               <PairPicker
                 students={students}

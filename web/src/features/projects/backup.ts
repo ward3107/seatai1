@@ -134,7 +134,21 @@ export type ParseResult =
 
 /** Parse + validate a backup JSON string. Returns a discriminated result
  *  so the UI can show targeted error messages without throwing. */
+/** Hard ceiling on a backup file we'll attempt to parse. A SeatAI backup is a
+ *  handful of small classes; anything past this is corrupt or hostile, and
+ *  JSON.parsing a multi-hundred-MB string would freeze the tab. */
+const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
+
 export function parseBackup(json: string): ParseResult {
+  // `.length` is UTF-16 code units — a cheap upper bound on byte size that
+  // avoids allocating a Blob just to measure an oversized file.
+  if (json.length > MAX_BACKUP_BYTES) {
+    return {
+      ok: false,
+      kind: 'invalid-json',
+      message: 'Backup file is too large to be a valid SeatAI export',
+    };
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(json);

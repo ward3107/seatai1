@@ -5,6 +5,7 @@
  */
 
 import { generateId } from './sampleData';
+import { parseDelimited } from '../core/roster/oneRoster';
 import type { Student, Gender, AcademicLevel, BehaviorLevel } from '../types';
 
 const VALID_GENDERS = ['male', 'female', 'other'];
@@ -94,11 +95,15 @@ export function parseCsv(
   text: string,
   t: Translator,
 ): { students: Student[]; errors: string[]; warnings: string[] } {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) return { students: [], errors: [t('csvImport.error_no_header')], warnings: [] };
+  // RFC-4180-aware parsing (quoted fields, embedded commas, "" escapes) —
+  // shared with the OneRoster importer. Returns header-keyed rows with
+  // blank lines already dropped.
+  const records = parseDelimited(text);
+  if (records.length === 0) return { students: [], errors: [t('csvImport.error_no_header')], warnings: [] };
 
-  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
-  if (!headers.includes('name')) {
+  // parseDelimited keys every row by the original (trimmed) header text;
+  // our column names are case-insensitive, so lowercase the keys.
+  if (!Object.keys(records[0]).some((h) => h.toLowerCase() === 'name')) {
     return { students: [], errors: [t('csvImport.error_missing_name')], warnings: [] };
   }
 
@@ -107,16 +112,15 @@ export function parseCsv(
   const warnings: string[] = [];
   const seenNames = new Map<string, number>();
 
-  const dataLines = lines.slice(1, 1 + MAX_ROSTER);
-  if (lines.length - 1 > MAX_ROSTER) {
+  const dataRecords = records.slice(0, MAX_ROSTER);
+  if (records.length > MAX_ROSTER) {
     warnings.push(t('csvImport.warn_too_many_rows', { max: MAX_ROSTER }));
   }
 
-  dataLines.forEach((line, i) => {
+  dataRecords.forEach((record, i) => {
     const rowNum = i + 2; // 1-indexed + header
-    const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
     const row: Record<string, string> = {};
-    headers.forEach((h, idx) => { row[h] = values[idx] ?? ''; });
+    for (const [h, v] of Object.entries(record)) row[h.toLowerCase()] = v;
 
     const student = parseStudent(row, rowNum, warnings, t);
     if (!student) {

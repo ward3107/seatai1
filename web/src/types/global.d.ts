@@ -97,7 +97,7 @@ export interface OptimizationResult {
   /** Why the winning start stopped: reached the generation cap
    *  ('generations'), stalled with no improvement ('converged'), or ran
    *  out of the wall-clock budget ('time'). Optional for back-compat. */
-  stop_reason?: 'generations' | 'converged' | 'time';
+  stop_reason?: 'generations' | 'converged' | 'time' | 'cancelled';
   computation_time_ms: number;
   warnings: string[];
   /** Algorithm used for optimization (if applicable) */
@@ -127,6 +127,9 @@ export interface GeneticConfig {
    *  empty buffer seats), separates friends, and keeps similar-ability and
    *  incompatible students apart — to discourage copying. */
   examMode?: boolean;
+  /** Optional PRNG seed for reproducible runs — the same inputs + seed
+   *  always produce the same seating chart. Undefined = random each run. */
+  seed?: number;
 }
 
 export interface SeatingConstraints {

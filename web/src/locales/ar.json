@@ -275,7 +275,16 @@
     "conflict_pair_both": "{{a}} و{{b}} مُدرجان في قائمتَي 'فصل' و'الجلوس قربًا'.",
     "conflict_front_and_back": "{{name}} مُعيَّن للصفين الأمامي والخلفي معًا.",
     "conflict_back_vs_accessibility": "{{name}} يحتاج الصف الأمامي لكنه مُعيَّن للخلفي.",
-    "conflict_duplicate_pair": "{{a}} و{{b}} مُدرجان مرتين."
+    "conflict_duplicate_pair": "{{a}} و{{b}} مُدرجان مرتين.",
+    "ai_title": "اقتراحات قواعد من الذكاء الاصطناعي",
+    "ai_suggest": "اقترح قواعد من الملاحظات",
+    "ai_hint": "يقرأ ملاحظاتك الخاصة عن الطلاب ويقترح قواعد جلوس. لا يُطبَّق شيء حتى توافق عليه.",
+    "ai_none": "لم تُقترح قواعد — الملاحظات لا تستدعي ذلك بوضوح.",
+    "ai_accept": "قبول الاقتراح",
+    "ai_dismiss": "رفض الاقتراح",
+    "ai_kind_separate": "فصل",
+    "ai_kind_together": "جلوس معًا",
+    "ai_kind_front": "الصف الأمامي"
   },
   "navigation": {
     "students": "الطلاب",
@@ -448,6 +457,10 @@
     "generations": "الأجيال",
     "time": "وقت الحساب",
     "results_title": "نتائج التحسين",
+    "progress": "الجيل {{generation}} من {{total}}",
+    "ai_summary_title": "ملخص الصف بالذكاء الاصطناعي",
+    "ai_summary_generate": "إنشاء ملخص",
+    "ai_summary_hint": "فقرة واحدة مناسبة للمعلمين حول هذا الترتيب — يمكن لصقها في بريد إلكتروني للزملاء أو أولياء الأمور.",
     "show_movement_diff": "أبرز الطلاب الذين انتقلوا من الترتيب السابق",
     "overall_fitness_score": "درجة الملاءمة العامة",
     "notes": "ملاحظات",
@@ -473,7 +486,8 @@
     "near_optimal_note": "ترتيب شبه مثالي — {{reason}} بعد {{generations}} جيلًا في {{ms}} مللي ثانية. نتيجة استدلالية قوية وليست حلاً مثاليًا مُثبتًا رياضيًا.",
     "stop_generations": "بلغ حد الأجيال",
     "stop_converged": "تقارب",
-    "stop_time": "بلغ ميزانية الوقت"
+    "stop_time": "بلغ ميزانية الوقت",
+    "stop_cancelled": "أُلغي من قبلك"
   },
   "settings": {
     "title": "الإعدادات",
@@ -750,7 +764,8 @@
     "seat_locked": "مقفل",
     "optimization_started": "بدأت عملية التحسين",
     "optimization_complete": "اكتملت عملية التحسين، النتيجة {{score}} بالمئة",
-    "optimization_failed": "فشلت عملية التحسين: {{error}}"
+    "optimization_failed": "فشلت عملية التحسين: {{error}}",
+    "relationship_overlay": "طبقة العلاقات: {{friends}} روابط صداقة، {{conflicts}} روابط تعارض"
   },
   "seatstatus": {
     "ok": "جميع قواعد الجلوس مُحقّقة",
@@ -760,7 +775,8 @@
     "together_violated": "يجب أن يجلس {{a}} و{{b}} معًا",
     "mentor_violated": "يجب أن يجلس {{mentee}} بجوار الموجّه {{mentor}}",
     "front_violated": "يجب أن يجلس {{name}} في الصف الأمامي",
-    "back_violated": "يجب أن يجلس {{name}} في الصف الخلفي"
+    "back_violated": "يجب أن يجلس {{name}} في الصف الخلفي",
+    "student_not_found": "الطالب المعيّن ({{id}}) لم يعد في قائمة الصف"
   },
   "oneRoster": {
     "title": "OneRoster / تصدير من النظام",

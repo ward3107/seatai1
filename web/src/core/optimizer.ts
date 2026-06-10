@@ -23,6 +23,45 @@ import { generateSlots, type LayoutDef, type Slot } from './layouts';
 
 type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
 
+/** A chromosome paired with its (cached) fitness. Individuals are scored
+ *  exactly once — when created — and carry the score with them so elites
+ *  surviving into the next generation are never re-evaluated. */
+type Scored = { chrom: Chromosome; fitness: number };
+
+/** Why a GA start stopped. Superset of the public
+ *  `OptimizationResult['stop_reason']` union: 'cancelled' (caller asked us
+ *  to stop via `shouldStop`) is new here and would ideally be added to the
+ *  shared type in types/global.d.ts. */
+type StopReason = 'generations' | 'converged' | 'time' | 'cancelled';
+
+/** Live progress snapshot reported during a run via `onProgress`. */
+export interface OptimizeProgress {
+  /** Generations completed so far, summed across multi-starts. */
+  generation: number;
+  /** Upper bound on generations (maxGenerations × number of starts). */
+  totalGenerations: number;
+  /** Best fitness found so far across all starts. */
+  bestFitness: number;
+}
+
+/** Optional hooks for long-running optimizations. */
+export interface OptimizeOptions {
+  /** Called at most every ~10 generations, plus once at the very end. */
+  onProgress?: (p: OptimizeProgress) => void;
+  /** Polled once per generation; return true to stop early. The best
+   *  result found so far is still returned (stop_reason 'cancelled'). */
+  shouldStop?: () => boolean;
+}
+
+/** GeneticConfig plus optimizer-only extras. `seed` enables reproducible
+ *  runs without widening the shared GeneticConfig type — it rides along
+ *  as an extra property through the store and worker untouched. */
+export type OptimizerConfig = GeneticConfig & {
+  /** Optional PRNG seed. When set, the run uses mulberry32(seed) so the
+   *  same inputs always produce the same seating chart. */
+  seed?: number;
+};
+
 /** Penalty scale applied when "freshen seating" (rotation avoidance) is on.
  *  Tuned to be comparable to a single objective term (~0.3) so it nudges
  *  rotation without overriding hard constraints (which use ±1). Shared by
@@ -124,9 +163,13 @@ export class ClassroomOptimizer {
   setWeights(w: ObjectiveWeights) {
     this.weights = { ...w };
   }
-  setConfig(c: GeneticConfig) {
+  setConfig(c: OptimizerConfig) {
     this.config = { ...c };
     this.examMode = !!c.examMode;
+    // Seeded reproducible runs: a numeric seed swaps in a deterministic
+    // PRNG. Absent seed leaves the current RNG untouched (Math.random by
+    // default, or whatever a prior setRng() installed).
+    if (typeof c.seed === 'number') this.setRng(mulberry32(c.seed));
   }
   /** Toggle exam / anti-cheating mode directly (config also carries it). */
   setExamMode(on: boolean) {
@@ -159,41 +202,52 @@ export class ClassroomOptimizer {
    * Run the genetic algorithm one full time and return the best
    * chromosome it produced with its fitness. Pure (no class-state
    * mutation), so the multi-start wrapper can call it repeatedly.
+   *
+   * Implemented as a generator that yields once per completed generation
+   * so the drivers (`optimize` / `optimizeAsync`) can stream progress and
+   * — in the async case — periodically yield the event loop to let a
+   * hosting worker receive cancel messages.
    */
-  private runSingleStart(
+  private *runSingleStartGen(
     ids: string[],
     studentMap: Map<string, Student>,
     totalSeats: number,
     deadline: number | null,
-  ): {
-    chrom: Chromosome;
-    fitness: number;
-    generations: number;
-    stopReason: 'generations' | 'converged' | 'time';
-  } {
-    // Build initial population
-    let population: Chromosome[] = [];
-    population.push(this.seedFromConstraints(ids, totalSeats));
-    while (population.length < this.config.populationSize) {
+    shouldStop?: () => boolean,
+  ): Generator<
+    { generation: number; bestFitness: number },
+    {
+      chrom: Chromosome;
+      fitness: number;
+      generations: number;
+      stopReason: StopReason;
+    },
+    void
+  > {
+    // Build the initial population, scoring each individual exactly once.
+    // From here on, fitness travels with the chromosome: children are
+    // scored when created and the elite keeps its cached score, so the
+    // population is never re-scored wholesale.
+    const seeded = this.seedFromConstraints(ids, totalSeats);
+    let scored: Scored[] = [
+      { chrom: seeded, fitness: this.fitness(seeded, studentMap) },
+    ];
+    while (scored.length < this.config.populationSize) {
       const chrom = this.shuffle(ids);
       while (chrom.length < totalSeats) chrom.push('');
-      population.push(chrom);
+      scored.push({ chrom, fitness: this.fitness(chrom, studentMap) });
     }
 
     let bestFitness = -Infinity;
-    let bestChrom: Chromosome = population[0];
+    let bestChrom: Chromosome = scored[0].chrom;
     let stagnation = 0;
     // Generations actually executed and the reason we stopped. Default to
     // hitting the configured cap; overwritten if we bail early.
     let generations = 0;
-    let stopReason: 'generations' | 'converged' | 'time' = 'generations';
+    let stopReason: StopReason = 'generations';
 
     for (let gen = 0; gen < this.config.maxGenerations; gen++) {
       generations = gen + 1;
-      const scored = population.map((chrom) => ({
-        chrom,
-        fitness: this.fitness(chrom, studentMap),
-      }));
 
       scored.sort((a, b) => b.fitness - a.fitness);
       if (scored[0].fitness > bestFitness) {
@@ -204,6 +258,10 @@ export class ClassroomOptimizer {
         stagnation++;
       }
 
+      // Let the driver observe progress (and, in the async path, yield the
+      // event loop) once per generation.
+      yield { generation: generations, bestFitness };
+
       if (stagnation >= this.config.earlyStopPatience) {
         stopReason = 'converged';
         break;
@@ -213,8 +271,13 @@ export class ClassroomOptimizer {
         stopReason = 'time';
         break;
       }
+      // Caller-requested cancellation — keep the best found so far.
+      if (shouldStop?.()) {
+        stopReason = 'cancelled';
+        break;
+      }
 
-      const nextGen: Chromosome[] = [scored[0].chrom]; // elitism
+      const nextGen: Scored[] = [scored[0]]; // elitism — keeps cached score
       while (nextGen.length < this.config.populationSize) {
         const parentA = this.tournamentSelect(scored);
         const parentB = this.tournamentSelect(scored);
@@ -230,16 +293,55 @@ export class ClassroomOptimizer {
           this.swapMutate(child);
         }
 
-        nextGen.push(child);
+        nextGen.push({ chrom: child, fitness: this.fitness(child, studentMap) });
       }
 
-      population = nextGen;
+      scored = nextGen;
     }
 
     return { chrom: bestChrom, fitness: bestFitness, generations, stopReason };
   }
 
-  optimize(): OptimizationResult {
+  optimize(opts?: OptimizeOptions): OptimizationResult {
+    // Synchronous driver: drain the generator in one go. Existing callers
+    // see exactly the old blocking behaviour (and result shape).
+    const it = this.optimizeGen(opts);
+    let step = it.next();
+    while (!step.done) step = it.next();
+    return step.value;
+  }
+
+  /**
+   * Async variant of `optimize()` for workers: runs `chunkGenerations`
+   * generations at a time, then awaits a macrotask (`setTimeout 0`) so the
+   * hosting worker's message queue can deliver a 'cancel' (consumed via
+   * `opts.shouldStop`). Same result shape as `optimize()`.
+   */
+  async optimizeAsync(
+    opts?: OptimizeOptions & { chunkGenerations?: number },
+  ): Promise<OptimizationResult> {
+    const chunk = Math.max(1, opts?.chunkGenerations ?? 20);
+    const it = this.optimizeGen(opts);
+    let sinceYield = 0;
+    let step = it.next();
+    while (!step.done) {
+      if (++sinceYield >= chunk) {
+        sinceYield = 0;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      step = it.next();
+    }
+    return step.value;
+  }
+
+  /**
+   * Shared optimization pipeline (multi-start GA + local-search polish),
+   * written as a generator that yields once per completed generation. The
+   * sync and async entry points above just drive it at different paces.
+   */
+  private *optimizeGen(
+    opts?: OptimizeOptions,
+  ): Generator<void, OptimizationResult, void> {
     const t0 = performance.now();
     const warnings: string[] = [];
 
@@ -267,15 +369,69 @@ export class ClassroomOptimizer {
     // in local optima sometimes; an extra restart costs ~200ms per
     // start for typical classes but doubles result reliability.
     const starts = Math.max(1, Math.min(10, this.config.multiStart ?? 1));
-    let best: ReturnType<ClassroomOptimizer['runSingleStart']> | null = null;
+    const totalGenerations = this.config.maxGenerations * starts;
+    const onProgress = opts?.onProgress;
+    // Progress is throttled here (not per-generation) so listeners see at
+    // most one report every ~10 generations plus a final one.
+    let globalBest = -Infinity;
+    let lastGlobalGen = 0;
+    let lastReportedGen = -Infinity;
+    let best: {
+      chrom: Chromosome;
+      fitness: number;
+      generations: number;
+      stopReason: StopReason;
+    } | null = null;
+
     for (let s = 0; s < starts; s++) {
-      // Always run the first start; skip later starts once out of time.
+      // Always run the first start; skip later starts once out of time
+      // or once the caller has asked us to stop.
       if (s > 0 && deadline !== null && performance.now() >= deadline) break;
-      const candidate = this.runSingleStart(ids, studentMap, totalSeats, deadline);
+      if (s > 0 && opts?.shouldStop?.()) break;
+
+      const start = this.runSingleStartGen(
+        ids,
+        studentMap,
+        totalSeats,
+        deadline,
+        opts?.shouldStop,
+      );
+      let step = start.next();
+      while (!step.done) {
+        const { generation, bestFitness } = step.value;
+        lastGlobalGen = s * this.config.maxGenerations + generation;
+        if (bestFitness > globalBest) globalBest = bestFitness;
+        if (onProgress && lastGlobalGen - lastReportedGen >= 10) {
+          lastReportedGen = lastGlobalGen;
+          onProgress({
+            generation: lastGlobalGen,
+            totalGenerations,
+            bestFitness: globalBest,
+          });
+        }
+        yield; // chunking point for optimizeAsync
+        step = start.next();
+      }
+
+      const candidate = step.value;
       if (!best || candidate.fitness > best.fitness) best = candidate;
+      if (candidate.stopReason === 'cancelled') break;
     }
-    const bestChrom = best!.chrom;
-    const bestFitness = best!.fitness;
+
+    // Memetic polish: hill-climb the GA's best chromosome with pairwise
+    // swaps. Only ever improves (or keeps) the fitness.
+    const polished = this.localSearchPolish(best!.chrom, studentMap);
+    const bestChrom = polished.chrom;
+    const bestFitness = polished.fitness;
+
+    // Final progress report so listeners always see the finished state.
+    if (onProgress) {
+      onProgress({
+        generation: lastGlobalGen,
+        totalGenerations,
+        bestFitness: Math.max(globalBest, bestFitness),
+      });
+    }
 
     const computationTimeMs = performance.now() - t0;
 
@@ -291,11 +447,56 @@ export class ClassroomOptimizer {
       // Report the real work done by the winning start, not the configured
       // cap — so the UI can say "converged after N generations" honestly.
       generations: best!.generations,
-      stop_reason: best!.stopReason,
+      // 'cancelled' is internal-only for now: the shared OptimizationResult
+      // type in types/global.d.ts doesn't include it yet (would need the
+      // union widened + an `optimization.stop_cancelled` locale string).
+      stop_reason: best!.stopReason as OptimizationResult['stop_reason'],
       computation_time_ms: computationTimeMs,
       warnings,
       algorithm: 'genetic',
     };
+  }
+
+  // ── Local-search polish (memetic step) ────────────────────────────────────
+
+  /**
+   * Hill-climb a chromosome by trying pairwise position swaps (including
+   * into empty slots) and keeping any swap that improves fitness. Repeats
+   * passes until a pass yields no improvement, up to `maxPasses` passes or
+   * `maxEvals` fitness evaluations — whichever comes first — so the cost
+   * stays bounded even for large rooms.
+   */
+  private localSearchPolish(
+    chrom: Chromosome,
+    studentMap: Map<string, Student>,
+    maxPasses = 3,
+    maxEvals = 2000,
+  ): { chrom: Chromosome; fitness: number } {
+    const best = [...chrom];
+    let bestFitness = this.fitness(best, studentMap);
+    let evals = 0;
+
+    for (let pass = 0; pass < maxPasses && evals < maxEvals; pass++) {
+      let improved = false;
+      for (let i = 0; i < best.length - 1 && evals < maxEvals; i++) {
+        for (let j = i + 1; j < best.length && evals < maxEvals; j++) {
+          // Swapping two empty seats (or identical genes) is a no-op.
+          if (best[i] === best[j]) continue;
+          [best[i], best[j]] = [best[j], best[i]];
+          evals++;
+          const f = this.fitness(best, studentMap);
+          if (f > bestFitness) {
+            bestFitness = f;
+            improved = true;
+          } else {
+            [best[i], best[j]] = [best[j], best[i]]; // revert
+          }
+        }
+      }
+      if (!improved) break;
+    }
+
+    return { chrom: best, fitness: bestFitness };
   }
 
   // ── Constraint-aware seeding ──────────────────────────────────────────────
@@ -342,6 +543,16 @@ export class ClassroomOptimizer {
     studentMap: Map<string, Student>,
   ): number {
     let score = 0;
+
+    // Position lookup: studentId → chromosome index. Built once per call so the
+    // constraint scoring below is O(1) per id instead of an O(seats) indexOf in
+    // a loop that runs for every individual, every generation. IDs are unique
+    // within a valid chromosome, so the first (and only) occurrence wins.
+    const posOf = new Map<string, number>();
+    for (let i = 0; i < chrom.length; i++) {
+      const id = chrom[i];
+      if (id && !posOf.has(id)) posOf.set(id, i);
+    }
 
     for (const slot of this.slots) {
       const sid = chrom[slot.index];
@@ -443,41 +654,41 @@ export class ClassroomOptimizer {
 
     // Pair-based constraints
     for (const [a, b] of this.constraints.separate_pairs) {
-      const sa = chrom.indexOf(a);
-      const sb = chrom.indexOf(b);
+      const sa = posOf.get(a) ?? -1;
+      const sb = posOf.get(b) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score -= 1;
     }
     for (const [a, b] of this.constraints.keep_together_pairs) {
-      const sa = chrom.indexOf(a);
-      const sb = chrom.indexOf(b);
+      const sa = posOf.get(a) ?? -1;
+      const sb = posOf.get(b) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score += 0.5;
     }
 
     // Front/back row assignments
     for (const id of this.constraints.front_row_ids) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       if (slot.isFront) score += 1;
       else score -= 0.5 * slot.row;
     }
-    for (const id of this.constraints.back_row_ids) {
-      const pos = chrom.indexOf(id);
-      if (pos === -1) continue;
-      const slot = this.slots[pos];
-      if (slot.isBack) score += 1;
-      else {
-        const maxRow = Math.max(...this.slots.map((s) => s.row));
-        score -= 0.5 * (maxRow - slot.row);
+    if (this.constraints.back_row_ids.length > 0) {
+      const maxRow = Math.max(...this.slots.map((s) => s.row));
+      for (const id of this.constraints.back_row_ids) {
+        const pos = posOf.get(id) ?? -1;
+        if (pos === -1) continue;
+        const slot = this.slots[pos];
+        if (slot.isBack) score += 1;
+        else score -= 0.5 * (maxRow - slot.row);
       }
     }
 
     // Aisle assignments — reward edge-column placement.
     // Anyone in the leftmost or rightmost ~5% of normalized x is "on the aisle".
     for (const id of this.constraints.aisle_ids ?? []) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       const onAisle = slot.x <= 0.05 || slot.x >= 0.95;
@@ -489,7 +700,7 @@ export class ClassroomOptimizer {
     // (UI presents this as "window side". Mirror with `aisle` if you need the
     // other wall.)
     for (const id of this.constraints.near_window_ids ?? []) {
-      const pos = chrom.indexOf(id);
+      const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
       if (slot.x <= 0.1) score += 1;
@@ -499,8 +710,8 @@ export class ClassroomOptimizer {
     // Peer mentor → mentee adjacency. Both must be adjacent; if they are,
     // reward strongly so mentor pairs reliably sit together.
     for (const [mentor, mentee] of this.constraints.peer_mentor_pairs ?? []) {
-      const sa = chrom.indexOf(mentor);
-      const sb = chrom.indexOf(mentee);
+      const sa = posOf.get(mentor) ?? -1;
+      const sb = posOf.get(mentee) ?? -1;
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score += 0.75;
       else score -= 0.25;
