@@ -14,12 +14,14 @@ import {
   PanelLeft,
   Sun,
   GraduationCap,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import AiRuleSuggestions from './AiRuleSuggestions';
 import type { RuleSuggestion } from '../../utils/aiSuggestRules';
-import type { SeatingConstraints, Student } from '../../types';
+import type { SeatingConstraints, Student, HardRuleCategory } from '../../types';
 
 type PairField = 'separate_pairs' | 'keep_together_pairs' | 'peer_mentor_pairs';
 type RowField =
@@ -126,6 +128,37 @@ function StudentSearch({
   );
 }
 
+// ── Required (hard / soft) toggle ─────────────────────────────────────────────
+
+interface RequiredToggleProps {
+  isHard: boolean;
+  onToggle: () => void;
+  t: (key: string) => string;
+}
+
+/** Small switch that flips a rule category between "preferred" (soft) and
+ *  "required" (hard). Required rules are enforced strongly and any that can't
+ *  be met are reported after optimizing. */
+function RequiredToggle({ isHard, onToggle, t }: RequiredToggleProps) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isHard}
+      onClick={onToggle}
+      title={t(isHard ? 'constraints.required_on_hint' : 'constraints.required_off_hint')}
+      className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+        isHard
+          ? 'bg-rose-100 border-rose-300 text-rose-800'
+          : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'
+      }`}
+    >
+      {isHard ? <Lock size={9} aria-hidden="true" /> : <Unlock size={9} aria-hidden="true" />}
+      {t(isHard ? 'constraints.required' : 'constraints.preferred')}
+    </button>
+  );
+}
+
 // ── Pair picker ──────────────────────────────────────────────────────────────
 
 interface PairPickerProps {
@@ -137,6 +170,9 @@ interface PairPickerProps {
   description: string;
   icon: React.ReactNode;
   variant: 'separate' | 'together';
+  /** When provided, a soft/required toggle is shown for this rule category. */
+  isHard?: boolean;
+  onToggleHard?: () => void;
   t: (key: string) => string;
 }
 
@@ -149,6 +185,8 @@ function PairPicker({
   description,
   icon,
   variant,
+  isHard,
+  onToggleHard,
   t,
 }: PairPickerProps) {
   const [a, setA] = useState('');
@@ -187,6 +225,9 @@ function PairPicker({
           <h4 className="text-xs font-semibold text-gray-800">{label}</h4>
           <p className="text-[11px] text-gray-500 leading-snug">{description}</p>
         </div>
+        {onToggleHard && (
+          <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
+        )}
         <span className="text-xs font-medium text-gray-500 tabular-nums">
           {pairs.length}
         </span>
@@ -259,6 +300,9 @@ interface RowPickerProps {
   description: string;
   icon: React.ReactNode;
   variant: 'front' | 'back';
+  /** When provided, a soft/required toggle is shown for this rule category. */
+  isHard?: boolean;
+  onToggleHard?: () => void;
   t: (key: string) => string;
 }
 
@@ -270,6 +314,8 @@ function RowPicker({
   description,
   icon,
   variant,
+  isHard,
+  onToggleHard,
   t,
 }: RowPickerProps) {
   const [query, setQuery] = useState('');
@@ -303,6 +349,9 @@ function RowPicker({
           <h4 className="text-xs font-semibold text-gray-800">{label}</h4>
           <p className="text-[11px] text-gray-500 leading-snug">{description}</p>
         </div>
+        {onToggleHard && (
+          <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
+        )}
         <span className="text-xs font-medium text-gray-500 tabular-nums">
           {selectedIds.length}
         </span>
@@ -479,6 +528,13 @@ export default function ConstraintsPanel() {
       back_row_ids: [],
     });
 
+  // Flip a rule category between "preferred" (soft) and "required" (hard).
+  const toggleHard = (cat: HardRuleCategory) => () =>
+    setConstraints({
+      ...constraints,
+      hard: { ...constraints.hard, [cat]: !constraints.hard?.[cat] },
+    });
+
   // Apply one accepted AI suggestion through the same paths the manual
   // pickers use (dedupe against existing rules included).
   const applySuggestion = (s: RuleSuggestion) => {
@@ -564,6 +620,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.must_separate_desc')}
                 icon={<UserMinus size={14} />}
                 variant="separate"
+                isHard={constraints.hard?.separate_pairs}
+                onToggleHard={toggleHard('separate_pairs')}
                 t={t}
               />
 
@@ -576,6 +634,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.should_sit_near_desc')}
                 icon={<UserPlus size={14} />}
                 variant="together"
+                isHard={constraints.hard?.keep_together_pairs}
+                onToggleHard={toggleHard('keep_together_pairs')}
                 t={t}
               />
 
@@ -587,6 +647,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.force_front_row_desc')}
                 icon={<ArrowUpToLine size={14} />}
                 variant="front"
+                isHard={constraints.hard?.front_row_ids}
+                onToggleHard={toggleHard('front_row_ids')}
                 t={t}
               />
 
@@ -598,6 +660,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.prefer_back_row_desc')}
                 icon={<ArrowDownToLine size={14} />}
                 variant="back"
+                isHard={constraints.hard?.back_row_ids}
+                onToggleHard={toggleHard('back_row_ids')}
                 t={t}
               />
 
@@ -609,6 +673,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.on_aisle_desc')}
                 icon={<PanelLeft size={14} />}
                 variant="back"
+                isHard={constraints.hard?.aisle_ids}
+                onToggleHard={toggleHard('aisle_ids')}
                 t={t}
               />
 
@@ -620,6 +686,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.near_window_desc')}
                 icon={<Sun size={14} />}
                 variant="front"
+                isHard={constraints.hard?.near_window_ids}
+                onToggleHard={toggleHard('near_window_ids')}
                 t={t}
               />
 
@@ -632,6 +700,8 @@ export default function ConstraintsPanel() {
                 description={t('constraints.peer_mentor_desc')}
                 icon={<GraduationCap size={14} />}
                 variant="together"
+                isHard={constraints.hard?.peer_mentor_pairs}
+                onToggleHard={toggleHard('peer_mentor_pairs')}
                 t={t}
               />
 

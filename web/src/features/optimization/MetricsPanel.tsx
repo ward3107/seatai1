@@ -176,6 +176,16 @@ export default function MetricsPanel() {
         })}
       </div>
 
+      {/* Unmet required (hard) rules — surfaced prominently because it means
+          the teacher's required rules were contradictory or impossible. */}
+      {result.unmet_hard_rules ? (
+        <div role="alert" className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+          <p className="text-sm font-medium text-rose-800">
+            {t('optimization.unmet_hard_rules', { count: result.unmet_hard_rules })}
+          </p>
+        </div>
+      ) : null}
+
       {/* Warnings */}
       {result.warnings.length > 0 && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

@@ -284,7 +284,11 @@
     "ai_dismiss": "Dismiss suggestion",
     "ai_kind_separate": "Separate",
     "ai_kind_together": "Sit together",
-    "ai_kind_front": "Front row"
+    "ai_kind_front": "Front row",
+    "required": "Required",
+    "preferred": "Preferred",
+    "required_on_hint": "Required: the optimizer must satisfy this. Click to make it a preference.",
+    "required_off_hint": "Preference: the optimizer tries to satisfy this. Click to make it required."
   },
   "navigation": {
     "students": "Students",
@@ -487,7 +491,8 @@
     "stop_generations": "reached the generation limit",
     "stop_converged": "converged",
     "stop_time": "hit the time budget",
-    "stop_cancelled": "cancelled by you"
+    "stop_cancelled": "cancelled by you",
+    "unmet_hard_rules": "{{count}} required rule(s) couldn’t be satisfied — they may be contradictory. Review your required rules."
   },
   "settings": {
     "title": "Settings",

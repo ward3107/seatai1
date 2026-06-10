@@ -100,6 +100,12 @@ export interface OptimizationResult {
   stop_reason?: 'generations' | 'converged' | 'time' | 'cancelled';
   computation_time_ms: number;
   warnings: string[];
+  /** How many **required** (hard) rules the final chart still couldn't
+   *  satisfy — non-zero only when the hard rules were contradictory or
+   *  impossible (e.g. more front-row-required students than front seats).
+   *  Lets the UI warn the teacher honestly instead of hiding the conflict.
+   *  Absent / 0 = all required rules met. */
+  unmet_hard_rules?: number;
   /** Algorithm used for optimization (if applicable) */
   algorithm?: 'genetic' | 'simulated_annealing' | 'greedy' | 'random_search';
 }
@@ -143,7 +149,24 @@ export interface SeatingConstraints {
   near_window_ids?: string[];
   /** Mentor → mentee assignments; the mentee must be adjacent to the mentor. */
   peer_mentor_pairs?: [string, string][];
+  /** Rule categories the teacher marked as **required** ("hard"). A hard rule
+   *  is enforced with a large penalty and any rule that still can't be met is
+   *  reported, so contradictory requirements surface instead of being quietly
+   *  traded away. Absent / false = soft (the default — scored as a preference).
+   *  See docs/RESEARCH_BASIS.md for which rules default to hard and why. */
+  hard?: Partial<Record<HardRuleCategory, boolean>>;
 }
+
+/** The rule categories that can be toggled between soft (preference) and hard
+ *  (required). Mirrors the array/list fields of SeatingConstraints. */
+export type HardRuleCategory =
+  | 'separate_pairs'
+  | 'keep_together_pairs'
+  | 'front_row_ids'
+  | 'back_row_ids'
+  | 'aisle_ids'
+  | 'near_window_ids'
+  | 'peer_mentor_pairs';
 
 export interface ClassProject {
   id: string;

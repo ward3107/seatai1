@@ -284,7 +284,11 @@
     "ai_dismiss": "דחה הצעה",
     "ai_kind_separate": "להפריד",
     "ai_kind_together": "לשבת יחד",
-    "ai_kind_front": "שורה ראשונה"
+    "ai_kind_front": "שורה ראשונה",
+    "required": "חובה",
+    "preferred": "מועדף",
+    "required_on_hint": "חובה: המערכת חייבת לקיים זאת. לחצו כדי להפוך להעדפה.",
+    "required_off_hint": "העדפה: המערכת תנסה לקיים זאת. לחצו כדי להפוך לחובה."
   },
   "navigation": {
     "students": "תלמידים",
@@ -487,7 +491,8 @@
     "stop_generations": "הגיע למגבלת הדורות",
     "stop_converged": "התכנס",
     "stop_time": "הגיע לתקציב הזמן",
-    "stop_cancelled": "בוטל על ידך"
+    "stop_cancelled": "בוטל על ידך",
+    "unmet_hard_rules": "לא ניתן היה לקיים {{count}} כללי חובה — ייתכן שהם סותרים. בדקו את כללי החובה שלכם."
   },
   "settings": {
     "title": "הגדרות",
