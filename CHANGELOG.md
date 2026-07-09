@@ -9,12 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Layout types: U-shape, clusters, circle, and custom rows
+- Student questionnaire with answer mapping and printable handout
+- Arrangement comparison (side-by-side) and saved-arrangement management
+- Seat rotation scheduling
+- AI features: placement explanations, rule suggestions from notes, and
+  class summary (streaming responses)
+- Roster sync: LTI 1.3 launch and Google Classroom / OneRoster import via
+  optional serverless API
+- Progressive Web App (offline-capable, precached)
+- Optimizer: progress/cancel/seed controls and locked-seat awareness on
+  re-optimize
+- End-to-end test suite (Playwright, desktop + mobile)
+
+### Security
+- Closed IPv6 bypass in the NRPS SSRF guard
+- Hardened LTI launch and backup parsing
+
 ### Planned
 - WASM core implementation for performance
-- Additional layout types (U-shape, clusters)
 - Behavioral prediction engine
 - Longitudinal tracking
-- Smart rotation scheduler
 - Parent portal
 - Student collaboration features
 - Backend sync (optional)
