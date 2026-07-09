@@ -4,8 +4,10 @@
 
 **SeatAI** is an AI-powered classroom seating optimization platform. A
 genetic algorithm searches for student placements that balance academic
-ability, behavior, diversity, and special needs. Runs entirely in the
-browser — no server, no sign-in, IndexedDB for persistence.
+ability, behavior, diversity, and special needs. The core app runs
+entirely in the browser — no sign-in, IndexedDB for persistence. An
+**optional serverless API** (`web/api/`) adds LTI launch and roster
+sync (Google Classroom / OneRoster) for schools that want it.
 
 **Repository:** `C:\Users\Waseem\Documents\seatai\seatai1`
 **Version:** 1.0.0
@@ -26,8 +28,11 @@ browser — no server, no sign-in, IndexedDB for persistence.
 | **Drag & Drop** | @dnd-kit 6 | Accessible drag-drop |
 | **Storage** | Dexie.js 4 | IndexedDB wrapper |
 | **Export** | jsPDF + html2canvas | PDF + image export |
-| **Testing** | Vitest | Unit tests (currently 281 tests) |
+| **Testing** | Vitest + Playwright | 318 unit tests (28 files) + e2e |
 | **i18n** | en / he / ar / ru | RTL supported; minimal translation system |
+| **AI** | Serverless API | Explanations, rule suggestions, class summary (streaming) |
+| **Roster** | LTI 1.3 + Google Classroom + OneRoster | Optional serverless import |
+| **PWA** | vite-plugin-pwa + Workbox | Offline-capable, precached |
 
 ---
 
@@ -42,9 +47,14 @@ seatai/
 │   │   ├── features/         # FEATURE-BASED organization ⭐
 │   │   │   ├── classroom/    # ClassroomGrid, Classroom3D, SeatCard, …
 │   │   │   ├── students/     # Student management
+│   │   │   ├── questionnaire/# Student survey + answer mapping + handout
 │   │   │   ├── layout/       # LayoutPanel (rows / clusters / U / circle / custom)
 │   │   │   ├── constraints/  # Front/back/keep-together rules
 │   │   │   ├── optimization/ # Metrics + explanation
+│   │   │   ├── results/      # Explanation panel (why placements)
+│   │   │   ├── compare/      # Compare arrangements side-by-side
+│   │   │   ├── arrangements/ # Saved arrangement management
+│   │   │   ├── rotation/     # Seat rotation scheduling
 │   │   │   ├── settings/     # Algorithm configuration
 │   │   │   ├── export/       # PDF / image export
 │   │   │   ├── import/       # CSV import
@@ -54,14 +64,17 @@ seatai/
 │   │   ├── core/
 │   │   │   ├── optimizer.ts  # Genetic algorithm (slot-based)
 │   │   │   ├── layouts.ts    # Layout generators
+│   │   │   ├── roster/       # Google Classroom + OneRoster import
 │   │   │   ├── store/        # Zustand store
 │   │   │   └── db.ts         # Dexie IndexedDB
 │   │   ├── hooks/            # Custom React hooks
 │   │   ├── workers/          # optimizer.worker.ts
+│   │   ├── utils/            # Helpers (incl. aiExplain, aiSuggestRules, aiSummary)
 │   │   ├── types/            # TypeScript definitions
-│   │   ├── utils/            # Helpers
 │   │   ├── locales/          # en / he / ar / ru
 │   │   └── main.tsx          # Entry point
+│   ├── api/                  # Serverless API — LTI 1.3 launch/login/jwks
+│   ├── e2e/                  # Playwright end-to-end tests
 │   ├── package.json
 │   └── vite.config.ts
 │
@@ -241,7 +254,9 @@ The repo has a `vercel.json` at the root that sets the build command to
 ## Testing Approach
 
 - Unit tests with Vitest + Testing Library, co-located with source.
-- 281 tests currently passing. Run with `npm test` from `web/`.
+- 318 tests across 28 files currently passing. Run with `npm test` from
+  `web/`.
+- End-to-end tests with Playwright live in `web/e2e/` (desktop + mobile).
 
 ---
 
@@ -307,4 +322,4 @@ the original row-based renderer.
 
 ---
 
-*Last updated: 2026-05-14*
+*Last updated: 2026-07-09*
