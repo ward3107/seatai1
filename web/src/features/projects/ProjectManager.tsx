@@ -50,6 +50,7 @@ export default function ProjectManager() {
       resultHistory: s.resultHistory,
       rotationPlan: s.rotationPlan,
       savedArrangements: s.savedArrangements,
+      questionnaire: s.questionnaire,
       uiLanguage: s.uiLanguage,
       uiScale: s.uiScale,
       theme: s.theme,

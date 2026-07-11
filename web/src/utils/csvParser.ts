@@ -6,7 +6,7 @@
 
 import { generateId } from './sampleData';
 import { parseDelimited } from '../core/roster/oneRoster';
-import type { Student, Gender, AcademicLevel, BehaviorLevel } from '../types';
+import type { Student, Gender, AcademicLevel, BehaviorLevel, SpecialNeed } from '../types';
 
 const VALID_GENDERS = ['male', 'female', 'other'];
 const VALID_ACADEMIC = ['advanced', 'proficient', 'basic', 'below_basic'];
@@ -58,6 +58,33 @@ function parseStudent(
     warnings.push(t('csvImport.warn_invalid_value', { row: rowNum, column: 'behavior_level', value: rawBeh, fallback: 'good' }));
   }
 
+  // Age: optional whole number. Ignore blanks; warn on non-numeric or
+  // out-of-range values (1..25 covers K-12 plus a margin) rather than
+  // silently storing garbage.
+  let age: number | undefined;
+  const rawAge = row['age']?.trim();
+  if (rawAge) {
+    const n = Number(rawAge);
+    if (!Number.isFinite(n) || n <= 0 || n > 25) {
+      warnings.push(t('csvImport.warn_invalid_value', { row: rowNum, column: 'age', value: rawAge, fallback: '—' }));
+    } else {
+      age = Math.round(n);
+    }
+  }
+
+  // Special needs: a delimited list of need labels (";" or "|" so commas
+  // stay free for the CSV itself). Each label becomes a SpecialNeed entry;
+  // the boolean sub-flags aren't expressible in a flat cell so default off.
+  const special_needs: SpecialNeed[] = (row['special_needs'] ?? '')
+    .split(/[;|]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((type) => ({
+      type,
+      requires_front_seat: false,
+      requires_support_buddy: false,
+    }));
+
   const parseScore = (col: string, fallback: number): number => {
     const raw = row[col]?.trim();
     if (!raw) return fallback;
@@ -77,6 +104,7 @@ function parseStudent(
     id: generateId(),
     name,
     gender,
+    age,
     academic_level,
     academic_score: parseScore('academic_score', 70),
     behavior_level,
@@ -88,7 +116,7 @@ function parseStudent(
     requires_quiet_area: parseBool(row['requires_quiet_area'] ?? ''),
     friends_ids: [],
     incompatible_ids: [],
-    special_needs: [],
+    special_needs,
     notes: row['notes']?.trim() || undefined,
   };
 }

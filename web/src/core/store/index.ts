@@ -539,7 +539,9 @@ export const useStore = create<AppState>()(
             state.previousPositions = state.result.student_positions;
           }
           state.activeArrangementId = id;
-          state.result = structuredClone(arr.result) as OptimizationResult;
+          // `arr` is an immer draft here — unwrap with current() before cloning
+          // so structuredClone doesn't choke on the proxy.
+          state.result = structuredClone(current(arr.result)) as OptimizationResult;
           state.history = [];
           state.historyFuture = [];
         }),
@@ -783,6 +785,12 @@ export const useStore = create<AppState>()(
               ? structuredClone(current(state.rotationPlan))
               : null,
             savedArrangements: structuredClone(current(state.savedArrangements)),
+            // Questionnaire progress, run history and the freshen-seating flag
+            // belong to the class, not the app — include them so switching
+            // projects doesn't silently drop them.
+            questionnaire: structuredClone(current(state.questionnaire)),
+            resultHistory: structuredClone(current(state.resultHistory)),
+            avoidRecentNeighbors: state.avoidRecentNeighbors,
           };
           if (existing) {
             Object.assign(existing, snapshot, { name, updatedAt: now });
@@ -818,12 +826,27 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = p.savedArrangements ?? [];
           state.activeArrangementId = null;
+          // Class-scoped data. Fall back to fresh defaults for older projects
+          // saved before these fields were part of the snapshot.
+          state.questionnaire = p.questionnaire ?? {
+            consentAck: false,
+            surveyedIds: [],
+            skipPeers: false,
+            peerSurveyEnabled: true,
+            simpleMode: false,
+          };
+          state.resultHistory = p.resultHistory ?? [];
+          state.avoidRecentNeighbors = p.avoidRecentNeighbors ?? false;
           state.history = [];
           state.historyFuture = [];
           // Land in the workspace: loading from the Home/welcome screen (or
           // mid-wizard) must show the loaded class, not stay on onboarding.
           state.homeView = false;
           state.wizardActive = false;
+          // The new class's seats don't match any prior selection/lock.
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.previousPositions = null;
         }),
 
       deleteProject: (id) =>
@@ -857,6 +880,7 @@ export const useStore = create<AppState>()(
           state.currentProjectId = data.currentProjectId;
           state.result = data.result ?? null;
           state.resultHistory = data.resultHistory ?? [];
+          if (data.questionnaire) state.questionnaire = data.questionnaire;
           state.rotationPlan = data.rotationPlan ?? null;
           state.activeRotationPeriodId = null;
           state.savedArrangements = data.savedArrangements ?? [];
@@ -884,11 +908,48 @@ export const useStore = create<AppState>()(
     })),
     {
       name: 'seatai-storage',
+      version: 1,
+      // Zustand's default merge is a shallow spread, so a persisted nested
+      // object (questionnaire / config / weights / aiSettings) replaces the
+      // default wholesale — any key we later ADD to a default is lost for
+      // existing users. Deep-merge those known nested objects one level down so
+      // new default keys survive alongside the user's saved values.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<AppState>;
+        const merged = { ...current, ...p } as AppState;
+        const deepKeys = [
+          'questionnaire',
+          'config',
+          'weights',
+          'aiSettings',
+        ] as const;
+        for (const key of deepKeys) {
+          const base = current[key];
+          const over = p[key];
+          if (
+            base && typeof base === 'object' && !Array.isArray(base) &&
+            over && typeof over === 'object' && !Array.isArray(over)
+          ) {
+            (merged as unknown as Record<string, unknown>)[key] = { ...base, ...over };
+          }
+        }
+        return merged;
+      },
       storage: createJSONStorage(() => dexieStorage),
       // After the persisted state loads, sync the module-level locale to the
       // restored language so the non-hook `t()` matches the hydrated UI.
       onRehydrateStorage: () => (state) => {
-        if (state?.uiLanguage) setLocale(state.uiLanguage);
+        if (!state) return;
+        if (state.uiLanguage) setLocale(state.uiLanguage);
+        // Locked seats and the click-to-swap selection are seat keys tied to a
+        // specific result. If the persisted result is gone (or never existed)
+        // they point at nothing — clear them so a stale lock doesn't leak into
+        // the next optimization.
+        if (!state.result) {
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.previousPositions = null;
+        }
       },
       partialize: (state) => ({
         students: state.students,
