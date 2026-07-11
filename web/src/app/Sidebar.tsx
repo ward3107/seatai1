@@ -39,6 +39,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
   const layoutDef = useStore((s) => s.layoutDef);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
+  const setHomeView = useStore((s) => s.setHomeView);
   const { t } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
 
@@ -80,7 +81,18 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
         <div className="w-[400px] max-w-[85vw] h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setHomeView(true);
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  setSidebarOpen(false);
+                }
+              }}
+              className="flex items-center gap-3 text-start rounded-lg -m-1 p-1 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label={t('app.home')}
+              title={t('app.home')}
+            >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
@@ -88,7 +100,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                 <h1 className="font-bold text-xl text-gray-800 dark:text-gray-100">{t('app.title')}</h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.subtitle')}</p>
               </div>
-            </div>
+            </button>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"

@@ -102,6 +102,8 @@
     "print": "הדפס",
     "print_title": "הדפס מפת מושבים",
     "open_sidebar": "פתח סרגל צד",
+    "home": "דף הבית",
+    "back_to_chart": "חזרה למפת הישיבה",
     "close_sidebar": "סגור סרגל צד",
     "undo": "בטל (Ctrl+Z)",
     "redo": "בצע שוב (Ctrl+Y)",

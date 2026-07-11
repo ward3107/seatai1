@@ -139,6 +139,13 @@ interface AppState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 
+  /** Transient: when true, the main content shows the welcome / "home"
+   *  landing instead of the seating chart, even if a class is loaded. Lets
+   *  the teacher return to the start screen without clearing anything. Not
+   *  persisted — always starts false on reload. */
+  homeView: boolean;
+  setHomeView: (open: boolean) => void;
+
   // --- Seating Map UI ---
   lockedSeats: string[];            // seat keys "row-col"
   heatMapMode: HeatMapMode;
@@ -527,6 +534,12 @@ export const useStore = create<AppState>()(
       setSidebarOpen: (open) =>
         set((state) => {
           state.sidebarOpen = open;
+        }),
+
+      homeView: false,
+      setHomeView: (open) =>
+        set((state) => {
+          state.homeView = open;
         }),
 
       // --- Seating Map UI ---

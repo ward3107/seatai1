@@ -24,7 +24,7 @@ import { useLtiImport } from '../hooks/useLtiImport';
 import { getDisplayScorePct } from '../utils/seatingUtils';
 import { slotCount } from '../core/layouts';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 
 const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
   sm: 'text-sm',
@@ -37,6 +37,8 @@ function App() {
     students,
     layoutDef,
     setSidebarOpen,
+    homeView,
+    setHomeView,
     result,
     previousPositions,
     showMovementDiff,
@@ -142,9 +144,32 @@ function App() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-3 sm:p-6">
-          {students.length === 0 ? (
-            /* ── Onboarding empty state ── */
-            <OnboardingView onOpenSidebar={() => setSidebarOpen(true)} />
+          {students.length === 0 || homeView ? (
+            /* ── Welcome / home landing ──
+               Shown automatically when the class is empty, or on demand when
+               the teacher clicks Home / the logo (homeView). When a class is
+               already loaded, offer a way straight back to the seating chart
+               so the home screen is a detour, never a dead end. */
+            <>
+              {homeView && students.length > 0 && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setHomeView(false)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <ArrowLeft size={15} className="text-gray-500 dark:text-gray-400 rtl:rotate-180" aria-hidden="true" />
+                    {t('app.back_to_chart')}
+                  </button>
+                </div>
+              )}
+              <OnboardingView
+                onOpenSidebar={() => {
+                  setHomeView(false);
+                  setSidebarOpen(true);
+                }}
+              />
+            </>
           ) : (
             <>
               {/* Results disclosure: metrics + per-student explanations
