@@ -24,6 +24,27 @@ function csvCell(value: string | number | undefined): string {
   return s;
 }
 
+/**
+ * Render `el` to a canvas with the app forced to light colours. The global
+ * dark-mode CSS remaps white surfaces to slate, which would otherwise bake a
+ * dark background and low-contrast cards into the exported PNG/PDF. Strip the
+ * `dark` class for the duration of the capture, then restore it.
+ */
+async function captureGridLight(
+  el: HTMLElement,
+  opts: Parameters<typeof import('html2canvas')['default']>[1],
+): Promise<HTMLCanvasElement> {
+  const html2canvas = (await import('html2canvas')).default;
+  const root = document.documentElement;
+  const wasDark = root.classList.contains('dark');
+  if (wasDark) root.classList.remove('dark');
+  try {
+    return await html2canvas(el, opts);
+  } finally {
+    if (wasDark) root.classList.add('dark');
+  }
+}
+
 export default function ExportButton() {
   const result = useStore((s) => s.result);
   const students = useStore((s) => s.students);
@@ -160,8 +181,7 @@ export default function ExportButton() {
     setLoading('png');
     setOpen(false);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#f8fafc' });
+      const canvas = await captureGridLight(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       const url = canvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = url;
@@ -179,10 +199,9 @@ export default function ExportButton() {
     setLoading('pdf');
     setOpen(false);
     try {
-      const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#f8fafc' });
+      const canvas = await captureGridLight(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       const imgData = canvas.toDataURL('image/png');
 
       // A4 landscape

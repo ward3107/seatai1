@@ -36,6 +36,33 @@ export default function PrintView({ onClose }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // Force light colours for the printout regardless of the active theme: the
+  // global dark-mode CSS remaps white surfaces to slate, which would print a
+  // dark/black chart. Strip the `dark` class while the browser is printing,
+  // then restore it. Uses before/afterprint so it also covers "Save as PDF".
+  useEffect(() => {
+    const root = document.documentElement;
+    const before = () => {
+      if (root.classList.contains('dark')) {
+        root.classList.remove('dark');
+        root.dataset.restoreDark = '1';
+      }
+    };
+    const after = () => {
+      if (root.dataset.restoreDark === '1') {
+        root.classList.add('dark');
+        delete root.dataset.restoreDark;
+      }
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+      after(); // restore if unmounted mid-print
+    };
+  }, []);
+
   if (!result) return null;
 
   const studentMap = new Map(students.map(s => [s.id, s]));
@@ -305,11 +332,22 @@ export default function PrintView({ onClose }: Props) {
         </div>
       </div>
 
-      {/* Print-specific CSS */}
+      {/* Print-specific CSS.
+          The chart lives in a modal nested inside #root (not a body-level
+          portal), so we can't hide by `body > *`. Instead hide everything
+          with `visibility`, then reveal only #print-content and pin it to the
+          page's top-left. Backgrounds are forced white (and the `dark` class
+          is stripped for the print via the effect above) so the chart never
+          prints on a dark/black page. */}
       <style>{`
         @media print {
-          body > *:not(#print-portal) { display: none !important; }
-          #print-portal { display: block !important; }
+          body * { visibility: hidden !important; }
+          #print-content, #print-content * { visibility: visible !important; }
+          #print-content {
+            position: absolute !important;
+            left: 0; top: 0; width: 100%;
+            background: #fff !important;
+          }
           .print\\:hidden { display: none !important; }
           .hidden.print\\:block { display: block !important; }
           @page { margin: 1cm; size: landscape; }
