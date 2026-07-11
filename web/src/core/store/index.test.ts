@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useStore } from './index';
+import { getLocale } from '../../lib/i18n';
 import type { Student, OptimizationResult } from '../../types';
 
 const mockStudent: Student = {
@@ -247,6 +248,16 @@ describe('Zustand Store', () => {
 
       const { uiLanguage } = result.current;
       expect(uiLanguage).toBe('he');
+    });
+
+    it('syncs the module-level locale so the non-hook t() matches', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.setUiLanguage('ru');
+      });
+
+      expect(getLocale()).toBe('ru');
     });
   });
 

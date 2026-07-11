@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { t, setLocale, getLocale } from './i18n';
+import { t, setLocale, getLocale, detectDefaultLocale } from './i18n';
 
 describe('i18n Translation System', () => {
   beforeEach(() => {
@@ -80,6 +80,33 @@ describe('i18n Translation System', () => {
 
       expect(typeof hebrew).toBe('string');
       expect(typeof english).toBe('string');
+    });
+  });
+
+  describe('detectDefaultLocale() - Browser language detection', () => {
+    const setLangs = (langs: string[] | undefined, single = 'en-US') => {
+      vi.spyOn(navigator, 'languages', 'get').mockReturnValue(langs as readonly string[]);
+      vi.spyOn(navigator, 'language', 'get').mockReturnValue(single);
+    };
+
+    it('matches a supported language by its primary subtag', () => {
+      setLangs(['he-IL', 'en-US']);
+      expect(detectDefaultLocale()).toBe('he');
+    });
+
+    it('skips unsupported languages and picks the first supported one', () => {
+      setLangs(['fr-FR', 'de-DE', 'ru-RU']);
+      expect(detectDefaultLocale()).toBe('ru');
+    });
+
+    it('falls back to English when nothing is supported', () => {
+      setLangs(['fr-FR', 'es-ES']);
+      expect(detectDefaultLocale()).toBe('en');
+    });
+
+    it('falls back to navigator.language when languages is empty', () => {
+      setLangs([], 'ar-EG');
+      expect(detectDefaultLocale()).toBe('ar');
     });
   });
 
