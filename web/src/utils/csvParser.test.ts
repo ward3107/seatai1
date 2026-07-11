@@ -23,6 +23,15 @@ describe('parseCsv', () => {
     expect(errors[0]).toBe('csvImport.error_missing_name');
   });
 
+  it('accepts the `student_name` header the app export writes (round-trip)', () => {
+    // The seating-chart CSV export historically wrote `student_name`; a
+    // re-import of that exact file must work, not fail with missing-name.
+    const csv = 'row,col,student_name,gender\n1,1,Alice,female\n1,2,Bob,male';
+    const { students, errors } = parseCsv(csv, t);
+    expect(errors).toEqual([]);
+    expect(students.map((s) => s.name)).toEqual(['Alice', 'Bob']);
+  });
+
   it('reports a per-row error when name cell is empty', () => {
     const csv = 'name,gender\n,female\nAlice,female';
     const { students, errors } = parseCsv(csv, t);

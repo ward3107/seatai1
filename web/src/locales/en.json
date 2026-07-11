@@ -406,7 +406,8 @@
       "save": "Save Student",
       "cancel": "Cancel",
       "clear": "Clear Form"
-    }
+    },
+    "ai_loading": "Generating…"
   },
   "classroom": {
     "teacher_desk": "Teacher's Desk",

@@ -29,7 +29,9 @@ function parseStudent(
   warnings: string[],
   t: Translator,
 ): Student | null {
-  const name = row['name']?.trim();
+  // Accept `name`, or the `student_name` / `student name` header the app's
+  // own CSV export historically wrote, so an exported roster re-imports.
+  const name = (row['name'] ?? row['student_name'] ?? row['student name'])?.trim();
   if (!name) return null;
 
   const rawGender = (row['gender'] ?? '').trim().toLowerCase();
@@ -103,7 +105,8 @@ export function parseCsv(
 
   // parseDelimited keys every row by the original (trimmed) header text;
   // our column names are case-insensitive, so lowercase the keys.
-  if (!Object.keys(records[0]).some((h) => h.toLowerCase() === 'name')) {
+  const NAME_HEADERS = ['name', 'student_name', 'student name'];
+  if (!Object.keys(records[0]).some((h) => NAME_HEADERS.includes(h.toLowerCase()))) {
     return { students: [], errors: [t('csvImport.error_missing_name')], warnings: [] };
   }
 

@@ -406,7 +406,8 @@
       "save": "שמור תלמיד",
       "cancel": "ביטול",
       "clear": "נקה טופס"
-    }
+    },
+    "ai_loading": "יוצר…"
   },
   "classroom": {
     "teacher_desk": "שולחן המורה",

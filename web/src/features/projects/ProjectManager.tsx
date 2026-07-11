@@ -172,8 +172,12 @@ export default function ProjectManager() {
               <button
                 onClick={() => {
                   setSaveName('');
-                  useStore.getState().saveProject(saveName.trim() || `${t('projects.class')} ${new Date().toLocaleDateString()}`);
-                  // Actually make a new one by clearing currentProjectId first
+                  // asNew=true → always create a copy instead of overwriting
+                  // the currently-loaded project.
+                  useStore.getState().saveProject(
+                    saveName.trim() || `${t('projects.class')} ${new Date().toLocaleDateString()}`,
+                    true,
+                  );
                 }}
                 title={t('projects.save_as_new')}
                 className="flex items-center gap-1 px-2 py-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
