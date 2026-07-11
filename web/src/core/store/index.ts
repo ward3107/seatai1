@@ -146,6 +146,20 @@ interface AppState {
   homeView: boolean;
   setHomeView: (open: boolean) => void;
 
+  /** Transient: the guided setup wizard. When `wizardActive` is true the main
+   *  area shows the step-by-step flow (add students → room → rules →
+   *  generate) instead of the workspace. `wizardStep` is the 0-based stage.
+   *  Not persisted — a returning class opens straight in the workspace. */
+  wizardActive: boolean;
+  wizardStep: number;
+  /** Open the wizard at a given step (default 0) and, implicitly, take over
+   *  the main area until it's closed. */
+  startWizard: (step?: number) => void;
+  /** Jump to a specific wizard step (clamped by the caller). */
+  setWizardStep: (step: number) => void;
+  /** Close the wizard and return to the normal workspace. */
+  closeWizard: () => void;
+
   // --- Seating Map UI ---
   lockedSeats: string[];            // seat keys "row-col"
   heatMapMode: HeatMapMode;
@@ -540,6 +554,23 @@ export const useStore = create<AppState>()(
       setHomeView: (open) =>
         set((state) => {
           state.homeView = open;
+        }),
+
+      wizardActive: false,
+      wizardStep: 0,
+      startWizard: (step = 0) =>
+        set((state) => {
+          state.wizardActive = true;
+          state.wizardStep = step;
+          state.homeView = false;
+        }),
+      setWizardStep: (step) =>
+        set((state) => {
+          state.wizardStep = step;
+        }),
+      closeWizard: () =>
+        set((state) => {
+          state.wizardActive = false;
         }),
 
       // --- Seating Map UI ---

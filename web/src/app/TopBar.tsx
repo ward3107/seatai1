@@ -25,6 +25,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
   const homeView = useStore((s) => s.homeView);
   const setHomeView = useStore((s) => s.setHomeView);
+  const wizardActive = useStore((s) => s.wizardActive);
   const history = useStore((s) => s.history);
   const historyFuture = useStore((s) => s.historyFuture);
   const undo = useStore((s) => s.undo);
@@ -36,7 +37,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
 
   return (
     <header className="min-h-14 bg-white/90 backdrop-blur-sm shadow-sm flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
-      {!sidebarOpen && (
+      {!sidebarOpen && !wizardActive && (
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -47,9 +48,9 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
       )}
 
       {/* Home — return to the welcome/landing screen without clearing the
-          class. Only meaningful once a class is loaded and we're not already
-          on it. */}
-      {students.length > 0 && !homeView && (
+          class. Only meaningful once a class is loaded, we're not already
+          on it, and not mid-setup. */}
+      {students.length > 0 && !homeView && !wizardActive && (
         <button
           onClick={() => setHomeView(true)}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"

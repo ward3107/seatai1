@@ -478,10 +478,10 @@ function detectConflicts(
 
 // ── Main panel ───────────────────────────────────────────────────────────────
 
-export default function ConstraintsPanel() {
+export default function ConstraintsPanel({ defaultOpen = false }: { defaultOpen?: boolean } = {}) {
   const { constraints, setConstraints, students } = useStore();
   const { t } = useLanguage();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   const totalRules =
     constraints.separate_pairs.length +

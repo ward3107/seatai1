@@ -14,6 +14,7 @@ import TopBar from './TopBar';
 const PrintView = lazy(() => import('../features/print/PrintView'));
 import ComparePanel from '../features/compare/ComparePanel';
 import OnboardingView from '../features/onboarding/OnboardingView';
+import SetupWizard from '../features/wizard/SetupWizard';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import WelcomeTipsModal from '../components/WelcomeTipsModal';
 import UserGuide from '../components/UserGuide';
@@ -36,9 +37,9 @@ function App() {
   const {
     students,
     layoutDef,
-    setSidebarOpen,
     homeView,
     setHomeView,
+    wizardActive,
     result,
     previousPositions,
     showMovementDiff,
@@ -89,8 +90,11 @@ function App() {
   // seating map matters more — the Help button still opens the full guide.
   useEffect(() => {
     const roomy = typeof window === 'undefined' || window.innerWidth >= 768;
-    if (roomy && !welcomeTipsDismissed && students.length > 0) setShowTips(true);
-  }, [welcomeTipsDismissed, students.length]);
+    // Don't interrupt the guided setup wizard with the tips modal — it pops
+    // once the teacher lands in the actual workspace.
+    if (roomy && !welcomeTipsDismissed && students.length > 0 && !wizardActive)
+      setShowTips(true);
+  }, [welcomeTipsDismissed, students.length, wizardActive]);
 
   // On small viewports, default the sidebar to closed so the user sees
   // the seating area first. Run once on mount only — afterwards the
@@ -123,14 +127,19 @@ function App() {
         {a11yAnnouncement}
       </div>
 
-      <Sidebar
-        wasmReady={wasmReady}
-        isOptimizing={isOptimizing}
-        error={error}
-        optimize={optimize}
-        progress={progress}
-        cancel={cancel}
-      />
+      {/* The setup wizard takes over the whole screen, so the sidebar
+          (which is where students would otherwise be added) is hidden to
+          avoid two competing entry points. */}
+      {!wizardActive && (
+        <Sidebar
+          wasmReady={wasmReady}
+          isOptimizing={isOptimizing}
+          error={error}
+          optimize={optimize}
+          progress={progress}
+          cancel={cancel}
+        />
+      )}
 
       {/* Main Content — min-w-0 lets this flex child shrink below its
           content width so the seating grid's horizontal scroll stays
@@ -144,7 +153,16 @@ function App() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-3 sm:p-6">
-          {students.length === 0 || homeView ? (
+          {wizardActive ? (
+            /* ── Guided setup wizard ── */
+            <SetupWizard
+              wasmReady={wasmReady}
+              isOptimizing={isOptimizing}
+              optimize={optimize}
+              progress={progress}
+              cancel={cancel}
+            />
+          ) : students.length === 0 || homeView ? (
             /* ── Welcome / home landing ──
                Shown automatically when the class is empty, or on demand when
                the teacher clicks Home / the logo (homeView). When a class is
@@ -163,12 +181,7 @@ function App() {
                   </button>
                 </div>
               )}
-              <OnboardingView
-                onOpenSidebar={() => {
-                  setHomeView(false);
-                  setSidebarOpen(true);
-                }}
-              />
+              <OnboardingView />
             </>
           ) : (
             <>
