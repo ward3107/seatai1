@@ -77,6 +77,12 @@ export const EXAM_SPACING = 0.5;
 export const EXAM_SAME_LEVEL = 0.4;
 export const EXAM_FRIEND = 0.6;
 
+/** Penalty applied per violated **hard** (required) rule. Set far above the
+ *  objective + soft-constraint scale (which lives in the single digits) so the
+ *  GA treats hard rules as effectively inviolable — it will only leave one
+ *  unmet when the hard rules are contradictory or physically impossible. */
+export const HARD_PENALTY = 1000;
+
 /** Pluggable RNG so tests can seed it for deterministic runs. Defaults
  *  to Math.random in production. */
 export type Rng = () => number;
@@ -469,11 +475,17 @@ export class ClassroomOptimizer {
     const studentPositions = this.buildStudentPositions(bestChrom);
     const objectiveScores = this.scoreObjectives(bestChrom, studentMap);
 
+    // Any hard rule still unmet means the required rules were contradictory or
+    // impossible. Reported via the dedicated `unmet_hard_rules` field so the UI
+    // can show a localized message (rather than an English warning string).
+    const unmetHard = this.countHardViolations(bestChrom);
+
     return {
       layout,
       student_positions: studentPositions,
       fitness_score: bestFitness,
       objective_scores: objectiveScores,
+      unmet_hard_rules: unmetHard || undefined,
       // Report the real work done by the winning start, not the configured
       // cap — so the UI can say "converged after N generations" honestly.
       generations: best!.generations,
@@ -595,6 +607,87 @@ export class ClassroomOptimizer {
       chrom[F[k]] = shuffled[k];
     }
     return chrom;
+  }
+
+  // ── Hard (required) rules ─────────────────────────────────────────────────
+
+  private isHard(cat: import('../types').HardRuleCategory): boolean {
+    return !!this.constraints.hard?.[cat];
+  }
+
+  /**
+   * Count how many **hard** rule instances a chromosome violates. Only
+   * categories the teacher marked required are checked. A rule referencing a
+   * student who isn't placed is skipped (it can't be the chart's fault). Used
+   * both to penalise violations during the search (× HARD_PENALTY) and to
+   * report the unmet count on the final chart.
+   */
+  private countHardViolations(
+    chrom: Chromosome,
+    posOf?: Map<string, number>,
+  ): number {
+    const c = this.constraints;
+    if (!c.hard) return 0;
+
+    const pos =
+      posOf ??
+      (() => {
+        const m = new Map<string, number>();
+        for (let i = 0; i < chrom.length; i++) {
+          const id = chrom[i];
+          if (id && !m.has(id)) m.set(id, i);
+        }
+        return m;
+      })();
+
+    // Returns true/false for "a and b are adjacent", or null if either is
+    // unplaced (skip — not the chart's fault).
+    const adjacent = (a: string, b: string): boolean | null => {
+      const sa = pos.get(a) ?? -1;
+      const sb = pos.get(b) ?? -1;
+      if (sa === -1 || sb === -1) return null;
+      return this.slots[sa].neighbors.includes(sb);
+    };
+    const slotOf = (id: string): Slot | null => {
+      const p = pos.get(id) ?? -1;
+      return p === -1 ? null : this.slots[p];
+    };
+
+    let v = 0;
+    if (this.isHard('separate_pairs')) {
+      for (const [a, b] of c.separate_pairs) if (adjacent(a, b) === true) v++;
+    }
+    if (this.isHard('keep_together_pairs')) {
+      for (const [a, b] of c.keep_together_pairs) if (adjacent(a, b) === false) v++;
+    }
+    if (this.isHard('peer_mentor_pairs')) {
+      for (const [a, b] of c.peer_mentor_pairs ?? []) if (adjacent(a, b) === false) v++;
+    }
+    if (this.isHard('front_row_ids')) {
+      for (const id of c.front_row_ids) {
+        const s = slotOf(id);
+        if (s && !s.isFront) v++;
+      }
+    }
+    if (this.isHard('back_row_ids')) {
+      for (const id of c.back_row_ids) {
+        const s = slotOf(id);
+        if (s && !s.isBack) v++;
+      }
+    }
+    if (this.isHard('aisle_ids')) {
+      for (const id of c.aisle_ids ?? []) {
+        const s = slotOf(id);
+        if (s && !(s.x <= 0.05 || s.x >= 0.95)) v++;
+      }
+    }
+    if (this.isHard('near_window_ids')) {
+      for (const id of c.near_window_ids ?? []) {
+        const s = slotOf(id);
+        if (s && !(s.x <= 0.1)) v++;
+      }
+    }
+    return v;
   }
 
   // ── Fitness function ──────────────────────────────────────────────────────
@@ -776,6 +869,15 @@ export class ClassroomOptimizer {
       if (sa === -1 || sb === -1) continue;
       if (this.slots[sa].neighbors.includes(sb)) score += 0.75;
       else score -= 0.25;
+    }
+
+    // Hard (required) rules: each unmet one costs HARD_PENALTY, far above the
+    // soft scale above, so the GA satisfies them whenever it's possible. The
+    // soft reward/penalty for the same rule still applies — it just becomes
+    // a tie-breaker once the hard penalty is (or isn't) in play. No-op when
+    // the teacher hasn't marked any rule required.
+    if (this.constraints.hard) {
+      score -= this.countHardViolations(chrom, posOf) * HARD_PENALTY;
     }
 
     return score;

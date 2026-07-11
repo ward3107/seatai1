@@ -387,6 +387,77 @@ describe('ClassroomOptimizer', () => {
     });
   });
 
+  describe('Hard (required) rules', () => {
+    const baseConstraints: SeatingConstraints = {
+      separate_pairs: [],
+      keep_together_pairs: [],
+      front_row_ids: [],
+      back_row_ids: [],
+    };
+
+    it('always satisfies a hard separate rule that a soft one might trade away', () => {
+      // Alice(1) and Bob(2) are friends and academically close, so the soft
+      // objectives pull them together. Marked as a *required* separation, they
+      // must still end up non-adjacent.
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(1));
+      optimizer.setConstraints({
+        ...baseConstraints,
+        separate_pairs: [['1', '2']],
+        hard: { separate_pairs: true },
+      });
+      const result = optimizer.optimize();
+      const p1 = result.student_positions['1'];
+      const p2 = result.student_positions['2'];
+      const distance = Math.abs(p1.row - p2.row) + Math.abs(p1.col - p2.col);
+      expect(distance).toBeGreaterThan(1); // not adjacent
+      expect(result.unmet_hard_rules ?? 0).toBe(0);
+    });
+
+    it('forces a hard front-row rule to actually land in row 0', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(2));
+      optimizer.setConstraints({
+        ...baseConstraints,
+        front_row_ids: ['3'],
+        hard: { front_row_ids: true },
+      });
+      const result = optimizer.optimize();
+      expect(result.student_positions['3'].row).toBe(0);
+      expect(result.unmet_hard_rules ?? 0).toBe(0);
+    });
+
+    it('reports unmet_hard_rules when required rules are contradictory', () => {
+      // Same pair required to sit together AND apart — impossible. The optimizer
+      // must report exactly one unmet hard rule instead of hiding it.
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(3));
+      optimizer.setConstraints({
+        ...baseConstraints,
+        separate_pairs: [['1', '2']],
+        keep_together_pairs: [['1', '2']],
+        hard: { separate_pairs: true, keep_together_pairs: true },
+      });
+      const result = optimizer.optimize();
+      expect(result.unmet_hard_rules).toBe(1);
+    });
+
+    it('behaves exactly like before when no rule is marked hard', () => {
+      // Determinism guard: adding an (empty) hard map must not change results.
+      const make = (hard: boolean) => {
+        const o = new ClassroomOptimizer(students, 3, 4);
+        o.setRng(mulberry32(42));
+        o.setConstraints(
+          hard
+            ? { ...baseConstraints, separate_pairs: [['1', '4']], hard: {} }
+            : { ...baseConstraints, separate_pairs: [['1', '4']] },
+        );
+        return o.optimize().student_positions;
+      };
+      expect(make(true)).toEqual(make(false));
+    });
+  });
+
   describe('Objective Scores', () => {
     it('should return valid objective scores', () => {
       const optimizer = new ClassroomOptimizer(students, 2, 2);

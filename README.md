@@ -165,6 +165,11 @@ SeatAI uses a **genetic algorithm** to optimize seating:
 
 Weights are user-configurable.
 
+> **Grounded in research.** Every objective and rule the optimizer uses is
+> mapped to the peer‑reviewed evidence behind it — with honest grades for how
+> strong that evidence is — in
+> [`docs/RESEARCH_BASIS.md`](docs/RESEARCH_BASIS.md).
+
 ### Layout System
 
 The optimizer is layout-agnostic. Each layout (rows, clusters, U-shape,
