@@ -31,16 +31,16 @@ export default function QuestionnairePanel() {
   const complete = total > 0 && done >= total;
 
   return (
-    <div className="bg-indigo-50/60 rounded-xl overflow-hidden border border-indigo-100">
+    <div className="bg-indigo-50/60 dark:bg-indigo-900/30 rounded-xl overflow-hidden border border-indigo-100 dark:border-indigo-800">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-indigo-100/50 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-indigo-100/50 dark:hover:bg-indigo-900/40 transition-colors"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
-          <ClipboardList size={18} className="text-indigo-500" />
-          <span className="font-medium text-gray-700">{t('questionnaire.title')}</span>
-          <span className="text-[10px] uppercase tracking-wide bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full font-semibold">
+          <ClipboardList size={18} className="text-indigo-500 dark:text-indigo-400" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">{t('questionnaire.title')}</span>
+          <span className="text-[10px] uppercase tracking-wide bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded-full font-semibold">
             {t('questionnaire.step_badge')}
           </span>
         </div>
@@ -49,63 +49,63 @@ export default function QuestionnairePanel() {
 
       {open && (
         <div className="p-4 pt-0 space-y-3">
-          <p className="text-[11px] text-gray-600 leading-relaxed">{t('questionnaire.intro')}</p>
+          <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">{t('questionnaire.intro')}</p>
 
           {total === 0 ? (
-            <p className="text-xs text-gray-500 bg-white rounded-lg p-2.5 border border-gray-200">
+            <p className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-200 dark:border-gray-700">
               {t('questionnaire.add_students_first')}
             </p>
           ) : (
             <>
               {/* Consent gate */}
-              <label className="flex items-start gap-2 text-xs text-gray-700 cursor-pointer bg-white rounded-lg p-2.5 border border-gray-200">
+              <label className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-200 dark:border-gray-700">
                 <input
                   type="checkbox"
                   checked={consentAck}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                  className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
                 />
                 <span>
                   <span className="font-medium">{t('questionnaire.consent_label')}</span>
-                  <span className="block text-[10px] text-gray-500 mt-0.5">{t('questionnaire.consent_hint')}</span>
+                  <span className="block text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{t('questionnaire.consent_hint')}</span>
                 </span>
               </label>
 
               {/* Options */}
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={peerEnabled}
                     onChange={(e) => setPeerEnabled(e.target.checked)}
-                    className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
                   />
                   {t('questionnaire.peer_enabled')}
                 </label>
                 {peerEnabled && (
-                  <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer pl-5">
+                  <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer pl-5">
                     <input
                       type="checkbox"
                       checked={skipPeers}
                       onChange={(e) => setSkipPeers(e.target.checked)}
-                      className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                      className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
                     />
                     {t('questionnaire.skip_peers')}
                   </label>
                 )}
-                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={!!simpleMode}
                     onChange={(e) => setSimpleMode(e.target.checked)}
-                    className="rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
                   />
                   {t('questionnaire.simple_mode')}
                 </label>
               </div>
 
               {/* Progress */}
-              <div className="flex items-center justify-between text-[11px] text-gray-500">
+              <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
                 <span>{t('questionnaire.progress', { done, total })}</span>
                 {done > 0 && (
                   <button onClick={resetQuestionnaire} className="flex items-center gap-1 hover:text-indigo-600">
@@ -132,7 +132,7 @@ export default function QuestionnairePanel() {
               <button
                 onClick={() => setQuestionnaireOpen(true, true)}
                 disabled={!consentAck}
-                className="w-full py-2 px-3 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 px-3 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Smartphone size={15} />
                 {t('questionnaire.student_mode')}
@@ -149,13 +149,13 @@ export default function QuestionnairePanel() {
                   })
                 }
                 disabled={total === 0}
-                className="w-full py-2 px-3 text-indigo-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-indigo-100/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 px-3 text-indigo-600 dark:text-indigo-300 text-sm font-medium flex items-center justify-center gap-2 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/40 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Printer size={15} />
                 {t('questionnaire.handout_button')}
               </button>
               {!consentAck && (
-                <p className="text-[10px] text-amber-600">{t('questionnaire.consent_required')}</p>
+                <p className="text-[10px] text-amber-600 dark:text-amber-300">{t('questionnaire.consent_required')}</p>
               )}
             </>
           )}

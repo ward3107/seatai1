@@ -31,7 +31,7 @@ export default function SeatContextMenu({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.1 }}
-          className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 py-1.5 min-w-[190px] max-w-[calc(100vw-1rem)]"
+          className="fixed z-50 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-1.5 min-w-[190px] max-w-[calc(100vw-1rem)]"
           // Clamp to the viewport so a long-press near a screen edge (common
           // on phones) doesn't open the menu off-screen.
           style={{
@@ -41,7 +41,7 @@ export default function SeatContextMenu({
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="w-full px-4 py-2 text-sm text-start hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+            className="w-full px-4 py-2 text-sm text-start hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2.5 transition-colors"
             onClick={() => {
               onToggleLock(contextMenu.seatKey);
               onClose();
@@ -54,7 +54,7 @@ export default function SeatContextMenu({
             )}
           </button>
           {violations.has(contextMenu.seatKey) && (
-            <div className="px-4 py-2 text-xs text-red-500 flex items-center gap-2 border-t border-gray-100 mt-1">
+            <div className="px-4 py-2 text-xs text-red-500 dark:text-red-400 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700 mt-1">
               <AlertTriangle size={12} />
               {t('classroom.constraint_violation')}
             </div>

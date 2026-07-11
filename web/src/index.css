@@ -99,11 +99,50 @@ html.dark .text-gray-900 {
 html.dark .text-gray-700 { color: rgb(226 232 240); }
 html.dark .text-gray-600 { color: rgb(203 213 225); }
 html.dark .text-gray-500 { color: rgb(148 163 184); }
+/* gray-400 was missing — without it the most muted labels rendered dark
+   slate-on-slate and effectively vanished. */
+html.dark .text-gray-400 { color: rgb(148 163 184); } /* slate-400 */
 
 html.dark .border-gray-200,
-html.dark .border-gray-300 {
+html.dark .border-gray-300,
+html.dark .border-gray-100 {
   border-color: rgb(51 65 85); /* slate-700 */
 }
+
+/* Hover fills: the base grays are remapped above, but the `hover:` variants
+   generate their own selectors, so a hover that fills gray-50/100 flashed
+   bright white in dark mode. Remap the two common ones. */
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover {
+  background-color: rgb(51 65 85); /* slate-700 */
+}
+
+/* Translucent white surfaces used for floating panels/toolbars. Only /90 and
+   /95 were remapped; /80 leaked the light gradient through in dark mode. */
+html.dark .bg-white\/80 {
+  background-color: rgb(30 41 59); /* slate-800 */
+  color: rgb(226 232 240);
+}
+
+/* Form controls: give inputs/selects/textareas a dark field so typed text
+   and placeholders stay legible even where a component didn't add its own
+   dark: variant. */
+html.dark input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: rgb(15 23 42); /* slate-900 */
+  color: rgb(226 232 240);
+  border-color: rgb(51 65 85); /* slate-700 */
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: rgb(100 116 139); /* slate-500 */
+}
+
+/* Darker, less harsh scrollbars in dark mode. */
+html.dark ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+html.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); }
+html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
 #root {
   min-height: 100vh;

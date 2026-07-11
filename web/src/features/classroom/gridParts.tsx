@@ -6,7 +6,7 @@ import type { Student } from '../../types';
 /** Spinner shown while a lazily-loaded view (3D / timeline) fetches. */
 export function LazyFallback() {
   return (
-    <div className="flex items-center justify-center py-12 text-sm text-gray-400">
+    <div className="flex items-center justify-center py-12 text-sm text-gray-400 dark:text-gray-400">
       <RefreshCw size={16} className="animate-spin mr-2" />
       Loading…
     </div>
@@ -96,8 +96,8 @@ export function DecoTile({ kind, label }: { kind: 'desk' | 'obstacle'; label: st
       className={clsx(
         'rounded-lg min-h-[88px] w-[72px] flex flex-col items-center justify-center gap-1 border-2 select-none shrink-0',
         kind === 'desk'
-          ? 'bg-amber-100 border-amber-300 text-amber-700'
-          : 'bg-gray-100 border-gray-300 text-gray-500',
+          ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+          : 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400',
       )}
     >
       {kind === 'desk' ? <User size={18} aria-hidden="true" /> : <Ban size={18} aria-hidden="true" />}
@@ -143,7 +143,7 @@ export function DragGhost({
   return (
     <div
       className={clsx(
-        'w-[88px] h-[88px] rounded-lg border-2 border-indigo-400 bg-white shadow-2xl',
+        'w-[88px] h-[88px] rounded-lg border-2 border-indigo-400 bg-white dark:bg-gray-800 shadow-2xl',
         'flex flex-col items-center justify-center opacity-95 rotate-2 scale-110'
       )}
     >
@@ -159,7 +159,7 @@ export function DragGhost({
       >
         {student.name.charAt(0).toUpperCase()}
       </div>
-      <p className="mt-1 text-xs font-medium text-gray-700 truncate max-w-[76px] text-center">
+      <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[76px] text-center">
         {student.name.split(' ')[0]}
       </p>
     </div>
@@ -169,9 +169,9 @@ export function DragGhost({
 /** Static colour legend shown when no heat-map mode is active. */
 export function StaticLegend({ t }: { t: (key: string) => string }) {
   return (
-    <div className="mt-5 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+    <div className="mt-5 flex flex-wrap justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
       <div className="flex items-center gap-1.5">
-        <div className="w-3.5 h-3.5 rounded bg-blue-50 border-2 border-blue-200" />
+        <div className="w-3.5 h-3.5 rounded bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800" />
         {t('classroom.legend_front_row')}
       </div>
       <div className="flex items-center gap-1.5">
@@ -183,7 +183,7 @@ export function StaticLegend({ t }: { t: (key: string) => string }) {
         {t('classroom.legend_female')}
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-3.5 h-3.5 rounded bg-red-100 border-2 border-red-400" />
+        <div className="w-3.5 h-3.5 rounded bg-red-100 dark:bg-red-900/40 border-2 border-red-400" />
         {t('classroom.legend_violation')}
       </div>
       <div className="flex items-center gap-1.5">
@@ -219,10 +219,10 @@ export function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => s
         ];
 
   return (
-    <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs text-gray-500">
+    <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs text-gray-500 dark:text-gray-400">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-1.5">
-          <div className={`w-3.5 h-3.5 rounded ${item.color} border border-gray-300`} />
+          <div className={`w-3.5 h-3.5 rounded ${item.color} border border-gray-300 dark:border-gray-700`} />
           {item.label}
         </div>
       ))}

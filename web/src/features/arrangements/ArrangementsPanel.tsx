@@ -47,17 +47,17 @@ export default function ArrangementsPanel() {
     new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   return (
-    <div className="bg-gray-50 rounded-xl overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
-          <Bookmark size={18} className="text-gray-500" />
-          <span className="font-medium text-gray-700">{t('arrangements.title')}</span>
+          <Bookmark size={18} className="text-gray-500 dark:text-gray-400" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">{t('arrangements.title')}</span>
           {arrangements.length > 0 && (
-            <span className="ml-1.5 text-xs text-gray-500">({arrangements.length})</span>
+            <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({arrangements.length})</span>
           )}
         </div>
         {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -65,7 +65,7 @@ export default function ArrangementsPanel() {
 
       {open && (
         <div className="p-4 pt-0 space-y-3">
-          <p className="text-[11px] text-gray-500 leading-relaxed">{t('arrangements.description')}</p>
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">{t('arrangements.description')}</p>
 
           {/* Save current */}
           {result ? (
@@ -76,7 +76,7 @@ export default function ArrangementsPanel() {
                 onChange={(e) => setSaveName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 placeholder={t('arrangements.name_placeholder')}
-                className="flex-1 min-w-0 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-400 focus:border-primary-400"
+                className="flex-1 min-w-0 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
               <button
                 onClick={handleSave}
@@ -87,7 +87,7 @@ export default function ArrangementsPanel() {
               </button>
             </div>
           ) : (
-            <p className="text-xs text-gray-500 bg-white rounded-lg p-2.5 border border-gray-200">
+            <p className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-200 dark:border-gray-700">
               {t('arrangements.optimize_first')}
             </p>
           )}
@@ -102,7 +102,7 @@ export default function ArrangementsPanel() {
                     key={a.id}
                     className={clsx(
                       'flex items-center gap-2 rounded-lg border px-2.5 py-1.5',
-                      isActive ? 'bg-primary-50 border-primary-200' : 'bg-white border-gray-200',
+                      isActive ? 'bg-primary-50 border-primary-200' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                     )}
                   >
                     {editingId === a.id ? (
@@ -115,9 +115,9 @@ export default function ArrangementsPanel() {
                             if (e.key === 'Enter') commitEdit();
                             if (e.key === 'Escape') setEditingId(null);
                           }}
-                          className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded"
+                          className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-900 dark:text-gray-100"
                         />
-                        <button onClick={commitEdit} aria-label={t('arrangements.save')} className="p-1 text-green-600 hover:bg-green-50 rounded">
+                        <button onClick={commitEdit} aria-label={t('arrangements.save')} className="p-1 text-green-600 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40 rounded">
                           <Check size={15} />
                         </button>
                       </>
@@ -128,8 +128,8 @@ export default function ArrangementsPanel() {
                           className="flex-1 min-w-0 text-left"
                           aria-pressed={isActive}
                         >
-                          <span className="block text-sm font-medium text-gray-700 truncate">{a.name}</span>
-                          <span className="block text-[10px] text-gray-400">
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{a.name}</span>
+                          <span className="block text-[10px] text-gray-400 dark:text-gray-400">
                             {getDisplayScorePct(a.result)}% · {formatDate(a.createdAt)}
                           </span>
                         </button>
@@ -138,10 +138,10 @@ export default function ArrangementsPanel() {
                             {t('arrangements.active')}
                           </span>
                         )}
-                        <button onClick={() => startEdit(a)} aria-label={t('arrangements.rename')} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded shrink-0">
+                        <button onClick={() => startEdit(a)} aria-label={t('arrangements.rename')} className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded shrink-0">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => deleteArrangement(a.id)} aria-label={t('arrangements.delete')} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded shrink-0">
+                        <button onClick={() => deleteArrangement(a.id)} aria-label={t('arrangements.delete')} className="p-1 text-gray-400 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/40 rounded shrink-0">
                           <Trash2 size={13} />
                         </button>
                       </>

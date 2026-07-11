@@ -14,13 +14,13 @@ export default function TextSizeToggle() {
 
   return (
     <div
-      className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5"
+      className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-gray-700/50 p-0.5"
       role="group"
       aria-label={t('app.text_size')}
     >
       <Type
         size={14}
-        className="text-gray-500 mx-1"
+        className="text-gray-500 dark:text-gray-400 mx-1"
         aria-hidden="true"
       />
       {ORDER.map((scale) => (
@@ -35,8 +35,8 @@ export default function TextSizeToggle() {
             'px-1.5 py-0.5 text-xs font-medium rounded transition-colors min-w-[1.5rem]',
             'focus:outline-none focus:ring-2 focus:ring-primary-500',
             uiScale === scale
-              ? 'bg-white text-gray-800 shadow-sm'
-              : 'text-gray-500 hover:text-gray-800',
+              ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-800',
           )}
         >
           {LABEL[scale]}

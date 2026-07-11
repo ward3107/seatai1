@@ -69,11 +69,11 @@ export default function StudentList() {
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4">
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-gray-800">{t('students.title')}</h2>
-        <span className="text-sm text-gray-500">
+        <h2 className="font-semibold text-gray-800 dark:text-gray-100">{t('students.title')}</h2>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {filtered.length}{filtered.length !== students.length ? `/${students.length}` : ''} {t('students.total')}
         </span>
       </div>
@@ -82,19 +82,19 @@ export default function StudentList() {
       {students.length > 0 && (
         <div className="space-y-2 mb-3">
           <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
             <input
               type="text"
               placeholder={t('students.search_placeholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+              className="w-full pl-8 pr-7 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
                 aria-label={t('students.clear_search')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-gray-600"
               >
                 <X size={13} />
               </button>
@@ -105,7 +105,7 @@ export default function StudentList() {
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setFilterType(t => t === 'academic' ? 'behavior' : 'academic')}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded bg-white"
+              className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
               title={t('students.toggle_filter')}
             >
               <Filter size={10} />
@@ -119,7 +119,7 @@ export default function StudentList() {
                   'px-2 py-0.5 rounded-full text-xs border transition-colors',
                   filter === value
                     ? 'bg-primary-100 border-primary-400 text-primary-700'
-                    : 'border-gray-300 text-gray-500 hover:border-gray-400'
+                    : 'border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400'
                 )}
               >
                 {label}
@@ -152,7 +152,7 @@ export default function StudentList() {
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
                 selectedStudentId === student.id
                   ? 'bg-primary-100 border-2 border-primary-300'
-                  : 'bg-white hover:bg-gray-100 border-2 border-transparent'
+                  : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-transparent'
               )}
               onClick={() => setDetailsTarget(student.id)}
               onKeyDown={(e) => {
@@ -182,13 +182,13 @@ export default function StudentList() {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-800 truncate text-sm">
+                <p className="font-medium text-gray-800 dark:text-gray-100 truncate text-sm">
                   {student.name || 'Unnamed'}
                   {specialBadge(student) && (
                     <span className="ml-1 text-xs">{specialBadge(student)}</span>
                   )}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {student.academic_level} · {student.behavior_level}
                   {student.primary_language && ` · ${student.primary_language}`}
                 </p>
@@ -201,14 +201,14 @@ export default function StudentList() {
                   className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                   aria-label={t('students.edit_student', { name: student.name || t('students.unnamed') })}
                 >
-                  <Edit2 size={13} className="text-gray-500" aria-hidden="true" />
+                  <Edit2 size={13} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeStudent(student.id); }}
-                  className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                  className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/40 rounded transition-colors"
                   aria-label={t('students.remove_student', { name: student.name || t('students.unnamed') })}
                 >
-                  <Trash2 size={13} className="text-red-500" aria-hidden="true" />
+                  <Trash2 size={13} className="text-red-500 dark:text-red-400" aria-hidden="true" />
                 </button>
               </div>
             </motion.div>
@@ -216,7 +216,7 @@ export default function StudentList() {
         </AnimatePresence>
 
         {students.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-gray-400 dark:text-gray-400">
             <User size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">{t('students.no_students_yet')}</p>
             <p className="text-xs">{t('students.add_students_or_import')}</p>
@@ -224,7 +224,7 @@ export default function StudentList() {
         )}
 
         {students.length > 0 && filtered.length === 0 && (
-          <div className="text-center py-6 text-gray-400">
+          <div className="text-center py-6 text-gray-400 dark:text-gray-400">
             <Search size={24} className="mx-auto mb-1.5 opacity-50" />
             <p className="text-sm">{t('students.no_students_match')}</p>
             <button onClick={() => { setQuery(''); setFilter('all'); }} className="text-xs text-primary-500 underline mt-1">

@@ -63,7 +63,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
               transitions 0 ↔ 400 so main content reflows. */}
       <aside
         className={clsx(
-          'bg-white/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
+          'bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
           'fixed inset-y-0 left-0 z-40 max-w-[85vw] w-[400px]',
           'transition-transform duration-200',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
@@ -79,22 +79,22 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
       >
         <div className="w-[400px] max-w-[85vw] h-full flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <div>
-                <h1 className="font-bold text-xl text-gray-800">{t('app.title')}</h1>
-                <p className="text-xs text-gray-500">{t('app.subtitle')}</p>
+                <h1 className="font-bold text-xl text-gray-800 dark:text-gray-100">{t('app.title')}</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.subtitle')}</p>
               </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               aria-label={t('app.close_sidebar')}
             >
-              <X size={20} className="text-gray-500" aria-hidden="true" />
+              <X size={20} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
             </button>
           </div>
 
@@ -150,7 +150,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
             {/* Surface impossible / contradictory rules before optimizing. */}
             <ErrorBoundary name="Constraint Warnings" inline>
               <ConstraintWarnings />
@@ -198,7 +198,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                     }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>
                     {t('optimization.progress', {
                       generation: progress.generation,
@@ -208,7 +208,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                   <button
                     type="button"
                     onClick={cancel}
-                    className="px-2 py-0.5 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium"
+                    className="px-2 py-0.5 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 transition-colors font-medium"
                   >
                     {t('optimization.cancel')}
                   </button>
@@ -217,13 +217,13 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             )}
 
             {error && (
-              <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div role="alert" className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 text-sm">
                 {error}
               </div>
             )}
 
             {!wasmReady && !error && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-600 text-sm flex items-center gap-2">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-600 dark:text-blue-300 text-sm flex items-center gap-2">
                 <RefreshCw size={16} className="animate-spin" />
                 {t('app.loading_optimizer')}
               </div>
@@ -232,7 +232,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             {/* Quiet privacy reassurance — always visible so IT and
                 teachers know what they're trusting at a glance. */}
             <div
-              className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700"
+              className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300"
               title={t('app.privacy_local_only')}
             >
               <ShieldCheck size={11} aria-hidden="true" />

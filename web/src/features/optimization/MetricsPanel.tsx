@@ -84,22 +84,22 @@ export default function MetricsPanel() {
   ];
 
   const colorClasses = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    purple: 'bg-purple-100 text-purple-600',
-    orange: 'bg-orange-100 text-orange-600',
+    blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
+    green: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300',
+    purple: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300',
+    orange: 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300',
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6"
+      className="bg-white/90 dark:bg-gray-800 backdrop-blur-sm rounded-2xl shadow-xl p-6"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800">{t('optimization.results_title')}</h2>
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('optimization.results_title')}</h2>
+        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-1">
             <Clock size={14} />
             <span>{Math.round(result.computation_time_ms)}ms</span>
@@ -116,11 +116,11 @@ export default function MetricsPanel() {
         <div className="text-5xl font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
           {getDisplayScorePct(result)}%
         </div>
-        <p className="text-sm text-gray-500 mt-1">{t('optimization.overall_fitness_score')}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('optimization.overall_fitness_score')}</p>
         {/* Honest framing — the GA finds a strong (near-optimal) plan via a
             heuristic search; it isn't a proven mathematical optimum. We say so
             plainly and show how the search actually terminated. */}
-        <p className="text-[11px] text-gray-400 mt-1.5 max-w-md mx-auto">
+        <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-1.5 max-w-md mx-auto">
           {t('optimization.near_optimal_note', {
             reason: t(`optimization.stop_${result.stop_reason ?? 'generations'}`),
             generations: result.generations,
@@ -151,8 +151,8 @@ export default function MetricsPanel() {
               >
                 <Icon size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-800">{percentage}%</div>
-              <p className="text-xs text-gray-500">{metric.label}</p>
+              <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{percentage}%</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{metric.label}</p>
 
               {/* Progress bar */}
               <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -179,8 +179,8 @@ export default function MetricsPanel() {
       {/* Unmet required (hard) rules — surfaced prominently because it means
           the teacher's required rules were contradictory or impossible. */}
       {result.unmet_hard_rules ? (
-        <div role="alert" className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
-          <p className="text-sm font-medium text-rose-800">
+        <div role="alert" className="mt-4 p-3 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg">
+          <p className="text-sm font-medium text-rose-800 dark:text-rose-300">
             {t('optimization.unmet_hard_rules', { count: result.unmet_hard_rules })}
           </p>
         </div>
@@ -188,9 +188,9 @@ export default function MetricsPanel() {
 
       {/* Warnings */}
       {result.warnings.length > 0 && (
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm font-medium text-yellow-800">{t('optimization.notes')}:</p>
-          <ul className="mt-1 text-sm text-yellow-700 list-disc list-inside">
+        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">{t('optimization.notes')}:</p>
+          <ul className="mt-1 text-sm text-yellow-700 dark:text-yellow-300 list-disc list-inside">
             {result.warnings.map((warning, i) => (
               <li key={i}>{warning}</li>
             ))}
@@ -201,9 +201,9 @@ export default function MetricsPanel() {
       {/* Whole-class AI summary — only when the teacher has opted in to AI
           features in Settings. Sends aggregate facts, not the roster. */}
       {aiSettings.enabled && aiSettings.apiKey && (
-        <div className="mt-4 p-3 bg-violet-50 border border-violet-200 rounded-lg">
+        <div className="mt-4 p-3 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 rounded-lg">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-violet-800 flex items-center gap-1.5">
+            <p className="text-sm font-medium text-violet-800 dark:text-violet-300 flex items-center gap-1.5">
               <Sparkles size={14} aria-hidden="true" />
               {t('optimization.ai_summary_title')}
             </p>
@@ -224,10 +224,10 @@ export default function MetricsPanel() {
             </button>
           </div>
           {!aiText && !aiError && (
-            <p className="mt-1 text-xs text-violet-600">{t('optimization.ai_summary_hint')}</p>
+            <p className="mt-1 text-xs text-violet-600 dark:text-violet-300">{t('optimization.ai_summary_hint')}</p>
           )}
           {aiError && (
-            <p role="alert" className="mt-2 text-xs text-red-600">{aiError}</p>
+            <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-300">{aiError}</p>
           )}
           {aiText && (
             <p className="mt-2 text-sm text-violet-900 whitespace-pre-wrap">{aiText}</p>

@@ -348,7 +348,7 @@ export default function ClassroomGrid() {
 
   return (
     <div
-      className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 sm:p-6"
+      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 sm:p-6"
       onClick={() => setContextMenu(null)}
     >
       {/* Toolbar */}

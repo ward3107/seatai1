@@ -77,7 +77,7 @@ function StudentSearch({
       <div className="relative">
         <Search
           size={12}
-          className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 pointer-events-none"
           aria-hidden="true"
         />
         <input
@@ -98,13 +98,13 @@ function StudentSearch({
           }}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          className="w-full text-xs pl-7 pr-2 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full text-xs pl-7 pr-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
       {open && filtered.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 left-0 right-0 max-h-44 overflow-auto bg-white border border-gray-200 rounded shadow-lg text-xs"
+          className="absolute z-50 mt-1 left-0 right-0 max-h-44 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg text-xs"
         >
           {filtered.map((s) => (
             <li key={s.id} role="option" aria-selected={s.id === value}>
@@ -149,8 +149,8 @@ function RequiredToggle({ isHard, onToggle, t }: RequiredToggleProps) {
       title={t(isHard ? 'constraints.required_on_hint' : 'constraints.required_off_hint')}
       className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
         isHard
-          ? 'bg-rose-100 border-rose-300 text-rose-800'
-          : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'
+          ? 'bg-rose-100 dark:bg-rose-900/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+          : 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
       }`}
     >
       {isHard ? <Lock size={9} aria-hidden="true" /> : <Unlock size={9} aria-hidden="true" />}
@@ -203,14 +203,14 @@ function PairPicker({
   const tone =
     variant === 'separate'
       ? {
-          chip: 'bg-red-50 text-red-800 border-red-200',
-          box: 'bg-red-50/40 border-red-100',
-          icon: 'text-red-500',
+          chip: 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+          box: 'bg-red-50/40 dark:bg-red-900/30 border-red-100 dark:border-red-800',
+          icon: 'text-red-500 dark:text-red-400',
         }
       : {
-          chip: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-          box: 'bg-emerald-50/40 border-emerald-100',
-          icon: 'text-emerald-500',
+          chip: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+          box: 'bg-emerald-50/40 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800',
+          icon: 'text-emerald-500 dark:text-emerald-400',
         };
 
   const getName = (id: string) => students.find((s) => s.id === id)?.name ?? id;
@@ -222,13 +222,13 @@ function PairPicker({
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs font-semibold text-gray-800">{label}</h4>
-          <p className="text-[11px] text-gray-500 leading-snug">{description}</p>
+          <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-100">{label}</h4>
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">{description}</p>
         </div>
         {onToggleHard && (
           <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
         )}
-        <span className="text-xs font-medium text-gray-500 tabular-nums">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {pairs.length}
         </span>
       </header>
@@ -265,7 +265,7 @@ function PairPicker({
           placeholder={t('constraints.student_a')}
           ariaLabel={t('constraints.student_a')}
         />
-        <span className="text-xs text-gray-400" aria-hidden="true">
+        <span className="text-xs text-gray-400 dark:text-gray-400" aria-hidden="true">
           ↔
         </span>
         <StudentSearch
@@ -323,14 +323,14 @@ function RowPicker({
   const tone =
     variant === 'front'
       ? {
-          on: 'bg-indigo-100 border-indigo-400 text-indigo-900',
-          box: 'bg-indigo-50/40 border-indigo-100',
-          icon: 'text-indigo-500',
+          on: 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 text-indigo-900',
+          box: 'bg-indigo-50/40 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800',
+          icon: 'text-indigo-500 dark:text-indigo-400',
         }
       : {
-          on: 'bg-amber-100 border-amber-400 text-amber-900',
-          box: 'bg-amber-50/40 border-amber-100',
-          icon: 'text-amber-500',
+          on: 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 text-amber-900',
+          box: 'bg-amber-50/40 dark:bg-amber-900/30 border-amber-100 dark:border-amber-800',
+          icon: 'text-amber-500 dark:text-amber-400',
         };
 
   const filtered = useMemo(() => {
@@ -346,13 +346,13 @@ function RowPicker({
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs font-semibold text-gray-800">{label}</h4>
-          <p className="text-[11px] text-gray-500 leading-snug">{description}</p>
+          <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-100">{label}</h4>
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">{description}</p>
         </div>
         {onToggleHard && (
           <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
         )}
-        <span className="text-xs font-medium text-gray-500 tabular-nums">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {selectedIds.length}
         </span>
       </header>
@@ -361,7 +361,7 @@ function RowPicker({
         <div className="relative">
           <Search
             size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 pointer-events-none"
             aria-hidden="true"
           />
           <input
@@ -370,7 +370,7 @@ function RowPicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('constraints.search_students')}
             aria-label={t('constraints.search_students')}
-            className="w-full text-xs pl-7 pr-2 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full text-xs pl-7 pr-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
       )}
@@ -385,7 +385,7 @@ function RowPicker({
               onClick={() => onToggle(s.id)}
               aria-pressed={on}
               className={`px-2 py-0.5 rounded-full text-[11px] border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                on ? tone.on : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                on ? tone.on : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400'
               }`}
             >
               {firstName(s.name)}
@@ -393,7 +393,7 @@ function RowPicker({
           );
         })}
         {filtered.length === 0 && (
-          <p className="text-[11px] text-gray-400 italic">
+          <p className="text-[11px] text-gray-400 dark:text-gray-400 italic">
             {t('constraints.no_match')}
           </p>
         )}
@@ -549,27 +549,27 @@ export default function ConstraintsPanel() {
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
         aria-expanded={open}
         aria-controls="constraints-panel-body"
       >
         <div className="flex items-center gap-2">
-          <Users2 size={18} className="text-gray-500" aria-hidden="true" />
-          <span className="font-medium text-gray-700">
+          <Users2 size={18} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">
             {t('constraints.title')}
           </span>
           {totalRules > 0 && (
-            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs tabular-nums">
+            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-xs tabular-nums">
               {totalRules}
             </span>
           )}
           {conflicts.length > 0 && (
             <span
-              className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs"
+              className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded-full text-xs"
               title={t('constraints.has_conflicts')}
             >
               <AlertTriangle size={10} aria-hidden="true" />
@@ -587,17 +587,17 @@ export default function ConstraintsPanel() {
       {open && (
         <div id="constraints-panel-body" className="p-4 pt-0 space-y-3">
           {students.length < 2 ? (
-            <p className="text-xs text-gray-400 italic p-3 bg-white rounded-lg border border-gray-200">
+            <p className="text-xs text-gray-400 dark:text-gray-400 italic p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               {t('constraints.need_more_students')}
             </p>
           ) : (
             <>
               {conflicts.length > 0 && (
                 <div
-                  className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1"
+                  className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-1"
                   role="alert"
                 >
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
                     <AlertTriangle size={12} aria-hidden="true" />
                     {t('constraints.conflicts_heading')}
                   </div>
@@ -709,7 +709,7 @@ export default function ConstraintsPanel() {
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="text-xs text-red-600 hover:text-red-800 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                  className="text-xs text-red-600 dark:text-red-300 hover:text-red-800 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                 >
                   {t('constraints.clear_all')}
                 </button>

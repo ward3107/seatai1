@@ -84,7 +84,7 @@ function Stepper({
   incLabel: string;
 }) {
   const btn =
-    'w-9 h-9 shrink-0 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-95 transition';
+    'w-9 h-9 shrink-0 flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-95 transition';
   return (
     <div className="flex items-center gap-1.5">
       <button
@@ -103,7 +103,7 @@ function Stepper({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full min-w-0 px-2 py-1.5 border border-gray-300 rounded text-sm text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="w-full min-w-0 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-sm text-center tabular-nums dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
       />
       <button
         type="button"
@@ -201,23 +201,23 @@ export default function LayoutPanel() {
     setLayoutDef({ ...layoutDef, blockedCells: [] });
 
   return (
-    <div className="bg-gray-50 rounded-xl overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="layout-panel-body"
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
       >
         <div className="flex items-center gap-2">
-          <LayoutGrid size={18} className="text-gray-500" aria-hidden="true" />
-          <span className="font-medium text-gray-700">{t('layout.title')}</span>
-          <span className="text-xs text-gray-500 tabular-nums">
+          <LayoutGrid size={18} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">{t('layout.title')}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
             {total} {t('layout.seats')}
           </span>
           {!enough && (
             <span
-              className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px]"
+              className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded-full text-[10px]"
               title={t('layout.not_enough_seats')}
             >
               !
@@ -248,15 +248,15 @@ export default function LayoutPanel() {
                     'flex items-start gap-2.5 p-2.5 rounded-lg border-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
                     active
                       ? 'bg-primary-50 border-primary-400'
-                      : 'bg-white border-gray-200 hover:border-gray-300',
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300',
                   )}
                 >
                   <LayoutThumbnail def={p.preview} size={48} active={active} />
                   <div className="flex flex-col gap-0.5 min-w-0">
-                    <div className="text-xs font-medium text-gray-800 leading-tight">
+                    <div className="text-xs font-medium text-gray-800 dark:text-gray-100 leading-tight">
                       {t(p.i18nKey)}
                     </div>
-                    <div className="text-[10px] text-gray-500 leading-tight">
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
                       {t(p.descKey)}
                     </div>
                   </div>
@@ -272,7 +272,7 @@ export default function LayoutPanel() {
             layoutDef.type === 'circle') && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                   {t('settings.rows')}
                 </label>
                 <Stepper
@@ -285,7 +285,7 @@ export default function LayoutPanel() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                   {t('settings.columns')}
                 </label>
                 <Stepper
@@ -302,22 +302,22 @@ export default function LayoutPanel() {
 
           {/* Desk & obstacles — rows layout only (regular grid). */}
           {layoutDef.type === 'rows' && (
-            <div className="space-y-2 border-t border-gray-200 pt-3">
+            <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-600">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {t('layout.features_title')}
                 </span>
                 {blocked.length > 0 && (
                   <button
                     type="button"
                     onClick={clearFeatures}
-                    className="text-[11px] text-red-600 hover:text-red-800 underline focus:outline-none focus:ring-1 focus:ring-red-500 rounded"
+                    className="text-[11px] text-red-600 dark:text-red-300 hover:text-red-800 underline focus:outline-none focus:ring-1 focus:ring-red-500 rounded"
                   >
                     {t('layout.features_clear')}
                   </button>
                 )}
               </div>
-              <p className="text-[10px] text-gray-500 leading-snug">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-snug">
                 {t('layout.features_hint')}
               </p>
 
@@ -349,7 +349,7 @@ export default function LayoutPanel() {
                             ? 'bg-amber-400 border-amber-500 text-white'
                             : kind === 'obstacle'
                               ? 'bg-gray-400 border-gray-500 text-white'
-                              : 'bg-white border-gray-300 hover:border-primary-400',
+                              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:border-primary-400',
                         )}
                       >
                         {kind === 'desk' ? (
@@ -363,9 +363,9 @@ export default function LayoutPanel() {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-3 text-[10px] text-gray-500">
+              <div className="flex flex-wrap gap-3 text-[10px] text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-white border border-gray-300" />
+                  <span className="w-3 h-3 rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700" />
                   {t('layout.feature_seat')}
                 </span>
                 <span className="flex items-center gap-1">
@@ -383,7 +383,7 @@ export default function LayoutPanel() {
           {/* Cluster pod size */}
           {layoutDef.type === 'clusters' && (
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                 {t('layout.cluster_size')}
               </label>
               <div className="flex gap-1">
@@ -397,7 +397,7 @@ export default function LayoutPanel() {
                       'flex-1 py-1.5 text-xs font-medium rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
                       (layoutDef.clusterSize ?? 2) === n
                         ? 'bg-primary-50 border-primary-400 text-primary-700'
-                        : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400',
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400',
                     )}
                   >
                     {n}×{n}
@@ -411,7 +411,7 @@ export default function LayoutPanel() {
           {layoutDef.type === 'custom-rows' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-600">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {t('layout.seats_per_row')}
                 </span>
                 <div className="flex gap-1">
@@ -420,7 +420,7 @@ export default function LayoutPanel() {
                     onClick={resetCustomRows}
                     title={t('layout.reset_rows')}
                     aria-label={t('layout.reset_rows')}
-                    className="p-1 rounded hover:bg-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="p-1 rounded hover:bg-gray-200 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <RotateCcw size={12} aria-hidden="true" />
                   </button>
@@ -438,7 +438,7 @@ export default function LayoutPanel() {
               <ul className="space-y-1.5 max-h-44 overflow-auto pr-1">
                 {(layoutDef.customRowSizes ?? []).map((size, idx) => (
                   <li key={idx} className="flex items-center gap-2">
-                    <span className="text-[11px] text-gray-500 w-12 tabular-nums">
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400 w-12 tabular-nums">
                       {t('layout.row')} {idx + 1}
                     </span>
                     <input
@@ -449,14 +449,14 @@ export default function LayoutPanel() {
                       onChange={(e) =>
                         updateCustomRow(idx, Number(e.target.value))
                       }
-                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                     <button
                       type="button"
                       onClick={() => removeCustomRow(idx)}
                       disabled={(layoutDef.customRowSizes ?? []).length <= 1}
                       aria-label={t('layout.remove_row')}
-                      className="p-1 rounded hover:bg-gray-200 text-gray-500 disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="p-1 rounded hover:bg-gray-200 text-gray-500 dark:text-gray-400 disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <Minus size={12} aria-hidden="true" />
                     </button>
@@ -468,7 +468,7 @@ export default function LayoutPanel() {
 
           {!enough && (
             <p
-              className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-2"
+              className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded p-2"
               role="alert"
             >
               {t('layout.not_enough_seats_detail', {

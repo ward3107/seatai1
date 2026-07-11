@@ -62,7 +62,7 @@ export default function GridControls({
   const heatMapOptions = getHeatMapOptions(t);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4 p-2 bg-gray-50 rounded-xl border border-gray-200">
+    <div className="flex flex-wrap items-center gap-2 mb-4 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700">
 
       {/* ── Undo / Redo ── */}
       <div className="flex items-center gap-0.5">
@@ -75,7 +75,7 @@ export default function GridControls({
             'p-2 rounded-lg transition-all flex items-center gap-1',
             history.length === 0
               ? 'text-gray-300 cursor-not-allowed'
-              : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-gray-900'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-white hover:shadow-sm hover:text-gray-900'
           )}
         >
           <Undo2 size={15} aria-hidden="true" />
@@ -89,13 +89,13 @@ export default function GridControls({
             'p-2 rounded-lg transition-all flex items-center gap-1',
             historyFuture.length === 0
               ? 'text-gray-300 cursor-not-allowed'
-              : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-gray-900'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-white hover:shadow-sm hover:text-gray-900'
           )}
         >
           <Redo2 size={15} aria-hidden="true" />
         </button>
         {history.length > 0 && (
-          <span className="text-[11px] text-gray-400 ml-1">
+          <span className="text-[11px] text-gray-400 dark:text-gray-400 ml-1">
             {history.length}
           </span>
         )}
@@ -104,7 +104,7 @@ export default function GridControls({
       <div className="w-px h-5 bg-gray-300" />
 
       {/* ── Interaction Mode ── */}
-      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
+      <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
         <button
           onClick={() => setInteractionMode('drag')}
           aria-pressed={interactionMode === 'drag'}
@@ -113,7 +113,7 @@ export default function GridControls({
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
             interactionMode === 'drag'
               ? 'bg-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           )}
         >
           <GripVertical size={12} />
@@ -127,7 +127,7 @@ export default function GridControls({
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
             interactionMode === 'click'
               ? 'bg-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           )}
         >
           <MousePointer2 size={12} />
@@ -138,7 +138,7 @@ export default function GridControls({
       <div className="w-px h-5 bg-gray-300" />
 
       {/* ── Layout Mode ── */}
-      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
+      <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
         <button
           onClick={() => setViewMode('rows')}
           aria-pressed={viewMode === 'rows'}
@@ -147,7 +147,7 @@ export default function GridControls({
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
             viewMode === 'rows'
               ? 'bg-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           )}
         >
           <AlignJustify size={12} />
@@ -161,7 +161,7 @@ export default function GridControls({
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
             viewMode === 'pairs'
               ? 'bg-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
           )}
         >
           <Columns2 size={12} />
@@ -179,8 +179,8 @@ export default function GridControls({
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
           showTimeline
-            ? 'bg-orange-100 text-orange-600 border border-orange-200'
-            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+            ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm'
         )}
       >
         <History size={15} />
@@ -191,8 +191,8 @@ export default function GridControls({
 
       {/* ── Heat Map ── */}
       <div className="flex items-center gap-1.5">
-        <Palette size={13} className="text-gray-400" />
-        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <Palette size={13} className="text-gray-400 dark:text-gray-400" />
+        <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
           {heatMapOptions.map((opt) => (
             <button
               key={opt.value}
@@ -203,7 +203,7 @@ export default function GridControls({
                 'px-2.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap',
                 heatMapMode === opt.value
                   ? 'bg-indigo-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               )}
             >
               {opt.label}
@@ -221,11 +221,11 @@ export default function GridControls({
           disabled={zoomLevel <= 0.6}
           aria-label={t('gridControls.zoom_out')}
           title={t('gridControls.zoom_out')}
-          className="p-2 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
         >
           <ZoomOut size={15} />
         </button>
-        <span className="text-xs text-gray-500 w-10 text-center font-mono tabular-nums">
+        <span className="text-xs text-gray-500 dark:text-gray-400 w-10 text-center font-mono tabular-nums">
           {Math.round(zoomLevel * 100)}%
         </span>
         <button
@@ -233,7 +233,7 @@ export default function GridControls({
           disabled={zoomLevel >= 1.5}
           aria-label={t('gridControls.zoom_in')}
           title={t('gridControls.zoom_in')}
-          className="p-2 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
         >
           <ZoomIn size={15} />
         </button>
@@ -249,8 +249,8 @@ export default function GridControls({
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
           showRelations
-            ? 'bg-indigo-100 text-indigo-600 border border-indigo-200'
-            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+            ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm'
         )}
       >
         {showRelations ? <Eye size={15} /> : <EyeOff size={15} />}
@@ -265,8 +265,8 @@ export default function GridControls({
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
           showConstraintBadges
-            ? 'bg-green-100 text-green-600 border border-green-200'
-            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+            ? 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 border border-green-200 dark:border-green-800'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm'
         )}
       >
         <ShieldCheck size={15} />
@@ -281,8 +281,8 @@ export default function GridControls({
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
           showSeatTags
-            ? 'bg-indigo-100 text-indigo-600 border border-indigo-200'
-            : 'text-gray-500 hover:bg-white hover:shadow-sm'
+            ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-white hover:shadow-sm'
         )}
       >
         <Tags size={15} />

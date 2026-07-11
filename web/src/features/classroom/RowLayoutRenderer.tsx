@@ -74,7 +74,7 @@ export default function RowLayoutRenderer({
       </div>
 
       {/* Instruction hint */}
-      <p className="text-center text-xs text-gray-400 mb-5">
+      <p className="text-center text-xs text-gray-400 dark:text-gray-400 mb-5">
         {interactionMode === 'drag'
           ? t('classroom.drag_hint')
           : t('classroom.click_hint')}
@@ -106,7 +106,7 @@ export default function RowLayoutRenderer({
                   )}
                 >
                   {/* Row number label */}
-                  <span className="text-[10px] text-gray-400 font-medium self-center w-8 text-right shrink-0">
+                  <span className="text-[10px] text-gray-400 dark:text-gray-400 font-medium self-center w-8 text-right shrink-0">
                     {rowIndex + 1}
                   </span>
 
@@ -161,8 +161,8 @@ export default function RowLayoutRenderer({
                           className={clsx(
                             'flex gap-2 p-2 rounded-xl border-2',
                             rowIndex === 0
-                              ? 'border-blue-200 bg-blue-50'
-                              : 'border-amber-200 bg-amber-50'
+                              ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30'
+                              : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30'
                           )}
                         >
                           {deskSeats.map((seat) => (

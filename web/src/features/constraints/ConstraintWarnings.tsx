@@ -30,8 +30,8 @@ export default function ConstraintWarnings() {
       className={
         'rounded-lg border p-2.5 text-xs ' +
         (hasError
-          ? 'bg-red-50 border-red-200 text-red-800'
-          : 'bg-amber-50 border-amber-200 text-amber-900')
+          ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300'
+          : 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-900')
       }
     >
       <div className="flex items-center gap-1.5 font-semibold mb-1">

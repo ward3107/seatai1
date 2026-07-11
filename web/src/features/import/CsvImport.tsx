@@ -75,12 +75,12 @@ export default function CsvImport() {
   return (
     <div className="space-y-3">
       {/* Mode toggle */}
-      <div className="flex items-center gap-2 text-xs text-gray-600">
+      <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
         <span>{t('csvImport.import_mode')}</span>
         <button
           onClick={() => setMode('append')}
           className={`px-2 py-0.5 rounded-full border transition-colors ${
-            mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 hover:border-gray-400'
+            mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
           }`}
         >
           {t('csvImport.add_to_class')}
@@ -88,7 +88,7 @@ export default function CsvImport() {
         <button
           onClick={() => setMode('replace')}
           className={`px-2 py-0.5 rounded-full border transition-colors ${
-            mode === 'replace' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'border-gray-300 hover:border-gray-400'
+            mode === 'replace' ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-400 text-orange-700 dark:text-orange-300' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
           }`}
         >
           {t('csvImport.replace_class')}
@@ -100,13 +100,13 @@ export default function CsvImport() {
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
+        className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
       >
-        <Upload size={20} className="text-gray-400" />
-        <p className="text-sm text-gray-500 text-center">
+        <Upload size={20} className="text-gray-400 dark:text-gray-400" />
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
           {t('csvImport.drop_here').replace('<span>', '<span className="text-primary-500 underline">')}
         </p>
-        <p className="text-xs text-gray-400">Columns: name, gender, academic_level, score…</p>
+        <p className="text-xs text-gray-400 dark:text-gray-400">Columns: name, gender, academic_level, score…</p>
         <input
           ref={inputRef}
           type="file"
@@ -130,28 +130,28 @@ export default function CsvImport() {
         const hasErrors = result.errors.length > 0;
         const hasWarnings = result.warnings.length > 0;
         const bannerCls = hasErrors
-          ? 'bg-red-50 border border-red-200'
+          ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
           : hasWarnings
-            ? 'bg-amber-50 border border-amber-200'
-            : 'bg-green-50 border border-green-200';
+            ? 'bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800'
+            : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800';
         const Icon = hasErrors || hasWarnings ? AlertCircle : CheckCircle2;
-        const iconCls = hasErrors ? 'text-red-500' : hasWarnings ? 'text-amber-500' : 'text-green-500';
+        const iconCls = hasErrors ? 'text-red-500 dark:text-red-400' : hasWarnings ? 'text-amber-500 dark:text-amber-400' : 'text-green-500 dark:text-green-400';
         return (
           <div className={`rounded-lg p-3 flex items-start gap-2 ${bannerCls}`}>
             <Icon size={16} className={`${iconCls} shrink-0 mt-0.5`} />
             <div className="flex-1 text-xs">
-              <p className="font-medium text-gray-700">
+              <p className="font-medium text-gray-700 dark:text-gray-300">
                 {result.added} {t('csvImport.imported')}
               </p>
               {result.errors.map((err, i) => (
-                <p key={`e-${i}`} className="text-red-700 mt-0.5">• {err}</p>
+                <p key={`e-${i}`} className="text-red-700 dark:text-red-300 mt-0.5">• {err}</p>
               ))}
               {result.warnings.map((warn, i) => (
-                <p key={`w-${i}`} className="text-amber-700 mt-0.5">• {warn}</p>
+                <p key={`w-${i}`} className="text-amber-700 dark:text-amber-300 mt-0.5">• {warn}</p>
               ))}
             </div>
             <button onClick={() => setResult(null)} className="shrink-0 p-0.5 hover:bg-black/5 rounded">
-              <X size={12} className="text-gray-500" />
+              <X size={12} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         );

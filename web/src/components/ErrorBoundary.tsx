@@ -38,12 +38,12 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     if (inline) {
       return (
-        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 text-sm">
           <AlertTriangle size={14} />
           <span>{name ?? 'Component'} failed to render.</span>
           <button
             onClick={this.reset}
-            className="ml-auto underline hover:no-underline text-red-500"
+            className="ml-auto underline hover:no-underline text-red-500 dark:text-red-400"
           >
             Retry
           </button>
@@ -52,13 +52,13 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8 bg-red-50 border border-red-200 rounded-2xl text-center">
+      <div className="flex flex-col items-center justify-center gap-4 p-8 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl text-center">
         <AlertTriangle size={32} className="text-red-400" />
         <div>
-          <p className="font-semibold text-red-700 text-lg">
+          <p className="font-semibold text-red-700 dark:text-red-300 text-lg">
             {name ? `${name} crashed` : 'Something went wrong'}
           </p>
-          <p className="text-red-500 text-sm mt-1 max-w-xs">
+          <p className="text-red-500 dark:text-red-400 text-sm mt-1 max-w-xs">
             {error.message || 'An unexpected error occurred.'}
           </p>
         </div>
@@ -71,7 +71,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         </button>
         <details className="text-left w-full max-w-sm">
           <summary className="text-xs text-red-400 cursor-pointer">Details</summary>
-          <pre className="mt-1 text-xs text-red-400 overflow-auto max-h-32 bg-white rounded p-2 border border-red-100">
+          <pre className="mt-1 text-xs text-red-400 overflow-auto max-h-32 bg-white dark:bg-gray-800 rounded p-2 border border-red-100 dark:border-red-800">
             {error.stack}
           </pre>
         </details>

@@ -350,13 +350,13 @@ export default function ExplanationPanel() {
       <>
         {/* Search */}
         <div className="mb-4 relative">
-          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
 
@@ -376,13 +376,13 @@ export default function ExplanationPanel() {
                 className={clsx(
                   'rounded-xl border p-4',
                   hasWarn
-                    ? 'border-amber-200 bg-amber-50'
-                    : 'border-green-200 bg-green-50'
+                    ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30'
+                    : 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30'
                 )}
               >
                 {/* Compatibility score badge */}
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                     {row + 1}-{col + 1}
                     {studentB && ` - ${row + 1}-${col + 2}`}
                   </span>
@@ -433,7 +433,7 @@ export default function ExplanationPanel() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
                       {studentA.name}
                       {studentB && ` & ${studentB.name}`}
                     </p>
@@ -442,20 +442,20 @@ export default function ExplanationPanel() {
 
                 {/* Reasons for pairing - based on educational research */}
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-gray-500 uppercase font-medium">
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">
                     {studentB ? 'Why paired together:' : 'Seat status:'}
                   </p>
                   {compatibility.reasons.map((reason, i) => (
                     <div key={i} className={clsx(
                       'text-[11px] px-2 py-1.5 rounded-md leading-snug',
-                      reason.includes('Friends') ? 'bg-green-100 text-green-800' :
-                      reason.includes('No conflicts') ? 'bg-blue-100 text-blue-800' :
-                      reason.includes('levels') ? 'bg-purple-100 text-purple-800' :
-                      reason.includes('behavior') ? 'bg-amber-100 text-amber-800' :
-                      reason.includes('front row') || reason.includes('quiet') ? 'bg-indigo-100 text-indigo-800' :
-                      reason.includes('genders') ? 'bg-teal-100 text-teal-800' :
-                      reason.includes('bilingual') ? 'bg-cyan-100 text-cyan-800' :
-                      'bg-gray-100 text-gray-700'
+                      reason.includes('Friends') ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' :
+                      reason.includes('No conflicts') ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' :
+                      reason.includes('levels') ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300' :
+                      reason.includes('behavior') ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300' :
+                      reason.includes('front row') || reason.includes('quiet') ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300' :
+                      reason.includes('genders') ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300' :
+                      reason.includes('bilingual') ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-300' :
+                      'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                     )}>
                       {reason}
                     </div>
@@ -467,7 +467,7 @@ export default function ExplanationPanel() {
         </div>
 
         {filteredPairs.length === 0 && (
-          <p className="text-center text-sm text-gray-400 py-6">{t('explanation.no_match', { search })}</p>
+          <p className="text-center text-sm text-gray-400 dark:text-gray-400 py-6">{t('explanation.no_match', { search })}</p>
         )}
       </>
     );
@@ -497,13 +497,13 @@ export default function ExplanationPanel() {
       <>
         {/* Search */}
         <div className="mb-4 relative">
-          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
 
@@ -515,8 +515,8 @@ export default function ExplanationPanel() {
               className={clsx(
                 'rounded-xl border p-3',
                 hasWarn
-                  ? 'border-amber-200 bg-amber-50'
-                  : 'border-gray-200 bg-gray-50'
+                  ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30'
+                  : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50'
               )}
             >
               {/* Student header */}
@@ -534,10 +534,10 @@ export default function ExplanationPanel() {
                   {student.name.charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 truncate">
+                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
                     {student.name}
                   </p>
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-400">
                     {t('explanation.row_seat', { row: row + 1, seat: col + 1 })}
                   </p>
                 </div>
@@ -548,27 +548,27 @@ export default function ExplanationPanel() {
                 {reasons.map((r, i) => (
                   <li key={i} className="flex items-start gap-1.5">
                     {r.type === 'good' ? (
-                      <CheckCircle2 size={11} className="text-emerald-500 mt-0.5 shrink-0" />
+                      <CheckCircle2 size={11} className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
                     ) : r.type === 'warn' ? (
-                      <AlertTriangle size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                      <AlertTriangle size={11} className="text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
                     ) : (
-                      <Info size={11} className="text-gray-400 mt-0.5 shrink-0" />
+                      <Info size={11} className="text-gray-400 dark:text-gray-400 mt-0.5 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
                       <p
                         className={clsx(
                           'text-[11px] leading-snug',
                           r.type === 'good'
-                            ? 'text-emerald-700'
+                            ? 'text-emerald-700 dark:text-emerald-300'
                             : r.type === 'warn'
-                            ? 'text-amber-700'
-                            : 'text-gray-500'
+                            ? 'text-amber-700 dark:text-amber-300'
+                            : 'text-gray-500 dark:text-gray-400'
                         )}
                       >
                         {r.text}
                       </p>
                       {r.citation && (
-                        <p className="text-[9px] text-gray-400 italic mt-0.5 leading-tight">
+                        <p className="text-[9px] text-gray-400 dark:text-gray-400 italic mt-0.5 leading-tight">
                           — {r.citation}
                         </p>
                       )}
@@ -581,52 +581,52 @@ export default function ExplanationPanel() {
         </div>
 
         {entries.length === 0 && (
-          <p className="text-center text-sm text-gray-400 py-6">{t('explanation.no_match', { search })}</p>
+          <p className="text-center text-sm text-gray-400 dark:text-gray-400 py-6">{t('explanation.no_match', { search })}</p>
         )}
       </>
     );
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden mb-6">
+    <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden mb-6">
       {/* Header toggle */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
             {isPairsMode ? (
-              <Heart size={16} className="text-indigo-600" />
+              <Heart size={16} className="text-indigo-600 dark:text-indigo-300" />
             ) : (
-              <Info size={16} className="text-indigo-600" />
+              <Info size={16} className="text-indigo-600 dark:text-indigo-300" />
             )}
           </div>
           <div className="text-left">
-            <p className="font-semibold text-gray-800 text-sm">
+            <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
               {isPairsMode ? t('explanation.why_these_pairs') : t('explanation.why_this_seating')}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {isPairsMode ? t('explanation.practical_reasons_pairing') : t('explanation.practical_reasons_placement')}
             </p>
           </div>
           {warnCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full flex items-center gap-1">
+            <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-full flex items-center gap-1">
               <AlertTriangle size={10} />
               {warnCount} {t('explanation.issues')}
             </span>
           )}
         </div>
         {expanded ? (
-          <ChevronUp size={16} className="text-gray-400" />
+          <ChevronUp size={16} className="text-gray-400 dark:text-gray-400" />
         ) : (
-          <ChevronDown size={16} className="text-gray-400" />
+          <ChevronDown size={16} className="text-gray-400 dark:text-gray-400" />
         )}
       </button>
 
       {/* Expanded body */}
       {expanded && (
-        <div className="border-t border-gray-100 p-4">
+        <div className="border-t border-gray-100 dark:border-gray-700 p-4">
           {content}
         </div>
       )}

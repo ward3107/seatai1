@@ -144,7 +144,7 @@ export default function StudentForm() {
     return (
       <button
         onClick={() => setIsAdding(true)}
-        className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-primary-400 hover:text-primary-500 transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 transition-colors flex items-center justify-center gap-2"
       >
         <Plus size={18} />
         {t('students.add_button')}
@@ -153,14 +153,14 @@ export default function StudentForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 space-y-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl p-4 space-y-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800">
+        <h3 className="font-semibold text-gray-800 dark:text-gray-100">
           {editingStudent ? t('students.edit') : t('students.add')}
         </h3>
-        <button type="button" onClick={handleCancel} aria-label={t('detail.close')} className="p-1 hover:bg-gray-100 rounded">
-          <X size={18} className="text-gray-500" />
+        <button type="button" onClick={handleCancel} aria-label={t('detail.close')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+          <X size={18} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
 
@@ -168,7 +168,7 @@ export default function StudentForm() {
       <div className="flex gap-3 items-start">
         {/* Photo */}
         <div className="flex-shrink-0">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('students.photo')}
           </label>
           <div className="relative w-16 h-16">
@@ -185,12 +185,12 @@ export default function StudentForm() {
                 <img
                   src={form.photo_url}
                   alt=""
-                  className="w-16 h-16 rounded-lg object-cover border border-gray-300"
+                  className="w-16 h-16 rounded-lg object-cover border border-gray-300 dark:border-gray-700"
                 />
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, photo_url: undefined })}
-                  className="absolute -top-1 -right-1 p-0.5 bg-white border border-gray-300 rounded-full text-gray-500 hover:text-red-500 shadow-sm"
+                  className="absolute -top-1 -right-1 p-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:text-red-500 shadow-sm"
                   aria-label={t('students.photo_remove')}
                 >
                   <Trash2 size={11} />
@@ -198,7 +198,7 @@ export default function StudentForm() {
               </>
             ) : (
               <label
-                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-primary-400 hover:text-primary-500 cursor-pointer transition-colors"
+                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 cursor-pointer transition-colors"
                 title={t('students.photo_add')}
               >
                 <ImagePlus size={20} />
@@ -238,13 +238,13 @@ export default function StudentForm() {
 
         {/* Name */}
         <div className="flex-1">
-          <label htmlFor={fieldId('name')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.name')}</label>
+          <label htmlFor={fieldId('name')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.name')}</label>
           <input
             id={fieldId('name')}
             type="text"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder={t('students.name_placeholder')}
             required
           />
@@ -254,12 +254,12 @@ export default function StudentForm() {
       {/* Gender + Language */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={fieldId('gender')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.gender')}</label>
+          <label htmlFor={fieldId('gender')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.gender')}</label>
           <select
             id={fieldId('gender')}
             value={form.gender}
             onChange={(e) => setForm({ ...form, gender: e.target.value as Gender })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           >
             <option value="male">{t('students.gender_male')}</option>
             <option value="female">{t('students.gender_female')}</option>
@@ -267,12 +267,12 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label htmlFor={fieldId('language')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.language')}</label>
+          <label htmlFor={fieldId('language')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.language')}</label>
           <select
             id={fieldId('language')}
             value={form.primary_language ?? ''}
             onChange={(e) => setForm({ ...form, primary_language: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           >
             <option value="">{t('students.select_option')}</option>
             {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
@@ -283,12 +283,12 @@ export default function StudentForm() {
       {/* Academic */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={fieldId('academic-level')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.academic_level')}</label>
+          <label htmlFor={fieldId('academic-level')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.academic_level')}</label>
           <select
             id={fieldId('academic-level')}
             value={form.academic_level}
             onChange={(e) => setForm({ ...form, academic_level: e.target.value as AcademicLevel })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           >
             <option value="advanced">{t('students.level_advanced')}</option>
             <option value="proficient">{t('students.level_proficient')}</option>
@@ -297,13 +297,13 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label htmlFor={fieldId('academic-score')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
+          <label htmlFor={fieldId('academic-score')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.score')}</label>
           <input
             id={fieldId('academic-score')}
             type="number" min="0" max="100"
             value={form.academic_score}
             onChange={(e) => setForm({ ...form, academic_score: Number(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </div>
@@ -311,12 +311,12 @@ export default function StudentForm() {
       {/* Behavior */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={fieldId('behavior-level')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.behavior_level')}</label>
+          <label htmlFor={fieldId('behavior-level')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.behavior_level')}</label>
           <select
             id={fieldId('behavior-level')}
             value={form.behavior_level}
             onChange={(e) => setForm({ ...form, behavior_level: e.target.value as BehaviorLevel })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           >
             <option value="excellent">{t('students.behavior_excellent')}</option>
             <option value="good">{t('students.behavior_good')}</option>
@@ -325,23 +325,23 @@ export default function StudentForm() {
           </select>
         </div>
         <div>
-          <label htmlFor={fieldId('behavior-score')} className="block text-sm font-medium text-gray-700 mb-1">{t('students.score')}</label>
+          <label htmlFor={fieldId('behavior-score')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('students.score')}</label>
           <input
             id={fieldId('behavior-score')}
             type="number" min="0" max="100"
             value={form.behavior_score}
             onChange={(e) => setForm({ ...form, behavior_score: Number(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </div>
 
       {/* ── Relationships section (collapsible) ── */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         <button
           type="button"
           onClick={() => setShowRelations(v => !v)}
-          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           <span>{t('students.relationships')} {(form.friends_ids.length + form.incompatible_ids.length) > 0 && `(${form.friends_ids.length + form.incompatible_ids.length})`}</span>
           {showRelations ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -350,12 +350,12 @@ export default function StudentForm() {
         {showRelations && (
           <div className="p-3 space-y-3">
             {otherStudents.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">{t('students.need_more_students')}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-400 italic">{t('students.need_more_students')}</p>
             ) : (
               <>
                 {/* Friends */}
                 <div>
-                  <p className="text-xs font-medium text-green-700 mb-1">{t('students.friends_label')}</p>
+                  <p className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">{t('students.friends_label')}</p>
                   <div className="flex flex-wrap gap-1">
                     {otherStudents.map(s => {
                       const active = form.friends_ids.includes(s.id);
@@ -368,10 +368,10 @@ export default function StudentForm() {
                           onClick={() => toggleId('friends_ids', s.id)}
                           className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
                             active
-                              ? 'bg-green-100 border-green-400 text-green-800'
+                              ? 'bg-green-100 dark:bg-green-900/40 border-green-400 text-green-800 dark:text-green-300'
                               : conflict
-                              ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'border-gray-300 text-gray-600 hover:border-green-400 hover:text-green-700'
+                              ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
+                              : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-green-400 hover:text-green-700'
                           }`}
                         >
                           {s.name.split(' ')[0]}
@@ -383,7 +383,7 @@ export default function StudentForm() {
 
                 {/* Incompatible */}
                 <div>
-                  <p className="text-xs font-medium text-red-700 mb-1">{t('students.incompatible_label')}</p>
+                  <p className="text-xs font-medium text-red-700 dark:text-red-300 mb-1">{t('students.incompatible_label')}</p>
                   <div className="flex flex-wrap gap-1">
                     {otherStudents.map(s => {
                       const active = form.incompatible_ids.includes(s.id);
@@ -396,10 +396,10 @@ export default function StudentForm() {
                           onClick={() => toggleId('incompatible_ids', s.id)}
                           className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
                             active
-                              ? 'bg-red-100 border-red-400 text-red-800'
+                              ? 'bg-red-100 dark:bg-red-900/40 border-red-400 text-red-800 dark:text-red-300'
                               : friend
-                              ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-700'
+                              ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
+                              : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-red-400 hover:text-red-700'
                           }`}
                         >
                           {s.name.split(' ')[0]}
@@ -415,11 +415,11 @@ export default function StudentForm() {
       </div>
 
       {/* ── Special needs section (collapsible) ── */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         <button
           type="button"
           onClick={() => setShowSpecialNeeds(v => !v)}
-          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           <span>{t('students.accessibility_title')} {form.special_needs.length > 0 && `(${form.special_needs.length})`}</span>
           {showSpecialNeeds ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -434,42 +434,42 @@ export default function StudentForm() {
                   type="checkbox"
                   checked={form.requires_front_row}
                   onChange={(e) => setForm({ ...form, requires_front_row: e.target.checked })}
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                  className="rounded border-gray-300 dark:border-gray-700 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">{t('students.requires_front_row')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('students.requires_front_row')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.has_mobility_issues}
                   onChange={(e) => setForm({ ...form, has_mobility_issues: e.target.checked })}
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                  className="rounded border-gray-300 dark:border-gray-700 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">{t('students.mobility_issues')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('students.mobility_issues')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.requires_quiet_area}
                   onChange={(e) => setForm({ ...form, requires_quiet_area: e.target.checked })}
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                  className="rounded border-gray-300 dark:border-gray-700 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">{t('students.requires_quiet_area')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('students.requires_quiet_area')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.is_bilingual}
                   onChange={(e) => setForm({ ...form, is_bilingual: e.target.checked })}
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                  className="rounded border-gray-300 dark:border-gray-700 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">{t('students.bilingual')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('students.bilingual')}</span>
               </label>
             </div>
 
             {/* Add a special need type */}
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1">{t('students.add_specific_need')}</p>
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{t('students.add_specific_need')}</p>
               <div className="flex flex-wrap gap-1">
                 {SPECIAL_NEED_TYPES.map(type => {
                   const active = form.special_needs.some(n => n.type === type);
@@ -480,8 +480,8 @@ export default function StudentForm() {
                       onClick={() => active ? removeSpecialNeed(type) : addSpecialNeed(type)}
                       className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
                         active
-                          ? 'bg-purple-100 border-purple-400 text-purple-800'
-                          : 'border-gray-300 text-gray-600 hover:border-purple-400 hover:text-purple-700'
+                          ? 'bg-purple-100 dark:bg-purple-900/40 border-purple-400 text-purple-800 dark:text-purple-300'
+                          : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-purple-400 hover:text-purple-700'
                       }`}
                     >
                       {active ? `✓ ${type}` : `+ ${type}`}
@@ -493,11 +493,11 @@ export default function StudentForm() {
 
             {/* Configured special needs */}
             {form.special_needs.map((need, i) => (
-              <div key={need.type} className="bg-purple-50 rounded-lg p-2 space-y-1.5">
+              <div key={need.type} className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-2 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-purple-800">{need.type}</span>
-                  <button type="button" onClick={() => removeSpecialNeed(need.type)} aria-label={t('students.remove_student', { name: need.type })} className="p-0.5 hover:bg-purple-100 rounded">
-                    <X size={12} className="text-purple-600" />
+                  <span className="text-xs font-medium text-purple-800 dark:text-purple-300">{need.type}</span>
+                  <button type="button" onClick={() => removeSpecialNeed(need.type)} aria-label={t('students.remove_student', { name: need.type })} className="p-0.5 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded">
+                    <X size={12} className="text-purple-600 dark:text-purple-300" />
                   </button>
                 </div>
                 <input
@@ -505,24 +505,24 @@ export default function StudentForm() {
                   placeholder={t('students.need_notes_placeholder')}
                   value={need.description ?? ''}
                   onChange={(e) => updateNeed(i, { description: e.target.value })}
-                  className="w-full px-2 py-1 text-xs border border-purple-200 rounded focus:ring-1 focus:ring-purple-400 bg-white"
+                  className="w-full px-2 py-1 text-xs border border-purple-200 dark:border-purple-800 rounded focus:ring-1 focus:ring-purple-400 bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                 />
                 <div className="flex gap-3">
-                  <label className="flex items-center gap-1 text-xs text-purple-700">
+                  <label className="flex items-center gap-1 text-xs text-purple-700 dark:text-purple-300">
                     <input
                       type="checkbox"
                       checked={need.requires_front_seat}
                       onChange={(e) => updateNeed(i, { requires_front_seat: e.target.checked })}
-                      className="rounded border-purple-300 text-purple-500"
+                      className="rounded border-purple-300 dark:border-purple-800 text-purple-500 dark:text-purple-400"
                     />
                     {t('students.front_seat')}
                   </label>
-                  <label className="flex items-center gap-1 text-xs text-purple-700">
+                  <label className="flex items-center gap-1 text-xs text-purple-700 dark:text-purple-300">
                     <input
                       type="checkbox"
                       checked={need.requires_support_buddy}
                       onChange={(e) => updateNeed(i, { requires_support_buddy: e.target.checked })}
-                      className="rounded border-purple-300 text-purple-500"
+                      className="rounded border-purple-300 dark:border-purple-800 text-purple-500 dark:text-purple-400"
                     />
                     {t('students.support_buddy')}
                   </label>
@@ -535,7 +535,7 @@ export default function StudentForm() {
 
       {/* Notes */}
       <div>
-        <label htmlFor={fieldId('notes')} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={fieldId('notes')} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {t('students.notes')}
         </label>
         <textarea
@@ -545,7 +545,7 @@ export default function StudentForm() {
           placeholder={t('students.notes_placeholder')}
           rows={3}
           maxLength={500}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-y"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-y"
         />
       </div>
 
