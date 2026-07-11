@@ -6,20 +6,20 @@ import { parseCsv } from '../../utils/csvParser';
 
 // Expected CSV columns (case-insensitive, trimmed)
 // Required: name
-// Optional: gender, academic_level, academic_score, behavior_level, behavior_score,
+// Optional: gender, age, academic_level, academic_score, behavior_level, behavior_score,
 //           primary_language, is_bilingual, requires_front_row, has_mobility_issues,
-//           requires_quiet_area
+//           requires_quiet_area, special_needs (";"- or "|"-separated list), notes
 const TEMPLATE_HEADERS = [
-  'name', 'gender', 'academic_level', 'academic_score',
+  'name', 'gender', 'age', 'academic_level', 'academic_score',
   'behavior_level', 'behavior_score', 'primary_language',
   'is_bilingual', 'requires_front_row', 'has_mobility_issues', 'requires_quiet_area',
-  'notes',
+  'special_needs', 'notes',
 ];
 
 const TEMPLATE_EXAMPLE = [
-  ['Alice Cohen', 'female', 'advanced', '92', 'excellent', '90', 'Hebrew', 'true', 'false', 'false', 'false', 'Strong reader, helps neighbors'],
-  ['Yossi Levi', 'male', 'basic', '55', 'challenging', '48', 'Hebrew', 'false', 'true', 'false', 'false', 'Needs frequent check-ins'],
-  ['Mariam Hassan', 'female', 'proficient', '75', 'good', '80', 'Arabic', 'true', 'false', 'false', 'false', ''],
+  ['Alice Cohen', 'female', '10', 'advanced', '92', 'excellent', '90', 'Hebrew', 'true', 'false', 'false', 'false', '', 'Strong reader, helps neighbors'],
+  ['Yossi Levi', 'male', '9', 'basic', '55', 'challenging', '48', 'Hebrew', 'false', 'true', 'false', 'false', 'ADHD', 'Needs frequent check-ins'],
+  ['Mariam Hassan', 'female', '10', 'proficient', '75', 'good', '80', 'Arabic', 'true', 'false', 'false', 'false', 'dyslexia;anxiety', ''],
 ];
 
 function downloadTemplate() {

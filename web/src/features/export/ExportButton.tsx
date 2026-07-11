@@ -49,6 +49,9 @@ export default function ExportButton() {
   const result = useStore((s) => s.result);
   const students = useStore((s) => s.students);
   const layoutDef = useStore((s) => s.layoutDef);
+  const constraints = useStore((s) => s.constraints);
+  const weights = useStore((s) => s.weights);
+  const config = useStore((s) => s.config);
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<Loading>(null);
@@ -160,6 +163,11 @@ export default function ExportButton() {
         },
         layoutDef,
         students,
+        // The rules and tuning that produced this chart. Without them the
+        // export can't be reproduced or re-imported faithfully.
+        constraints,
+        weights,
+        config,
         seats: result ? result.layout.seats : null,
         warnings: result ? result.warnings : [],
       };

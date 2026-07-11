@@ -198,6 +198,24 @@ export interface ClassProject {
   rotationPlan?: RotationPlan | null;
   /** Optional named seating arrangements saved within this class. */
   savedArrangements?: SavedArrangement[];
+  /** Step-1 questionnaire progress for this class (consent, surveyed students,
+   *  peer/simple toggles). Added after the initial schema, so older projects
+   *  omit it and the loader falls back to a fresh questionnaire. */
+  questionnaire?: {
+    consentAck: boolean;
+    surveyedIds: string[];
+    skipPeers: boolean;
+    peerSurveyEnabled?: boolean;
+    simpleMode?: boolean;
+  };
+  /** Rolling history of optimization runs used for "who sat with whom" and the
+   *  freshen-seating penalty. Optional for back-compat with older snapshots. */
+  resultHistory?: Array<{
+    timestamp: string;
+    positions: Record<string, { row: number; col: number }>;
+  }>;
+  /** Whether the freshen-seating penalty was enabled for this class. */
+  avoidRecentNeighbors?: boolean;
 }
 
 /** One period (e.g. a week) inside a term rotation plan — a full

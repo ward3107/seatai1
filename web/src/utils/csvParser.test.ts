@@ -166,4 +166,32 @@ describe('parseCsv', () => {
       requires_quiet_area: false,
     });
   });
+
+  it('imports a numeric age and warns on invalid/out-of-range ages', () => {
+    const csv = [
+      'name,age',
+      'Alice,9',
+      'Bob,old',
+      'Cara,',
+    ].join('\n');
+    const { students, warnings } = parseCsv(csv, t);
+    expect(students[0].age).toBe(9);
+    expect(students[1].age).toBeUndefined();
+    expect(students[2].age).toBeUndefined();
+    expect(warnings.some((w) => w.includes('column=age'))).toBe(true);
+  });
+
+  it('parses a delimited special_needs list into SpecialNeed entries', () => {
+    const csv = [
+      'name,special_needs',
+      '"Alice",ADHD;dyslexia',
+      'Bob,',
+    ].join('\n');
+    const { students } = parseCsv(csv, t);
+    expect(students[0].special_needs).toEqual([
+      { type: 'ADHD', requires_front_seat: false, requires_support_buddy: false },
+      { type: 'dyslexia', requires_front_seat: false, requires_support_buddy: false },
+    ]);
+    expect(students[1].special_needs).toEqual([]);
+  });
 });

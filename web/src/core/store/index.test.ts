@@ -367,5 +367,60 @@ describe('Zustand Store', () => {
       expect(result.current.students).toHaveLength(0);
       expect(result.current.result).toBeNull();
     });
+
+    it('carries questionnaire progress and run history through save/load', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.setStudents([mockStudent]);
+        result.current.setQuestionnaireConsent(true);
+        result.current.markStudentSurveyed(mockStudent.id);
+        result.current.setAvoidRecentNeighbors(true);
+        useStore.setState({
+          resultHistory: [
+            { timestamp: '2026-01-01T00:00:00.000Z', positions: { [mockStudent.id]: { row: 0, col: 0 } } },
+          ],
+        });
+        result.current.saveProject('Class A');
+      });
+
+      // Snapshot captured the class-scoped data.
+      const proj = result.current.projects[0];
+      expect(proj.questionnaire?.consentAck).toBe(true);
+      expect(proj.questionnaire?.surveyedIds).toContain(mockStudent.id);
+      expect(proj.resultHistory).toHaveLength(1);
+      expect(proj.avoidRecentNeighbors).toBe(true);
+
+      // Mutate live state, then load: the saved values come back.
+      act(() => {
+        result.current.resetQuestionnaire();
+        result.current.setAvoidRecentNeighbors(false);
+        useStore.setState({ resultHistory: [] });
+        result.current.loadProject(proj.id);
+      });
+
+      expect(result.current.questionnaire.consentAck).toBe(true);
+      expect(result.current.questionnaire.surveyedIds).toContain(mockStudent.id);
+      expect(result.current.resultHistory).toHaveLength(1);
+      expect(result.current.avoidRecentNeighbors).toBe(true);
+    });
+
+    it('loadProject clears stale seat locks and selection', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.setStudents([mockStudent]);
+        result.current.saveProject('Class A');
+      });
+      const projectId = result.current.projects[0].id;
+
+      act(() => {
+        useStore.setState({ lockedSeats: ['0-0'], selectedSeatKey: '1-1' });
+        result.current.loadProject(projectId);
+      });
+
+      expect(result.current.lockedSeats).toEqual([]);
+      expect(result.current.selectedSeatKey).toBeNull();
+    });
   });
 });

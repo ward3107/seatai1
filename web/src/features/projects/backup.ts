@@ -51,6 +51,14 @@ export interface BackupData {
   rotationPlan?: RotationPlan | null;
   /** Optional named seating arrangements saved within the class. */
   savedArrangements?: SavedArrangement[];
+  /** Optional step-1 questionnaire progress (consent, surveyed students). */
+  questionnaire?: {
+    consentAck: boolean;
+    surveyedIds: string[];
+    skipPeers: boolean;
+    peerSurveyEnabled?: boolean;
+    simpleMode?: boolean;
+  };
   /** Optional UI preferences. The restoring browser can choose to keep
    *  its own — we treat them as suggestions rather than requirements. */
   uiLanguage?: 'en' | 'he' | 'ar' | 'ru';
@@ -89,6 +97,13 @@ export function buildBackup(state: {
   }>;
   rotationPlan?: RotationPlan | null;
   savedArrangements?: SavedArrangement[];
+  questionnaire?: {
+    consentAck: boolean;
+    surveyedIds: string[];
+    skipPeers: boolean;
+    peerSurveyEnabled?: boolean;
+    simpleMode?: boolean;
+  };
   uiLanguage?: 'en' | 'he' | 'ar' | 'ru';
   uiScale?: 'sm' | 'md' | 'lg';
   theme?: 'light' | 'dark' | 'system';
@@ -113,6 +128,7 @@ export function buildBackup(state: {
       resultHistory: state.resultHistory,
       rotationPlan: state.rotationPlan,
       savedArrangements: state.savedArrangements,
+      questionnaire: state.questionnaire,
       uiLanguage: state.uiLanguage,
       uiScale: state.uiScale,
       theme: state.theme,
