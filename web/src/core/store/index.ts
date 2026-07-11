@@ -235,7 +235,9 @@ interface AppState {
   // Projects
   projects: ClassProject[];
   currentProjectId: string | null;
-  saveProject: (name: string) => void;
+  /** Save the current class as a project. Pass `asNew` to always create a
+   *  fresh project (a copy) instead of overwriting the loaded one. */
+  saveProject: (name: string, asNew?: boolean) => void;
   loadProject: (id: string) => void;
   deleteProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
@@ -300,6 +302,14 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
+          // An emptied roster has no chart — clear the stale result so the
+          // header score / Print / Compare don't render over an empty class.
+          if (state.students.length === 0) {
+            state.result = null;
+            state.previousPositions = null;
+            state.lockedSeats = [];
+            state.selectedSeatKey = null;
+          }
         }),
       setStudents: (students) =>
         set((state) => {
@@ -308,6 +318,12 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
+          if (students.length === 0) {
+            state.result = null;
+            state.previousPositions = null;
+            state.lockedSeats = [];
+            state.selectedSeatKey = null;
+          }
         }),
 
       // Layout
@@ -743,10 +759,14 @@ export const useStore = create<AppState>()(
       projects: [],
       currentProjectId: null,
 
-      saveProject: (name) =>
+      saveProject: (name, asNew = false) =>
         set((state) => {
           const now = new Date().toISOString();
-          const existing = state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
+          // `asNew` forces a copy: ignore the loaded project so "save as new"
+          // never overwrites the class the teacher is working on.
+          const existing = asNew
+            ? undefined
+            : state.projects.find((p: ClassProject) => p.id === state.currentProjectId);
           // Build the persistable snapshot once. Uses structuredClone (faster
           // than JSON round-trip) for nested arrays/objects. `layoutDef` is
           // included so circle / cluster / U-shape projects survive reload.
@@ -800,6 +820,10 @@ export const useStore = create<AppState>()(
           state.activeArrangementId = null;
           state.history = [];
           state.historyFuture = [];
+          // Land in the workspace: loading from the Home/welcome screen (or
+          // mid-wizard) must show the loaded class, not stay on onboarding.
+          state.homeView = false;
+          state.wizardActive = false;
         }),
 
       deleteProject: (id) =>

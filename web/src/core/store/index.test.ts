@@ -318,5 +318,54 @@ describe('Zustand Store', () => {
       const { projects } = result.current;
       expect(projects).toHaveLength(0);
     });
+
+    it('saveProject(name, true) creates a copy instead of overwriting the loaded project', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.setStudents([mockStudent]);
+        result.current.saveProject('Class A');
+      });
+      const idA = result.current.projects[0].id;
+
+      act(() => {
+        result.current.loadProject(idA); // now currentProjectId = idA
+        result.current.saveProject('Class B', true); // asNew → must not overwrite A
+      });
+
+      const names = result.current.projects.map((p) => p.name).sort();
+      expect(result.current.projects).toHaveLength(2);
+      expect(names).toEqual(['Class A', 'Class B']);
+    });
+
+    it('loadProject returns to the workspace (clears homeView/wizard)', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => {
+        result.current.setStudents([mockStudent]);
+        result.current.saveProject('Test Class');
+      });
+      const id = result.current.projects[0].id;
+
+      act(() => {
+        result.current.setHomeView(true);
+        result.current.startWizard();
+        result.current.loadProject(id);
+      });
+
+      expect(result.current.homeView).toBe(false);
+      expect(result.current.wizardActive).toBe(false);
+    });
+
+    it('clears a stale result when the roster is emptied', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => {
+        result.current.setStudents([mockStudent]);
+        // Fake a result so we can prove it gets cleared.
+        useStore.setState({ result: { layout: { seats: [] } } as never });
+        result.current.removeStudent(mockStudent.id);
+      });
+      expect(result.current.students).toHaveLength(0);
+      expect(result.current.result).toBeNull();
+    });
   });
 });

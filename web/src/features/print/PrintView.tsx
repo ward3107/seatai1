@@ -91,19 +91,30 @@ export default function PrintView({ onClose }: Props) {
     ? Math.max(0.6, Math.min(1, Math.sqrt(18 / Math.max(result.layout.seats.length, 1))))
     : 1;
 
-  // Build grid: rows × cols with student name (or empty)
-  const grid: (string | null)[][] = Array.from({ length: rows }, () =>
-    Array(cols).fill(null)
-  );
-
+  // Build the grid from the actual seat extents, not state rows/cols: a
+  // custom-rows layout can have a row wider than `cols`, and sizing by `cols`
+  // would silently drop the overflow seats from the printout. Store each
+  // seat's student_id (not its name) so badges resolve by id — two students
+  // sharing a name must not collide.
+  let maxRow = rows - 1;
+  let maxCol = cols - 1;
   for (const seat of result.layout.seats) {
-    const { row, col } = seat.position;
-    if (row < rows && col < cols) {
-      if (seat.student_id) {
-        const s = studentMap.get(seat.student_id);
-        grid[row][col] = s ? s.name : seat.student_id;
-      }
-    }
+    maxRow = Math.max(maxRow, seat.position.row);
+    maxCol = Math.max(maxCol, seat.position.col);
+  }
+  for (const key of blockedAt.keys()) {
+    const [r, c] = key.split('|').map(Number);
+    maxRow = Math.max(maxRow, r);
+    maxCol = Math.max(maxCol, c);
+  }
+  const gridRows = maxRow + 1;
+  const gridCols = maxCol + 1;
+
+  const grid: (string | null)[][] = Array.from({ length: gridRows }, () =>
+    Array(gridCols).fill(null),
+  );
+  for (const seat of result.layout.seats) {
+    if (seat.student_id) grid[seat.position.row][seat.position.col] = seat.student_id;
   }
 
   const handlePrint = () => window.print();
@@ -230,7 +241,7 @@ export default function PrintView({ onClose }: Props) {
               </div>
             ) : (
             <div className="overflow-auto">
-              <table className="w-full border-collapse mx-auto" style={{ maxWidth: `${cols * 120}px` }}>
+              <table className="w-full border-collapse mx-auto" style={{ maxWidth: `${gridCols * 120}px` }}>
                 <tbody>
                   {grid.map((rowSeats, rowIdx) => (
                     <tr key={rowIdx}>
@@ -238,7 +249,7 @@ export default function PrintView({ onClose }: Props) {
                       <td className="text-xs text-gray-400 text-right pr-2 w-6 align-middle">
                         {rowIdx + 1}
                       </td>
-                      {rowSeats.map((name, colIdx) => {
+                      {rowSeats.map((sid, colIdx) => {
                         const blockedKind = blockedAt.get(`${rowIdx}|${colIdx}`);
                         if (blockedKind) {
                           return (
@@ -255,9 +266,11 @@ export default function PrintView({ onClose }: Props) {
                             </td>
                           );
                         }
-                        const student = name
-                          ? students.find(s => s.name === name) ?? null
-                          : null;
+                        // Resolve by id (not name) so duplicate names don't
+                        // borrow each other's badges. Fall back to the raw id
+                        // if the student was removed.
+                        const student = sid ? studentMap.get(sid) ?? null : null;
+                        const name = student ? student.name : sid;
                         const hasNeeds = student && (
                           student.has_mobility_issues ||
                           student.requires_front_row ||

@@ -72,7 +72,7 @@ export default function ExportButton() {
         // full classroom shape (especially for circle / cluster layouts).
         rows = [
           [
-            'row', 'col', 'student_name', 'gender', 'age', 'academic_level',
+            'row', 'col', 'name', 'gender', 'age', 'academic_level',
             'academic_score', 'behavior_level', 'behavior_score',
             'requires_front_row', 'requires_quiet_area', 'has_mobility_issues',
             'special_needs', 'primary_language', 'is_bilingual',
@@ -104,7 +104,7 @@ export default function ExportButton() {
         // Roster-only export — no seat positions yet. One row per student.
         rows = [
           [
-            'student_name', 'gender', 'age', 'academic_level', 'academic_score',
+            'name', 'gender', 'age', 'academic_level', 'academic_score',
             'behavior_level', 'behavior_score', 'requires_front_row',
             'requires_quiet_area', 'has_mobility_issues', 'special_needs',
             'primary_language', 'is_bilingual',

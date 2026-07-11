@@ -22,7 +22,6 @@ import StudentHoverPopup from './StudentHoverPopup';
 import { DragGhost, HeatMapLegend, LazyFallback, StaticLegend } from './gridParts';
 import { createEmptyGrid, emptySeatsFromLayout } from './gridHelpers';
 import { useGridKeyboardNav } from './useGridKeyboardNav';
-import { useSeatingHistory } from '../../hooks/useSeatingHistory';
 import { getViolations } from '../../utils/seatingUtils';
 import { getConstraintStatus } from '../../core/seatStatus';
 import type { Seat, Student, OptimizationResult } from '../../types';
@@ -67,8 +66,6 @@ export default function ClassroomGrid() {
   const [activeDragSeatKey, setActiveDragSeatKey] = useState<string | null>(null);
 
   const gridContainerRef = useRef<HTMLDivElement>(null);
-
-  useSeatingHistory();
 
   const seats = useMemo(() => {
     if (result?.layout.seats) return result.layout.seats;
