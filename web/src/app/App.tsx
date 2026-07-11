@@ -34,28 +34,29 @@ const SCALE_CLASS: Record<'sm' | 'md' | 'lg', string> = {
 };
 
 function App() {
-  const {
-    students,
-    layoutDef,
-    homeView,
-    setHomeView,
-    wizardActive,
-    result,
-    previousPositions,
-    showMovementDiff,
-    setShowMovementDiff,
-    history,
-    historyFuture,
-    undo,
-    redo,
-    uiScale,
-    resultsCollapsed,
-    setResultsCollapsed,
-    questionnaireOpen,
-    setQuestionnaireOpen,
-  } = useStore();
+  // Individual selectors (not a bulk `useStore()`) so App only re-renders on
+  // the slices it uses — otherwise every seat swap / lock / weight change
+  // re-rendered the whole tree.
+  const students = useStore((s) => s.students);
+  const layoutDef = useStore((s) => s.layoutDef);
+  const homeView = useStore((s) => s.homeView);
+  const setHomeView = useStore((s) => s.setHomeView);
+  const wizardActive = useStore((s) => s.wizardActive);
+  const result = useStore((s) => s.result);
+  const previousPositions = useStore((s) => s.previousPositions);
+  const showMovementDiff = useStore((s) => s.showMovementDiff);
+  const setShowMovementDiff = useStore((s) => s.setShowMovementDiff);
+  const history = useStore((s) => s.history);
+  const historyFuture = useStore((s) => s.historyFuture);
+  const undo = useStore((s) => s.undo);
+  const redo = useStore((s) => s.redo);
+  const uiScale = useStore((s) => s.uiScale);
+  const resultsCollapsed = useStore((s) => s.resultsCollapsed);
+  const setResultsCollapsed = useStore((s) => s.setResultsCollapsed);
+  const questionnaireOpen = useStore((s) => s.questionnaireOpen);
+  const setQuestionnaireOpen = useStore((s) => s.setQuestionnaireOpen);
 
-  const { wasmReady, isOptimizing, error, initWasm, optimize, progress, cancel } = useOptimizer();
+  const { wasmReady, isOptimizing, error, optimize, progress, cancel } = useOptimizer();
   const { t } = useLanguage();
   useTheme();
   // Import a roster handed over by the LTI launch (URL fragment), if any.
@@ -105,10 +106,8 @@ function App() {
     }
   }, []);
 
-  // Initialize WASM on mount
-  useEffect(() => {
-    initWasm();
-  }, [initWasm]);
+  // The optimizer worker is initialized by useOptimizer's own mount effect,
+  // so no separate initWasm() call is needed here.
 
   useKeyboardShortcuts({
     canUndo: history.length > 0,
