@@ -356,6 +356,23 @@ describe('ClassroomOptimizer', () => {
       expect(result.layout.seats.filter((s) => !s.is_empty)).toHaveLength(students.length);
     });
 
+    it('does not duplicate a student pinned to two seats', () => {
+      // Regression: pinning the same id to two slots wrote it into the
+      // chromosome twice and dropped another student. setPinned dedupes.
+      const optimizer = new ClassroomOptimizer(students, layout);
+      optimizer.setRng(mulberry32(9));
+      optimizer.setPinned(
+        new Map([
+          [slotAt(0, 0), '1'],
+          [slotAt(2, 3), '1'], // same student again — must be ignored
+        ]),
+      );
+      const result = optimizer.optimize();
+      const placed = result.layout.seats.map((s) => s.student_id).filter((id): id is string => !!id);
+      expect(new Set(placed).size).toBe(placed.length); // no duplicates
+      expect(new Set(placed)).toEqual(new Set(['1', '2', '3', '4']));
+    });
+
     it('lets unpinned students take the pinned-free seats', () => {
       const optimizer = new ClassroomOptimizer(students, layout);
       optimizer.setRng(mulberry32(3));
