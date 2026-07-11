@@ -102,6 +102,8 @@
     "print": "Print",
     "print_title": "Print seating chart",
     "open_sidebar": "Open sidebar",
+    "home": "Home",
+    "back_to_chart": "Back to seating chart",
     "close_sidebar": "Close sidebar",
     "undo": "Undo (Ctrl+Z)",
     "redo": "Redo (Ctrl+Y)",

@@ -5,7 +5,7 @@ import ExportButton from '../features/export/ExportButton';
 import LanguageSelector from '../components/LanguageSelector';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
-import { Menu, Users, Printer, Undo2, Redo2, HelpCircle, GitCompare } from 'lucide-react';
+import { Menu, Home, Users, Printer, Undo2, Redo2, HelpCircle, GitCompare } from 'lucide-react';
 
 interface TopBarProps {
   onShowCompare: () => void;
@@ -23,6 +23,8 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   const result = useStore((s) => s.result);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
+  const homeView = useStore((s) => s.homeView);
+  const setHomeView = useStore((s) => s.setHomeView);
   const history = useStore((s) => s.history);
   const historyFuture = useStore((s) => s.historyFuture);
   const undo = useStore((s) => s.undo);
@@ -41,6 +43,20 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           aria-label={t('app.open_sidebar')}
         >
           <Menu size={20} className="text-gray-600" aria-hidden="true" />
+        </button>
+      )}
+
+      {/* Home — return to the welcome/landing screen without clearing the
+          class. Only meaningful once a class is loaded and we're not already
+          on it. */}
+      {students.length > 0 && !homeView && (
+        <button
+          onClick={() => setHomeView(true)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          aria-label={t('app.home')}
+          title={t('app.home')}
+        >
+          <Home size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
         </button>
       )}
 
