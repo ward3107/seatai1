@@ -106,7 +106,7 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
 
   if (!result) {
     return (
-      <div className="p-6 text-center text-gray-500">
+      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
         <History size={24} className="mx-auto mb-2 opacity-50" />
         <p>{t('classroom.no_history')}</p>
       </div>
@@ -119,12 +119,12 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp size={20} className="text-primary-500" />
-          <h3 className="font-semibold text-gray-800">{t('classroom.optimization_timeline')}</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100">{t('classroom.optimization_timeline')}</h3>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             ✕
           </button>
@@ -134,29 +134,29 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
       {/* Statistics */}
       {stats && (
         <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="bg-white rounded-lg p-2 shadow-sm">
-            <div className="text-[10px] text-gray-500 uppercase">{t('classroom.min_fitness')}</div>
-            <div className="text-sm font-bold text-gray-800">{stats.minFitness.toFixed(1)}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.min_fitness')}</div>
+            <div className="text-sm font-bold text-gray-800 dark:text-gray-100">{stats.minFitness.toFixed(1)}</div>
           </div>
-          <div className="bg-white rounded-lg p-2 shadow-sm">
-            <div className="text-[10px] text-gray-500 uppercase">{t('classroom.max_fitness')}</div>
-            <div className="text-sm font-bold text-green-600">{stats.maxFitness.toFixed(1)}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.max_fitness')}</div>
+            <div className="text-sm font-bold text-green-600 dark:text-green-300">{stats.maxFitness.toFixed(1)}</div>
           </div>
-          <div className="bg-white rounded-lg p-2 shadow-sm">
-            <div className="text-[10px] text-gray-500 uppercase">{t('classroom.improvement')}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.improvement')}</div>
             <div className="text-sm font-bold text-primary-600">{stats.improvement.toFixed(1)}</div>
           </div>
-          <div className="bg-white rounded-lg p-2 shadow-sm">
-            <div className="text-[10px] text-gray-500 uppercase">{t('classroom.avg_fitness')}</div>
-            <div className="text-sm font-bold text-gray-800">{stats.avgFitness.toFixed(1)}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.avg_fitness')}</div>
+            <div className="text-sm font-bold text-gray-800 dark:text-gray-100">{stats.avgFitness.toFixed(1)}</div>
           </div>
         </div>
       )}
 
       {/* Playback Controls */}
-      <div className="bg-white rounded-xl p-3 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
             {t('classroom.generation')}: {currentEntry?.generation ?? 0} / {maxGeneration}
           </div>
 
@@ -165,7 +165,7 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
               onClick={() => setPlaybackSpeed(Math.max(0.25, playbackSpeed / 2))}
               className={clsx(
                 'px-2 py-1 text-xs rounded transition-colors',
-                'bg-gray-100 hover:bg-gray-200 text-gray-700',
+                'bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 text-gray-700 dark:text-gray-300',
                 playbackSpeed <= 0.25 && 'opacity-50 cursor-not-allowed'
               )}
               disabled={playbackSpeed <= 0.25}
@@ -177,7 +177,7 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
               onClick={() => setPlaybackSpeed(Math.min(4, playbackSpeed * 2))}
               className={clsx(
                 'px-2 py-1 text-xs rounded transition-colors',
-                'bg-gray-100 hover:bg-gray-200 text-gray-700',
+                'bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 text-gray-700 dark:text-gray-300',
                 playbackSpeed >= 4 && 'opacity-50 cursor-not-allowed'
               )}
               disabled={playbackSpeed >= 4}
@@ -185,19 +185,19 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
               <FastForward className="w-3 h-3" />
               ÷2
             </button>
-            <span className="text-xs text-gray-500">{playbackSpeed}×</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{playbackSpeed}×</span>
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-2">
           {/* Rewind */}
-          <button onClick={handleRewind} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.go_to_start')}>
-            <SkipBack size={16} className="text-gray-600" />
+          <button onClick={handleRewind} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title={t('classroom.go_to_start')}>
+            <SkipBack size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
 
           {/* Step back */}
-          <button onClick={handleSkipBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.step_back')}>
-            <Rewind size={16} className="text-gray-600" />
+          <button onClick={handleSkipBack} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title={t('classroom.step_back')}>
+            <Rewind size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
 
           {/* Play/Pause */}
@@ -215,13 +215,13 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
           </button>
 
           {/* Step forward */}
-          <button onClick={handleSkipForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.step_forward')}>
-            <FastForward size={16} className="text-gray-600" />
+          <button onClick={handleSkipForward} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title={t('classroom.step_forward')}>
+            <FastForward size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
 
           {/* Fast forward */}
-          <button onClick={handleFastForward} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title={t('classroom.go_to_end')}>
-            <SkipForward size={16} className="text-gray-600" />
+          <button onClick={handleFastForward} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title={t('classroom.go_to_end')}>
+            <SkipForward size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
         </div>
 
@@ -240,27 +240,27 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
 
       {/* Generation Info */}
       {currentEntry && (
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h4 className="text-sm font-semibold text-gray-800 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+          <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
             {t('classroom.generation')} {currentEntry.generation}
           </h4>
-          <div className="text-xs text-gray-600">
+          <div className="text-xs text-gray-600 dark:text-gray-300">
             <div className="flex justify-between">
               <span>{t('classroom.fitness_score')}:</span>
-              <span className="font-medium text-gray-800">{currentEntry.fitness.toFixed(2)}</span>
+              <span className="font-medium text-gray-800 dark:text-gray-100">{currentEntry.fitness.toFixed(2)}</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Fitness Chart */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h4 className="text-sm font-semibold text-gray-800 mb-3">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">
           {t('classroom.fitness_progression')}
         </h4>
         <div className="relative h-32">
           {/* Y-axis */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between text-[10px] text-gray-400">
+          <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between text-[10px] text-gray-400 dark:text-gray-400">
             <span>100</span>
             <span>50</span>
             <span>0</span>
@@ -272,7 +272,7 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
             {[0, 25, 50, 75, 100].map((value) => (
               <div
                 key={value}
-                className="absolute left-0 right-0 border-t border-gray-100"
+                className="absolute left-0 right-0 border-t border-gray-100 dark:border-gray-700"
                 style={{ bottom: `${value}%` }}
               />
             ))}

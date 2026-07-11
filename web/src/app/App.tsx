@@ -152,30 +152,30 @@ function App() {
                   dominates the viewport. Score stays visible in the header
                   for at-a-glance feedback. */}
               {result && (
-                <div className="mb-4 bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm">
+                <div className="mb-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-sm">
                   <button
                     type="button"
                     onClick={() => setResultsCollapsed(!resultsCollapsed)}
                     aria-expanded={!resultsCollapsed}
                     aria-controls="results-disclosure-body"
-                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
                   >
-                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                       <span className="font-semibold">{t('optimization.results_title')}</span>
-                      <span className="text-gray-400">·</span>
+                      <span className="text-gray-400 dark:text-gray-400">·</span>
                       <span>
                         {t('app.score')}: <strong>{getDisplayScorePct(result)}%</strong>
                       </span>
-                      <span className="text-gray-400 hidden sm:inline">·</span>
-                      <span className="text-gray-500 hidden sm:inline">
+                      <span className="text-gray-400 dark:text-gray-400 hidden sm:inline">·</span>
+                      <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">
                         {Math.round(result.computation_time_ms)}ms · {result.generations}{' '}
                         {t('optimization.generations')}
                       </span>
                     </div>
                     {resultsCollapsed ? (
-                      <ChevronDown size={18} className="text-gray-400" aria-hidden="true" />
+                      <ChevronDown size={18} className="text-gray-400 dark:text-gray-400" aria-hidden="true" />
                     ) : (
-                      <ChevronUp size={18} className="text-gray-400" aria-hidden="true" />
+                      <ChevronUp size={18} className="text-gray-400 dark:text-gray-400" aria-hidden="true" />
                     )}
                   </button>
 
@@ -184,12 +184,12 @@ function App() {
                       {/* Movement-diff toggle — only meaningful when a
                           previous run is available to compare against. */}
                       {previousPositions && (
-                        <label className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 rounded-lg">
+                        <label className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
                           <input
                             type="checkbox"
                             checked={showMovementDiff}
                             onChange={(e) => setShowMovementDiff(e.target.checked)}
-                            className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                            className="rounded border-gray-300 dark:border-gray-700 text-primary-500 focus:ring-primary-500"
                           />
                           <span>{t('optimization.show_movement_diff')}</span>
                         </label>

@@ -66,20 +66,20 @@ export default function GoogleClassroomImport() {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3 space-y-3">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-3">
       <div className="flex items-center gap-2">
-        <GraduationCap size={18} className="text-emerald-600" />
-        <span className="font-medium text-gray-700 text-sm">{t('googleImport.title')}</span>
+        <GraduationCap size={18} className="text-emerald-600 dark:text-emerald-300" />
+        <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">{t('googleImport.title')}</span>
       </div>
 
       {!configured ? (
-        <p className="text-[11px] text-gray-500 leading-snug">
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
           {t('googleImport.not_configured')}
         </p>
       ) : (
         <>
           {/* Privacy reassurance — this is the whole reason teachers trust it. */}
-          <p className="flex items-start gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2 leading-snug">
+          <p className="flex items-start gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded p-2 leading-snug">
             <ShieldCheck size={13} className="shrink-0 mt-0.5" />
             {t('googleImport.privacy_note')}
           </p>
@@ -94,14 +94,14 @@ export default function GoogleClassroomImport() {
               {busy === 'connect' ? t('googleImport.connecting') : t('googleImport.connect')}
             </button>
           ) : courses.length === 0 ? (
-            <p className="text-xs text-gray-500">{t('googleImport.no_courses')}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('googleImport.no_courses')}</p>
           ) : (
             <div className="space-y-2">
-              <label className="block text-xs text-gray-500">{t('googleImport.choose_course')}</label>
+              <label className="block text-xs text-gray-500 dark:text-gray-400">{t('googleImport.choose_course')}</label>
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-900 dark:text-gray-100"
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -109,12 +109,12 @@ export default function GoogleClassroomImport() {
               </select>
 
               {/* Append / replace, mirroring the CSV importer. */}
-              <div className="flex items-center gap-2 text-xs text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                 <span>{t('csvImport.import_mode')}</span>
                 <button
                   onClick={() => setMode('append')}
                   className={`px-2 py-0.5 rounded-full border transition-colors ${
-                    mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 hover:border-gray-400'
+                    mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
                   }`}
                 >
                   {t('csvImport.add_to_class')}
@@ -122,7 +122,7 @@ export default function GoogleClassroomImport() {
                 <button
                   onClick={() => setMode('replace')}
                   className={`px-2 py-0.5 rounded-full border transition-colors ${
-                    mode === 'replace' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'border-gray-300 hover:border-gray-400'
+                    mode === 'replace' ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-400 text-orange-700 dark:text-orange-300' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
                   }`}
                 >
                   {t('csvImport.replace_class')}
@@ -143,23 +143,23 @@ export default function GoogleClassroomImport() {
       )}
 
       {error && (
-        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-red-50 border border-red-200">
-          <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
-          <p className="flex-1 text-xs text-red-700">{error}</p>
+        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+          <AlertCircle size={15} className="text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
+          <p className="flex-1 text-xs text-red-700 dark:text-red-300">{error}</p>
           <button onClick={() => setError(null)} className="shrink-0 p-0.5 hover:bg-black/5 rounded">
-            <X size={12} className="text-gray-500" />
+            <X size={12} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       )}
 
       {done && (
-        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-green-50 border border-green-200">
-          <CheckCircle2 size={15} className="text-green-500 shrink-0 mt-0.5" />
-          <p className="flex-1 text-xs text-gray-700">
+        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+          <CheckCircle2 size={15} className="text-green-500 dark:text-green-400 shrink-0 mt-0.5" />
+          <p className="flex-1 text-xs text-gray-700 dark:text-gray-300">
             {t('googleImport.imported_from', { count: done.count, class: done.className })}
           </p>
           <button onClick={() => setDone(null)} className="shrink-0 p-0.5 hover:bg-black/5 rounded">
-            <X size={12} className="text-gray-500" />
+            <X size={12} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       )}

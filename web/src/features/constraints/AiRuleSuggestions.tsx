@@ -62,11 +62,11 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
   };
 
   return (
-    <section className="rounded-lg border bg-violet-50/40 border-violet-100 p-3 space-y-2">
+    <section className="rounded-lg border bg-violet-50/40 dark:bg-violet-900/30 border-violet-100 dark:border-violet-800 p-3 space-y-2">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-violet-500" aria-hidden="true" />
-          <h4 className="text-xs font-semibold text-gray-800">{t('constraints.ai_title')}</h4>
+          <Sparkles size={14} className="text-violet-500 dark:text-violet-400" aria-hidden="true" />
+          <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-100">{t('constraints.ai_title')}</h4>
         </div>
         <button
           type="button"
@@ -84,14 +84,14 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
           )}
         </button>
       </header>
-      <p className="text-[11px] text-gray-500 leading-snug">{t('constraints.ai_hint')}</p>
+      <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">{t('constraints.ai_hint')}</p>
 
       {error && (
-        <p role="alert" className="text-[11px] text-red-600">{error}</p>
+        <p role="alert" className="text-[11px] text-red-600 dark:text-red-300">{error}</p>
       )}
 
       {suggestions && suggestions.length === 0 && !error && (
-        <p className="text-[11px] text-gray-500 italic">{t('constraints.ai_none')}</p>
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 italic">{t('constraints.ai_none')}</p>
       )}
 
       {suggestions && suggestions.length > 0 && (
@@ -99,19 +99,19 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
           {suggestions.map((s) => (
             <li
               key={`${s.kind}|${s.a}|${s.b ?? ''}`}
-              className="flex items-start gap-2 p-2 bg-white rounded border border-violet-100 text-[11px]"
+              className="flex items-start gap-2 p-2 bg-white dark:bg-gray-800 rounded border border-violet-100 dark:border-violet-800 text-[11px]"
             >
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-gray-800 dark:text-gray-100">
                   {kindLabel[s.kind]}: {nameOf(s.a)}
                   {s.b ? ` ↔ ${nameOf(s.b)}` : ''}
                 </span>
-                {s.reason && <p className="text-gray-500 mt-0.5">{s.reason}</p>}
+                {s.reason && <p className="text-gray-500 dark:text-gray-400 mt-0.5">{s.reason}</p>}
               </div>
               <button
                 type="button"
                 onClick={() => accept(s)}
-                className="p-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+                className="p-1 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition-colors"
                 aria-label={t('constraints.ai_accept')}
                 title={t('constraints.ai_accept')}
               >
@@ -120,7 +120,7 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
               <button
                 type="button"
                 onClick={() => dismiss(s)}
-                className="p-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                className="p-1 rounded bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-gray-200 transition-colors"
                 aria-label={t('constraints.ai_dismiss')}
                 title={t('constraints.ai_dismiss')}
               >

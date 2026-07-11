@@ -125,17 +125,17 @@ export default function ProjectManager() {
     new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
 
   return (
-    <div className="bg-gray-50 rounded-xl overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <FolderOpen size={18} className="text-gray-500" />
-          <span className="font-medium text-gray-700">
+          <FolderOpen size={18} className="text-gray-500 dark:text-gray-400" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">
             {t('projects.title')}
             {projects.length > 0 && (
-              <span className="ml-1.5 text-xs text-gray-500">({projects.length})</span>
+              <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({projects.length})</span>
             )}
           </span>
           {currentProject && (
@@ -157,7 +157,7 @@ export default function ProjectManager() {
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
-              className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+              className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
             />
             <button
               onClick={handleSave}
@@ -176,7 +176,7 @@ export default function ProjectManager() {
                   // Actually make a new one by clearing currentProjectId first
                 }}
                 title={t('projects.save_as_new')}
-                className="flex items-center gap-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-1 px-2 py-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <Plus size={14} />
               </button>
@@ -185,7 +185,7 @@ export default function ProjectManager() {
 
           {/* Project list */}
           {projects.length === 0 ? (
-            <p className="text-xs text-gray-400 italic text-center py-2">
+            <p className="text-xs text-gray-400 dark:text-gray-400 italic text-center py-2">
               {t('projects.no_projects')}
             </p>
           ) : (
@@ -196,7 +196,7 @@ export default function ProjectManager() {
                   className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-colors ${
                     p.id === currentProjectId
                       ? 'border-primary-300 bg-primary-50'
-                      : 'border-transparent bg-white hover:bg-gray-50'
+                      : 'border-transparent bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   {/* Name / edit */}
@@ -208,15 +208,15 @@ export default function ProjectManager() {
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
-                          className="flex-1 text-sm px-1.5 py-0.5 border border-primary-400 rounded focus:outline-none"
+                          className="flex-1 text-sm px-1.5 py-0.5 border border-primary-400 rounded dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none"
                         />
-                        <button onClick={commitEdit} className="text-green-600 hover:text-green-800"><Check size={13} /></button>
-                        <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600"><X size={13} /></button>
+                        <button onClick={commitEdit} className="text-green-600 dark:text-green-300 hover:text-green-800"><Check size={13} /></button>
+                        <button onClick={() => setEditingId(null)} className="text-gray-400 dark:text-gray-400 hover:text-gray-600"><X size={13} /></button>
                       </div>
                     ) : (
                       <>
-                        <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{p.name}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-400">
                           {p.students.length} {t('app.students')} · {formatDate(p.updatedAt)}
                           {p.result && ` · ${t('app.score')}: ${getDisplayScorePct(p.result)}%`}
                         </p>
@@ -240,26 +240,26 @@ export default function ProjectManager() {
                         className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                         title={t('projects.rename')}
                       >
-                        <Pencil size={12} className="text-gray-500" />
+                        <Pencil size={12} className="text-gray-500 dark:text-gray-400" />
                       </button>
                       {confirmDelete === p.id ? (
                         <>
                           <button onClick={() => { deleteProject(p.id); setConfirmDelete(null); }}
-                            className="p-1.5 bg-red-100 hover:bg-red-200 rounded transition-colors">
-                            <Check size={12} className="text-red-600" />
+                            className="p-1.5 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 rounded transition-colors">
+                            <Check size={12} className="text-red-600 dark:text-red-300" />
                           </button>
                           <button onClick={() => setConfirmDelete(null)}
                             className="p-1.5 hover:bg-gray-200 rounded transition-colors">
-                            <X size={12} className="text-gray-500" />
+                            <X size={12} className="text-gray-500 dark:text-gray-400" />
                           </button>
                         </>
                       ) : (
                         <button
                           onClick={() => setConfirmDelete(p.id)}
-                          className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/40 rounded transition-colors"
                           title={t('projects.delete')}
                         >
-                          <Trash2 size={12} className="text-red-500" />
+                          <Trash2 size={12} className="text-red-500 dark:text-red-400" />
                         </button>
                       )}
                     </div>
@@ -272,13 +272,13 @@ export default function ProjectManager() {
           {/* Backup & restore — single-file portable JSON of everything.
               Critical for the IndexedDB-only model: if a teacher clears
               their browser, the backup is the only way back. */}
-          <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-gray-600">
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                 {t('projects.backup_section_title')}
               </span>
             </div>
-            <p className="text-[10px] text-gray-500 leading-snug">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-snug">
               {t('projects.backup_hint')}
             </p>
             <div className="flex gap-2">
@@ -292,7 +292,7 @@ export default function ProjectManager() {
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <UploadCloud size={13} aria-hidden="true" />
                 {t('projects.restore_button')}
@@ -313,7 +313,7 @@ export default function ProjectManager() {
             {restoreError && (
               <p
                 role="alert"
-                className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded p-2 flex items-start gap-1.5"
+                className="text-[11px] text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded p-2 flex items-start gap-1.5"
               >
                 <AlertTriangle size={11} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
                 <span>{restoreError}</span>
@@ -339,17 +339,17 @@ export default function ProjectManager() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="restore-confirm-title"
-            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(420px,92vw)] bg-white rounded-2xl shadow-2xl p-5 space-y-3 focus:outline-none"
+            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(420px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 space-y-3 focus:outline-none"
           >
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle size={18} className="text-amber-600" aria-hidden="true" />
+              <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={18} className="text-amber-600 dark:text-amber-300" aria-hidden="true" />
               </div>
               <div className="flex-1">
-                <h3 id="restore-confirm-title" className="font-bold text-gray-900">
+                <h3 id="restore-confirm-title" className="font-bold text-gray-900 dark:text-gray-100">
                   {t('projects.restore_confirm_title')}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   {t('projects.restore_confirm_body', {
                     date: pendingRestore.exportedAt
                       ? new Date(pendingRestore.exportedAt).toLocaleString()
@@ -364,7 +364,7 @@ export default function ProjectManager() {
               <button
                 type="button"
                 onClick={() => setPendingRestore(null)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 {t('projects.restore_confirm_no')}
               </button>

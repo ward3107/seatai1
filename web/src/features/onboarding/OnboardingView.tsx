@@ -26,25 +26,25 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
   const steps = [
     {
       icon: Upload,
-      color: 'bg-blue-100 text-blue-600',
+      color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
       title: t('onboarding.import_title'),
       desc: t('onboarding.import_desc'),
     },
     {
       icon: UserPlus,
-      color: 'bg-purple-100 text-purple-600',
+      color: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300',
       title: t('onboarding.manual_title'),
       desc: t('onboarding.manual_desc'),
     },
     {
       icon: Sparkles,
-      color: 'bg-amber-100 text-amber-600',
+      color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300',
       title: t('onboarding.optimize_title'),
       desc: t('onboarding.optimize_desc'),
     },
     {
       icon: FileText,
-      color: 'bg-green-100 text-green-600',
+      color: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300',
       title: t('onboarding.export_title'),
       desc: t('onboarding.export_desc'),
     },
@@ -62,10 +62,10 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center mx-auto mb-5 shadow-lg">
           <span className="text-white font-bold text-4xl">S</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           {t('onboarding.welcome_title')}
         </h1>
-        <p className="text-gray-500 text-base max-w-md mx-auto">
+        <p className="text-gray-500 dark:text-gray-400 text-base max-w-md mx-auto">
           {t('onboarding.welcome_desc')}
         </p>
       </motion.div>
@@ -82,15 +82,15 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
           return (
             <div
               key={i}
-              className="bg-white rounded-xl border border-gray-200 p-4 text-left shadow-sm"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left shadow-sm"
             >
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 ${step.color}`}>
                 <Icon size={18} />
               </div>
-              <p className="text-sm font-semibold text-gray-800 mb-1">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">
                 {step.title}
               </p>
-              <p className="text-xs text-gray-500 leading-relaxed">{step.desc}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{step.desc}</p>
             </div>
           );
         })}
@@ -113,7 +113,7 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
 
         {/* Or pick a pre-built demo class */}
         <div className="flex flex-col items-center gap-2">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">
+          <span className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wide">
             {t('onboarding.or_try_a_sample')}
           </span>
           <div className="flex flex-wrap items-center justify-center gap-2">
@@ -121,11 +121,11 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
               <button
                 key={sample.id}
                 onClick={() => loadSampleClass(sample.id)}
-                className="px-3.5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
+                className="px-3.5 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 transition-colors flex items-center gap-2"
               >
-                <Users size={14} className="text-amber-500" />
+                <Users size={14} className="text-amber-500 dark:text-amber-400" />
                 <span>{t(`onboarding.sample_${sample.id}` as const)}</span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-gray-400">
                   · {sample.students.length}
                 </span>
               </button>
@@ -134,7 +134,7 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
         </div>
       </motion.div>
 
-      <p className="mt-6 text-xs text-gray-400">
+      <p className="mt-6 text-xs text-gray-400 dark:text-gray-400">
         {t('onboarding.privacy')}
       </p>
     </div>

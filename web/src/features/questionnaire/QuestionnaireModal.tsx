@@ -119,7 +119,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
     clsx(
       'rounded-lg font-medium border transition-all',
       sm ? 'px-4 py-3 text-base' : 'px-3 py-2 text-sm',
-      selected ? 'bg-primary-100 text-primary-700 border-primary-300' : 'bg-white text-gray-600 border-gray-200 hover:border-primary-200',
+      selected ? 'bg-primary-100 text-primary-700 border-primary-300' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-200',
     );
 
   return (
@@ -140,22 +140,22 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: 12 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-auto"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-auto"
         >
           {/* ── Student-mode name picker ── */}
           {showPicker ? (
             <>
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <h2 className={clsx('font-bold text-gray-800', sm ? 'text-xl' : 'text-lg')}>
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+                <h2 className={clsx('font-bold text-gray-800 dark:text-gray-100', sm ? 'text-xl' : 'text-lg')}>
                   {t('questionnaire.pick_your_name')}
                 </h2>
-                <button onClick={onClose} aria-label={t('questionnaire.close')} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} aria-label={t('questionnaire.close')} className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                   <X size={18} />
                 </button>
               </div>
               <div className="p-5">
                 {students.length === 0 ? (
-                  <p className="text-sm text-gray-400">{t('questionnaire.no_other_students')}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-400">{t('questionnaire.no_other_students')}</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     {students.map((s, i) => {
@@ -170,17 +170,17 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                           className={clsx(
                             'flex items-center justify-between gap-2 rounded-lg border px-3 text-left',
                             sm ? 'py-3 text-base' : 'py-2.5 text-sm',
-                            done ? 'bg-green-50 border-green-200 text-gray-600' : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300',
+                            done ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-gray-600 dark:text-gray-300' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary-300',
                           )}
                         >
                           <span className="truncate font-medium">{s.name}</span>
-                          {done && <Check size={15} className="text-green-500 shrink-0" />}
+                          {done && <Check size={15} className="text-green-500 dark:text-green-400 shrink-0" />}
                         </button>
                       );
                     })}
                   </div>
                 )}
-                <button onClick={onClose} className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700">
+                <button onClick={onClose} className="mt-4 w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700">
                   {t('questionnaire.done')}
                 </button>
               </div>
@@ -188,16 +188,16 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
           ) : current ? (
             <>
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
                 <div>
                   {!studentMode && (
                     <p className="text-[11px] uppercase tracking-wide text-primary-500 font-semibold">
                       {t('questionnaire.student_of', { current: idx + 1, total: students.length })}
                     </p>
                   )}
-                  <h2 className={clsx('font-bold text-gray-800', sm ? 'text-xl' : 'text-lg')}>{current.name}</h2>
+                  <h2 className={clsx('font-bold text-gray-800 dark:text-gray-100', sm ? 'text-xl' : 'text-lg')}>{current.name}</h2>
                 </div>
-                <button onClick={onClose} aria-label={t('questionnaire.close')} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} aria-label={t('questionnaire.close')} className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                   <X size={18} />
                 </button>
               </div>
@@ -206,13 +206,13 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                 {/* B1 — seatmates */}
                 {peersOn && (
                   <div>
-                    <p className={clsx('font-semibold text-gray-700 flex items-center gap-1.5', sm ? 'text-base' : 'text-sm')}>
+                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5', sm ? 'text-base' : 'text-sm')}>
                       <Users2 size={sm ? 18 : 15} className="text-primary-500" />
                       {t('questionnaire.q_seatmates')}
                     </p>
-                    <p className="text-[11px] text-gray-500 mb-2">{t('questionnaire.q_seatmates_hint', { max: MAX_SEATMATES })}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_seatmates_hint', { max: MAX_SEATMATES })}</p>
                     {others.length === 0 ? (
-                      <p className="text-xs text-gray-400">{t('questionnaire.no_other_students')}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-400">{t('questionnaire.no_other_students')}</p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5 max-h-40 overflow-auto">
                         {others.map((s) => {
@@ -227,7 +227,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                               className={clsx(
                                 'rounded-full font-medium border transition-all',
                                 sm ? 'px-3.5 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
-                                selected ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 disabled:opacity-40 disabled:cursor-not-allowed',
+                                selected ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-300 disabled:opacity-40 disabled:cursor-not-allowed',
                               )}
                             >
                               {s.name}
@@ -242,11 +242,11 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                 {/* B2 — mentor / helper */}
                 {peersOn && others.length > 0 && (
                   <div>
-                    <p className={clsx('font-semibold text-gray-700 flex items-center gap-1.5', sm ? 'text-base' : 'text-sm')}>
+                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5', sm ? 'text-base' : 'text-sm')}>
                       <HeartHandshake size={sm ? 18 : 15} className="text-primary-500" />
                       {t('questionnaire.q_helper')}
                     </p>
-                    <p className="text-[11px] text-gray-500 mb-2">{t('questionnaire.q_helper_hint')}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_helper_hint')}</p>
                     <div className="flex flex-wrap gap-1.5 max-h-32 overflow-auto">
                       {others.map((s) => {
                         const selected = answers.helper === s.id;
@@ -258,7 +258,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                             className={clsx(
                               'rounded-full font-medium border transition-all',
                               sm ? 'px-3.5 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
-                              selected ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300',
+                              selected ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-emerald-300',
                             )}
                           >
                             {s.name}
@@ -271,7 +271,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
 
                 {/* B3 — focus zone */}
                 <div>
-                  <p className={clsx('font-semibold text-gray-700 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_focus')}</p>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_focus')}</p>
                   <div className="flex gap-2">
                     {(['front', 'middle', 'back'] as const).map((z) => (
                       <button key={z} onClick={() => setAnswers((a) => ({ ...a, focusZone: a.focusZone === z ? null : z }))} className={choiceBtn(answers.focusZone === z)}>
@@ -283,7 +283,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
 
                 {/* B4 — noise */}
                 <div>
-                  <p className={clsx('font-semibold text-gray-700 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_noise')}</p>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_noise')}</p>
                   <div className="flex gap-2">
                     {(['yes', 'somewhat', 'no'] as const).map((n) => (
                       <button key={n} onClick={() => setAnswers((a) => ({ ...a, noise: a.noise === n ? null : n }))} className={choiceBtn(answers.noise === n)}>
@@ -296,14 +296,14 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                 {/* B5 / B6 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className={clsx('font-semibold text-gray-700 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_window')}</p>
+                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_window')}</p>
                     <div className="flex gap-2">
                       <button onClick={() => setAnswers((a) => ({ ...a, preferWindow: a.preferWindow === true ? null : true }))} className={choiceBtn(answers.preferWindow === true)}>{t('questionnaire.yes')}</button>
                       <button onClick={() => setAnswers((a) => ({ ...a, preferWindow: a.preferWindow === false ? null : false }))} className={choiceBtn(answers.preferWindow === false)}>{t('questionnaire.no')}</button>
                     </div>
                   </div>
                   <div>
-                    <p className={clsx('font-semibold text-gray-700 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_board')}</p>
+                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_board')}</p>
                     <div className="flex gap-2">
                       <button onClick={() => setAnswers((a) => ({ ...a, needBoardClear: a.needBoardClear === true ? null : true }))} className={choiceBtn(answers.needBoardClear === true)}>{t('questionnaire.yes')}</button>
                       <button onClick={() => setAnswers((a) => ({ ...a, needBoardClear: a.needBoardClear === false ? null : false }))} className={choiceBtn(answers.needBoardClear === false)}>{t('questionnaire.no')}</button>
@@ -313,9 +313,9 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between gap-2 p-4 border-t border-gray-100 sticky bottom-0 bg-white">
+              <div className="flex items-center justify-between gap-2 p-4 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
                 {studentMode ? (
-                  <button onClick={() => setPicking(true)} className="px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 flex items-center gap-1">
+                  <button onClick={() => setPicking(true)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1">
                     <ChevronLeft size={16} />
                     {t('questionnaire.back')}
                   </button>
@@ -323,7 +323,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                   <button
                     onClick={() => setIdx((i) => Math.max(0, i - 1))}
                     disabled={idx === 0}
-                    className="px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                   >
                     <ChevronLeft size={16} />
                     {t('questionnaire.back')}
@@ -332,7 +332,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
 
                 <div className="flex items-center gap-2">
                   {!studentMode && !isLast && (
-                    <button onClick={() => setIdx((i) => Math.min(students.length - 1, i + 1))} className="px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100">
+                    <button onClick={() => setIdx((i) => Math.min(students.length - 1, i + 1))} className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                       {t('questionnaire.skip')}
                     </button>
                   )}
@@ -344,7 +344,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
               </div>
             </>
           ) : (
-            <div className="p-6 text-center text-sm text-gray-400">{t('questionnaire.no_other_students')}</div>
+            <div className="p-6 text-center text-sm text-gray-400 dark:text-gray-400">{t('questionnaire.no_other_students')}</div>
           )}
         </motion.div>
       </motion.div>

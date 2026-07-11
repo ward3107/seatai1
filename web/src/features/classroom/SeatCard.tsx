@@ -143,12 +143,12 @@ export default memo(function SeatCard({
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
 
         // Empty seat
-        seat.is_empty && 'border-dashed border-gray-300 bg-gray-50 cursor-default',
+        seat.is_empty && 'border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 cursor-default',
 
         // Occupied seat base
         !seat.is_empty && [
           isDragMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-          heatColor || 'bg-white border-gray-300',
+          heatColor || 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700',
           'hover:shadow-md hover:scale-[1.02]',
         ],
 
@@ -158,15 +158,15 @@ export default memo(function SeatCard({
         // Drop target highlight — red/green when we have a live constraint
         // preview, neutral green otherwise.
         isOver && !isDragging && dropPreview === 'invalid' &&
-          'ring-2 ring-red-400 ring-offset-1 bg-red-50 border-red-400',
+          'ring-2 ring-red-400 ring-offset-1 bg-red-50 dark:bg-red-900/30 border-red-400',
         isOver && !isDragging && dropPreview !== 'invalid' &&
-          'ring-2 ring-green-400 ring-offset-1 bg-green-50 border-green-400',
+          'ring-2 ring-green-400 ring-offset-1 bg-green-50 dark:bg-green-900/30 border-green-400',
 
         // Currently being dragged
         isDragging && 'opacity-20 scale-95',
 
         // Violation glow
-        isViolated && !isDragging && heatMapMode === 'none' && 'border-red-400 bg-red-50',
+        isViolated && !isDragging && heatMapMode === 'none' && 'border-red-400 bg-red-50 dark:bg-red-900/30',
 
         // Moved between optimization runs
         isMoved && !isDragging && 'ring-2 ring-amber-400/70 ring-offset-1',
@@ -177,7 +177,7 @@ export default memo(function SeatCard({
     >
       {/* Lock badge */}
       {isLocked && (
-        <div className="absolute top-1 right-1 text-gray-400 pointer-events-none">
+        <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-400 pointer-events-none">
           <Lock size={10} />
         </div>
       )}
@@ -185,7 +185,7 @@ export default memo(function SeatCard({
       {/* Moved badge */}
       {isMoved && (
         <div
-          className="absolute top-1 left-1 text-amber-600 pointer-events-none bg-amber-100 rounded-full p-0.5"
+          className="absolute top-1 left-1 text-amber-600 dark:text-amber-300 pointer-events-none bg-amber-100 dark:bg-amber-900/40 rounded-full p-0.5"
           title={t('classroom.moved_from_previous')}
         >
           <ArrowRightLeft size={9} />
@@ -198,7 +198,7 @@ export default memo(function SeatCard({
         <div
           className={clsx(
             'absolute bottom-1 right-1 pointer-events-none rounded-full',
-            constraintStatus === 'violated' ? 'text-red-600' : 'text-green-600',
+            constraintStatus === 'violated' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300',
           )}
           title={constraintTitle}
         >
@@ -236,7 +236,7 @@ export default memo(function SeatCard({
           )}
 
           {/* First name */}
-          <p className="mt-1 text-xs font-medium text-gray-700 text-center truncate w-full leading-tight px-1">
+          <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300 text-center truncate w-full leading-tight px-1">
             {student.name.split(' ')[0]}
           </p>
 
@@ -254,7 +254,7 @@ export default memo(function SeatCard({
           {/* Score badge — in the academic/behavior heat-maps the colour
               alone isn't accessible (red↔green), so show the number too. */}
           {(heatMapMode === 'academic' || heatMapMode === 'behavior') && (
-            <span className="mt-0.5 px-1 rounded bg-white/80 text-[10px] font-semibold tabular-nums text-gray-700 leading-tight">
+            <span className="mt-0.5 px-1 rounded bg-white/80 dark:bg-gray-800/80 text-[10px] font-semibold tabular-nums text-gray-700 dark:text-gray-300 leading-tight">
               {heatMapMode === 'academic' ? student.academic_score : student.behavior_score}
             </span>
           )}
@@ -281,7 +281,7 @@ export default memo(function SeatCard({
               )}
               {student.special_needs?.length > 0 && (
                 <span
-                  className="px-1 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700"
+                  className="px-1 rounded text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
                   title={t('classroom.has_iep')}
                 >
                   IEP
@@ -291,7 +291,7 @@ export default memo(function SeatCard({
           )}
         </>
       ) : (
-        <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
           <span className="text-gray-300 text-[9px]">—</span>
         </div>
       )}

@@ -232,13 +232,13 @@ export default function ExportButton() {
       <button
         onClick={() => setOpen(v => !v)}
         disabled={!!loading}
-        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors disabled:opacity-50"
         title={t('export.title')}
       >
         {loading ? (
-          <Loader2 size={16} className="animate-spin text-gray-500" />
+          <Loader2 size={16} className="animate-spin text-gray-500 dark:text-gray-400" />
         ) : (
-          <Download size={16} className="text-gray-500" />
+          <Download size={16} className="text-gray-500 dark:text-gray-400" />
         )}
         {t('export.button')}
       </button>
@@ -248,40 +248,40 @@ export default function ExportButton() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute end-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+          <div className="absolute end-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
             {/* PNG / PDF render the seating grid, so they only appear once an
                 optimization result exists. CSV / JSON always work. */}
             {result && (
               <>
                 <button
                   onClick={exportPng}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <FileImage size={16} className="text-blue-500" />
+                  <FileImage size={16} className="text-blue-500 dark:text-blue-400" />
                   {t('export.save_png')}
                 </button>
                 <button
                   onClick={exportPdf}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <FileText size={16} className="text-red-500" />
+                  <FileText size={16} className="text-red-500 dark:text-red-400" />
                   {t('export.save_pdf')}
                 </button>
-                <div className="border-t border-gray-100" />
+                <div className="border-t border-gray-100 dark:border-gray-700" />
               </>
             )}
             <button
               onClick={exportCsv}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <FileSpreadsheet size={16} className="text-emerald-500" />
+              <FileSpreadsheet size={16} className="text-emerald-500 dark:text-emerald-400" />
               {t('export.save_csv')}
             </button>
             <button
               onClick={exportJson}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <FileJson size={16} className="text-amber-500" />
+              <FileJson size={16} className="text-amber-500 dark:text-amber-400" />
               {t('export.save_json')}
             </button>
           </div>

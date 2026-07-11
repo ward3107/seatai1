@@ -43,7 +43,7 @@ function MiniSeatPreview({
 }) {
   const nameById = new Map(students.map((s) => [s.id, s.name]));
   return (
-    <div className="relative w-full aspect-[4/3] bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+    <div className="relative w-full aspect-[4/3] bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {result.layout.seats.map((seat, i) => {
         if (seat.is_empty || !seat.student_id) return null;
         const x = seat.position.x ?? (result.layout.cols > 1 ? seat.position.col / (result.layout.cols - 1) : 0.5);
@@ -67,7 +67,7 @@ function MiniSeatPreview({
 function DeltaBadge({ delta, t }: { delta: number; t: (k: string) => string }) {
   if (delta === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-gray-400" title={t('compare.same')}>
+      <span className="inline-flex items-center gap-0.5 text-gray-400 dark:text-gray-400" title={t('compare.same')}>
         <Minus size={11} aria-hidden="true" />0
       </span>
     );
@@ -77,7 +77,7 @@ function DeltaBadge({ delta, t }: { delta: number; t: (k: string) => string }) {
     <span
       className={clsx(
         'inline-flex items-center gap-0.5 font-medium',
-        better ? 'text-emerald-600' : 'text-red-500',
+        better ? 'text-emerald-600 dark:text-emerald-300' : 'text-red-500 dark:text-red-400',
       )}
       title={better ? t('compare.better') : t('compare.worse')}
     >
@@ -174,33 +174,33 @@ export default function ComparePanel({
         role="dialog"
         aria-modal="true"
         aria-labelledby="compare-title"
-        className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(820px,94vw)] max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl focus:outline-none"
+        className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(820px,94vw)] max-h-[90vh] overflow-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl focus:outline-none"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 id="compare-title" className="font-bold text-gray-900 flex items-center gap-2">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+          <h2 id="compare-title" className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <Wand2 size={18} className="text-primary-500" aria-hidden="true" />
             {t('compare.title')}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-lg"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             aria-label={t('compare.close')}
           >
-            <X size={18} className="text-gray-500" aria-hidden="true" />
+            <X size={18} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
           </button>
         </div>
 
         <div className="p-4 space-y-4">
-          <p className="text-sm text-gray-500">{t('compare.hint')}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('compare.hint')}</p>
 
           <div className="grid grid-cols-2 gap-4">
             {/* ── Plan A (current) ── */}
             <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 {t('compare.current')}
               </h3>
-              <div className="text-3xl font-bold text-gray-800">
+              <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">
                 {getDisplayScorePct(result)}%
               </div>
               <MiniSeatPreview result={result} students={students} />
@@ -208,26 +208,26 @@ export default function ComparePanel({
 
             {/* ── Plan B (alternative) ── */}
             <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 {t('compare.alternative')}
               </h3>
               {alternative ? (
                 <>
-                  <div className="text-3xl font-bold text-gray-800 flex items-baseline gap-2">
+                  <div className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-baseline gap-2">
                     {getDisplayScorePct(alternative)}%
                     {comparison && <DeltaBadge delta={comparison.overallDelta} t={t} />}
                   </div>
                   <MiniSeatPreview result={alternative} students={students} />
                 </>
               ) : (
-                <div className="aspect-[4/3] border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-center p-4">
+                <div className="aspect-[4/3] border border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center text-center p-4">
                   {generating ? (
-                    <span className="inline-flex items-center gap-2 text-sm text-gray-500">
+                    <span className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Loader2 size={16} className="animate-spin" aria-hidden="true" />
                       {t('compare.generating')}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-400">{t('compare.no_alternative')}</span>
+                    <span className="text-sm text-gray-400 dark:text-gray-400">{t('compare.no_alternative')}</span>
                   )}
                 </div>
               )}
@@ -236,10 +236,10 @@ export default function ComparePanel({
 
           {/* ── Objective deltas ── */}
           {comparison && (
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-500 text-xs">
+                  <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs">
                     <th className="text-start font-medium px-3 py-2">{t('compare.metric')}</th>
                     <th className="text-end font-medium px-3 py-2">{t('compare.current')}</th>
                     <th className="text-end font-medium px-3 py-2">{t('compare.alternative')}</th>
@@ -248,10 +248,10 @@ export default function ComparePanel({
                 </thead>
                 <tbody>
                   {comparison.objectives.map((o) => (
-                    <tr key={o.key} className="border-t border-gray-100">
-                      <td className="px-3 py-2 text-gray-700">{t(OBJECTIVE_LABEL_KEY[o.key])}</td>
-                      <td className="px-3 py-2 text-end tabular-nums text-gray-600">{o.a}%</td>
-                      <td className="px-3 py-2 text-end tabular-nums text-gray-800 font-medium">{o.b}%</td>
+                    <tr key={o.key} className="border-t border-gray-100 dark:border-gray-700">
+                      <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{t(OBJECTIVE_LABEL_KEY[o.key])}</td>
+                      <td className="px-3 py-2 text-end tabular-nums text-gray-600 dark:text-gray-300">{o.a}%</td>
+                      <td className="px-3 py-2 text-end tabular-nums text-gray-800 dark:text-gray-100 font-medium">{o.b}%</td>
                       <td className="px-3 py-2 text-end tabular-nums"><DeltaBadge delta={o.delta} t={t} /></td>
                     </tr>
                   ))}
@@ -262,7 +262,7 @@ export default function ComparePanel({
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between gap-2 p-4 border-t border-gray-200 sticky bottom-0 bg-white">
+        <div className="flex items-center justify-between gap-2 p-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
           <button
             type="button"
             onClick={handleGenerate}
@@ -281,7 +281,7 @@ export default function ComparePanel({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               {t('compare.keep_current')}
             </button>

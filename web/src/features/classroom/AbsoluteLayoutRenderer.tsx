@@ -60,7 +60,7 @@ export default function AbsoluteLayoutRenderer({
         </motion.div>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mb-4">
+      <p className="text-center text-xs text-gray-400 dark:text-gray-400 mb-4">
         {interactionMode === 'drag'
           ? t('classroom.drag_hint')
           : t('classroom.click_hint')}
@@ -80,7 +80,7 @@ export default function AbsoluteLayoutRenderer({
         <div
           ref={gridContainerRef}
           id="seating-grid-export"
-          className="relative mx-auto bg-amber-50/30 border-2 border-amber-200 rounded-2xl"
+          className="relative mx-auto bg-amber-50/30 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-800 rounded-2xl"
           style={{
             // Aspect ratio close to a classroom — wider than tall.
             // Floored so seats keep breathing room on phones (scrolls).
