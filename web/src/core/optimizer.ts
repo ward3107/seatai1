@@ -159,6 +159,12 @@ export class ClassroomOptimizer {
   /** Slot indices the GA is free to fill, ascending. Recomputed per run from
    *  `pinned`; defaults to every slot. */
   private freeSlots: number[] = [];
+  /** Min/max normalized x across the current slots. "Aisle" / "window" are
+   *  defined relative to these actual extremes rather than absolute 0/1, so
+   *  the constraints stay satisfiable in layouts whose seats don't span the
+   *  full width (e.g. a circle, whose x is bounded to ~[0.08, 0.92]). */
+  private xMin = 0;
+  private xMax = 1;
 
   constructor(
     students: Student[],
@@ -173,6 +179,40 @@ export class ClassroomOptimizer {
       this.layoutDef = rowsOrLayout;
     }
     this.slots = generateSlots(this.layoutDef);
+    this.recomputeSlotBounds();
+  }
+
+  /** Refresh the cached x-extent whenever the slot set changes. */
+  private recomputeSlotBounds() {
+    if (this.slots.length === 0) {
+      this.xMin = 0;
+      this.xMax = 1;
+      return;
+    }
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const s of this.slots) {
+      if (s.x < lo) lo = s.x;
+      if (s.x > hi) hi = s.x;
+    }
+    this.xMin = lo;
+    this.xMax = hi;
+  }
+
+  /** Margin (in normalized x) within which a seat counts as being on the
+   *  aisle / window wall. Scaled to the layout's width so it means "the
+   *  outermost seats" regardless of how wide the layout actually is. */
+  private edgeMargin(): number {
+    return Math.max(0.02, (this.xMax - this.xMin) * 0.06);
+  }
+  /** True when the seat is against either side wall (aisle). */
+  private isAisleSlot(slot: Slot): boolean {
+    const m = this.edgeMargin();
+    return slot.x <= this.xMin + m || slot.x >= this.xMax - m;
+  }
+  /** True when the seat is against the window (left) wall. */
+  private isWindowSlot(slot: Slot): boolean {
+    return slot.x <= this.xMin + this.edgeMargin();
   }
 
   setWeights(w: ObjectiveWeights) {
@@ -202,6 +242,7 @@ export class ClassroomOptimizer {
   setLayout(def: LayoutDef) {
     this.layoutDef = def;
     this.slots = generateSlots(def);
+    this.recomputeSlotBounds();
   }
   /** Pin students to seats so a re-optimize keeps them in place and only
    *  rearranges the rest. `pinned` maps slotIndex → studentId; entries whose
@@ -325,6 +366,15 @@ export class ClassroomOptimizer {
       }
 
       scored = nextGen;
+    }
+
+    // The loop updates bestChrom at the *top* of each iteration, so any
+    // improvement bred in the final generation would otherwise be discarded
+    // (only the carried-over elite survives). Do one last compare here.
+    scored.sort((a, b) => b.fitness - a.fitness);
+    if (scored[0].fitness > bestFitness) {
+      bestFitness = scored[0].fitness;
+      bestChrom = scored[0].chrom;
     }
 
     return { chrom: bestChrom, fitness: bestFitness, generations, stopReason };
@@ -566,7 +616,7 @@ export class ClassroomOptimizer {
       .map((s) => s.index);
 
     for (const sid of this.constraints.front_row_ids) {
-      if (!ids.includes(sid)) continue;
+      if (!ids.includes(sid) || placed.has(sid)) continue;
       for (const slotIdx of frontSlots) {
         if (chrom[slotIdx] === '') {
           chrom[slotIdx] = sid;
@@ -678,13 +728,13 @@ export class ClassroomOptimizer {
     if (this.isHard('aisle_ids')) {
       for (const id of c.aisle_ids ?? []) {
         const s = slotOf(id);
-        if (s && !(s.x <= 0.05 || s.x >= 0.95)) v++;
+        if (s && !this.isAisleSlot(s)) v++;
       }
     }
     if (this.isHard('near_window_ids')) {
       for (const id of c.near_window_ids ?? []) {
         const s = slotOf(id);
-        if (s && !(s.x <= 0.1)) v++;
+        if (s && !this.isWindowSlot(s)) v++;
       }
     }
     return v;
@@ -775,9 +825,8 @@ export class ClassroomOptimizer {
 
       // Quiet area: prefer perimeter (front, back, or edge cols)
       if (student.requires_quiet_area) {
-        // Treat slots near the edge of normalized space as "edge"
-        const isEdge =
-          slot.x <= 0.05 || slot.x >= 0.95 || slot.isFront || slot.isBack;
+        // Treat slots against a side wall or the front/back rows as "edge"
+        const isEdge = this.isAisleSlot(slot) || slot.isFront || slot.isBack;
         score += this.weights.special_needs * (isEdge ? 0.5 : 0);
       }
 
@@ -845,9 +894,8 @@ export class ClassroomOptimizer {
       const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
-      const onAisle = slot.x <= 0.05 || slot.x >= 0.95;
-      if (onAisle) score += 1;
-      else score -= 0.5 * Math.min(slot.x, 1 - slot.x);
+      if (this.isAisleSlot(slot)) score += 1;
+      else score -= 0.5 * Math.min(slot.x - this.xMin, this.xMax - slot.x);
     }
 
     // Near-window assignments — reward left-column placement.
@@ -857,8 +905,8 @@ export class ClassroomOptimizer {
       const pos = posOf.get(id) ?? -1;
       if (pos === -1) continue;
       const slot = this.slots[pos];
-      if (slot.x <= 0.1) score += 1;
-      else score -= 0.4 * slot.x;
+      if (this.isWindowSlot(slot)) score += 1;
+      else score -= 0.4 * (slot.x - this.xMin);
     }
 
     // Peer mentor → mentee adjacency. Both must be adjacent; if they are,
@@ -892,7 +940,16 @@ export class ClassroomOptimizer {
     let academicSum = 0;
     let behavioralSum = 0;
     let diversitySum = 0;
+    // The balance/diversity objectives only mean something for a seat that
+    // has at least one neighbour, so they're averaged over `count` (seated
+    // students with neighbours). The special-needs objective is different:
+    // it's about the seat's row, not who's beside the student, so it's
+    // averaged over its own denominator — the students who actually carry a
+    // special-needs flag. Dividing it by the whole class (the old bug) meant
+    // a class with a handful of correctly-placed front-row students reported
+    // a near-zero special_needs score, dragging down the headline average.
     let specialSum = 0;
+    let specialCount = 0;
     let count = 0;
 
     for (const slot of this.slots) {
@@ -900,7 +957,13 @@ export class ClassroomOptimizer {
       if (!sid) continue;
       const s = studentMap.get(sid);
       if (!s) continue;
-      count++;
+
+      // Special-needs objective — independent of neighbours, so counted for
+      // every placed student who needs the front row (even an isolated one).
+      if (s.requires_front_row || s.has_mobility_issues) {
+        specialCount++;
+        if (slot.isFront) specialSum++;
+      }
 
       const neighbors: Student[] = [];
       for (const nIdx of slot.neighbors) {
@@ -910,6 +973,7 @@ export class ClassroomOptimizer {
         if (ns) neighbors.push(ns);
       }
       if (neighbors.length === 0) continue;
+      count++;
 
       const avgA =
         neighbors.reduce((sum, n) => sum + n.academic_score, 0) /
@@ -923,10 +987,6 @@ export class ClassroomOptimizer {
 
       const sameG = neighbors.filter((n) => n.gender === s.gender).length;
       diversitySum += 1 - sameG / neighbors.length;
-
-      if (s.requires_front_row || s.has_mobility_issues) {
-        specialSum += slot.isFront ? 1 : 0;
-      }
     }
 
     return {
@@ -935,7 +995,10 @@ export class ClassroomOptimizer {
       behavioral_balance:
         count > 0 ? Math.round((behavioralSum / count) * 100) : 0,
       diversity: count > 0 ? Math.round((diversitySum / count) * 100) : 0,
-      special_needs: count > 0 ? Math.round((specialSum / count) * 100) : 0,
+      // No special-needs students → the objective is vacuously satisfied
+      // (100), so it neither rewards nor penalises the headline average.
+      special_needs:
+        specialCount > 0 ? Math.round((specialSum / specialCount) * 100) : 100,
     };
   }
 

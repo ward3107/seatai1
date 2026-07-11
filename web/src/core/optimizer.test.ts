@@ -310,6 +310,27 @@ describe('ClassroomOptimizer', () => {
       const result = optimizer.optimize();
       expect(result.student_positions['2'].row).toBe(2); // last row of 3
     });
+
+    it('never drops a student when front_row_ids contains a duplicate', () => {
+      // Regression: the constraint-seeding front-row loop lacked the
+      // placed-guard the back-row loop had, so a duplicated id was seated
+      // twice — corrupting the chromosome and dropping another student.
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(5));
+      optimizer.setConstraints({
+        separate_pairs: [],
+        keep_together_pairs: [],
+        front_row_ids: ['3', '3'], // same student twice
+        back_row_ids: [],
+      });
+      const result = optimizer.optimize();
+      // Every student is placed exactly once.
+      const placed = result.layout.seats
+        .map((s) => s.student_id)
+        .filter((id): id is string => !!id);
+      expect(new Set(placed).size).toBe(placed.length); // no duplicates
+      expect(new Set(placed)).toEqual(new Set(['1', '2', '3', '4']));
+    });
   });
 
   describe('Locked seats (pinning)', () => {
@@ -456,6 +477,26 @@ describe('ClassroomOptimizer', () => {
       };
       expect(make(true)).toEqual(make(false));
     });
+
+    it('can satisfy a hard aisle rule in a circle layout', () => {
+      // Regression: aisle used to be defined as x<=0.05 || x>=0.95, but a
+      // circle's seats never reach those extremes, so the rule was
+      // permanently unsatisfiable (a stuck HARD_PENALTY). It must now be
+      // reachable via the layout's actual side-most seats.
+      const optimizer = new ClassroomOptimizer(students, {
+        type: 'circle',
+        rows: 2,
+        cols: 2,
+      });
+      optimizer.setRng(mulberry32(7));
+      optimizer.setConstraints({
+        ...baseConstraints,
+        aisle_ids: ['1'],
+        hard: { aisle_ids: true },
+      });
+      const result = optimizer.optimize();
+      expect(result.unmet_hard_rules ?? 0).toBe(0);
+    });
   });
 
   describe('Objective Scores', () => {
@@ -474,6 +515,37 @@ describe('ClassroomOptimizer', () => {
       expect(diversity).toBeLessThanOrEqual(100);
       expect(special_needs).toBeGreaterThanOrEqual(0);
       expect(special_needs).toBeLessThanOrEqual(100);
+    });
+
+    it('normalizes special_needs by the special-needs students, not the class', () => {
+      // Only student 3 requires the front row. With a hard front-row rule they
+      // land in row 0, so the special_needs objective is fully satisfied and
+      // must report ~100 — not 2/N (the old bug divided by the whole class).
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setRng(mulberry32(2));
+      optimizer.setConstraints({
+        separate_pairs: [],
+        keep_together_pairs: [],
+        front_row_ids: ['3'],
+        back_row_ids: [],
+        hard: { front_row_ids: true },
+      });
+      const result = optimizer.optimize();
+      expect(result.student_positions['3'].row).toBe(0);
+      expect(result.objective_scores.special_needs).toBe(100);
+    });
+
+    it('reports special_needs = 100 when no student has special needs', () => {
+      // A class with nothing to satisfy is vacuously perfect on this axis, so
+      // it must not drag the headline average down to 0.
+      const plain = students.map((s) => ({
+        ...s,
+        requires_front_row: false,
+        has_mobility_issues: false,
+      }));
+      const optimizer = new ClassroomOptimizer(plain, 2, 2);
+      const result = optimizer.optimize();
+      expect(result.objective_scores.special_needs).toBe(100);
     });
   });
 

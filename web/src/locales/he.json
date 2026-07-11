@@ -325,6 +325,7 @@
     "remove_student": "הסר את {{name}}",
     "notes": "הערות מורה",
     "notes_placeholder": "תצפיות פרטיות, למשל \"מתקשה להתרכז אחרי הצהריים\". נשאר רק במכשיר הזה.",
+    "need_notes_placeholder": "הערות (רשות)",
     "gender": "מגדר",
     "language": "שפה",
     "academic_level": "רמה אקדמית",

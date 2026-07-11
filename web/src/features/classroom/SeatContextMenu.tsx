@@ -41,7 +41,7 @@ export default function SeatContextMenu({
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+            className="w-full px-4 py-2 text-sm text-start hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
             onClick={() => {
               onToggleLock(contextMenu.seatKey);
               onClose();

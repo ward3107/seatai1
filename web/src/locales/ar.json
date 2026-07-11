@@ -325,6 +325,7 @@
     "remove_student": "إزالة {{name}}",
     "notes": "ملاحظات المعلم",
     "notes_placeholder": "ملاحظات خاصة، مثل \"يحتاج مساعدة للتركيز بعد الغداء\". تبقى على هذا الجهاز فقط.",
+    "need_notes_placeholder": "ملاحظات (اختياري)",
     "gender": "الجنس",
     "language": "اللغة",
     "academic_level": "المستوى الأكاديمي",

@@ -86,7 +86,7 @@ export function useOptimizer() {
 
     // The optimizer is ready (TypeScript implementation always works via worker)
     setWasmReady(true);
-    console.log('✅ Optimizer ready');
+    if (import.meta.env.DEV) console.log('✅ Optimizer ready');
 
     // Try to set up the worker for better performance
     try {
@@ -97,7 +97,7 @@ export function useOptimizer() {
         const msg = e.data;
 
         if (msg.type === 'ready') {
-          console.log('✅ Worker ready');
+          if (import.meta.env.DEV) console.log('✅ Worker ready');
 
         } else if (msg.type === 'progress') {
           setProgress({

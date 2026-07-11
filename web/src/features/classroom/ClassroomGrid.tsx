@@ -112,7 +112,7 @@ export default function ClassroomGrid() {
     : 1;
 
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
-  const violations = useMemo(() => result ? getViolations(result, students) : new Set<string>(), [result, students]);
+  const violations = useMemo(() => result ? getViolations(result, students, layoutDef) : new Set<string>(), [result, students, layoutDef]);
 
   // Full per-seat constraint status (✓ / ⚠ badges + tooltips). Only computed
   // when the teacher turns the badges on, so it costs nothing by default.
