@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 
 interface Props {
@@ -22,6 +23,7 @@ export default function PrintView({ onClose }: Props) {
   const cols = useStore((s) => s.cols);
   const layoutDef = useStore((s) => s.layoutDef);
   const printRef = useRef<HTMLDivElement>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(true);
   const { t } = useLanguage();
 
   // Privacy-friendly mode for sharing the chart with substitutes,
@@ -120,13 +122,24 @@ export default function PrintView({ onClose }: Props) {
   const handlePrint = () => window.print();
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="print-title"
+      onClick={onClose}
+    >
       {/* Modal shell */}
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div
+        ref={trapRef}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col focus:outline-none"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 print:hidden">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">{t('print.title')}</h2>
+            <h2 id="print-title" className="text-lg font-bold text-gray-800">{t('print.title')}</h2>
             <p className="text-sm text-gray-500">
               {students.length} {t('app.students')} · {t('app.score')}: {getDisplayScorePct(result)}% ·{' '}
               {new Date().toLocaleDateString()}

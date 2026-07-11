@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Check, ChevronLeft, ChevronRight, Sparkles, Users, LayoutGrid, ListChecks, RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
@@ -36,6 +37,14 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
   const seats = slotCount(layoutDef);
   const enoughStudents = students.length >= 2;
   const enoughSeats = students.length <= seats;
+
+  // Move focus to the step panel when the step changes so keyboard and
+  // screen-reader users are taken to (and hear) the new step, instead of
+  // staying on the Next/Back button.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bodyRef.current?.focus();
+  }, [step]);
 
   const stepLabels = [
     t('wizard.step_students'),
@@ -110,7 +119,13 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
       </nav>
 
       {/* Step body */}
-      <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 shadow-sm sm:p-6">
+      <div
+        ref={bodyRef}
+        tabIndex={-1}
+        role="group"
+        aria-label={stepLabels[step]}
+        className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 shadow-sm sm:p-6 focus:outline-none"
+      >
         {step === 0 && <WizardStudents />}
         {step === 1 && (
           <div className="space-y-3">

@@ -51,7 +51,10 @@ interface Props {
   ariaLabel: string;
   onSeatClick: (seatKey: string) => void;
   onContextMenu: (e: React.MouseEvent, seatKey: string) => void;
-  onMouseEnter: () => void;
+  // Receives the seat key so the parent can supply a single stable handler
+  // (keeps SeatCard's memo effective — otherwise a fresh closure per render
+  // re-renders every seat on any hover).
+  onMouseEnter: (seatKey: string) => void;
   onMouseLeave: () => void;
 }
 
@@ -123,7 +126,7 @@ export default memo(function SeatCard({
       data-seat-key={seatKey}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={() => onMouseEnter(seatKey)}
       onMouseLeave={onMouseLeave}
       {...(canDrag ? { ...attributes, ...listeners } : {})}
       // Override dnd-kit's aria-pressed (which reflects drag state)

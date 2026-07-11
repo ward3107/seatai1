@@ -139,19 +139,43 @@ export default function ClassroomGrid() {
   // Set of student IDs whose row/col changed between the previous and
   // current optimization run. Only computed when the user has the
   // "show movement" toggle on AND both a current result and a previous
-  // baseline exist.
-  const movedStudentIds: Set<string> =
-    showMovementDiff && result && previousPositions
-      ? (() => {
-          const moved = new Set<string>();
-          for (const [id, pos] of Object.entries(result.student_positions)) {
-            const prev = previousPositions[id];
-            if (!prev) continue; // student is new in this run
-            if (prev.row !== pos.row || prev.col !== pos.col) moved.add(id);
-          }
-          return moved;
-        })()
-      : new Set<string>();
+  // baseline exist. Memoized so it doesn't rebuild on every render (e.g.
+  // every hover).
+  const movedStudentIds = useMemo<Set<string>>(() => {
+    if (!(showMovementDiff && result && previousPositions)) return new Set<string>();
+    const moved = new Set<string>();
+    for (const [id, pos] of Object.entries(result.student_positions)) {
+      const prev = previousPositions[id];
+      if (!prev) continue; // student is new in this run
+      if (prev.row !== pos.row || prev.col !== pos.col) moved.add(id);
+    }
+    return moved;
+  }, [showMovementDiff, result, previousPositions]);
+
+  // seatKey → student, so the hover handlers can resolve the hovered student
+  // without a per-seat closure (see the stable handlers below).
+  const studentBySeatKey = useMemo(() => {
+    const m = new Map<string, Student>();
+    for (const seat of seats) {
+      if (seat.student_id) {
+        const s = studentMap.get(seat.student_id);
+        if (s) m.set(`${seat.position.row}-${seat.position.col}`, s);
+      }
+    }
+    return m;
+  }, [seats, studentMap]);
+
+  const handleSeatMouseEnter = useCallback(
+    (sk: string) => {
+      setHoveredSeatKey(sk);
+      setHoveredStudent(studentBySeatKey.get(sk) ?? null);
+    },
+    [studentBySeatKey],
+  );
+  const handleSeatMouseLeave = useCallback(() => {
+    setHoveredSeatKey(null);
+    setHoveredStudent(null);
+  }, []);
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
   // KeyboardSensor gives keyboard-only users a way to swap students:
@@ -331,14 +355,8 @@ export default function ClassroomGrid() {
         ariaLabel={seatAriaLabel(seat, student, lockedSeats.includes(sk))}
         onSeatClick={handleSeatClick}
         onContextMenu={handleContextMenu}
-        onMouseEnter={() => {
-          setHoveredSeatKey(sk);
-          if (student) setHoveredStudent(student);
-        }}
-        onMouseLeave={() => {
-          setHoveredSeatKey(null);
-          setHoveredStudent(null);
-        }}
+        onMouseEnter={handleSeatMouseEnter}
+        onMouseLeave={handleSeatMouseLeave}
       />
     );
   };
