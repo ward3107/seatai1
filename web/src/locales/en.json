@@ -8,6 +8,7 @@
     "front_overflow": "{{need}} students need a front-row seat but the layout only has {{have}}.",
     "back_overflow": "{{need}} students need a back-row seat but the layout only has {{have}}.",
     "aisle_overflow": "{{need}} students need an aisle seat but the layout only has {{have}}.",
+    "window_overflow": "{{need}} students need a window seat but the layout only has {{have}}.",
     "not_enough_seats": "You have {{students}} students but only {{seats}} seats.",
     "stale_reference": "A rule still refers to a student who's no longer in the class."
   },

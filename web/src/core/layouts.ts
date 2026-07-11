@@ -317,9 +317,21 @@ function circleLayout(def: LayoutDef): Slot[] {
       col: i,
       x,
       y,
-      isFront: row === 0,
-      isBack: row === def.rows - 1,
+      // Provisional — corrected below from the actual row range.
+      isFront: false,
+      isBack: false,
     });
+  }
+  // The ring's y never reaches the poles, so `row` can't hit 0 or def.rows-1
+  // for larger `rows` (e.g. rows=8 → rows land in 1..6). Anchor front/back to
+  // the actual extreme rows present, so front_row / back_row constraints stay
+  // satisfiable and the badges agree with the optimizer.
+  const rowVals = partial.map((s) => s.row);
+  const minRow = Math.min(...rowVals);
+  const maxRow = Math.max(...rowVals);
+  for (const s of partial) {
+    s.isFront = s.row === minRow;
+    s.isBack = s.row === maxRow;
   }
   // Ring neighbors: left + right around the circle.
   const neighbors = partial.map((s) => {

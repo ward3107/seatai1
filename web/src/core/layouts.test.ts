@@ -123,6 +123,19 @@ describe('generateSlots', () => {
       const min = Math.min(...distances);
       expect(max - min).toBeLessThan(0.001);
     });
+
+    it('always has a reachable front and back row, even for many rows', () => {
+      // Regression: with rows>=8 the ring's y never mapped to row 0 or
+      // rows-1, so isFront/isBack were false for every seat — front/back
+      // constraints became impossible. They must anchor to the extreme rows.
+      for (const rows of [3, 8, 12]) {
+        const slots = generateSlots({ type: 'circle', rows, cols: 4 });
+        expect(slots.some((s) => s.isFront)).toBe(true);
+        expect(slots.some((s) => s.isBack)).toBe(true);
+        // Front and back are distinct rows.
+        expect(slots.find((s) => s.isFront)!.row).not.toBe(slots.find((s) => s.isBack)!.row);
+      }
+    });
   });
 
   describe('custom-rows layout', () => {

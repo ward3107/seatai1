@@ -251,9 +251,14 @@ export class ClassroomOptimizer {
   setPinned(pinned: Map<number, string>) {
     const valid = new Map<number, string>();
     const ids = new Set(this.students.map((s) => s.id));
+    // Also dedupe by student: pinning the same id to two slots would write
+    // that student twice into the chromosome (a duplicate gene) and drop
+    // someone else. First pin wins.
+    const pinnedIds = new Set<string>();
     for (const [slotIdx, sid] of pinned) {
-      if (slotIdx >= 0 && slotIdx < this.slots.length && ids.has(sid)) {
+      if (slotIdx >= 0 && slotIdx < this.slots.length && ids.has(sid) && !pinnedIds.has(sid)) {
         valid.set(slotIdx, sid);
+        pinnedIds.add(sid);
       }
     }
     this.pinned = valid;

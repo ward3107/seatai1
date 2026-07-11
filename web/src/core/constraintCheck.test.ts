@@ -74,6 +74,17 @@ describe('detectConstraintConflicts', () => {
     expect(f?.params).toMatchObject({ need: 6, have: 5 });
   });
 
+  it('warns when more students need the window than there are window seats', () => {
+    // A circle has ~1 left-most (window) seat, so requiring 2 is impossible.
+    const circle: LayoutDef = { type: 'circle', rows: 3, cols: 4 };
+    const big = ['a', 'b', 'c'].map((id) => student(id));
+    const c = { ...emptyConstraints, near_window_ids: ['a', 'b'] };
+    const out = detectConstraintConflicts(c, big, circle);
+    const w = out.find((x) => x.messageKey === 'conflicts.window_overflow');
+    expect(w?.severity).toBe('warning');
+    expect(w?.params?.need).toBe(2);
+  });
+
   it('warns when there are more students than seats', () => {
     const tiny: LayoutDef = { type: 'rows', rows: 1, cols: 2 };
     const out = detectConstraintConflicts(emptyConstraints, roster, tiny);
