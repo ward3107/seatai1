@@ -4,13 +4,11 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { SAMPLE_CLASSES } from '../../utils/sampleData';
 
-interface Props {
-  onOpenSidebar: () => void;
-}
-
-export default function OnboardingView({ onOpenSidebar }: Props) {
+export default function OnboardingView() {
   const setStudents = useStore((s) => s.setStudents);
   const setLayoutDef = useStore((s) => s.setLayoutDef);
+  const startWizard = useStore((s) => s.startWizard);
+  const setHomeView = useStore((s) => s.setHomeView);
   const { t } = useLanguage();
 
   function loadSampleClass(id: typeof SAMPLE_CLASSES[number]['id']) {
@@ -20,7 +18,9 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
     // original sample data (otherwise switching back returns edited names).
     setStudents(JSON.parse(JSON.stringify(sample.students)));
     setLayoutDef({ type: 'rows', rows: sample.rows, cols: sample.cols });
-    onOpenSidebar();
+    // A sample is a complete class + layout — drop straight into the
+    // workspace rather than the setup wizard.
+    setHomeView(false);
   }
 
   const steps = [
@@ -104,7 +104,7 @@ export default function OnboardingView({ onOpenSidebar }: Props) {
         className="flex flex-col items-center gap-4"
       >
         <button
-          onClick={onOpenSidebar}
+          onClick={() => startWizard()}
           className="px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold shadow hover:shadow-lg transition-shadow flex items-center gap-2"
         >
           <UserPlus size={18} />

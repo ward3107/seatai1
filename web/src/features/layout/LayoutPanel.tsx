@@ -118,10 +118,10 @@ function Stepper({
   );
 }
 
-export default function LayoutPanel() {
+export default function LayoutPanel({ defaultOpen = false }: { defaultOpen?: boolean } = {}) {
   const { layoutDef, setLayoutDef, students } = useStore();
   const { t } = useLanguage();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   const total = slotCount(layoutDef);
   const enough = total >= students.length;
