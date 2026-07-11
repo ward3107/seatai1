@@ -187,4 +187,35 @@ describe('fetchRoster', () => {
     expect(roster.students.map((s) => s.name).sort()).toEqual(['Alice', 'Bob']);
     expect(page).toBe(2);
   });
+
+  it('refuses a pagination next-link that points at an internal host (SSRF)', async () => {
+    let fetchedSecond = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        if (url.toString().includes('169.254.169.254')) {
+          fetchedSecond = true;
+          return jsonRes({ members: [] });
+        }
+        return new Response(
+          JSON.stringify({ members: [{ user_id: '1', name: 'Alice', roles: ['#Learner'] }] }),
+          {
+            headers: {
+              'content-type': 'application/json',
+              // Malicious platform points the next page at cloud metadata.
+              link: '<https://169.254.169.254/latest/meta-data/>; rel="next"',
+            },
+          },
+        );
+      }),
+    );
+    await expect(
+      lib.fetchRoster(
+        { deploymentId: 'd', contextTitle: 'C', nrpsUrl: 'https://lms.test/memberships' },
+        't',
+      ),
+    ).rejects.toThrow(/non-routable/i);
+    // The internal address must never have been fetched.
+    expect(fetchedSecond).toBe(false);
+  });
 });
