@@ -158,6 +158,59 @@ describe('LTI handler flow', () => {
     expect(roster.students.map((s: { name: string }) => s.name)).toEqual(['Alice Cohen']);
   });
 
+  it('rejects a replay of an already-used launch (single-use nonce)', async () => {
+    // Fresh login → nonce.
+    const loginRes = mockRes();
+    await loginHandler(
+      mockReq({ query: { iss: PLATFORM.issuer, login_hint: 'lh', client_id: PLATFORM.clientId } }),
+      loginRes as never,
+    );
+    const state = new URL(loginRes.redirectUrl).searchParams.get('state')!;
+    const { nonce } = await verifyState(state);
+
+    const idToken = await new SignJWT({
+      [LTI.MESSAGE_TYPE]: 'LtiResourceLinkRequest',
+      [LTI.VERSION]: '1.3.0',
+      [LTI.DEPLOYMENT_ID]: 'dep-1',
+      [LTI.CONTEXT]: { title: 'Grade 5 Math' },
+      [LTI.NRPS]: { context_memberships_url: 'https://lms.test/memberships' },
+      nonce,
+    })
+      .setProtectedHeader({ alg: 'RS256', kid: 'platform-kid' })
+      .setIssuer(PLATFORM.issuer)
+      .setAudience(PLATFORM.clientId)
+      .setIssuedAt()
+      .setExpirationTime('5m')
+      .sign(platformPriv);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        const u = url.toString();
+        if (u.startsWith('https://lms.test/token')) return jsonRes({ access_token: 'tok' });
+        if (u.startsWith('https://lms.test/memberships')) {
+          return jsonRes({
+            members: [
+              { user_id: '1', name: 'Alice Cohen', roles: ['http://purl.imsglobal.org/vocab/lis/v2/membership#Learner'] },
+            ],
+          });
+        }
+        throw new Error(`unexpected fetch ${u}`);
+      }),
+    );
+
+    // First launch succeeds and claims the nonce.
+    const first = mockRes();
+    await launchHandler(mockReq({ method: 'POST', body: { id_token: idToken, state } }), first as never);
+    expect(first.statusCode).toBe(200);
+
+    // Replaying the identical (still-valid) launch must be rejected.
+    const replay = mockRes();
+    await launchHandler(mockReq({ method: 'POST', body: { id_token: idToken, state } }), replay as never);
+    expect(replay.statusCode).toBe(400);
+    expect(String(replay.body)).toContain('Nonce already used');
+  });
+
   it('rejects a launch whose id_token nonce does not match the state', async () => {
     const loginRes = mockRes();
     await loginHandler(

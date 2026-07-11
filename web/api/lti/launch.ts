@@ -15,6 +15,12 @@ import {
   toolBaseUrl,
 } from '../_lib/lti';
 import { rateLimit } from '../_lib/rateLimit';
+import { claimOnce } from '../_lib/kvStore';
+
+/** How long a used nonce is remembered — must cover the signed state's
+ *  lifetime (5m, see signState) so a captured launch can't be replayed for
+ *  the whole window the state is otherwise valid. A small margin is added. */
+const NONCE_TTL_MS = 6 * 60_000;
 
 function str(v: unknown): string {
   if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : '';
@@ -22,7 +28,7 @@ function str(v: unknown): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!rateLimit(req, res)) return;
+  if (!(await rateLimit(req, res))) return;
   try {
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
@@ -47,6 +53,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (payload.nonce !== st.nonce) {
       res.status(400).send('Nonce mismatch');
       return;
+    }
+
+    // Single-use nonce: LTI 1.3 requires a nonce be accepted only once.
+    // Atomically claim it; a replay of a captured (still-unexpired) launch
+    // loses the race and is rejected here instead of re-triggering the NRPS
+    // roster fetch. Best-effort per-instance without a KV backend; global
+    // once one is configured.
+    if (typeof st.nonce === 'string' && st.nonce) {
+      const fresh = await claimOnce(`lti:nonce:${st.nonce}`, NONCE_TTL_MS);
+      if (!fresh) {
+        res.status(400).send('Nonce already used');
+        return;
+      }
     }
 
     const launch = validateLaunchClaims(payload);
