@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { dexieStorage } from '../db';
 import { current } from 'immer';
+import { setLocale, detectDefaultLocale } from '../../lib/i18n';
 import type {
   Student,
   Seat,
@@ -649,12 +650,17 @@ export const useStore = create<AppState>()(
         }),
 
       // UI Language
-      // Default to Hebrew per product brief — most teachers using
-      // SeatAI in the field are Hebrew-speaking. Users can switch
-      // immediately from the language picker in the header.
-      uiLanguage: 'he',
+      // Default to the visitor's browser language when it's one we support
+      // (en / he / ar / ru), otherwise English. A returning user's saved
+      // choice is restored on hydration (see onRehydrateStorage below).
+      uiLanguage: detectDefaultLocale(),
       setUiLanguage: (lang) =>
-        set((state) => { state.uiLanguage = lang; }),
+        set((state) => {
+          state.uiLanguage = lang;
+          // Keep the module-level locale used by the non-hook `t()` in sync,
+          // so every translation surface switches together.
+          setLocale(lang);
+        }),
 
       // UI scale
       uiScale: 'md',
@@ -811,6 +817,11 @@ export const useStore = create<AppState>()(
     {
       name: 'seatai-storage',
       storage: createJSONStorage(() => dexieStorage),
+      // After the persisted state loads, sync the module-level locale to the
+      // restored language so the non-hook `t()` matches the hydrated UI.
+      onRehydrateStorage: () => (state) => {
+        if (state?.uiLanguage) setLocale(state.uiLanguage);
+      },
       partialize: (state) => ({
         students: state.students,
         rows: state.rows,

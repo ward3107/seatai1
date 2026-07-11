@@ -15,7 +15,30 @@ const translations: Record<UILanguage, Translations> = {
   ru,
 };
 
-let currentLocale: UILanguage = 'en';
+const SUPPORTED: UILanguage[] = ['en', 'he', 'ar', 'ru'];
+
+/**
+ * Best supported UI language for a fresh visitor, derived from the browser's
+ * language preferences. Falls back to English when nothing matches (so the
+ * app no longer defaults everyone to Hebrew). Matches on the primary subtag,
+ * e.g. `en-US` → `en`, `he-IL` → `he`.
+ */
+export function detectDefaultLocale(): UILanguage {
+  if (typeof navigator === 'undefined') return 'en';
+  const prefs = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+  for (const pref of prefs) {
+    const primary = pref?.toLowerCase().split('-')[0] as UILanguage | undefined;
+    if (primary && SUPPORTED.includes(primary)) return primary;
+  }
+  return 'en';
+}
+
+// Initialized to the detected language so the static `t` below is correct
+// from first paint, before the persisted store hydrates (which then calls
+// setLocale with the saved choice).
+let currentLocale: UILanguage = detectDefaultLocale();
 
 // Simple interpolation for {{variable}} placeholders
 function interpolate(text: string, values: Record<string, string | number>): string {

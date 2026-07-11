@@ -3,21 +3,25 @@ import ReactDOM from 'react-dom/client'
 import App from './app/App'
 import ErrorBoundary from './components/ErrorBoundary'
 import { migrateFromLocalStorage } from './core/db'
+import { detectDefaultLocale } from './lib/i18n'
 import './index.css'
 
-// Apply persisted language direction before first render.
-// Check both localStorage (legacy) and a fast sync read; the full Dexie
-// hydration is async and happens slightly later, but direction must be set
-// before paint to avoid RTL flash.
-const stored = localStorage.getItem('seatai-storage');
-if (stored) {
-  try {
-    const { state } = JSON.parse(stored);
-    const lang: string = state?.uiLanguage ?? 'en';
-    document.documentElement.lang = lang;
-    document.documentElement.dir = ['he', 'ar'].includes(lang) ? 'rtl' : 'ltr';
-  } catch { /* ignore parse errors */ }
-}
+// Apply the language direction before first render so there's no RTL flash.
+// Prefer any persisted choice (fast sync localStorage read; the full Dexie
+// hydration lands slightly later); otherwise fall back to the browser's
+// detected language — matching the store's default.
+(() => {
+  let lang: string = detectDefaultLocale();
+  const stored = localStorage.getItem('seatai-storage');
+  if (stored) {
+    try {
+      const { state } = JSON.parse(stored);
+      if (state?.uiLanguage) lang = state.uiLanguage;
+    } catch { /* ignore parse errors */ }
+  }
+  document.documentElement.lang = lang;
+  document.documentElement.dir = ['he', 'ar'].includes(lang) ? 'rtl' : 'ltr';
+})();
 
 // Migrate existing localStorage data to IndexedDB (runs once, silently)
 migrateFromLocalStorage('seatai-storage');
