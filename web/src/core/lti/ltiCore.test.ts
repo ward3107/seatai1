@@ -104,6 +104,17 @@ describe('validateLaunchClaims', () => {
     expect(() => validateLaunchClaims(ssrf('https://169.254.169.254/latest/meta-data'))).toThrow(/non-routable/i);
     expect(() => validateLaunchClaims(ssrf('not a url'))).toThrow(/invalid/i);
   });
+
+  it('rejects a student (learner-only) launch but allows an instructor', () => {
+    const learner = 'http://purl.imsglobal.org/vocab/lis/v2/membership#Learner';
+    const instructor = 'http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor';
+    // A student clicking the tool link must not receive the roster.
+    expect(() => validateLaunchClaims({ ...valid, [LTI.ROLES]: [learner] })).toThrow(/teacher|instructor/i);
+    // A teacher launch goes through.
+    expect(validateLaunchClaims({ ...valid, [LTI.ROLES]: [learner, instructor] }).deploymentId).toBe('dep-1');
+    // Absent roles are allowed (some platforms omit them; still signature-verified).
+    expect(validateLaunchClaims(valid).deploymentId).toBe('dep-1');
+  });
 });
 
 describe('assertSafeNrpsUrl', () => {

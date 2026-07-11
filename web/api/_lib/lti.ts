@@ -22,6 +22,7 @@ import type { VercelRequest } from '@vercel/node';
 import {
   NRPS_SCOPE,
   mapMembersToRoster,
+  assertSafeNrpsUrl,
   type PlatformConfig,
   type LaunchInfo,
 } from '../../src/core/lti/ltiCore';
@@ -41,7 +42,10 @@ async function fetchWithTimeout(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    // Default to `redirect: 'manual'` so a 3xx can't bounce a bearer-token
+    // request (token assertion / NRPS) to an unvalidated host — SSRF via
+    // redirect. A 3xx then surfaces as a non-ok response the callers reject.
+    return await fetch(url, { redirect: 'manual', ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
@@ -152,12 +156,19 @@ export async function fetchRoster(launch: LaunchInfo, token: string): Promise<Ro
   let url: string | null = launch.nrpsUrl;
   const members: unknown[] = [];
   for (let page = 0; page < 20 && url; page++) {
-    const res: Response = await fetchWithTimeout(url, {
+    // Re-validate EVERY URL, not just the first: a malicious platform can set
+    // the `Link: <…>; rel="next"` pagination target to an internal address
+    // (SSRF). `assertSafeNrpsUrl` throws on non-HTTPS / private / loopback /
+    // link-local hosts.
+    const safeUrl = assertSafeNrpsUrl(url);
+    const res: Response = await fetchWithTimeout(safeUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.ims.lti-nrps.v2.membershipcontainer+json',
       },
     });
+    // With redirect:'manual' a 3xx is non-ok, so this also rejects a redirect
+    // that would send the bearer token to an unvalidated Location.
     if (!res.ok) throw new Error(`NRPS ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const json = (await res.json()) as { members?: unknown[] };
     if (Array.isArray(json.members)) members.push(...json.members);

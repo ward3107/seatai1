@@ -99,9 +99,16 @@ export async function incrWithTtl(key: string, ttlMs: number): Promise<number> {
   const cfg = restConfig();
   if (cfg) {
     try {
-      const count = Number(await redis(cfg, ['INCR', key]));
-      // Set the window TTL only when we created the key (count === 1).
-      if (count === 1) await redis(cfg, ['PEXPIRE', key, ttlMs]);
+      // INCR then conditionally PEXPIRE in a single atomic EVAL. Doing them as
+      // two REST round-trips risked a window where INCR succeeded but PEXPIRE
+      // failed, leaving a key with no expiry that counts up forever and
+      // permanently 429s that client. The Lua script guarantees the TTL is set
+      // on creation (and re-asserts it if a key somehow lost its expiry).
+      const script =
+        "local c = redis.call('INCR', KEYS[1]) " +
+        "if c == 1 or redis.call('PTTL', KEYS[1]) < 0 then " +
+        "redis.call('PEXPIRE', KEYS[1], ARGV[1]) end return c";
+      const count = Number(await redis(cfg, ['EVAL', script, 1, key, ttlMs]));
       return count;
     } catch {
       /* fall through to in-memory */

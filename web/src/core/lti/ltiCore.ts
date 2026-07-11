@@ -19,10 +19,23 @@ export const LTI = {
   DEPLOYMENT_ID: 'https://purl.imsglobal.org/spec/lti/claim/deployment_id',
   CONTEXT: 'https://purl.imsglobal.org/spec/lti/claim/context',
   NRPS: 'https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice',
+  ROLES: 'https://purl.imsglobal.org/spec/lti/claim/roles',
 } as const;
 
 export const NRPS_SCOPE = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
 export const LEARNER_ROLE = 'http://purl.imsglobal.org/vocab/lis/v2/membership#Learner';
+
+/** LTI role sub-types that grant a teacher/staff view of the class. NRPS is
+ *  fetched with the tool's own credentials and returns the *whole* roster
+ *  (names + emails), so the launch must be gated to staff — otherwise a
+ *  student who clicks the tool link would receive every classmate's PII. */
+const STAFF_ROLE_RE =
+  /#(Instructor|TeachingAssistant|Administrator|Staff|Faculty|Mentor|ContentDeveloper|Manager|Officer|Dean)\b/i;
+
+/** True if any of the launch's LTI roles is a teacher/staff role. */
+export function hasStaffRole(roles: readonly string[]): boolean {
+  return roles.some((r) => STAFF_ROLE_RE.test(r));
+}
 
 /** A registered LMS platform we trust to launch us. */
 export interface PlatformConfig {
@@ -168,6 +181,18 @@ export function validateLaunchClaims(payload: Record<string, unknown>): LaunchIn
   }
   const deploymentId = payload[LTI.DEPLOYMENT_ID];
   if (typeof deploymentId !== 'string') throw new Error('Missing deployment id');
+
+  // Teacher-only gate: NRPS returns the full roster regardless of who launched,
+  // so reject a launch whose roles are present but contain no staff role (i.e.
+  // a student). Absent roles (some platforms omit them) are allowed through —
+  // the launch is still signature/issuer/audience-verified.
+  const rolesRaw = payload[LTI.ROLES];
+  const roles = Array.isArray(rolesRaw)
+    ? rolesRaw.filter((r): r is string => typeof r === 'string')
+    : [];
+  if (roles.length > 0 && !hasStaffRole(roles)) {
+    throw new Error('SeatAI roster import is for teachers — your account is not an instructor in this course.');
+  }
 
   const nrps = payload[LTI.NRPS] as { context_memberships_url?: unknown } | undefined;
   const nrpsRaw = nrps?.context_memberships_url;
