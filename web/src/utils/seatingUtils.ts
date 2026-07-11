@@ -1,5 +1,6 @@
 import type { Student, OptimizationResult, Seat } from '../types';
 import type { HeatMapMode } from '../core/store';
+import { generateSlots, type LayoutDef } from '../core/layouts';
 
 /**
  * Returns the set of seat keys ("row-col") that have active constraint violations.
@@ -8,37 +9,62 @@ import type { HeatMapMode } from '../core/store';
  *   - A student who has mobility issues but is not in row 0
  *   - A student seated adjacent to an incompatible student
  *
- * Adjacency: horizontal + vertical (row/col ± 1) for grid-shaped layouts,
- * ring neighbours (including the wrap-around pair) for circle layouts where
- * `col` is the seat's index around the ring and (row, col) is not a grid.
+ * Adjacency: when `layoutDef` is supplied the exact same `slot.neighbors`
+ * the optimizer scored against are used, so the violation highlighting always
+ * agrees with the algorithm — including pod-based (clusters) and
+ * distance-based (u-shape, custom-rows) neighbourhoods where reconstructing
+ * grid offsets would be wrong. Without `layoutDef` it falls back to a grid /
+ * ring heuristic (grid ±1, or ring neighbours for the circle layout).
  * Candidate positions are validated against the seats that actually exist
  * in the result's layout — never against assumed rows×cols grid bounds.
  */
 export function getViolations(
   result: OptimizationResult,
-  students: Student[]
+  students: Student[],
+  layoutDef?: LayoutDef
 ): Set<string> {
   const violations = new Set<string>();
   const studentMap = new Map(students.map((s) => [s.id, s]));
+  const seats = result.layout.seats;
 
-  // Index the seats that actually exist so neighbour candidates are checked
-  // against the real layout, not assumed grid dimensions.
-  const seatAt = new Map<string, Seat>();
-  for (const seat of result.layout.seats) {
-    seatAt.set(`${seat.position.row}-${seat.position.col}`, seat);
+  // Preferred path: derive neighbours from the very slots the optimizer used.
+  // `buildLayout` maps `this.slots` 1:1 to `seats`, so seats[i] shares
+  // slot i's neighbour indices.
+  let neighboursOf: (i: number) => Seat[];
+  const slots =
+    layoutDef && generateSlots(layoutDef).length === seats.length
+      ? generateSlots(layoutDef)
+      : null;
+
+  if (slots) {
+    neighboursOf = (i) => slots[i].neighbors.map((n) => seats[n]).filter(Boolean);
+  } else {
+    // Fallback heuristic (no layout def, or a mismatched seat count).
+    const seatAt = new Map<string, Seat>();
+    for (const seat of seats) seatAt.set(`${seat.position.row}-${seat.position.col}`, seat);
+    const isCircle = result.layout.layout_type === 'circle';
+    const seatAtRingIndex = new Map<number, Seat>();
+    if (isCircle) for (const seat of seats) seatAtRingIndex.set(seat.position.col, seat);
+    const ringSize = seats.length;
+    neighboursOf = (i) => {
+      const seat = seats[i];
+      const cands: (Seat | undefined)[] = isCircle
+        ? [
+            seatAtRingIndex.get((seat.position.col - 1 + ringSize) % ringSize),
+            seatAtRingIndex.get((seat.position.col + 1) % ringSize),
+          ]
+        : [
+            seatAt.get(`${seat.position.row}-${seat.position.col - 1}`),
+            seatAt.get(`${seat.position.row}-${seat.position.col + 1}`),
+            seatAt.get(`${seat.position.row - 1}-${seat.position.col}`),
+            seatAt.get(`${seat.position.row + 1}-${seat.position.col}`),
+          ];
+      return cands.filter((s): s is Seat => !!s);
+    };
   }
 
-  const isCircle = result.layout.layout_type === 'circle';
-  // In the circle layout each seat's `col` is its index around the ring.
-  const seatAtRingIndex = new Map<number, Seat>();
-  if (isCircle) {
-    for (const seat of result.layout.seats) {
-      seatAtRingIndex.set(seat.position.col, seat);
-    }
-  }
-  const ringSize = result.layout.seats.length;
-
-  for (const seat of result.layout.seats) {
+  for (let i = 0; i < seats.length; i++) {
+    const seat = seats[i];
     if (!seat.student_id) continue;
     const student = studentMap.get(seat.student_id);
     if (!student) continue;
@@ -51,20 +77,8 @@ export function getViolations(
     }
 
     // Incompatible adjacency
-    const neighbours: (Seat | undefined)[] = isCircle
-      ? [
-          seatAtRingIndex.get((seat.position.col - 1 + ringSize) % ringSize),
-          seatAtRingIndex.get((seat.position.col + 1) % ringSize),
-        ]
-      : [
-          seatAt.get(`${seat.position.row}-${seat.position.col - 1}`),
-          seatAt.get(`${seat.position.row}-${seat.position.col + 1}`),
-          seatAt.get(`${seat.position.row - 1}-${seat.position.col}`),
-          seatAt.get(`${seat.position.row + 1}-${seat.position.col}`),
-        ];
-
-    for (const neighbour of neighbours) {
-      if (!neighbour?.student_id || neighbour === seat) continue;
+    for (const neighbour of neighboursOf(i)) {
+      if (!neighbour.student_id || neighbour === seat) continue;
       if (student.incompatible_ids.includes(neighbour.student_id)) {
         violations.add(seatKey);
         violations.add(`${neighbour.position.row}-${neighbour.position.col}`);

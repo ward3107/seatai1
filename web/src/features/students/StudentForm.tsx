@@ -159,7 +159,7 @@ export default function StudentForm() {
         <h3 className="font-semibold text-gray-800">
           {editingStudent ? t('students.edit') : t('students.add')}
         </h3>
-        <button type="button" onClick={handleCancel} className="p-1 hover:bg-gray-100 rounded">
+        <button type="button" onClick={handleCancel} aria-label={t('detail.close')} className="p-1 hover:bg-gray-100 rounded">
           <X size={18} className="text-gray-500" />
         </button>
       </div>
@@ -496,13 +496,13 @@ export default function StudentForm() {
               <div key={need.type} className="bg-purple-50 rounded-lg p-2 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-purple-800">{need.type}</span>
-                  <button type="button" onClick={() => removeSpecialNeed(need.type)} className="p-0.5 hover:bg-purple-100 rounded">
+                  <button type="button" onClick={() => removeSpecialNeed(need.type)} aria-label={t('students.remove_student', { name: need.type })} className="p-0.5 hover:bg-purple-100 rounded">
                     <X size={12} className="text-purple-600" />
                   </button>
                 </div>
                 <input
                   type="text"
-                  placeholder="Notes (optional)"
+                  placeholder={t('students.need_notes_placeholder')}
                   value={need.description ?? ''}
                   onChange={(e) => updateNeed(i, { description: e.target.value })}
                   className="w-full px-2 py-1 text-xs border border-purple-200 rounded focus:ring-1 focus:ring-purple-400 bg-white"

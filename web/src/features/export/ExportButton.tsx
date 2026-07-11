@@ -248,7 +248,7 @@ export default function ExportButton() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+          <div className="absolute end-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
             {/* PNG / PDF render the seating grid, so they only appear once an
                 optimization result exists. CSV / JSON always work. */}
             {result && (

@@ -325,6 +325,7 @@
     "remove_student": "Remove {{name}}",
     "notes": "Teacher notes",
     "notes_placeholder": "Private observations, e.g. \"needs help focusing after lunch\". Stays on this device only.",
+    "need_notes_placeholder": "Notes (optional)",
     "gender": "Gender",
     "language": "Language",
     "academic_level": "Academic Level",

@@ -137,4 +137,29 @@ describe('getViolations', () => {
     const violations = getViolations(result, students);
     expect(violations.size).toBe(0);
   });
+
+  it('flags diagonal pod-mates in a clusters layout when given the layout def', () => {
+    // In a 2×2 pod every seat is a pod-mate (neighbour) of every other,
+    // including the diagonal pair — which is NOT orthogonally grid-adjacent.
+    // The optimizer scores them as neighbours, so the violation highlighting
+    // must agree once the layout def is supplied.
+    const def = { type: 'clusters' as const, rows: 2, cols: 2, clusterSize: 2 };
+    const slots = generateSlots(def);
+    // Find the two diagonal seats of the first pod.
+    const s00 = slots.find((s) => s.row === 0 && s.col === 0)!;
+    const s11 = slots.find((s) => s.row === 1 && s.col === 1)!;
+    expect(s00.neighbors).toContain(s11.index); // pod-mates
+    // ...but they are not grid-orthogonal neighbours.
+    expect(Math.abs(s00.row - s11.row) + Math.abs(s00.col - s11.col)).toBe(2);
+
+    const result = resultFromSlots('clusters', slots, { [s00.index]: 'a', [s11.index]: 'b' });
+    const students = [student('a', { incompatible_ids: ['b'] }), student('b')];
+
+    // Without the layout def the grid heuristic misses it...
+    expect(getViolations(result, students).size).toBe(0);
+    // ...with it, both seats are correctly flagged.
+    const withDef = getViolations(result, students, def);
+    expect(withDef.has(`${s00.row}-${s00.col}`)).toBe(true);
+    expect(withDef.has(`${s11.row}-${s11.col}`)).toBe(true);
+  });
 });

@@ -99,7 +99,7 @@ export async function verifyState(state: string): Promise<StatePayload> {
   // Verify against our own public key (derived from the private import).
   const pub = await importJWK((await getKeys()).publicJwk as unknown as JWK, ALG);
   void privateKey;
-  const { payload } = await jwtVerify(state, pub);
+  const { payload } = await jwtVerify(state, pub, { algorithms: [ALG] });
   return payload as StatePayload;
 }
 
@@ -109,6 +109,9 @@ export async function verifyIdToken(idToken: string, platform: PlatformConfig) {
   const { payload } = await jwtVerify(idToken, JWKS, {
     issuer: platform.issuer,
     audience: platform.clientId,
+    // Pin the signature algorithm: the id_token comes from a remote JWKS, so
+    // constrain verification to RS256 rather than trusting the token header.
+    algorithms: [ALG],
   });
   return payload as Record<string, unknown>;
 }
@@ -183,10 +186,15 @@ function parseNextLink(header: string | null): string | null {
 export function handoffPage(roster: RosterClass, toolUrl: string): string {
   const dest = `${toolUrl}/#lti=${encodeURIComponent(JSON.stringify(roster))}`;
   const destLiteral = JSON.stringify(dest);
+  // `toolUrl` can derive from the request Host header (see `toolBaseUrl`), so
+  // it is not fully trusted. `JSON.stringify` safely encodes it for the JS
+  // string literal; the visible <a href> must be HTML-attribute-escaped so a
+  // stray quote in the host can't break out of the attribute and inject markup.
+  const destHref = escapeHtml(dest);
   return `<!doctype html><html><head><meta charset="utf-8"><title>SeatAI</title></head>
 <body style="font-family:system-ui;padding:2rem;text-align:center">
 <p>Imported ${roster.students.length} students from ${escapeHtml(roster.name)}. Opening SeatAI…</p>
-<p><a id="go" href="${dest}">Open SeatAI</a></p>
+<p><a id="go" href="${destHref}">Open SeatAI</a></p>
 <script>
 (function(){
   try{ (window.top||window).location.replace(${destLiteral}); }

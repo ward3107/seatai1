@@ -34,7 +34,14 @@ export const dexieStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       const entry = await db.kv.get(name);
-      return entry?.value ?? null;
+      if (entry) return entry.value;
+      // Dexie has no entry yet. This is the first read after an upgrade from
+      // the old localStorage backend: `migrateFromLocalStorage` runs
+      // fire-and-forget at startup, so Zustand's async hydration can win the
+      // race and read Dexie before the migration write lands. Falling back to
+      // any legacy localStorage value here prevents a one-load "all my classes
+      // vanished" flash; the migration then copies it into Dexie and clears it.
+      return localStorage.getItem(name);
     } catch {
       // Fall back gracefully if IndexedDB is unavailable (e.g. private mode iOS)
       return localStorage.getItem(name);

@@ -107,6 +107,7 @@ export default function GridControls({
       <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
         <button
           onClick={() => setInteractionMode('drag')}
+          aria-pressed={interactionMode === 'drag'}
           title={t('gridControls.drag_mode')}
           className={clsx(
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
@@ -120,6 +121,7 @@ export default function GridControls({
         </button>
         <button
           onClick={() => setInteractionMode('click')}
+          aria-pressed={interactionMode === 'click'}
           title={t('gridControls.click_mode')}
           className={clsx(
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
@@ -139,6 +141,7 @@ export default function GridControls({
       <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-white">
         <button
           onClick={() => setViewMode('rows')}
+          aria-pressed={viewMode === 'rows'}
           title={t('gridControls.rows_layout')}
           className={clsx(
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
@@ -152,6 +155,7 @@ export default function GridControls({
         </button>
         <button
           onClick={() => setViewMode('pairs')}
+          aria-pressed={viewMode === 'pairs'}
           title={t('gridControls.pairs_layout')}
           className={clsx(
             'px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all',
@@ -170,6 +174,7 @@ export default function GridControls({
       {/* ── Timeline ── */}
       <button
         onClick={() => setShowTimeline(!showTimeline)}
+        aria-pressed={showTimeline}
         title={showTimeline ? t('gridControls.hide_timeline') : t('gridControls.show_timeline')}
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
@@ -192,6 +197,7 @@ export default function GridControls({
             <button
               key={opt.value}
               onClick={() => setHeatMapMode(opt.value)}
+              aria-pressed={heatMapMode === opt.value}
               title={t('gridControls.color_by', { label: opt.label })}
               className={clsx(
                 'px-2.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap',
@@ -213,6 +219,7 @@ export default function GridControls({
         <button
           onClick={() => setZoomLevel(zoomLevel - 0.1)}
           disabled={zoomLevel <= 0.6}
+          aria-label={t('gridControls.zoom_out')}
           title={t('gridControls.zoom_out')}
           className="p-2 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
         >
@@ -224,6 +231,7 @@ export default function GridControls({
         <button
           onClick={() => setZoomLevel(zoomLevel + 0.1)}
           disabled={zoomLevel >= 1.5}
+          aria-label={t('gridControls.zoom_in')}
           title={t('gridControls.zoom_in')}
           className="p-2 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-all"
         >
@@ -236,6 +244,7 @@ export default function GridControls({
       {/* ── Relationship Lines ── */}
       <button
         onClick={() => setShowRelations(!showRelations)}
+        aria-pressed={showRelations}
         title={showRelations ? t('gridControls.hide_relations') : t('gridControls.show_relations')}
         className={clsx(
           'p-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium',
