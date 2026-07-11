@@ -1,58 +1,49 @@
 /**
- * Minimal fixed-window rate limiter for the LTI endpoints.
+ * Fixed-window rate limiter for the LTI endpoints, backed by the pluggable
+ * KV store (see kvStore.ts):
+ *   - With a KV/Upstash REST endpoint configured, the counter is shared
+ *     across all serverless instances — a real global quota.
+ *   - Otherwise it degrades to a per-instance in-memory counter: best-effort,
+ *     the same behaviour as before. Either way the LTI endpoints (JWT verify
+ *     + outbound fetches) get a brake on hot-loop abuse.
  *
- * Scope honestly stated: state is per serverless instance, so this is a
- * best-effort brake on bursts and naive abuse (script hammering one warm
- * instance), not a hard global quota — Vercel may fan requests out across
- * instances. That's the right trade-off here: the LTI endpoints are
- * crypto-heavy (JWT verify + outbound fetches) and a single hot loop against
- * one instance is the realistic failure mode. A durable store (KV/Upstash)
- * can replace `hits` later without changing call sites.
+ * Client identity uses Vercel's trusted `x-real-ip` (the connecting client's
+ * IP, set by the edge) rather than the client-controllable left-most
+ * `x-forwarded-for` entry, which an attacker can rotate to mint a fresh
+ * window per value.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { incrWithTtl } from './kvStore';
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
 
-interface Window {
-  start: number;
-  count: number;
-}
-
-const hits = new Map<string, Window>();
-
 function clientIp(req: VercelRequest): string {
+  // `x-real-ip` is set by Vercel's edge to the actual connecting client and
+  // is not overwritable by the client. Fall back to the last XFF hop (closest
+  // to our edge, so least attacker-influenced) and then the socket address.
+  const realIp = req.headers['x-real-ip'];
+  const real = Array.isArray(realIp) ? realIp[0] : realIp;
+  if (real) return real.trim();
   const fwd = req.headers['x-forwarded-for'];
-  const first = Array.isArray(fwd) ? fwd[0] : fwd;
-  // x-forwarded-for is client-controllable in general, but on Vercel the
-  // left-most entry is set by their edge. Fall back to the socket address.
-  return first?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const fwdStr = Array.isArray(fwd) ? fwd[0] : fwd;
+  const hops = fwdStr?.split(',').map((s) => s.trim()).filter(Boolean);
+  if (hops && hops.length) return hops[hops.length - 1];
+  return req.socket?.remoteAddress || 'unknown';
 }
 
 /**
  * Returns true if the request is allowed; on false it has already sent the
  * 429 response (with Retry-After) and the handler should return immediately.
  */
-export function rateLimit(req: VercelRequest, res: VercelResponse): boolean {
-  const now = Date.now();
-
-  // Opportunistic GC so the map can't grow unbounded on a long-lived instance.
-  if (hits.size > 1000) {
-    for (const [k, w] of hits) {
-      if (now - w.start > WINDOW_MS) hits.delete(k);
-    }
-  }
-
-  const key = clientIp(req);
-  const win = hits.get(key);
-  if (!win || now - win.start > WINDOW_MS) {
-    hits.set(key, { start: now, count: 1 });
-    return true;
-  }
-  win.count++;
-  if (win.count > MAX_PER_WINDOW) {
-    const retryAfter = Math.ceil((win.start + WINDOW_MS - now) / 1000);
-    res.setHeader('Retry-After', String(Math.max(retryAfter, 1)));
+export async function rateLimit(
+  req: VercelRequest,
+  res: VercelResponse,
+): Promise<boolean> {
+  const key = `lti:rl:${clientIp(req)}`;
+  const count = await incrWithTtl(key, WINDOW_MS);
+  if (count > MAX_PER_WINDOW) {
+    res.setHeader('Retry-After', String(Math.ceil(WINDOW_MS / 1000)));
     res.status(429).send('Too many requests');
     return false;
   }

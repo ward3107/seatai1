@@ -15,7 +15,7 @@ function str(v: unknown): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!rateLimit(req, res)) return;
+  if (!(await rateLimit(req, res))) return;
   try {
     const src = (req.method === 'POST' ? req.body : req.query) ?? {};
     const iss = str(src.iss);
