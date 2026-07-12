@@ -105,8 +105,27 @@ export default function StudentDetailPanel() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string>('');
 
+  // md+ docks the panel in-flow beside the map (non-modal, no backdrop) so
+  // the highlighted student stays visible and the map keeps scrolling. Small
+  // screens keep the modal bottom sheet. Track the breakpoint so focus-trap /
+  // backdrop / aria-modal only apply in the modal (mobile) case.
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' &&
+      window.matchMedia('(min-width: 768px)').matches,
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   const open = !!detailsTargetStudentId;
-  const trapRef = useFocusTrap<HTMLElement>(open);
+  // Trap focus only when the panel is a modal (mobile bottom sheet). When
+  // docked beside the map on desktop it's non-modal, so keyboard focus must
+  // be free to reach the map and sidebar.
+  const trapRef = useFocusTrap<HTMLElement>(open && !isDesktop);
   const student = open
     ? students.find((s) => s.id === detailsTargetStudentId) ?? null
     : null;
@@ -151,28 +170,34 @@ export default function StudentDetailPanel() {
 
   return (
     <>
-      {/* Backdrop */}
-      <button
-        type="button"
-        aria-label={t('detail.close')}
-        onClick={() => setDetailsTarget(null)}
-        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
-      />
+      {/* Backdrop — modal (mobile) only. On desktop the panel docks in-flow
+          beside the map, so no backdrop: the map stays visible, interactive,
+          and scrollable while the drawer is open. */}
+      {!isDesktop && (
+        <button
+          type="button"
+          aria-label={t('detail.close')}
+          onClick={() => setDetailsTarget(null)}
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
+        />
+      )}
 
-      {/* Drawer — right side on md+, bottom sheet on mobile */}
+      {/* Drawer — docked column beside the map on md+, bottom sheet on mobile */}
       <aside
         ref={trapRef}
         tabIndex={-1}
         className={clsx(
-          'fixed z-50 bg-white shadow-2xl overflow-hidden flex flex-col focus:outline-none',
-          // Mobile (default): bottom sheet
-          'inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl',
-          // md+: right-side drawer — wider on larger screens so the
+          'bg-white shadow-2xl overflow-hidden flex flex-col focus:outline-none',
+          // Mobile (default): fixed modal bottom sheet.
+          'fixed z-50 inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl',
+          // md+: leave the fixed overlay and dock as an in-flow flex column at
+          // the end of the app row — full height, its own internal scroll, a
+          // divider instead of a shadow/backdrop. Wider on large screens so the
           // reasoning/history content has room to breathe.
-          'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:top-0 md:max-h-none md:w-[540px] lg:w-[640px] md:max-w-[92vw] md:rounded-t-none md:rounded-l-2xl',
+          'md:static md:z-0 md:h-full md:max-h-none md:w-[540px] lg:w-[640px] md:max-w-[92vw] md:shrink-0 md:rounded-none md:shadow-none md:border-s md:border-gray-200 dark:md:border-gray-700',
         )}
         aria-labelledby="student-detail-title"
-        aria-modal="true"
+        aria-modal={!isDesktop}
         role="dialog"
       >
         {/* Header */}
