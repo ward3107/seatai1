@@ -25,7 +25,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Allow pointing at a pre-installed Chromium (e.g. a sandbox that ships
+        // its own build) via PW_CHROMIUM_PATH. Unset in CI, where
+        // `playwright install` provides the pinned build, so this is a no-op there.
+        ...(process.env.PW_CHROMIUM_PATH
+          ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_PATH } }
+          : {}),
+      },
     },
     {
       name: 'firefox',
