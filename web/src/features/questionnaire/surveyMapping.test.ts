@@ -6,6 +6,7 @@ import {
   emptyAnswers,
   MAX_SEATMATES,
   NOISE_QUIET_THRESHOLD,
+  LOW_ATTENTION_THRESHOLD,
 } from './surveyMapping';
 import type { Student, SeatingConstraints } from '../../types';
 
@@ -61,6 +62,16 @@ describe('surveyToStudentPatch', () => {
     expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 3 }).requires_quiet_area).toBe(false);
     expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: NOISE_QUIET_THRESHOLD }).requires_quiet_area).toBe(true);
     expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 5 }).requires_quiet_area).toBe(true);
+  });
+
+  it('reinforces front-row placement when teacher-attention is low (UDL outcome-over-preference)', () => {
+    // A low attention rating routes to the front even without a front preference,
+    // because the OUTCOME (getting attention) matters more than the stated wish.
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), teacherAttention: 1 }).requires_front_row).toBe(true);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), teacherAttention: LOW_ATTENTION_THRESHOLD }).requires_front_row).toBe(true);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), teacherAttention: 3 }).requires_front_row).toBe(false);
+    // Explicit front preference still triggers even without an attention rating.
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), frontPreference: 'front' }).requires_front_row).toBe(true);
   });
 });
 

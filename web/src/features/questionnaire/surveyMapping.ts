@@ -61,9 +61,41 @@ export const MAX_SEATMATES = 3;
 
 /** GSQ-P style noise sensitivity: 1 = doesn't bother me at all, 5 = very much. */
 export type NoiseSensitivity = 1 | 2 | 3 | 4 | 5;
+/** Generic 5-point Likert used for the belonging and teacher-attention items. */
+export type Likert5 = 1 | 2 | 3 | 4 | 5;
 /** Threshold at (or above) which the student is routed into a quiet area.
  *  4 = "quite a bit", matching the GSQ-P cut-off convention. */
 export const NOISE_QUIET_THRESHOLD: NoiseSensitivity = 4;
+/** Threshold at (or below) which low teacher-attention reinforces front-row
+ *  placement, even if the student didn't explicitly pick "front". A rating of
+ *  2 means the student rarely gets teacher attention — action-zone research
+ *  (Adams & Biddle) says moving them forward materially improves this. */
+export const LOW_ATTENTION_THRESHOLD: Likert5 = 2;
+
+/**
+ * Additional constructs added on top of B1–B4:
+ *
+ * B5 — SENSE OF BELONGING (PSSM Scale; Goodenow 1993).
+ *   Classroom belonging predicts engagement, effort, and reduced dropout.
+ *   Phrased as a concrete behavioural proxy ("how easy is it to find someone
+ *   to talk to at recess?") — easier for children to answer than the abstract
+ *   "do you feel a part of the class?", and validated as a proxy in the
+ *   belonging literature. Low scores hint at social isolation; downstream this
+ *   can suggest an "anchor" (nominated seatmate) is high-priority.
+ *
+ * B6 — LEARNING-STYLE PREFERENCE (Cooperative Learning; Johnson & Johnson).
+ *   Preference for solo / pair / group work is a legitimate self-report
+ *   construct (children can reliably describe how they like to work by ~age 8).
+ *   Informs LAYOUT selection (rows for solo-preferring classes, clusters for
+ *   group-preferring), not individual seat assignment.
+ *
+ * B7 — TEACHER-ATTENTION ACCESS (UDL; extends the action-zone construct).
+ *   Front-row preference measures the student's *stated* wish; teacher-
+ *   attention access measures the *outcome* — how often they actually get
+ *   heard. A low score with a "middle/back" preference still routes to the
+ *   front, because the outcome trumps the preference when it comes to
+ *   learning (UDL Principle 3: Multiple Means of Engagement).
+ */
 
 export interface SurveyAnswers {
   /** B1 — up to 3 classmates the student would like to sit near (positive
@@ -79,6 +111,18 @@ export interface SurveyAnswers {
   /** B2 — a classmate who helps this student with schoolwork (peer-mentor).
    *  Recorded even if not reciprocated; reciprocity is checked downstream. */
   helper: string | null;
+  /** B5 — sense-of-belonging proxy (1 = hard to find someone at recess,
+   *  5 = very easy). PSSM Scale (Goodenow 1993). Informational for now;
+   *  downstream can prioritise an anchor seatmate. */
+  belonging: Likert5 | null;
+  /** B6 — preferred way to work (Cooperative Learning; Johnson & Johnson).
+   *  Aggregated across the class this informs layout choice; per-student it
+   *  is stored but does not directly rewrite the student record. */
+  learningStyle: 'alone' | 'pair' | 'group' | null;
+  /** B7 — how easy it is for the student to get the teacher's attention in
+   *  class (1 = very hard, 5 = very easy). UDL Engagement construct. A rating
+   *  ≤ LOW_ATTENTION_THRESHOLD reinforces front-row placement. */
+  teacherAttention: Likert5 | null;
 }
 
 export function emptyAnswers(): SurveyAnswers {
@@ -87,6 +131,9 @@ export function emptyAnswers(): SurveyAnswers {
     frontPreference: null,
     noise: null,
     helper: null,
+    belonging: null,
+    learningStyle: null,
+    teacherAttention: null,
   };
 }
 
@@ -111,6 +158,12 @@ export function answersFromStudent(
     // "requires_quiet_area" is treated as the max of the new scale.
     noise: student.requires_quiet_area ? 5 : null,
     helper: mentorPair ? mentorPair[0] : null,
+    // The additional Likert / preference items aren't (yet) round-tripped
+    // through the Student record; the modal starts them null on re-open,
+    // matching the "no new signal available" semantics.
+    belonging: null,
+    learningStyle: null,
+    teacherAttention: null,
   };
 }
 
@@ -126,9 +179,16 @@ export function surveyToStudentPatch(
     .filter((id) => id !== studentId)
     .slice(0, MAX_SEATMATES);
 
+  // Front-row placement is triggered by EITHER a stated front preference OR a
+  // low teacher-attention rating — the UDL principle that outcome trumps
+  // stated wish when the outcome is engagement/attention (Adams & Biddle;
+  // CAST 2018).
+  const lowAttention =
+    answers.teacherAttention !== null && answers.teacherAttention <= LOW_ATTENTION_THRESHOLD;
+
   return {
     friends_ids: seatmates,
-    requires_front_row: answers.frontPreference === 'front',
+    requires_front_row: answers.frontPreference === 'front' || lowAttention,
     requires_quiet_area: answers.noise !== null && answers.noise >= NOISE_QUIET_THRESHOLD,
   };
 }

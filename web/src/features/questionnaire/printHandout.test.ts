@@ -67,6 +67,19 @@ describe('buildHandoutHtml', () => {
     expect(html).not.toContain('questionnaire.noise_yes');
   });
 
+  it('renders the added belonging / learning-style / teacher-attention items', () => {
+    const html = buildHandoutHtml(students, { ...base, peersOn: false });
+    // B5 — sense of belonging (PSSM).
+    expect(html).toContain('questionnaire.q_belonging');
+    for (const n of [1, 2, 3, 4, 5]) expect(html).toContain(`questionnaire.belonging_${n}`);
+    // B6 — learning-style preference (Cooperative Learning).
+    expect(html).toContain('questionnaire.q_learning_style');
+    for (const v of ['alone', 'pair', 'group']) expect(html).toContain(`questionnaire.learn_${v}`);
+    // B7 — teacher-attention access (UDL Engagement).
+    expect(html).toContain('questionnaire.q_teacher_attention');
+    for (const n of [1, 2, 3, 4, 5]) expect(html).toContain(`questionnaire.attention_${n}`);
+  });
+
   it('renders one blank line per allowed seatmate', () => {
     const html = buildHandoutHtml(students, { ...base, peersOn: true, maxSeatmates: 3 });
     expect(html.match(/class="blank"/g)?.length).toBe(3 + 1); // 3 seatmates + 1 helper

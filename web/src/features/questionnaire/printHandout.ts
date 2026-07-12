@@ -54,6 +54,30 @@ export function buildHandoutHtml(students: Student[], o: HandoutOptions): string
       `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(`${n} — ${t(`questionnaire.noise_${n}`)}`)).join('')}</div>`,
     ),
   );
+  // B5 — sense of belonging (PSSM proxy).
+  parts.push(
+    question(
+      t('questionnaire.q_belonging'),
+      t('questionnaire.q_belonging_scale'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(`${n} — ${t(`questionnaire.belonging_${n}`)}`)).join('')}</div>`,
+    ),
+  );
+  // B6 — learning-style preference (Cooperative Learning).
+  parts.push(
+    question(
+      t('questionnaire.q_learning_style'),
+      '',
+      `<div class="opts">${(['alone', 'pair', 'group'] as const).map((v) => checkbox(t(`questionnaire.learn_${v}`))).join('')}</div>`,
+    ),
+  );
+  // B7 — teacher-attention access (UDL Engagement / action-zone outcome).
+  parts.push(
+    question(
+      t('questionnaire.q_teacher_attention'),
+      t('questionnaire.q_teacher_attention_scale'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(`${n} — ${t(`questionnaire.attention_${n}`)}`)).join('')}</div>`,
+    ),
+  );
 
   // Roster reference so students can spell classmates' names correctly.
   const roster =
