@@ -30,8 +30,66 @@ export const db = new SeatAIDatabase();
 
 // ─── Zustand StateStorage adapter ──────────────────────────────────────────
 
+// Persisted state bundles the (potentially large) `projects` blob together with
+// frequently-toggled view prefs (zoom, heat-map, view mode). Zustand persists
+// on any change to a persisted field, so without coalescing, one zoom click
+// JSON-stringifies and writes every saved class. Debounce writes per key and
+// flush on hide so rapid toggles collapse into a single write. The trade-off:
+// a change made < DEBOUNCE_MS before an unexpected crash isn't durable — fine
+// for a local convenience tool, and the hide-flush covers normal navigation.
+const WRITE_DEBOUNCE_MS = 400;
+const pendingWrites = new Map<string, string>();
+const flushTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+async function flushKey(name: string): Promise<void> {
+  const timer = flushTimers.get(name);
+  if (timer) {
+    clearTimeout(timer);
+    flushTimers.delete(name);
+  }
+  if (!pendingWrites.has(name)) return;
+  const value = pendingWrites.get(name)!;
+  pendingWrites.delete(name);
+  try {
+    await db.kv.put({ key: name, value });
+  } catch {
+    try {
+      localStorage.setItem(name, value);
+    } catch {
+      /* storage unavailable — best effort */
+    }
+  }
+}
+
+function flushAll(): void {
+  for (const name of [...pendingWrites.keys()]) void flushKey(name);
+}
+
+/** Await all buffered writes (test hook / explicit flush). */
+export async function flushPendingWrites(): Promise<void> {
+  await Promise.all([...pendingWrites.keys()].map((name) => flushKey(name)));
+}
+
+/** Drop buffered writes without persisting them (test isolation hook). */
+export function __clearPendingWrites(): void {
+  for (const timer of flushTimers.values()) clearTimeout(timer);
+  flushTimers.clear();
+  pendingWrites.clear();
+}
+
+// Persist any buffered write before the tab goes away.
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushAll);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushAll();
+  });
+}
+
 export const dexieStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
+    // A not-yet-flushed write is the freshest value — return it so a read that
+    // races a debounced write doesn't see a stale entry.
+    if (pendingWrites.has(name)) return pendingWrites.get(name)!;
     try {
       const entry = await db.kv.get(name);
       if (entry) return entry.value;
@@ -49,14 +107,21 @@ export const dexieStorage: StateStorage = {
   },
 
   setItem: async (name: string, value: string): Promise<void> => {
-    try {
-      await db.kv.put({ key: name, value });
-    } catch {
-      localStorage.setItem(name, value);
-    }
+    // Buffer the latest value and (re)arm a trailing flush; rapid successive
+    // writes to the same key collapse into one Dexie put.
+    pendingWrites.set(name, value);
+    const existing = flushTimers.get(name);
+    if (existing) clearTimeout(existing);
+    flushTimers.set(name, setTimeout(() => void flushKey(name), WRITE_DEBOUNCE_MS));
   },
 
   removeItem: async (name: string): Promise<void> => {
+    pendingWrites.delete(name);
+    const timer = flushTimers.get(name);
+    if (timer) {
+      clearTimeout(timer);
+      flushTimers.delete(name);
+    }
     try {
       await db.kv.delete(name);
     } catch {

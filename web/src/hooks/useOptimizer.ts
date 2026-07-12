@@ -80,7 +80,11 @@ export function useOptimizer() {
   const { t } = useLanguage();
 
   // ── Initialize (just mark ready - worker will run optimizations) ─────────────
-  const initWasm = useCallback(async () => {
+  // `isCancelled` lets the mount effect signal that the component unmounted
+  // while the dynamic worker import was still in flight — otherwise the import
+  // resolves after cleanup ran, creates a Worker, and stores it with nothing
+  // left to terminate it (a leaked worker on fast mount/unmount).
+  const initWasm = useCallback(async (isCancelled: () => boolean = () => false) => {
     if (loadedRef.current) return;
     loadedRef.current = true;
 
@@ -91,6 +95,7 @@ export function useOptimizer() {
     // Try to set up the worker for better performance
     try {
       const { default: WorkerCtor } = await import('../workers/optimizer.worker?worker');
+      if (isCancelled()) return; // unmounted mid-import — don't create a worker
       const worker: Worker = new WorkerCtor();
 
       worker.onmessage = (e: MessageEvent<WorkerOut>) => {
@@ -144,10 +149,15 @@ export function useOptimizer() {
 
   // Create worker on mount; tear down on unmount
   useEffect(() => {
-    initWasm();
+    let cancelled = false;
+    initWasm(() => cancelled);
     return () => {
+      cancelled = true;
       workerRef.current?.terminate();
       workerRef.current = null;
+      // Allow a genuine remount (e.g. StrictMode's mount→unmount→mount) to
+      // re-create the worker, since this init was torn down.
+      loadedRef.current = false;
     };
   }, [initWasm]);
 
@@ -181,6 +191,11 @@ export function useOptimizer() {
 
     // Use worker if available
     if (workerRef.current) {
+      // If a run is already in flight, the worker will deliver only ONE more
+      // 'result' and it resolves whichever promise is current. Resolve the
+      // previous caller now (with null) so its `await optimize()` doesn't hang
+      // forever when a second run replaces it.
+      pendingRef.current?.resolve(null);
       return new Promise<OptimizationResult | null>((resolve) => {
         pendingRef.current = { resolve };
         workerRef.current!.postMessage({

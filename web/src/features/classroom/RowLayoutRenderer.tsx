@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import clsx from 'clsx';
-import { Fragment, type ReactElement, type RefObject } from 'react';
+import { Fragment, useMemo, type ReactElement, type RefObject } from 'react';
 import RelationshipOverlay from './RelationshipOverlay';
 import { FitZoom, DecoTile } from './gridParts';
 import { groupIntoDesks } from './gridHelpers';
@@ -50,12 +50,22 @@ export default function RowLayoutRenderer({
   const { t } = useLanguage();
 
   // ── Build row groups ──────────────────────────────────────────────────────
-  const rowMap = new Map<number, Seat[]>();
-  for (const seat of seats) {
-    if (!rowMap.has(seat.position.row)) rowMap.set(seat.position.row, []);
-    rowMap.get(seat.position.row)!.push(seat);
-  }
-  const sortedRows = Array.from(rowMap.entries()).sort(([a], [b]) => a - b);
+  // Memoized on `seats`: the parent re-renders on every seat hover, and this
+  // grouping + per-row column sort is otherwise redundant O(n log n) work each
+  // time. Rows are sorted front-to-back and each row's seats left-to-right.
+  const sortedRows = useMemo(() => {
+    const rowMap = new Map<number, Seat[]>();
+    for (const seat of seats) {
+      if (!rowMap.has(seat.position.row)) rowMap.set(seat.position.row, []);
+      rowMap.get(seat.position.row)!.push(seat);
+    }
+    return Array.from(rowMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([rowIndex, rowSeats]) => [
+        rowIndex,
+        [...rowSeats].sort((a, b) => a.position.col - b.position.col),
+      ] as [number, Seat[]]);
+  }, [seats]);
 
   return (
     <>
@@ -86,10 +96,8 @@ export default function RowLayoutRenderer({
       <FitZoom zoom={zoomLevel}>
         <div ref={gridContainerRef} id="seating-grid-export" className="relative">
           <div className="flex flex-col gap-3">
-            {sortedRows.map(([rowIndex, rowSeats]) => {
-              const sortedSeats = [...rowSeats].sort(
-                (a, b) => a.position.col - b.position.col
-              );
+            {sortedRows.map(([rowIndex, sortedSeats]) => {
+              // `sortedSeats` is already column-sorted by the memo above.
               const isPairs = viewMode === 'pairs';
               const rowDecos = decorationsByRow.get(rowIndex) ?? [];
               const hasDecos = rowDecos.length > 0;

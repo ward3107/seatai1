@@ -8,7 +8,7 @@
  * a real IndexedDB.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { db, dexieStorage, migrateFromLocalStorage } from './db';
+import { db, dexieStorage, migrateFromLocalStorage, flushPendingWrites, __clearPendingWrites } from './db';
 
 // Dexie's table methods return a PromiseExtended; the spies return plain
 // Promises, so cast each spy to a loose mock to keep TS happy.
@@ -39,24 +39,45 @@ function stubKvThrows() {
   spy('delete').mockImplementation(boom);
 }
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  __clearPendingWrites();
+  localStorage.clear();
+});
 afterEach(() => vi.restoreAllMocks());
 
 describe('dexieStorage (Dexie path)', () => {
   it('round-trips set → get → remove', async () => {
-    stubKvWithMap();
+    const store = stubKvWithMap();
     expect(await dexieStorage.getItem('seatai')).toBeNull();
 
+    // A buffered write is readable immediately (pending-value read)…
     await dexieStorage.setItem('seatai', '{"a":1}');
+    expect(await dexieStorage.getItem('seatai')).toBe('{"a":1}');
+    // …and lands in Dexie once flushed.
+    await flushPendingWrites();
+    expect(store.get('seatai')).toBe('{"a":1}');
     expect(await dexieStorage.getItem('seatai')).toBe('{"a":1}');
 
     await dexieStorage.removeItem('seatai');
     expect(await dexieStorage.getItem('seatai')).toBeNull();
   });
 
+  it('coalesces rapid writes to the same key into one flush', async () => {
+    const store = stubKvWithMap();
+    const putSpy = db.kv.put as unknown as ReturnType<typeof vi.fn>;
+    await dexieStorage.setItem('seatai', 'a');
+    await dexieStorage.setItem('seatai', 'b');
+    await dexieStorage.setItem('seatai', 'c');
+    expect(putSpy).not.toHaveBeenCalled(); // nothing written yet — debounced
+    await flushPendingWrites();
+    expect(putSpy).toHaveBeenCalledTimes(1); // only the final value is written
+    expect(store.get('seatai')).toBe('c');
+  });
+
   it('does not touch localStorage on the happy path', async () => {
     stubKvWithMap();
     await dexieStorage.setItem('seatai', 'v');
+    await flushPendingWrites();
     expect(localStorage.getItem('seatai')).toBeNull();
   });
 });
@@ -65,6 +86,7 @@ describe('dexieStorage (localStorage fallback)', () => {
   it('reads and writes localStorage when IndexedDB throws', async () => {
     stubKvThrows();
     await dexieStorage.setItem('seatai', 'fallback-value');
+    await flushPendingWrites();
     expect(localStorage.getItem('seatai')).toBe('fallback-value');
     expect(await dexieStorage.getItem('seatai')).toBe('fallback-value');
 
