@@ -61,14 +61,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // roster fetch. Best-effort per-instance without a KV backend; global
     // once one is configured.
     if (typeof st.nonce === 'string' && st.nonce) {
-      const fresh = await claimOnce(`lti:nonce:${st.nonce}`, NONCE_TTL_MS);
+      // strict: if a KV backend is configured, a KV error fails the launch
+      // rather than downgrading replay protection to per-instance (fail-open).
+      const fresh = await claimOnce(`lti:nonce:${st.nonce}`, NONCE_TTL_MS, { strict: true });
       if (!fresh) {
         res.status(400).send('Nonce already used');
         return;
       }
     }
 
-    const launch = validateLaunchClaims(payload);
+    // Pin the launch to the deployment we registered for this platform (when
+    // one is configured) — a token minted for another deployment is rejected.
+    const launch = validateLaunchClaims(payload, platform.deploymentId);
     const token = await getNrpsToken(platform);
     const roster = await fetchRoster(launch, token);
 

@@ -122,20 +122,34 @@ export async function incrWithTtl(key: string, ttlMs: number): Promise<number> {
  * key did not already exist), false on any subsequent call within the TTL —
  * exactly what single-use nonce enforcement needs.
  *
- * On a KV error this falls back to the in-memory claim. That means a KV
- * outage weakens replay protection to per-instance (best-effort) rather than
- * failing legitimate launches — a deliberate availability-over-strictness
- * choice for a roster-import convenience endpoint.
+ * When no KV backend is configured this uses the per-instance in-memory claim
+ * (best-effort, the intended fallback for a keyless deployment).
+ *
+ * When a KV backend *is* configured, `opts.strict` controls what happens on a
+ * KV error:
+ *   - `strict` (default for security-critical callers like the nonce check):
+ *     re-throw. Silently dropping to the per-instance map during a KV outage
+ *     would fail *open* — a replay routed to another serverless instance would
+ *     see a fresh in-memory map and be accepted. Failing closed rejects the
+ *     launch (the user retries) instead of weakening single-use enforcement.
+ *   - non-strict: fall back to in-memory (availability over strictness).
  */
-export async function claimOnce(key: string, ttlMs: number): Promise<boolean> {
+export async function claimOnce(
+  key: string,
+  ttlMs: number,
+  opts: { strict?: boolean } = {},
+): Promise<boolean> {
   const cfg = restConfig();
   if (cfg) {
     try {
       // SET key 1 NX PX ttl → "OK" when newly set, null when it already exists.
       const result = await redis(cfg, ['SET', key, '1', 'NX', 'PX', ttlMs]);
       return result === 'OK';
-    } catch {
-      /* fall through to in-memory */
+    } catch (e) {
+      // A configured-but-erroring KV must not silently downgrade a single-use
+      // guarantee to per-instance. Surface the error so the caller fails closed.
+      if (opts.strict) throw e;
+      /* else fall through to in-memory */
     }
   }
   return memClaim(key, ttlMs);

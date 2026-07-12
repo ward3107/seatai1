@@ -18,11 +18,13 @@ import {
   type KeyLike,
   type JWK,
 } from 'jose';
+import { lookup } from 'node:dns/promises';
 import type { VercelRequest } from '@vercel/node';
 import {
   NRPS_SCOPE,
   mapMembersToRoster,
   assertSafeNrpsUrl,
+  isBlockedHost,
   type PlatformConfig,
   type LaunchInfo,
 } from '../../src/core/lti/ltiCore';
@@ -151,6 +153,29 @@ export async function getNrpsToken(platform: PlatformConfig): Promise<string> {
   return json.access_token;
 }
 
+/**
+ * DNS-layer SSRF guard. `assertSafeNrpsUrl` only inspects the literal host, so
+ * a public-looking name (`roster.evil.com`) that *resolves* to an internal
+ * address slips past it. Resolve the host and reject if any returned address is
+ * loopback / private / link-local. This narrows the DNS-rebinding window
+ * sharply; it can't fully close it, because undici re-resolves at connect time
+ * and we don't pin the socket to the checked IP — a full fix needs a custom
+ * dispatcher, out of scope for this convenience endpoint.
+ */
+async function assertHostResolvesPublic(hostname: string): Promise<void> {
+  let records: { address: string }[];
+  try {
+    records = await lookup(hostname, { all: true });
+  } catch {
+    throw new Error('NRPS host does not resolve');
+  }
+  for (const r of records) {
+    if (isBlockedHost(r.address)) {
+      throw new Error('NRPS URL resolves to a non-routable host');
+    }
+  }
+}
+
 /** Fetch the membership container, following NRPS pagination via Link headers. */
 export async function fetchRoster(launch: LaunchInfo, token: string): Promise<RosterClass> {
   let url: string | null = launch.nrpsUrl;
@@ -159,8 +184,10 @@ export async function fetchRoster(launch: LaunchInfo, token: string): Promise<Ro
     // Re-validate EVERY URL, not just the first: a malicious platform can set
     // the `Link: <…>; rel="next"` pagination target to an internal address
     // (SSRF). `assertSafeNrpsUrl` throws on non-HTTPS / private / loopback /
-    // link-local hosts.
+    // link-local *literal* hosts; the DNS check then rejects public names that
+    // resolve to an internal address.
     const safeUrl = assertSafeNrpsUrl(url);
+    await assertHostResolvesPublic(new URL(safeUrl).hostname);
     const res: Response = await fetchWithTimeout(safeUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
