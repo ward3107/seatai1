@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, FileImage, FileText, FileSpreadsheet, FileJson, Loader2 } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -62,6 +62,15 @@ export default function ExportButton() {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<Loading>(null);
+
+  // Escape closes the menu (matching LanguageSelector), so keyboard users
+  // aren't stuck with only the click-backdrop to dismiss it.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   // Without a roster there's nothing to export at all. A seating chart
   // (PNG / PDF) additionally needs an optimization result to render, but
@@ -266,6 +275,8 @@ export default function ExportButton() {
       <button
         onClick={() => setOpen(v => !v)}
         disabled={!!loading}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors disabled:opacity-50"
         title={t('export.title')}
       >
@@ -282,13 +293,14 @@ export default function ExportButton() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute end-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+          <div role="menu" aria-label={t('export.title')} className="absolute end-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
             {/* PNG / PDF render the seating grid, so they only appear once an
                 optimization result exists. CSV / JSON always work. */}
             {result && (
               <>
                 <button
                   onClick={exportPng}
+                  role="menuitem"
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <FileImage size={16} className="text-blue-500 dark:text-blue-400" />
@@ -296,6 +308,7 @@ export default function ExportButton() {
                 </button>
                 <button
                   onClick={exportPdf}
+                  role="menuitem"
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <FileText size={16} className="text-red-500 dark:text-red-400" />
@@ -306,6 +319,7 @@ export default function ExportButton() {
             )}
             <button
               onClick={exportCsv}
+                  role="menuitem"
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <FileSpreadsheet size={16} className="text-emerald-500 dark:text-emerald-400" />
@@ -313,6 +327,7 @@ export default function ExportButton() {
             </button>
             <button
               onClick={exportJson}
+                  role="menuitem"
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <FileJson size={16} className="text-amber-500 dark:text-amber-400" />

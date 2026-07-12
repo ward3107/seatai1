@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import StudentList from '../features/students/StudentList';
 import StudentForm from '../features/students/StudentForm';
@@ -43,6 +44,16 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
   const { t } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
 
+  // When the sidebar is collapsed it's still in the DOM (translated off-screen
+  // on mobile, width:0 on desktop), so `aria-hidden` alone leaves all its
+  // controls in the Tab order — keyboard users tab into invisible buttons.
+  // `inert` removes the whole subtree from focus and the a11y tree. Applied
+  // imperatively so it works regardless of the React version's prop typings.
+  const asideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    asideRef.current?.toggleAttribute('inert', !sidebarOpen);
+  }, [sidebarOpen]);
+
   return (
     <>
       {/* Backdrop — visible only when the sidebar is open on small screens. */}
@@ -63,6 +74,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             - md+:   position relative inside flex layout. Width
               transitions 0 ↔ 400 so main content reflows. */}
       <aside
+        ref={asideRef}
         className={clsx(
           'bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
           'fixed inset-y-0 left-0 z-40 max-w-[85vw] w-[400px]',

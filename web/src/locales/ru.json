@@ -111,7 +111,8 @@
     "history_controls": "Управление историей",
     "text_size": "Размер текста",
     "privacy_local_only": "Все данные остаются на этом устройстве — без серверов, без аккаунтов, без отслеживания.",
-    "privacy_badge": "Только локально"
+    "privacy_badge": "Только локально",
+    "skip_to_content": "Перейти к содержимому"
   },
   "theme": {
     "label": "Цветовая тема",
@@ -335,6 +336,11 @@
     "gender_male": "Мужской",
     "gender_female": "Женский",
     "gender_other": "Другой",
+    "icon_mobility": "Нужна поддержка мобильности",
+    "icon_front_row": "Нужен первый ряд",
+    "icon_quiet": "Нужна тихая зона",
+    "icon_adhd": "Поддержка СДВГ",
+    "icon_vision": "Поддержка зрения",
     "select_option": "— выбрать —",
     "level_advanced": "Продвинутый",
     "level_proficient": "Уверенный",
@@ -426,6 +432,8 @@
     "legend_locked": "Заблокировано",
     "popup_academic": "Академический",
     "popup_behavior": "Поведение",
+    "age_years": "{{age}} лет",
+    "close_popup": "Закрыть",
     "popup_special": "Особые требования",
     "popup_friends": "друзей",
     "popup_conflicts": "конфликта",

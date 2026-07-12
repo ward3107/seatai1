@@ -312,10 +312,10 @@ export default function StudentDetailPanel() {
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 <span className="text-[10px] px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-700">
-                  {student.academic_level}
+                  {t(`students.level_${student.academic_level}`)}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-700">
-                  {student.behavior_level}
+                  {t(`students.behavior_${student.behavior_level}`)}
                 </span>
                 {student.is_bilingual && (
                   <span className="text-[10px] px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-700 inline-flex items-center gap-1">

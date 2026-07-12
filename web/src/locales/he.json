@@ -111,7 +111,8 @@
     "history_controls": "פקדי היסטוריה",
     "text_size": "גודל טקסט",
     "privacy_local_only": "כל הנתונים נשארים במכשיר הזה — בלי שרתים, בלי חשבונות, בלי מעקב.",
-    "privacy_badge": "מקומי בלבד"
+    "privacy_badge": "מקומי בלבד",
+    "skip_to_content": "דלג לתוכן"
   },
   "theme": {
     "label": "ערכת צבעים",
@@ -335,6 +336,11 @@
     "gender_male": "זכר",
     "gender_female": "נקבה",
     "gender_other": "אחר",
+    "icon_mobility": "זקוק/ה לנגישות תנועה",
+    "icon_front_row": "זקוק/ה לשורה הקדמית",
+    "icon_quiet": "זקוק/ה לאזור שקט",
+    "icon_adhd": "תמיכה בקשב וריכוז",
+    "icon_vision": "תמיכה בראייה",
     "select_option": "— בחר —",
     "level_advanced": "מתקדם",
     "level_proficient": "שולט",
@@ -426,6 +432,8 @@
     "legend_locked": "מושב נעול",
     "popup_academic": "אקדמי",
     "popup_behavior": "התנהגות",
+    "age_years": "בן/בת {{age}}",
+    "close_popup": "סגירה",
     "popup_special": "דרישות מיוחדות",
     "popup_friends": "חברים",
     "popup_conflicts": "סתירות",
