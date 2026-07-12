@@ -3,8 +3,17 @@ import ReactDOM from 'react-dom/client'
 import App from './app/App'
 import ErrorBoundary from './components/ErrorBoundary'
 import { migrateFromLocalStorage } from './core/db'
+import { useStore } from './core/store'
 import { detectDefaultLocale } from './lib/i18n'
 import './index.css'
+
+// Expose the Zustand store to E2E tests (dev server only — never in a
+// production bundle, so the in-browser AI key isn't reachable from the console
+// of a deployed app). Playwright's helpers seed a class and read state through
+// `window.__ZUSTAND_STORE__` instead of clicking through slow setup flows.
+if (import.meta.env.DEV) {
+  (window as unknown as { __ZUSTAND_STORE__?: typeof useStore }).__ZUSTAND_STORE__ = useStore;
+}
 
 // Apply the language direction before first render so there's no RTL flash.
 // Prefer any persisted choice (fast sync localStorage read; the full Dexie

@@ -75,14 +75,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: web
-      # Informational only for now: 14 of 20 e2e specs are stale relative to
-      # the current UI and fail identically on main (verified against a main
-      # worktree). `continue-on-error` on the STEP keeps the check itself
-      # green while the suite is repaired — job-level continue-on-error still
-      # surfaces a red check, which blocks the merge button. Drop this once
-      # the suite is green on main so e2e becomes a real gate again.
+      # Reliable, maintained flows — a real gate. These seed state through the
+      # store test hook and use stable data-testid selectors, so they don't rot
+      # with UI copy/markup changes. Add specs here as more of the suite is
+      # brought current.
+      - name: Run e2e flows (gating)
+        run: npx playwright test flows.spec.ts --project=chromium
+        working-directory: web
+      # Informational only for now: the older specs are stale relative to the
+      # current UI and fail identically on main. `continue-on-error` on the STEP
+      # keeps the check green while they're repaired — job-level
+      # continue-on-error still surfaces a red check, which blocks the merge
+      # button. Drop this once the whole suite is green.
       # Chromium-only in CI: the cross-browser matrix is for local runs.
-      - name: Run e2e tests
+      - name: Run full e2e suite (informational)
         run: npx playwright test --project=chromium
         working-directory: web
         continue-on-error: true

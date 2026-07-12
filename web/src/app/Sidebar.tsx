@@ -170,6 +170,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
 
             <button
               onClick={optimize}
+              data-testid="optimize-button"
               disabled={!wasmReady || isOptimizing || students.length < 2 || students.length > slotCount(layoutDef)}
               aria-busy={isOptimizing}
               className="w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
