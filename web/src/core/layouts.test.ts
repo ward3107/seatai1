@@ -104,6 +104,28 @@ describe('generateSlots', () => {
       // endpoints) + 2 inner cells = 4 seats marked back.
       expect(back.length).toBe(4);
     });
+
+    it('connects the perimeter as a 4-connected chain without bridging the legs', () => {
+      const slots = generateSlots({ type: 'u-shape', rows: 4, cols: 5 });
+      const at = (row: number, col: number) =>
+        slots.find((s) => s.row === row && s.col === col);
+      const leftMid = at(1, 0)!; // mid-seat on the left leg
+      // Left-leg mid seat links only up/down its own leg — never across to the
+      // right leg (col 4) or diagonally into the room.
+      const neighborCells = leftMid.neighbors.map((n) => {
+        const o = slots.find((s) => s.index === n)!;
+        return `${o.row},${o.col}`;
+      });
+      expect(neighborCells.sort()).toEqual(['0,0', '2,0']);
+      // The bottom corner bridges the left leg into the back wall.
+      const corner = at(3, 0)!;
+      const cornerCells = corner.neighbors.map((n) => {
+        const o = slots.find((s) => s.index === n)!;
+        return `${o.row},${o.col}`;
+      });
+      expect(cornerCells).toContain('2,0'); // up the leg
+      expect(cornerCells).toContain('3,1'); // into the back wall
+    });
   });
 
   describe('circle layout', () => {
@@ -169,6 +191,38 @@ describe('generateSlots', () => {
       const r0 = slots.filter((s) => s.row === 0);
       const sumX = r0.reduce((sum, s) => sum + s.x, 0);
       expect(sumX / r0.length).toBeCloseTo(0.5, 1);
+    });
+
+    it('uses 4-connected (orthogonal) neighbors like the grid layout', () => {
+      // A uniform custom-rows grid must match the plain `rows` connectivity:
+      // corner 2, edge 3, interior 4 — NOT 8-connected (no diagonals).
+      const slots = generateSlots({ type: 'custom-rows', rows: 3, cols: 3 });
+      const corner = slots.find((s) => s.row === 0 && s.col === 0)!;
+      const interior = slots.find((s) => s.row === 1 && s.col === 1)!;
+      expect(corner.neighbors).toHaveLength(2);
+      expect(interior.neighbors).toHaveLength(4);
+      // The diagonal seat is explicitly NOT a neighbor of the corner.
+      const diagonal = slots.find((s) => s.row === 1 && s.col === 1)!;
+      expect(corner.neighbors).not.toContain(diagonal.index);
+    });
+
+    it('links a centered short row to the seat directly below it', () => {
+      // Row 0 has 2 centered seats over a full row of 6. Each should connect
+      // to the seat directly beneath it and to no diagonal seat.
+      const slots = generateSlots({
+        type: 'custom-rows',
+        rows: 2,
+        cols: 6,
+        customRowSizes: [2, 6],
+      });
+      const front = slots.filter((s) => s.row === 0);
+      for (const s of front) {
+        const down = s.neighbors
+          .map((n) => slots.find((o) => o.index === n)!)
+          .filter((o) => o.row === 1);
+        expect(down).toHaveLength(1);
+        expect(down[0].x).toBeCloseTo(s.x, 5);
+      }
     });
   });
 
