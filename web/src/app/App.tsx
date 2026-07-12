@@ -124,6 +124,16 @@ function App() {
 
   return (
     <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
+      {/* Skip link — first focusable element, so keyboard users can jump past
+          the header/sidebar straight to the seating area. Visually hidden
+          until focused. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[60] focus:top-2 focus:left-2 focus:px-3 focus:py-2 focus:bg-white focus:text-gray-900 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-primary-500"
+      >
+        {t('app.skip_to_content')}
+      </a>
+
       {/* Screen-reader-only live region for optimization lifecycle events. */}
       <div role="status" aria-live="polite" className="sr-only">
         {a11yAnnouncement}
@@ -146,7 +156,11 @@ function App() {
       {/* Main Content — min-w-0 lets this flex child shrink below its
           content width so the seating grid's horizontal scroll stays
           inside the content area instead of widening the whole page. */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0">
+        {/* Reachable page heading for assistive tech. The visible brand H1
+            lives in the sidebar, which is hidden/inert when collapsed (the
+            mobile default), so expose a stable one here too. */}
+        <h1 className="sr-only">{t('app.title')}</h1>
         <TopBar
           onShowCompare={() => setShowCompare(true)}
           onShowPrint={() => setShowPrint(true)}

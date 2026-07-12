@@ -111,7 +111,8 @@
     "history_controls": "عناصر التحكم في السجل",
     "text_size": "حجم الخط",
     "privacy_local_only": "تبقى جميع البيانات على هذا الجهاز — بلا خوادم ولا حسابات ولا تتبّع.",
-    "privacy_badge": "محلي فقط"
+    "privacy_badge": "محلي فقط",
+    "skip_to_content": "تخطَّ إلى المحتوى"
   },
   "theme": {
     "label": "نظام الألوان",
@@ -335,6 +336,11 @@
     "gender_male": "ذكر",
     "gender_female": "أنثى",
     "gender_other": "آخر",
+    "icon_mobility": "يحتاج إلى دعم الحركة",
+    "icon_front_row": "يحتاج إلى الصف الأمامي",
+    "icon_quiet": "يحتاج إلى منطقة هادئة",
+    "icon_adhd": "دعم فرط الحركة",
+    "icon_vision": "دعم بصري",
     "select_option": "— اختر —",
     "level_advanced": "متقدم",
     "level_proficient": "كفء",
@@ -426,6 +432,8 @@
     "legend_locked": "مقعد مؤمن",
     "popup_academic": "أكاديمي",
     "popup_behavior": "سلوك",
+    "age_years": "{{age}} سنة",
+    "close_popup": "إغلاق",
     "popup_special": "متطلبات خاصة",
     "popup_friends": "أصدقاء",
     "popup_conflicts": "تعارضات",

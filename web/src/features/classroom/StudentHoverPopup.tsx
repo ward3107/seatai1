@@ -58,14 +58,15 @@ export default function StudentHoverPopup({
               </div>
               <div>
                 <h3 className="font-bold text-gray-800 dark:text-gray-100">{student.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                  {student.gender}
-                  {student.age ? `, ${student.age} yrs` : ''}
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t(`students.gender_${student.gender}`)}
+                  {student.age ? `, ${t('classroom.age_years', { age: student.age })}` : ''}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
+              aria-label={t('classroom.close_popup')}
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
               <X size={15} className="text-gray-400 dark:text-gray-400" />
@@ -79,8 +80,8 @@ export default function StudentHoverPopup({
                 <BookOpen size={11} /> {t('classroom.popup_academic')}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-300 capitalize">
-                  {student.academic_level.replace('_', ' ')}
+                <span className="text-xs text-gray-600 dark:text-gray-300">
+                  {t(`students.level_${student.academic_level}`)}
                 </span>
                 <span className="font-bold text-blue-600 dark:text-blue-300">
                   {student.academic_score}%
@@ -92,8 +93,8 @@ export default function StudentHoverPopup({
                 <Users size={11} /> {t('classroom.popup_behavior')}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-300 capitalize">
-                  {student.behavior_level}
+                <span className="text-xs text-gray-600 dark:text-gray-300">
+                  {t(`students.behavior_${student.behavior_level}`)}
                 </span>
                 <span className="font-bold text-green-600 dark:text-green-300">
                   {student.behavior_score}%

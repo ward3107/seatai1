@@ -111,7 +111,8 @@
     "history_controls": "History controls",
     "text_size": "Text size",
     "privacy_local_only": "All data stays on this device — no servers, no accounts, no tracking.",
-    "privacy_badge": "Local-only"
+    "privacy_badge": "Local-only",
+    "skip_to_content": "Skip to content"
   },
   "theme": {
     "label": "Color theme",
@@ -335,6 +336,11 @@
     "gender_male": "Male",
     "gender_female": "Female",
     "gender_other": "Other",
+    "icon_mobility": "Needs mobility support",
+    "icon_front_row": "Needs the front row",
+    "icon_quiet": "Needs a quiet area",
+    "icon_adhd": "ADHD support",
+    "icon_vision": "Vision support",
     "select_option": "— select —",
     "level_advanced": "Advanced",
     "level_proficient": "Proficient",
@@ -426,6 +432,8 @@
     "legend_locked": "Locked seat",
     "popup_academic": "Academic",
     "popup_behavior": "Behavior",
+    "age_years": "{{age}} yrs",
+    "close_popup": "Close",
     "popup_special": "Special Requirements",
     "popup_friends": "friends",
     "popup_conflicts": "conflicts",

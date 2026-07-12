@@ -189,7 +189,7 @@ export default function StudentList() {
                   )}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {student.academic_level} · {student.behavior_level}
+                  {t(`students.level_${student.academic_level}`)} · {t(`students.behavior_${student.behavior_level}`)}
                   {student.primary_language && ` · ${student.primary_language}`}
                 </p>
               </div>

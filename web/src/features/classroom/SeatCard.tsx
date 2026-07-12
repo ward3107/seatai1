@@ -106,18 +106,21 @@ export default memo(function SeatCard({
 
   const heatColor = heatMapMode !== 'none' ? getHeatMapColor(heatMapMode, student, isViolated) : '';
 
-  // Build special needs icon string
-  const icons: string[] = [];
-  if (student?.has_mobility_issues) icons.push('♿');
-  if (student?.requires_front_row) icons.push('⭐');
-  if (student?.requires_quiet_area) icons.push('🔇');
-  if (student?.special_needs?.some((n: { type: string }) => n.type.toLowerCase().includes('adhd'))) icons.push('📚');
+  // Build special-needs icons, each with a real localized label so screen
+  // readers announce the need (not just the emoji) and the tooltip is
+  // meaningful for sighted users.
+  const icons: { icon: string; label: string }[] = [];
+  if (student?.has_mobility_issues) icons.push({ icon: '♿', label: t('students.icon_mobility') });
+  if (student?.requires_front_row) icons.push({ icon: '⭐', label: t('students.icon_front_row') });
+  if (student?.requires_quiet_area) icons.push({ icon: '🔇', label: t('students.icon_quiet') });
+  if (student?.special_needs?.some((n: { type: string }) => n.type.toLowerCase().includes('adhd')))
+    icons.push({ icon: '📚', label: t('students.icon_adhd') });
   if (
     student?.special_needs?.some(
       (n: { type: string }) => n.type.toLowerCase().includes('vision') || n.type.toLowerCase().includes('blind')
     )
   )
-    icons.push('👁️');
+    icons.push({ icon: '👁️', label: t('students.icon_vision') });
 
   return (
     <button
@@ -246,8 +249,8 @@ export default memo(function SeatCard({
           {/* Special needs icons */}
           {icons.length > 0 && (
             <div className="flex gap-0.5 mt-0.5 text-[10px] leading-none">
-              {icons.slice(0, 3).map((icon) => (
-                <span key={icon} title={icon}>
+              {icons.slice(0, 3).map(({ icon, label }) => (
+                <span key={icon} role="img" aria-label={label} title={label}>
                   {icon}
                 </span>
               ))}
