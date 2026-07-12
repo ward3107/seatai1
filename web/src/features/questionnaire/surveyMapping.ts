@@ -5,33 +5,87 @@ import type { Student, SeatingConstraints } from '../../types';
  * SeatAI's optimizer actually consumes. Kept side-effect free so it's
  * easy to unit-test and so the modal stays thin.
  *
- * See docs/QUESTIONNAIRE.md for the spec these items implement.
+ * Evidence base for each item:
+ *
+ * B1 — POSITIVE PEER NOMINATIONS (up to 3 seatmates)
+ *   Sociometric method (Moreno; Coie, Dodge & Coppotelli 1982). We include
+ *   positive nominations ONLY. Negative "like least" items were considered and
+ *   REJECTED for use with students because:
+ *     - They are the leading reason parents/schools refuse consent
+ *       (Zakriski et al. 1999).
+ *     - They show more response bias — students answer dislike items less
+ *       carefully (roster list-order bias r ≈ −.31 for rejection vs −.14 for
+ *       acceptance; Ryan & Bauman).
+ *   The "do NOT seat these two together" input is instead collected from the
+ *   TEACHER (`constraints.separate_pairs`), which is defensible clinical
+ *   judgement rather than a peer-vote on rejection.
+ *
+ * B2 — RECIPROCAL "HELPER" NOMINATION (peer-mentor)
+ *   Peer helping is protective for engagement; RECIPROCITY is the strongest
+ *   predictor a nominated pair will actually cooperate (van der Wilt et al.
+ *   2018). The optimizer treats mentor→mentee as adjacent when both students
+ *   independently nominate the same person, so unreciprocated nominations
+ *   are recorded but weighted lower — see docs/RESEARCH_BASIS.md.
+ *
+ * B3 — FRONT / TEACHER-PROXIMITY PREFERENCE
+ *   Action-zone effect: front-and-centre seats correlate with higher
+ *   engagement and participation (Adams & Biddle 1970; Sommer 1967).
+ *   Bicard et al. 2012 (JABA reversal design) and Wheldall & Lam 1987
+ *   further show that seat *arrangement* (rows vs clusters) and
+ *   teacher-assignment causally affect on-task behaviour. NOTE: the
+ *   old "need to see the board" item collapsed onto the same construct
+ *   (both routed to `requires_front_row`), so we merged them into ONE
+ *   question with a clearer label — asking twice inflated the signal.
+ *
+ * B4 — NOISE / SENSORY SENSITIVITY (5-point)
+ *   Adapted from GSQ-P (Sensory Sensitivity Questionnaire — Auditory
+ *   subscale). A 5-point rating is more informative than the previous
+ *   yes/somewhat/no and matches the source instrument's scoring; a rating
+ *   of 4–5 routes into `requires_quiet_area`.
+ *
+ * B5 — "Prefer a window seat" — REMOVED.
+ *   The literature review found no validated construct behind window
+ *   preference and it does not carry a learning signal; keeping it made the
+ *   questionnaire feel like a preference poll rather than an evidence-based
+ *   assessment. Teachers who need real accessibility routing (glare, hearing
+ *   loop) enter it as a special need in the teacher-side profile.
+ *
+ * A separate TEACHER-report track (see teacherSurvey.ts) covers items that
+ * children — especially under age 8 — cannot self-report reliably (attention
+ * regulation from SNAP-IV, behavioural difficulties from SDQ). Meta-analyses
+ * of youth self-report show teacher–child agreement is only fair (r ≈ .2–.4)
+ * for externalising behaviour, so those items live on the teacher side.
  */
 
 export const MAX_SEATMATES = 3;
 
+/** GSQ-P style noise sensitivity: 1 = doesn't bother me at all, 5 = very much. */
+export type NoiseSensitivity = 1 | 2 | 3 | 4 | 5;
+/** Threshold at (or above) which the student is routed into a quiet area.
+ *  4 = "quite a bit", matching the GSQ-P cut-off convention. */
+export const NOISE_QUIET_THRESHOLD: NoiseSensitivity = 4;
+
 export interface SurveyAnswers {
-  /** B1 — up to 3 classmates the student would like to sit near. */
+  /** B1 — up to 3 classmates the student would like to sit near (positive
+   *  sociometric nominations only; no negative "least like" item — see file
+   *  header for the ethical basis). */
   seatmates: string[];
-  /** B3 — where the student focuses best. */
-  focusZone: 'front' | 'middle' | 'back' | null;
-  /** B4 — does noise distract them? */
-  noise: 'yes' | 'somewhat' | 'no' | null;
-  /** B5 — prefers sitting near a window. */
-  preferWindow: boolean | null;
-  /** B6 — needs to see/hear the board clearly. */
-  needBoardClear: boolean | null;
-  /** B2 — a classmate who helps this student with schoolwork (mentor). */
+  /** B3 — teacher-proximity / action-zone preference. Merges the previous
+   *  focus-zone and "needs to see the board" questions, which both collapsed
+   *  onto the same underlying construct (front-row placement). */
+  frontPreference: 'front' | 'middle' | 'back' | null;
+  /** B4 — noise sensitivity on a 5-point scale (GSQ-P Auditory subscale). */
+  noise: NoiseSensitivity | null;
+  /** B2 — a classmate who helps this student with schoolwork (peer-mentor).
+   *  Recorded even if not reciprocated; reciprocity is checked downstream. */
   helper: string | null;
 }
 
 export function emptyAnswers(): SurveyAnswers {
   return {
     seatmates: [],
-    focusZone: null,
+    frontPreference: null,
     noise: null,
-    preferWindow: null,
-    needBoardClear: null,
     helper: null,
   };
 }
@@ -47,16 +101,15 @@ export function answersFromStudent(
   student: Student,
   constraints: SeatingConstraints,
 ): SurveyAnswers {
-  const nearWindow = constraints.near_window_ids ?? [];
   // The student's mentor is whoever is listed as their helper (mentor →
   // mentee, so we match on the mentee slot).
   const mentorPair = (constraints.peer_mentor_pairs ?? []).find(([, mentee]) => mentee === student.id);
   return {
     seatmates: (student.friends_ids ?? []).slice(0, MAX_SEATMATES),
-    focusZone: student.requires_front_row ? 'front' : null,
-    noise: student.requires_quiet_area ? 'yes' : null,
-    preferWindow: nearWindow.includes(student.id) ? true : null,
-    needBoardClear: student.requires_front_row ? true : null,
+    frontPreference: student.requires_front_row ? 'front' : null,
+    // We saved noise as a boolean before this redesign, so any pre-existing
+    // "requires_quiet_area" is treated as the max of the new scale.
+    noise: student.requires_quiet_area ? 5 : null,
     helper: mentorPair ? mentorPair[0] : null,
   };
 }
@@ -75,33 +128,17 @@ export function surveyToStudentPatch(
 
   return {
     friends_ids: seatmates,
-    requires_front_row: answers.focusZone === 'front' || answers.needBoardClear === true,
-    requires_quiet_area: answers.noise === 'yes',
+    requires_front_row: answers.frontPreference === 'front',
+    requires_quiet_area: answers.noise !== null && answers.noise >= NOISE_QUIET_THRESHOLD,
   };
 }
 
 /**
- * Add or remove the student from the constraints' near-window list based on
- * the window preference. Returns the same object reference when nothing
- * changes so callers can skip a no-op write. A null preference is treated
- * as "no opinion" and leaves any existing membership untouched.
+ * Removed: `applyWindowPreference`. The "prefer a window seat" question was
+ * dropped in the evidence-based redesign (see file header). Window-side needs
+ * that are actually accessibility-driven (glare sensitivity, hearing loops)
+ * belong in the teacher-entered student profile, not a student self-report.
  */
-export function applyWindowPreference(
-  constraints: SeatingConstraints,
-  studentId: string,
-  prefer: boolean | null,
-): SeatingConstraints {
-  if (prefer === null) return constraints;
-  const current = constraints.near_window_ids ?? [];
-  const has = current.includes(studentId);
-  if (prefer && !has) {
-    return { ...constraints, near_window_ids: [...current, studentId] };
-  }
-  if (!prefer && has) {
-    return { ...constraints, near_window_ids: current.filter((id) => id !== studentId) };
-  }
-  return constraints;
-}
 
 /**
  * Set (or clear) the student's mentor in the constraints' peer-mentor pairs.

@@ -9,10 +9,10 @@ import {
   emptyAnswers,
   answersFromStudent,
   surveyToStudentPatch,
-  applyWindowPreference,
   applyMentorPreference,
   MAX_SEATMATES,
   type SurveyAnswers,
+  type NoiseSensitivity,
 } from './surveyMapping';
 
 interface Props {
@@ -100,8 +100,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
     if (!peersOn) delete patch.friends_ids;
     updateStudent(current.id, patch);
 
-    let next = applyWindowPreference(constraints, current.id, answers.preferWindow);
-    next = applyMentorPreference(next, current.id, peersOn ? answers.helper : null);
+    const next = applyMentorPreference(constraints, current.id, peersOn ? answers.helper : null);
     if (next !== constraints) setConstraints(next);
 
     markStudentSurveyed(current.id);
@@ -269,45 +268,40 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                   </div>
                 )}
 
-                {/* B3 — focus zone */}
+                {/* B3 — Front / teacher-proximity preference. Action-zone
+                    literature: front-and-centre seats correlate with higher
+                    engagement (Adams & Biddle; Sommer). Merges the previous
+                    focus-zone + "see the board" items (both collapsed onto
+                    front-row placement anyway). */}
                 <div>
                   <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_focus')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_focus_hint')}</p>
                   <div className="flex gap-2">
                     {(['front', 'middle', 'back'] as const).map((z) => (
-                      <button key={z} onClick={() => setAnswers((a) => ({ ...a, focusZone: a.focusZone === z ? null : z }))} className={choiceBtn(answers.focusZone === z)}>
+                      <button key={z} onClick={() => setAnswers((a) => ({ ...a, frontPreference: a.frontPreference === z ? null : z }))} className={choiceBtn(answers.frontPreference === z)}>
                         {t(`questionnaire.focus_${z}`)}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* B4 — noise */}
+                {/* B4 — Noise sensitivity, 5-point rating (adapted from GSQ-P
+                    Auditory subscale). More informative than yes/somewhat/no
+                    and matches the source instrument's scoring. */}
                 <div>
                   <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_noise')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_noise_scale')}</p>
                   <div className="flex gap-2">
-                    {(['yes', 'somewhat', 'no'] as const).map((n) => (
-                      <button key={n} onClick={() => setAnswers((a) => ({ ...a, noise: a.noise === n ? null : n }))} className={choiceBtn(answers.noise === n)}>
-                        {t(`questionnaire.noise_${n}`)}
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, noise: a.noise === n ? null : (n as NoiseSensitivity) }))}
+                        className={choiceBtn(answers.noise === n)}
+                        aria-label={t(`questionnaire.noise_${n}`)}
+                      >
+                        {n}
                       </button>
                     ))}
-                  </div>
-                </div>
-
-                {/* B5 / B6 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_window')}</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => setAnswers((a) => ({ ...a, preferWindow: a.preferWindow === true ? null : true }))} className={choiceBtn(answers.preferWindow === true)}>{t('questionnaire.yes')}</button>
-                      <button onClick={() => setAnswers((a) => ({ ...a, preferWindow: a.preferWindow === false ? null : false }))} className={choiceBtn(answers.preferWindow === false)}>{t('questionnaire.no')}</button>
-                    </div>
-                  </div>
-                  <div>
-                    <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_board')}</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => setAnswers((a) => ({ ...a, needBoardClear: a.needBoardClear === true ? null : true }))} className={choiceBtn(answers.needBoardClear === true)}>{t('questionnaire.yes')}</button>
-                      <button onClick={() => setAnswers((a) => ({ ...a, needBoardClear: a.needBoardClear === false ? null : false }))} className={choiceBtn(answers.needBoardClear === false)}>{t('questionnaire.no')}</button>
-                    </div>
                   </div>
                 </div>
               </div>

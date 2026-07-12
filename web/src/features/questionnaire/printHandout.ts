@@ -37,32 +37,21 @@ export function buildHandoutHtml(students: Student[], o: HandoutOptions): string
     parts.push(question(t('questionnaire.q_helper'), t('questionnaire.q_helper_hint'), blankLine));
   }
 
+  // B3 — action-zone / front-preference (merges the old focus & "see the
+  //   board" items; they collapsed onto the same construct anyway).
   parts.push(
     question(
       t('questionnaire.q_focus'),
-      '',
+      t('questionnaire.q_focus_hint'),
       `<div class="opts">${checkbox(t('questionnaire.focus_front'))}${checkbox(t('questionnaire.focus_middle'))}${checkbox(t('questionnaire.focus_back'))}</div>`,
     ),
   );
+  // B4 — noise sensitivity, 5-point (GSQ-P Auditory subscale).
   parts.push(
     question(
       t('questionnaire.q_noise'),
-      '',
-      `<div class="opts">${checkbox(t('questionnaire.noise_yes'))}${checkbox(t('questionnaire.noise_somewhat'))}${checkbox(t('questionnaire.noise_no'))}</div>`,
-    ),
-  );
-  parts.push(
-    question(
-      t('questionnaire.q_window'),
-      '',
-      `<div class="opts">${checkbox(t('questionnaire.yes'))}${checkbox(t('questionnaire.no'))}</div>`,
-    ),
-  );
-  parts.push(
-    question(
-      t('questionnaire.q_board'),
-      '',
-      `<div class="opts">${checkbox(t('questionnaire.yes'))}${checkbox(t('questionnaire.no'))}</div>`,
+      t('questionnaire.q_noise_scale'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(`${n} — ${t(`questionnaire.noise_${n}`)}`)).join('')}</div>`,
     ),
   );
 
