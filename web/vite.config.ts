@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['seatai-logo.svg'],
       manifest: {
         name: 'SeatAI — Classroom Seating Optimizer',
         short_name: 'SeatAI',
@@ -21,7 +21,7 @@ export default defineConfig({
         orientation: 'landscape',
         icons: [
           {
-            src: 'favicon.svg',
+            src: 'seatai-logo.svg',
             sizes: '192x192 512x512',
             type: 'image/svg+xml',
             purpose: 'any maskable',
