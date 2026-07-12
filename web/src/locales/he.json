@@ -786,6 +786,8 @@
     "mentor_violated": "{{mentee}} צריך/ה לשבת ליד החונך {{mentor}}",
     "front_violated": "{{name}} צריך/ה לשבת בשורה הקדמית",
     "back_violated": "{{name}} צריך/ה לשבת בשורה האחורית",
+    "aisle_violated": "{{name}} צריך/ה לשבת ליד המעבר",
+    "window_violated": "{{name}} צריך/ה לשבת ליד החלון",
     "student_not_found": "התלמיד/ה המשובץ/ת ({{id}}) כבר לא ברשימת הכיתה"
   },
   "oneRoster": {

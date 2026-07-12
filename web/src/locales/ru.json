@@ -786,6 +786,8 @@
     "mentor_violated": "{{mentee}} должен сидеть рядом с наставником {{mentor}}",
     "front_violated": "{{name}} должен сидеть в первом ряду",
     "back_violated": "{{name}} должен сидеть в последнем ряду",
+    "aisle_violated": "{{name}} должен сидеть у прохода",
+    "window_violated": "{{name}} должен сидеть у окна",
     "student_not_found": "Назначенный ученик ({{id}}) больше не числится в классе"
   },
   "oneRoster": {

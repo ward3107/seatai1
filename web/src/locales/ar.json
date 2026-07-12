@@ -786,6 +786,8 @@
     "mentor_violated": "يجب أن يجلس {{mentee}} بجوار الموجّه {{mentor}}",
     "front_violated": "يجب أن يجلس {{name}} في الصف الأمامي",
     "back_violated": "يجب أن يجلس {{name}} في الصف الخلفي",
+    "aisle_violated": "يجب أن يجلس {{name}} بجانب الممر",
+    "window_violated": "يجب أن يجلس {{name}} بجانب النافذة",
     "student_not_found": "الطالب المعيّن ({{id}}) لم يعد في قائمة الصف"
   },
   "oneRoster": {

@@ -29,12 +29,10 @@ export function getViolations(
 
   // Preferred path: derive neighbours from the very slots the optimizer used.
   // `buildLayout` maps `this.slots` 1:1 to `seats`, so seats[i] shares
-  // slot i's neighbour indices.
+  // slot i's neighbour indices. Generate once (not twice) and reuse.
   let neighboursOf: (i: number) => Seat[];
-  const slots =
-    layoutDef && generateSlots(layoutDef).length === seats.length
-      ? generateSlots(layoutDef)
-      : null;
+  const generated = layoutDef ? generateSlots(layoutDef) : null;
+  const slots = generated && generated.length === seats.length ? generated : null;
 
   if (slots) {
     neighboursOf = (i) => slots[i].neighbors.map((n) => seats[n]).filter(Boolean);
@@ -71,8 +69,11 @@ export function getViolations(
 
     const seatKey = `${seat.position.row}-${seat.position.col}`;
 
-    // Front-row / mobility violation
-    if ((student.requires_front_row || student.has_mobility_issues) && seat.position.row > 0) {
+    // Front-row / mobility violation. Use the layout's real front flag when we
+    // have the slots (the front row isn't always row 0 — e.g. a large circle's
+    // front seats sit at row ≥ 1); fall back to row 0 only without a layout.
+    const atFront = slots ? slots[i].isFront : seat.position.row === 0;
+    if ((student.requires_front_row || student.has_mobility_issues) && !atFront) {
       violations.add(seatKey);
     }
 
