@@ -120,6 +120,12 @@ interface AppState {
     peerSurveyEnabled?: boolean;
     /** Young-student mode: larger text, simpler layout in the survey. */
     simpleMode?: boolean;
+    /** TEACHER-reported: the typical character of instruction in this class.
+     *  Aggregated evidence (Johnson & Johnson; Bicard 2012; Wheldall & Lam 1987)
+     *  shows the RIGHT layout depends on this: rows outperform clusters for
+     *  independent seat-work, but clusters and U-shape support cooperative /
+     *  discussion-heavy lessons. Feeds a layout-recommendation banner. */
+    lessonStyle?: 'solo' | 'mixed' | 'group' | null;
   };
   /** Transient: whether the guided questionnaire modal is open. */
   questionnaireOpen: boolean;
@@ -130,6 +136,7 @@ interface AppState {
   setQuestionnaireSkipPeers: (v: boolean) => void;
   setQuestionnairePeerEnabled: (v: boolean) => void;
   setQuestionnaireSimpleMode: (v: boolean) => void;
+  setLessonStyle: (v: 'solo' | 'mixed' | 'group' | null) => void;
   markStudentSurveyed: (id: string) => void;
   resetQuestionnaire: () => void;
 
@@ -463,7 +470,7 @@ export const useStore = create<AppState>()(
             state.activeRotationPeriodId = null;
           }
         }),
-      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false, peerSurveyEnabled: true, simpleMode: false },
+      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false, peerSurveyEnabled: true, simpleMode: false, lessonStyle: null },
       questionnaireOpen: false,
       questionnaireStudentMode: false,
       setQuestionnaireOpen: (v, studentMode = false) =>
@@ -486,6 +493,10 @@ export const useStore = create<AppState>()(
       setQuestionnaireSimpleMode: (v) =>
         set((state) => {
           state.questionnaire.simpleMode = v;
+        }),
+      setLessonStyle: (v) =>
+        set((state) => {
+          state.questionnaire.lessonStyle = v;
         }),
       markStudentSurveyed: (id) =>
         set((state) => {

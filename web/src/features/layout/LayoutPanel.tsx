@@ -14,6 +14,7 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { slotCount, type LayoutDef, type CellKind } from '../../core/layouts';
 import LayoutThumbnail from '../../components/LayoutThumbnail';
+import LessonStyleCard from './LessonStyleCard';
 
 type LayoutType = LayoutDef['type'];
 
@@ -233,6 +234,10 @@ export default function LayoutPanel({ defaultOpen = false }: { defaultOpen?: boo
 
       {open && (
         <div id="layout-panel-body" className="p-4 pt-0 space-y-3">
+          {/* Class-level teacher input — informs the preset picker below via a
+              non-blocking recommendation banner (see LessonStyleCard). */}
+          <LessonStyleCard />
+
           {/* Preset picker */}
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('layout.title')}>
             {PRESETS.map((p) => {
