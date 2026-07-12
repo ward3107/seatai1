@@ -202,6 +202,18 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                 </button>
               </div>
 
+              {/* Age-aware framing: student self-report on attention / behaviour
+                  is only fair-to-good from ~age 8 (child–teacher r ≈ .2–.4 in
+                  meta-analyses of externalising items). When the teacher is
+                  walking a young child through the survey, this banner reframes
+                  the task as OBSERVATION rather than self-report — the same
+                  fields, filled from the teacher's own knowledge of the child. */}
+              {!studentMode && current.age !== undefined && current.age < 8 && (
+                <div className="mx-5 mt-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 p-3 text-[12px] text-amber-800 dark:text-amber-200">
+                  {t('questionnaire.young_hint', { name: current.name, age: current.age })}
+                </div>
+              )}
+
               <div className={clsx('p-5', sm ? 'space-y-6' : 'space-y-5')}>
                 {/* B1 — seatmates */}
                 {peersOn && (

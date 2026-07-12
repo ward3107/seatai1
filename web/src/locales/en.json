@@ -108,7 +108,8 @@
     "attention_2": "Hard",
     "attention_3": "Sometimes",
     "attention_4": "Easy",
-    "attention_5": "Very easy"
+    "attention_5": "Very easy",
+    "young_hint": "Under age 8, self-report on attention and behaviour is less reliable than teacher observation. Fill this in based on what YOU observe about {{name}} in class."
   },
   "app": {
     "title": "SeatAI",
@@ -891,5 +892,14 @@
     "tab_csv": "CSV",
     "tab_google": "Google",
     "tab_oneroster": "OneRoster"
+  },
+  "lessonStyle": {
+    "title": "What are your lessons usually like?",
+    "hint": "This helps SeatAI suggest the best layout. Rows work best for independent seatwork; clusters for group work; U-shape for whole-class discussion.",
+    "solo": "Mostly independent seatwork",
+    "mixed": "Mix of both",
+    "group": "Mostly group / discussion",
+    "recommendation": "Based on your answer, {{layout}} tends to work best for this class.",
+    "apply": "Switch to it"
   }
 }
