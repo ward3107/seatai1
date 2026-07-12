@@ -864,5 +864,12 @@
     "skip": "Пропустить",
     "exit": "Выйти",
     "need_two_students": "Добавьте 2+ учеников"
+  },
+  "addStudents": {
+    "title": "Добавить учеников",
+    "tab_manual": "Ввод",
+    "tab_csv": "CSV",
+    "tab_google": "Google",
+    "tab_oneroster": "OneRoster"
   }
 }

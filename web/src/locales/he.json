@@ -864,5 +864,12 @@
     "skip": "דלג",
     "exit": "יציאה",
     "need_two_students": "הוסיפו 2+ תלמידים"
+  },
+  "addStudents": {
+    "title": "הוספת תלמידים",
+    "tab_manual": "הקלדה",
+    "tab_csv": "CSV",
+    "tab_google": "Google",
+    "tab_oneroster": "OneRoster"
   }
 }

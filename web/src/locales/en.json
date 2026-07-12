@@ -864,5 +864,12 @@
     "skip": "Skip",
     "exit": "Exit",
     "need_two_students": "Add 2+ students"
+  },
+  "addStudents": {
+    "title": "Add students",
+    "tab_manual": "Type",
+    "tab_csv": "CSV",
+    "tab_google": "Google",
+    "tab_oneroster": "OneRoster"
   }
 }

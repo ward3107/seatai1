@@ -142,7 +142,7 @@ export default memo(function SeatCard({
       aria-pressed={isSelected}
       aria-keyshortcuts="L"
       className={clsx(
-        'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[88px]',
+        'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[72px]',
         'border-2 transition-all duration-150 select-none text-left',
         // Tailwind reset for native button (no inherited bg/colors)
         'bg-transparent appearance-none',
