@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   surveyToStudentPatch,
-  applyWindowPreference,
   applyMentorPreference,
   answersFromStudent,
   emptyAnswers,
   MAX_SEATMATES,
+  NOISE_QUIET_THRESHOLD,
 } from './surveyMapping';
 import type { Student, SeatingConstraints } from '../../types';
 
@@ -50,40 +50,17 @@ describe('surveyToStudentPatch', () => {
     expect(patch.friends_ids!.length).toBe(MAX_SEATMATES);
   });
 
-  it('sets requires_front_row when focus is front', () => {
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), focusZone: 'front' }).requires_front_row).toBe(true);
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), focusZone: 'back' }).requires_front_row).toBe(false);
+  it('sets requires_front_row when frontPreference is front (action-zone construct)', () => {
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), frontPreference: 'front' }).requires_front_row).toBe(true);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), frontPreference: 'middle' }).requires_front_row).toBe(false);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), frontPreference: 'back' }).requires_front_row).toBe(false);
   });
 
-  it('sets requires_front_row when the student needs the board clear', () => {
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), needBoardClear: true }).requires_front_row).toBe(true);
-  });
-
-  it('sets requires_quiet_area only when noise === yes', () => {
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 'yes' }).requires_quiet_area).toBe(true);
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 'somewhat' }).requires_quiet_area).toBe(false);
-    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 'no' }).requires_quiet_area).toBe(false);
-  });
-});
-
-describe('applyWindowPreference', () => {
-  it('adds the student when they prefer a window', () => {
-    const next = applyWindowPreference(baseConstraints, 's1', true);
-    expect(next.near_window_ids).toEqual(['s1']);
-  });
-
-  it('removes the student when they no longer prefer a window', () => {
-    const next = applyWindowPreference({ ...baseConstraints, near_window_ids: ['s1', 's2'] }, 's1', false);
-    expect(next.near_window_ids).toEqual(['s2']);
-  });
-
-  it('returns the SAME reference when a null preference leaves state unchanged', () => {
-    expect(applyWindowPreference(baseConstraints, 's1', null)).toBe(baseConstraints);
-  });
-
-  it('returns the same reference when already present and still preferred (no-op)', () => {
-    const c = { ...baseConstraints, near_window_ids: ['s1'] };
-    expect(applyWindowPreference(c, 's1', true)).toBe(c);
+  it('routes noise into requires_quiet_area at the GSQ-P threshold (>=4)', () => {
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 1 }).requires_quiet_area).toBe(false);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 3 }).requires_quiet_area).toBe(false);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: NOISE_QUIET_THRESHOLD }).requires_quiet_area).toBe(true);
+    expect(surveyToStudentPatch('s1', { ...emptyAnswers(), noise: 5 }).requires_quiet_area).toBe(true);
   });
 });
 
@@ -132,14 +109,16 @@ describe('answersFromStudent', () => {
     expect(answersFromStudent(s, baseConstraints).seatmates).toEqual(['a', 'b', 'c']);
   });
 
-  it('reflects requires_quiet_area as noise=yes and window membership', () => {
+  it('reflects requires_quiet_area as the max noise rating (legacy boolean upgrade)', () => {
     const s = makeStudent({ requires_quiet_area: true });
-    const a = answersFromStudent(s, { ...baseConstraints, near_window_ids: ['s1'] });
-    expect(a.noise).toBe('yes');
-    expect(a.preferWindow).toBe(true);
+    const a = answersFromStudent(s, baseConstraints);
+    // The previous boolean maps to the maximum on the new 5-point scale, so
+    // the legacy setting stays consistent with `requires_quiet_area === true`.
+    expect(a.noise).toBe(5);
   });
 
-  it('leaves preferWindow null when the student is not in the window list', () => {
-    expect(answersFromStudent(makeStudent(), baseConstraints).preferWindow).toBeNull();
+  it('reflects requires_front_row as frontPreference=front', () => {
+    const s = makeStudent({ requires_front_row: true });
+    expect(answersFromStudent(s, baseConstraints).frontPreference).toBe('front');
   });
 });

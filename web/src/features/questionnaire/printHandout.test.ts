@@ -53,7 +53,18 @@ describe('buildHandoutHtml', () => {
     expect(html).not.toContain('questionnaire.handout_roster');
     // Non-peer questions still render.
     expect(html).toContain('questionnaire.q_focus');
-    expect(html).toContain('questionnaire.q_window');
+    expect(html).toContain('questionnaire.q_noise');
+    // Dropped in the evidence-based redesign — no window/board items.
+    expect(html).not.toContain('questionnaire.q_window');
+    expect(html).not.toContain('questionnaire.q_board');
+  });
+
+  it('renders the 5-point noise scale (GSQ-P) rather than yes/somewhat/no', () => {
+    const html = buildHandoutHtml(students, { ...base, peersOn: false });
+    for (const n of [1, 2, 3, 4, 5]) {
+      expect(html).toContain(`questionnaire.noise_${n}`);
+    }
+    expect(html).not.toContain('questionnaire.noise_yes');
   });
 
   it('renders one blank line per allowed seatmate', () => {

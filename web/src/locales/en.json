@@ -64,11 +64,6 @@
     "focus_middle": "Middle",
     "focus_back": "Back",
     "q_noise": "Does noise distract you?",
-    "noise_yes": "Yes",
-    "noise_somewhat": "A little",
-    "noise_no": "No",
-    "q_window": "Prefer a window seat?",
-    "q_board": "Need to see the board clearly?",
     "yes": "Yes",
     "no": "No",
     "back": "Back",
@@ -88,7 +83,14 @@
     "handout_name": "Name",
     "handout_date": "Date",
     "handout_roster": "Your classmates",
-    "print_btn": "Print"
+    "print_btn": "Print",
+    "q_focus_hint": "Where does the teacher usually stand? The front rows sit closer to the board and the teacher.",
+    "q_noise_scale": "1 = doesn't bother me at all · 5 = very much",
+    "noise_1": "Not at all",
+    "noise_2": "A little",
+    "noise_3": "Somewhat",
+    "noise_4": "Quite a bit",
+    "noise_5": "Very much"
   },
   "app": {
     "title": "SeatAI",

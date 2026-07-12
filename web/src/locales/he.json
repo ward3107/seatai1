@@ -64,11 +64,6 @@
     "focus_middle": "באמצע",
     "focus_back": "מאחור",
     "q_noise": "האם רעש מפריע לך?",
-    "noise_yes": "כן",
-    "noise_somewhat": "קצת",
-    "noise_no": "לא",
-    "q_window": "מעדיף מקום ליד חלון?",
-    "q_board": "צריך לראות את הלוח בבירור?",
     "yes": "כן",
     "no": "לא",
     "back": "חזור",
@@ -88,7 +83,14 @@
     "handout_name": "שם",
     "handout_date": "תאריך",
     "handout_roster": "החברים לכיתה שלך",
-    "print_btn": "הדפס"
+    "print_btn": "הדפס",
+    "q_focus_hint": "איפה בדרך כלל עומדת המורה? השורות הקדמיות קרובות ללוח ולמורה.",
+    "q_noise_scale": "1 = בכלל לא מפריע · 5 = מאוד מפריע",
+    "noise_1": "בכלל לא",
+    "noise_2": "קצת",
+    "noise_3": "בינוני",
+    "noise_4": "די הרבה",
+    "noise_5": "מאוד"
   },
   "app": {
     "title": "SeatAI",
