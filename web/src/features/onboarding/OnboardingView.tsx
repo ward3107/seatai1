@@ -59,9 +59,8 @@ export default function OnboardingView() {
         transition={{ duration: 0.5 }}
         className="mb-10"
       >
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center mx-auto mb-5 shadow-lg">
-          <span className="text-white font-bold text-4xl">S</span>
-        </div>
+        <img src="/seatai-logo.svg" alt="" aria-hidden="true" className="w-20 h-20 rounded-2xl mx-auto mb-5 shadow-lg" width={80} height={80} />
+
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           {t('onboarding.welcome_title')}
         </h1>

@@ -102,9 +102,8 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
               aria-label={t('app.home')}
               title={t('app.home')}
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
+              <img src="/seatai-logo.svg" alt="" aria-hidden="true" className="w-10 h-10 rounded-xl" width={40} height={40} />
+
               <div>
                 <h1 className="font-bold text-xl text-gray-800 dark:text-gray-100">{t('app.title')}</h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.subtitle')}</p>

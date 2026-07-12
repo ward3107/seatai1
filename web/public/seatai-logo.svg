@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="SeatAI">
+  <defs>
+    <linearGradient id="seatai-grad" x1="40" y1="40" x2="472" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#d946ef"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Gradient squircle tile -->
+  <rect x="16" y="16" width="480" height="480" rx="118" fill="url(#seatai-grad)"/>
+
+  <!-- Seats: eight "chair from above" glyphs (backrest + base bar), skipping
+       the centre where the AI node sits. -->
+  <g fill="#ffffff">
+    <!-- row 1 -->
+    <g><rect x="98"  y="98"  width="80" height="66" rx="24"/><rect x="98"  y="172" width="80" height="15" rx="7.5"/></g>
+    <g><rect x="216" y="98"  width="80" height="66" rx="24"/><rect x="216" y="172" width="80" height="15" rx="7.5"/></g>
+    <g><rect x="334" y="98"  width="80" height="66" rx="24"/><rect x="334" y="172" width="80" height="15" rx="7.5"/></g>
+    <!-- row 2 (centre skipped) -->
+    <g><rect x="98"  y="216" width="80" height="66" rx="24"/><rect x="98"  y="290" width="80" height="15" rx="7.5"/></g>
+    <g><rect x="334" y="216" width="80" height="66" rx="24"/><rect x="334" y="290" width="80" height="15" rx="7.5"/></g>
+    <!-- row 3 -->
+    <g><rect x="98"  y="334" width="80" height="66" rx="24"/><rect x="98"  y="408" width="80" height="15" rx="7.5"/></g>
+    <g><rect x="216" y="334" width="80" height="66" rx="24"/><rect x="216" y="408" width="80" height="15" rx="7.5"/></g>
+    <g><rect x="334" y="334" width="80" height="66" rx="24"/><rect x="334" y="408" width="80" height="15" rx="7.5"/></g>
+  </g>
+
+  <!-- Crosshair connecting the centre node to its four neighbours -->
+  <g stroke="#ffffff" stroke-width="12" stroke-linecap="round">
+    <line x1="256" y1="192" x2="256" y2="220"/>
+    <line x1="256" y1="292" x2="256" y2="320"/>
+    <line x1="192" y1="256" x2="220" y2="256"/>
+    <line x1="292" y1="256" x2="320" y2="256"/>
+  </g>
+
+  <!-- Central AI node: a bold white ring -->
+  <circle cx="256" cy="256" r="30" fill="none" stroke="#ffffff" stroke-width="14"/>
+
+  <!-- Sparkles (upper-right of the node) -->
+  <g fill="#ffffff">
+    <path d="M338 178 Q338 208 368 208 Q338 208 338 238 Q338 208 308 208 Q338 208 338 178 Z"/>
+    <path d="M382 224 Q382 243 401 243 Q382 243 382 262 Q382 243 363 243 Q382 243 382 224 Z"/>
+  </g>
+</svg>
