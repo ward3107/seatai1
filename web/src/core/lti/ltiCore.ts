@@ -128,19 +128,18 @@ export interface LaunchInfo {
  * deployments often serve NRPS from a sibling subdomain or CDN.
  * Throws on anything suspicious; returns the URL untouched otherwise.
  */
-export function assertSafeNrpsUrl(raw: string): string {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new Error('Invalid NRPS URL');
-  }
-  if (url.protocol !== 'https:') {
-    throw new Error('NRPS URL must use HTTPS');
-  }
-  // url.hostname keeps the brackets on IPv6 literals ("[::1]"), which would
-  // dodge the bare-address checks below — strip them first.
-  let host = url.hostname.toLowerCase();
+/**
+ * True if `rawHost` is a loopback / private / link-local literal that must
+ * never be the target of a server-side fetch. Accepts a hostname or a bare IP
+ * (IPv4, IPv6, or bracketed IPv6). Used both for the literal-URL guard below
+ * and — on the server — against each address a hostname *resolves* to, so a
+ * public name that points at an internal IP (DNS-based SSRF / rebinding) is
+ * caught too.
+ */
+export function isBlockedHost(rawHost: string): boolean {
+  // Bracketed IPv6 literals ("[::1]") would dodge the bare-address checks —
+  // strip the brackets first.
+  let host = rawHost.toLowerCase();
   if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1);
 
   const isLoopback =
@@ -161,7 +160,20 @@ export function assertSafeNrpsUrl(raw: string): string {
     // never a legitimate public NRPS endpoint — block the whole class rather
     // than decode the trailing address.
     host.startsWith('::ffff:');
-  if (isLoopback || isPrivate) {
+  return isLoopback || isPrivate;
+}
+
+export function assertSafeNrpsUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error('Invalid NRPS URL');
+  }
+  if (url.protocol !== 'https:') {
+    throw new Error('NRPS URL must use HTTPS');
+  }
+  if (isBlockedHost(url.hostname)) {
     throw new Error('NRPS URL points at a non-routable host');
   }
   return raw;
@@ -172,7 +184,10 @@ export function assertSafeNrpsUrl(raw: string): string {
  * what roster sync needs. Throws with a clear message on anything unexpected.
  * (JWT signature/iss/aud/nonce are checked by the handler before this runs.)
  */
-export function validateLaunchClaims(payload: Record<string, unknown>): LaunchInfo {
+export function validateLaunchClaims(
+  payload: Record<string, unknown>,
+  expectedDeploymentId?: string,
+): LaunchInfo {
   if (payload[LTI.MESSAGE_TYPE] !== 'LtiResourceLinkRequest') {
     throw new Error('Unsupported LTI message type');
   }
@@ -181,6 +196,16 @@ export function validateLaunchClaims(payload: Record<string, unknown>): LaunchIn
   }
   const deploymentId = payload[LTI.DEPLOYMENT_ID];
   if (typeof deploymentId !== 'string') throw new Error('Missing deployment id');
+
+  // If the platform registration pins a deployment id, the launch's claim must
+  // match it. LTI 1.3 §5.1.1: a tool accepts a launch only for a deployment it
+  // was registered for — otherwise a token minted for another (possibly
+  // untrusted) deployment under the same issuer/client would be honored. When
+  // no deployment id is registered we accept any (single-deployment setups
+  // often don't pin one); the launch is still signature/issuer/audience-checked.
+  if (expectedDeploymentId && deploymentId !== expectedDeploymentId) {
+    throw new Error('Launch deployment id does not match the registered platform');
+  }
 
   // Teacher-only gate: NRPS returns the full roster regardless of who launched,
   // so reject a launch whose roles are present but contain no staff role (i.e.

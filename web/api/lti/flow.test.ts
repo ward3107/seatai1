@@ -19,6 +19,12 @@ vi.mock('jose', async (importOriginal) => {
   return { ...actual, createRemoteJWKSet: () => actual.createLocalJWKSet(hoisted.platformJwks!) };
 });
 
+// fetchRoster resolves the NRPS host (DNS-layer SSRF guard) before fetching.
+// Mock it so the mock LMS host resolves to a public address.
+vi.mock('node:dns/promises', () => ({
+  lookup: vi.fn(async () => [{ address: '93.184.216.34', family: 4 }]),
+}));
+
 const PLATFORM = {
   issuer: 'https://lms.test',
   clientId: 'client-1',

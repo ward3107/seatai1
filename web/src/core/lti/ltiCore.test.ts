@@ -115,6 +115,16 @@ describe('validateLaunchClaims', () => {
     // Absent roles are allowed (some platforms omit them; still signature-verified).
     expect(validateLaunchClaims(valid).deploymentId).toBe('dep-1');
   });
+
+  it('enforces the registered deployment id when one is pinned', () => {
+    // Matching id passes.
+    expect(validateLaunchClaims(valid, 'dep-1').deploymentId).toBe('dep-1');
+    // A launch for a different deployment under the same platform is rejected.
+    expect(() => validateLaunchClaims(valid, 'dep-2')).toThrow(/deployment id/i);
+    // No registered id → accept any (single-deployment setups don't pin one).
+    expect(validateLaunchClaims(valid).deploymentId).toBe('dep-1');
+    expect(validateLaunchClaims(valid, undefined).deploymentId).toBe('dep-1');
+  });
 });
 
 describe('assertSafeNrpsUrl', () => {

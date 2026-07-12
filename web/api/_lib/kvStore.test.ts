@@ -36,6 +36,28 @@ describe('kvStore (in-memory fallback)', () => {
     });
   });
 
+  describe('claimOnce with a configured-but-erroring KV backend', () => {
+    beforeEach(() => {
+      process.env.KV_REST_API_URL = 'https://kv.test';
+      process.env.KV_REST_API_TOKEN = 'tok';
+      // Every KV REST call fails, simulating a KV outage.
+      vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('KV down'); }));
+    });
+    afterEach(() => {
+      delete process.env.KV_REST_API_URL;
+      delete process.env.KV_REST_API_TOKEN;
+      vi.unstubAllGlobals();
+    });
+
+    it('non-strict falls back to the in-memory claim (availability)', async () => {
+      expect(await claimOnce('nonce:soft', 60_000)).toBe(true);
+    });
+
+    it('strict fails closed by throwing instead of downgrading (no fail-open)', async () => {
+      await expect(claimOnce('nonce:hard', 60_000, { strict: true })).rejects.toThrow(/KV down/);
+    });
+  });
+
   describe('incrWithTtl', () => {
     it('counts up within the window', async () => {
       expect(await incrWithTtl('rl:ip', 60_000)).toBe(1);

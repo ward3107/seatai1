@@ -22,6 +22,13 @@ vi.mock('jose', async (importOriginal) => {
   };
 });
 
+// The DNS-layer SSRF guard resolves the NRPS host before fetching. Mock it so
+// the mock LMS hostname (`lms.test`) "resolves" to a public address; the
+// rebinding test overrides this per-call to return a private one.
+vi.mock('node:dns/promises', () => ({
+  lookup: vi.fn(async () => [{ address: '93.184.216.34', family: 4 }]),
+}));
+
 const PLATFORM = {
   issuer: 'https://lms.test',
   clientId: 'client-1',
@@ -217,5 +224,21 @@ describe('fetchRoster', () => {
     ).rejects.toThrow(/non-routable/i);
     // The internal address must never have been fetched.
     expect(fetchedSecond).toBe(false);
+  });
+
+  it('refuses an NRPS host that resolves to a private IP (DNS rebinding)', async () => {
+    const { lookup } = await import('node:dns/promises');
+    // A public-looking host that resolves to the cloud metadata address.
+    vi.mocked(lookup).mockResolvedValueOnce([{ address: '169.254.169.254', family: 4 }] as never);
+    let fetched = false;
+    vi.stubGlobal('fetch', vi.fn(async () => { fetched = true; return jsonRes({ members: [] }); }));
+    await expect(
+      lib.fetchRoster(
+        { deploymentId: 'd', contextTitle: 'C', nrpsUrl: 'https://roster.evil.test/memberships' },
+        't',
+      ),
+    ).rejects.toThrow(/non-routable|resolve/i);
+    // The guard runs before the fetch, so the request is never sent.
+    expect(fetched).toBe(false);
   });
 });
