@@ -20,7 +20,9 @@ type Tab = 'manual' | 'csv' | 'google' | 'oneroster';
 export default function AddStudentsPanel() {
   const { t } = useLanguage();
   const studentCount = useStore((s) => s.students.length);
-  const [tab, setTab] = useState<Tab>('manual');
+  // Default to CSV — importing a file (or the sample template) is the fastest
+  // way to fill a real class; typing one-by-one is the fallback.
+  const [tab, setTab] = useState<Tab>('csv');
 
   const tabs: { id: Tab; label: string; icon: typeof Keyboard }[] = [
     { id: 'manual', label: t('addStudents.tab_manual'), icon: Keyboard },
