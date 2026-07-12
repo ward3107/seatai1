@@ -101,6 +101,30 @@ describe('getViolations', () => {
     expect(violations.has('0-0')).toBe(false);
   });
 
+  it('uses slot.isFront (not row 0) for the front-row rule on a large circle', () => {
+    // On an 8-row circle the front seats sit at row ≥ 1 (the ring never reaches
+    // the pole), so the old `row > 0` check false-flagged a correctly-front
+    // student while its own badge showed green. With the layoutDef supplied,
+    // getViolations must agree with slot.isFront.
+    const layoutDef = { type: 'circle', rows: 8, cols: 2 } as const;
+    const slots = generateSlots(layoutDef);
+    const frontSlot = slots.find((s) => s.isFront)!;
+    const backSlot = slots.find((s) => s.isBack)!;
+    expect(frontSlot.row).toBeGreaterThan(0); // regression precondition
+    const result = resultFromSlots('circle', slots, {
+      [frontSlot.index]: 'a',
+      [backSlot.index]: 'b',
+    });
+    const students = [
+      student('a', { requires_front_row: true }),
+      student('b', { requires_front_row: true }),
+    ];
+    const violations = getViolations(result, students, layoutDef);
+    // 'a' is correctly at the front → not flagged; 'b' at the back → flagged.
+    expect(violations.has(`${frontSlot.row}-${frontSlot.col}`)).toBe(false);
+    expect(violations.has(`${backSlot.row}-${backSlot.col}`)).toBe(true);
+  });
+
   it('flags ring-adjacent incompatible students in a circle layout (wrap-around pair)', () => {
     // 6-seat circle. Ring indices 0 and 5 are physically adjacent (the ring
     // wraps), but their logical (row, col) coordinates are NOT grid-adjacent

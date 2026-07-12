@@ -786,6 +786,8 @@
     "mentor_violated": "{{mentee}} should sit next to mentor {{mentor}}",
     "front_violated": "{{name}} should be in the front row",
     "back_violated": "{{name}} should be in the back row",
+    "aisle_violated": "{{name}} should be on the aisle",
+    "window_violated": "{{name}} should be by the window",
     "student_not_found": "Assigned student ({{id}}) is no longer on the roster"
   },
   "oneRoster": {

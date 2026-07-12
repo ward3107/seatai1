@@ -17,9 +17,16 @@ function downloadBlob(filename: string, content: string, mime: string) {
 }
 
 // CSV cell quoting — only quote when necessary and escape embedded quotes.
-function csvCell(value: string | number | undefined): string {
+// Also neutralize spreadsheet formula (DDE) injection: a cell that begins with
+// = + - @ (or a tab/CR that Excel strips back to one of those) is treated as a
+// formula when the file is opened in Excel / Google Sheets. Student names flow
+// in from Google Classroom / LTI rosters where the student controls their own
+// name, so a payload like `=HYPERLINK(...)` or `=cmd|...` would execute in the
+// teacher's spreadsheet. Prefix such cells with a single quote to force text.
+export function csvCell(value: string | number | undefined): string {
   if (value === undefined || value === null) return '';
-  const s = String(value);
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }

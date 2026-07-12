@@ -20,6 +20,7 @@ import type {
   LayoutType,
 } from '../types';
 import { generateSlots, type LayoutDef, type Slot } from './layouts';
+import { isAisleSlot, isWindowSlot } from './seatGeometry';
 
 type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
 
@@ -199,20 +200,14 @@ export class ClassroomOptimizer {
     this.xMax = hi;
   }
 
-  /** Margin (in normalized x) within which a seat counts as being on the
-   *  aisle / window wall. Scaled to the layout's width so it means "the
-   *  outermost seats" regardless of how wide the layout actually is. */
-  private edgeMargin(): number {
-    return Math.max(0.02, (this.xMax - this.xMin) * 0.06);
-  }
-  /** True when the seat is against either side wall (aisle). */
+  /** Aisle / window classification. Delegates to the shared `seatGeometry`
+   *  helpers so the fitness function, the seat badges, the violation
+   *  highlights, and the placement explanations all use identical geometry. */
   private isAisleSlot(slot: Slot): boolean {
-    const m = this.edgeMargin();
-    return slot.x <= this.xMin + m || slot.x >= this.xMax - m;
+    return isAisleSlot(slot.x, this.xMin, this.xMax);
   }
-  /** True when the seat is against the window (left) wall. */
   private isWindowSlot(slot: Slot): boolean {
-    return slot.x <= this.xMin + this.edgeMargin();
+    return isWindowSlot(slot.x, this.xMin, this.xMax);
   }
 
   setWeights(w: ObjectiveWeights) {

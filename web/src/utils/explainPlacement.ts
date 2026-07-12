@@ -29,6 +29,7 @@ import type {
   SeatingConstraints,
 } from '../types';
 import { generateSlots, type LayoutDef } from '../core/layouts';
+import { slotXExtent, edgeMargin, isWindowSlot } from '../core/seatGeometry';
 
 export interface ExplanationLine {
   /** Translation key for the reason. */
@@ -153,8 +154,12 @@ export function explainPlacement(
   }
 
   // ── Slot geometry ───────────────────────────────────────────────────────
-  const isLeftEdge = mySlot.x <= 0.1;
-  const isRightEdge = mySlot.x >= 0.9;
+  // Edge/window measured relative to the layout's actual x-extent (matching
+  // the optimizer), not absolute 0.1/0.9 — otherwise a circle's window seat at
+  // x≈0.12 reads as "not on the window" and contradicts its own reward.
+  const { xMin, xMax } = slotXExtent(slots);
+  const isLeftEdge = isWindowSlot(mySlot.x, xMin, xMax);
+  const isRightEdge = mySlot.x >= xMax - edgeMargin(xMin, xMax);
   const slotInfo = {
     row: mySlot.row,
     col: mySlot.col,

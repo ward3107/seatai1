@@ -136,4 +136,27 @@ describe('getConstraintStatus', () => {
     expect(status.get('1-0')?.violated).toBe(true);
     expect(status.get('0-0')?.violated).toBe(false);
   });
+
+  it('flags a near-window student seated in the interior, not one at the window', () => {
+    // 1×5 row: x = 0, .25, .5, .75, 1. Window band (≤ 0.06) is the leftmost seat.
+    const { result, layout } = rowResult(['a', 'b', 'c', 'd', 'e']);
+    const roster = ['a', 'b', 'c', 'd', 'e'].map((id) => student(id));
+    const interior = getConstraintStatus(result, roster, { ...noConstraints, near_window_ids: ['c'] }, layout);
+    expect(interior.get('0-2')?.violated).toBe(true);
+    expect(interior.get('0-2')?.reasons).toContainEqual({ key: 'seatstatus.window_violated', params: { name: 'c' } });
+    const atWindow = getConstraintStatus(result, roster, { ...noConstraints, near_window_ids: ['a'] }, layout);
+    expect(atWindow.get('0-0')?.violated).toBe(false);
+  });
+
+  it('flags an aisle student in the interior, not one at either end', () => {
+    const { result, layout } = rowResult(['a', 'b', 'c', 'd', 'e']);
+    const roster = ['a', 'b', 'c', 'd', 'e'].map((id) => student(id));
+    const interior = getConstraintStatus(result, roster, { ...noConstraints, aisle_ids: ['c'] }, layout);
+    expect(interior.get('0-2')?.violated).toBe(true);
+    expect(interior.get('0-2')?.reasons).toContainEqual({ key: 'seatstatus.aisle_violated', params: { name: 'c' } });
+    // Both ends count as the aisle.
+    const atEnds = getConstraintStatus(result, roster, { ...noConstraints, aisle_ids: ['a', 'e'] }, layout);
+    expect(atEnds.get('0-0')?.violated).toBe(false);
+    expect(atEnds.get('0-4')?.violated).toBe(false);
+  });
 });

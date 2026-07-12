@@ -1,4 +1,5 @@
 import { generateSlots, type LayoutDef } from './layouts';
+import { slotXExtent, isAisleSlot, isWindowSlot } from './seatGeometry';
 import type { OptimizationResult, SeatingConstraints, Student } from '../types';
 
 /**
@@ -173,6 +174,25 @@ export function getConstraintStatus(
     const isBack = slots[idx].isBack || slots[idx].row === maxRow;
     if (!isBack) {
       flag(slots[idx].row, slots[idx].col, 'seatstatus.back_violated', { name: nm(id) });
+    }
+  }
+
+  // Aisle / near-window assignment rules. Previously unchecked here, so a
+  // student required on the aisle/window but placed in the interior wrongly
+  // showed a green ✓. Uses the same relative-margin geometry as the optimizer.
+  const { xMin, xMax } = slotXExtent(slots);
+  for (const id of constraints.aisle_ids ?? []) {
+    const idx = slotOfStudent.get(id);
+    if (idx === undefined) continue;
+    if (!isAisleSlot(slots[idx].x, xMin, xMax)) {
+      flag(slots[idx].row, slots[idx].col, 'seatstatus.aisle_violated', { name: nm(id) });
+    }
+  }
+  for (const id of constraints.near_window_ids ?? []) {
+    const idx = slotOfStudent.get(id);
+    if (idx === undefined) continue;
+    if (!isWindowSlot(slots[idx].x, xMin, xMax)) {
+      flag(slots[idx].row, slots[idx].col, 'seatstatus.window_violated', { name: nm(id) });
     }
   }
 
