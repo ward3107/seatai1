@@ -1,11 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import StudentList from '../features/students/StudentList';
-import StudentForm from '../features/students/StudentForm';
 import SettingsPanel from '../features/settings/SettingsPanel';
-import CsvImport from '../features/import/CsvImport';
-import GoogleClassroomImport from '../features/import/GoogleClassroomImport';
-import OneRosterImport from '../features/import/OneRosterImport';
+import AddStudentsPanel from '../features/import/AddStudentsPanel';
 import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
 import RotationPanel from '../features/rotation/RotationPanel';
@@ -122,50 +119,45 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             </button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-auto p-4 space-y-4">
-            <ErrorBoundary name="Projects" inline>
-              <ProjectManager />
-            </ErrorBoundary>
-
-            <ErrorBoundary name="CSV Import" inline>
-              <CsvImport />
-            </ErrorBoundary>
-
-            <ErrorBoundary name="Google Classroom Import" inline>
-              <GoogleClassroomImport />
-            </ErrorBoundary>
-
-            <ErrorBoundary name="OneRoster Import" inline>
-              <OneRosterImport />
+          {/* Content — ordered by workflow: add students → review roster →
+              survey → room → rules → rotation/arrangements → projects →
+              settings. Each block is a self-collapsing card, collapsed by
+              default, so the sidebar stays scannable. */}
+          <div className="flex-1 overflow-auto p-4 space-y-3">
+            {/* 1 · Students — all four add-methods unified behind tabs. */}
+            <ErrorBoundary name="Add Students" inline>
+              <AddStudentsPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Student List" inline>
               <StudentList />
             </ErrorBoundary>
 
-            <ErrorBoundary name="Student Form" inline>
-              <StudentForm />
-            </ErrorBoundary>
-
             <ErrorBoundary name="Questionnaire" inline>
               <QuestionnairePanel />
             </ErrorBoundary>
 
+            {/* 2 · Room */}
             <ErrorBoundary name="Layout" inline>
               <LayoutPanel />
             </ErrorBoundary>
 
+            {/* 3 · Rules */}
             <ErrorBoundary name="Seating Rules" inline>
               <ConstraintsPanel />
             </ErrorBoundary>
 
+            {/* 4 · Advanced / management */}
             <ErrorBoundary name="Rotation Planner" inline>
               <RotationPanel />
             </ErrorBoundary>
 
             <ErrorBoundary name="Saved Arrangements" inline>
               <ArrangementsPanel />
+            </ErrorBoundary>
+
+            <ErrorBoundary name="Projects" inline>
+              <ProjectManager />
             </ErrorBoundary>
 
             <ErrorBoundary name="Settings" inline>

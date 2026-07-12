@@ -41,9 +41,10 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
       const availW = outer.clientWidth;
       if (!natW || !availW) return;
       // On phones we only ever shrink to fit (cap 1). On wider screens we let
-      // the map grow to fill the available width — up to 1.6× — so a small
-      // class isn't stranded as a tiny island on a big desktop monitor.
-      const maxUp = availW >= 700 ? 1.6 : 1;
+      // the map grow a little to fill the available width — but only up to
+      // 1.15×. The old 1.6× ballooned a small or half-empty class into giant
+      // seats that felt clumsy on a desktop monitor.
+      const maxUp = availW >= 700 ? 1.15 : 1;
       const fit = Math.min(maxUp, availW / natW);
       const s = fit * zoom;
       setScale(s);

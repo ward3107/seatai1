@@ -144,8 +144,10 @@ test.describe('CSV import', () => {
   test('imports a roster from a CSV file into the store', async ({ page }) => {
     await page.goto('/');
 
-    // Reveal the importer if it's collapsed, then upload through the hidden
-    // file input (Playwright drives it directly regardless of visibility).
+    // The "Add students" section is open on an empty class; switch to the CSV
+    // tab so the file input mounts, then upload through it (Playwright drives
+    // the hidden input directly regardless of visibility).
+    await page.getByRole('tab', { name: 'CSV' }).click();
     const fileInput = page.locator('input[type="file"][accept*="csv"]').first();
     await fileInput.waitFor({ state: 'attached', timeout: 10000 });
     await fileInput.setInputFiles({

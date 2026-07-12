@@ -864,5 +864,12 @@
     "skip": "تخطي",
     "exit": "خروج",
     "need_two_students": "أضف طالبين أو أكثر"
+  },
+  "addStudents": {
+    "title": "إضافة طلاب",
+    "tab_manual": "كتابة",
+    "tab_csv": "CSV",
+    "tab_google": "Google",
+    "tab_oneroster": "OneRoster"
   }
 }
