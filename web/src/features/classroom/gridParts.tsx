@@ -54,7 +54,13 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
     ro.observe(outer);
     ro.observe(inner);
     return () => ro.disconnect();
-  }, [zoom, children]);
+    // Intentionally NOT depending on `children`: a parent re-render (e.g. on
+    // every seat hover) passes a fresh `children` element, which would re-run
+    // this effect — forcing a synchronous scrollWidth/Height reflow and
+    // tearing down/recreating the ResizeObserver ~60× while sweeping the grid.
+    // The observer already re-measures when the content's size actually changes,
+    // so re-subscribing per render is pure waste.
+  }, [zoom]);
 
   return (
     <div ref={outerRef} className="w-full flex justify-center overflow-x-auto">
