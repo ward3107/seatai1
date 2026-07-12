@@ -101,22 +101,61 @@ function buildGridNeighbors(slots: Omit<Slot, 'neighbors'>[]): number[][] {
   );
 }
 
-function buildDistanceNeighbors(
+/**
+ * Orthogonal (4-connected) neighbors for row-structured layouts whose columns
+ * don't line up on a strict grid — e.g. `custom-rows`, where short rows are
+ * centered and so a seat's logical `col` doesn't map to a shared x position.
+ *
+ * A plain Euclidean radius can't express "orthogonal only" here: a threshold
+ * wide enough to reach a half-cell-offset seat directly above also reaches the
+ * diagonal, making the layout 8-connected — inconsistent with the grid layouts
+ * (`rows`), which are 4-connected. So we link explicitly:
+ *   - **Horizontal:** within a row, each seat to the next seat by column order.
+ *   - **Vertical:** to seats in an immediately adjacent row (|Δrow| === 1)
+ *     whose x is within `xTol`. `xTol` sits between a half-cell (a centered
+ *     short row's offset — still "above") and a full cell (a true diagonal),
+ *     so directly-above/below connect but diagonals don't.
+ * The result matches `buildGridNeighbors` on a uniform grid.
+ */
+function buildOrthogonalNeighbors(
   slots: Omit<Slot, 'neighbors'>[],
-  threshold: number,
+  xTol: number,
 ): number[][] {
-  // Used for non-grid layouts (circle, clusters with gaps). Two slots are
-  // neighbors if their Euclidean distance in normalized space is ≤ threshold.
-  return slots.map((s) =>
-    slots
-      .filter((other) => other.index !== s.index)
-      .filter((other) => {
-        const dx = s.x - other.x;
-        const dy = s.y - other.y;
-        return Math.hypot(dx, dy) <= threshold;
-      })
-      .map((other) => other.index),
-  );
+  const neighbors: Set<number>[] = slots.map(() => new Set<number>());
+  const link = (a: number, b: number) => {
+    neighbors[a].add(b);
+    neighbors[b].add(a);
+  };
+
+  const byRow = new Map<number, Omit<Slot, 'neighbors'>[]>();
+  for (const s of slots) {
+    if (!byRow.has(s.row)) byRow.set(s.row, []);
+    byRow.get(s.row)!.push(s);
+  }
+
+  // Horizontal: consecutive seats within each row.
+  for (const row of byRow.values()) {
+    const sorted = [...row].sort((a, b) => a.col - b.col);
+    for (let i = 0; i < sorted.length - 1; i++) {
+      link(sorted[i].index, sorted[i + 1].index);
+    }
+  }
+
+  // Vertical: seats in an adjacent row within the horizontal tolerance.
+  const rowKeys = [...byRow.keys()].sort((a, b) => a - b);
+  for (let k = 0; k < rowKeys.length - 1; k++) {
+    if (rowKeys[k + 1] - rowKeys[k] !== 1) continue; // rows must be adjacent
+    const upper = byRow.get(rowKeys[k])!;
+    const lower = byRow.get(rowKeys[k + 1])!;
+    for (const s of upper) {
+      for (const o of lower) {
+        if (Math.abs(s.x - o.x) <= xTol) link(s.index, o.index);
+      }
+    }
+  }
+
+  // Returned in slot order; slot indices are contiguous 0..n-1 by construction.
+  return slots.map((s) => [...neighbors[s.index]]);
 }
 
 // ── Rows layout (current default) ────────────────────────────────────────────
@@ -171,13 +210,14 @@ function customRowsLayout(def: LayoutDef): Slot[] {
       });
     }
   }
-  // Use distance-based neighbors so a seat in a short row still sees the
-  // seats above/below it even when columns don't align.
+  // Orthogonal (4-connected) neighbors, matching the grid layouts. A short row
+  // is centered, so a seat directly above/below can be offset by up to half a
+  // cell; `xTol = 0.75 · cellW` reaches that offset but stops short of a full
+  // cell, so diagonals are excluded (unlike a Euclidean radius, which would
+  // make the layout 8-connected and inconsistent with `rows`).
   const cellW = 1 / Math.max(1, maxCols - 1);
-  const cellH = 1 / Math.max(1, rows - 1);
-  const threshold = Math.hypot(cellW, cellH) * 1.05;
   const filtered = applyBlocked(partial, def);
-  const neighbors = buildDistanceNeighbors(filtered, threshold);
+  const neighbors = buildOrthogonalNeighbors(filtered, cellW * 0.75);
   return filtered.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
 }
 
@@ -277,12 +317,12 @@ function uShapeLayout(def: LayoutDef): Slot[] {
   // Right leg (top → bottom)
   for (let r = 0; r < rows; r++) push(r, cols - 1);
 
-  // Distance-based neighbors with a generous threshold so adjacent seats
-  // along each leg/wall connect.
-  const cellW = 1 / Math.max(1, cols - 1);
-  const cellH = 1 / Math.max(1, rows - 1);
-  const threshold = Math.hypot(cellW, cellH) * 1.05;
-  const neighbors = buildDistanceNeighbors(partial, threshold);
+  // The perimeter seats keep their true (row, col) grid coordinates, so the
+  // orthogonal grid-neighbor builder connects each leg vertically and the back
+  // wall horizontally (the corners bridge them) — a clean 4-connected chain,
+  // consistent with the `rows` layout. The unused legs are never linked because
+  // their interior (row, col) cells don't exist.
+  const neighbors = buildGridNeighbors(partial);
   return partial.map((s, i) => ({ ...s, neighbors: neighbors[i] }));
 }
 

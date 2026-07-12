@@ -1068,8 +1068,15 @@ export class ClassroomOptimizer {
     const F = this.freeSlots;
     const m = F.length;
     if (m < 2) return;
-    const i = F[Math.floor(this.rng() * m)];
-    const j = F[Math.floor(this.rng() * m)];
+    const a = Math.floor(this.rng() * m);
+    // Draw the second index from the remaining m-1 slots and shift it past `a`,
+    // so the two are always distinct. A self-swap (i === j) is a no-op that
+    // silently wastes a mutation event — at m free slots it happened ~1/m of
+    // the time, throttling exploration late in a run when m is small.
+    let b = Math.floor(this.rng() * (m - 1));
+    if (b >= a) b++;
+    const i = F[a];
+    const j = F[b];
     [chrom[i], chrom[j]] = [chrom[j], chrom[i]];
   }
 
