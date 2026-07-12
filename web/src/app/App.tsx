@@ -12,12 +12,15 @@ import TopBar from './TopBar';
 // PrintView pulls in html2canvas indirectly (the user only sees it after
 // clicking Print), so defer its load.
 const PrintView = lazy(() => import('../features/print/PrintView'));
-import ComparePanel from '../features/compare/ComparePanel';
+// Interaction-gated views — none are on the first-paint path, so splitting them
+// out of the entry chunk cuts initial load. Each renders null when closed, so
+// mounting only when open loses no exit animation.
+const ComparePanel = lazy(() => import('../features/compare/ComparePanel'));
+const UserGuide = lazy(() => import('../components/UserGuide'));
+const SetupWizard = lazy(() => import('../features/wizard/SetupWizard'));
 import OnboardingView from '../features/onboarding/OnboardingView';
-import SetupWizard from '../features/wizard/SetupWizard';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import WelcomeTipsModal from '../components/WelcomeTipsModal';
-import UserGuide from '../components/UserGuide';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
@@ -154,13 +157,15 @@ function App() {
         <div className="flex-1 overflow-auto p-3 sm:p-6">
           {wizardActive ? (
             /* ── Guided setup wizard ── */
-            <SetupWizard
-              wasmReady={wasmReady}
-              isOptimizing={isOptimizing}
-              optimize={optimize}
-              progress={progress}
-              cancel={cancel}
-            />
+            <Suspense fallback={null}>
+              <SetupWizard
+                wasmReady={wasmReady}
+                isOptimizing={isOptimizing}
+                optimize={optimize}
+                progress={progress}
+                cancel={cancel}
+              />
+            </Suspense>
           ) : students.length === 0 || homeView ? (
             /* ── Welcome / home landing ──
                Shown automatically when the class is empty, or on demand when
@@ -256,7 +261,11 @@ function App() {
         </Suspense>
       )}
 
-      <ComparePanel open={showCompare} onClose={() => setShowCompare(false)} />
+      {showCompare && (
+        <Suspense fallback={null}>
+          <ComparePanel open={showCompare} onClose={() => setShowCompare(false)} />
+        </Suspense>
+      )}
 
       <QuestionnaireModal open={questionnaireOpen} onClose={() => setQuestionnaireOpen(false)} />
 
@@ -268,7 +277,11 @@ function App() {
       <WelcomeTipsModal open={showTips} onClose={() => setShowTips(false)} />
 
       {/* Comprehensive user guide — opens from the help button in the header. */}
-      <UserGuide open={showGuide} onClose={() => setShowGuide(false)} />
+      {showGuide && (
+        <Suspense fallback={null}>
+          <UserGuide open={showGuide} onClose={() => setShowGuide(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

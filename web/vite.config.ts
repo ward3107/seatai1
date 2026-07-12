@@ -59,12 +59,20 @@ export default defineConfig({
         // Split large, independently-versioned vendor libraries into their
         // own chunks. They change far less often than app code, so browsers
         // keep them cached across deploys, and the initial parse cost drops.
-        // jspdf / html2canvas are intentionally absent — they're already
-        // dynamic-imported on demand from the export path.
-        manualChunks: {
-          'vendor-motion': ['framer-motion'],
-          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/utilities'],
-          'vendor-db': ['dexie', 'dexie-react-hooks'],
+        // Split large, independently-versioned vendor libraries into their own
+        // chunks by node_modules path — the function form matches subpath
+        // imports (react-dom/client, dexie-react-hooks) that the object form
+        // misses. These change far less often than app code, so browsers keep
+        // them cached across deploys and the entry chunk parses faster.
+        // jspdf / html2canvas are intentionally absent — already dynamic-imported
+        // on demand from the export path.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'vendor-react';
+          if (/[\\/]node_modules[\\/](zustand|immer)[\\/]/.test(id)) return 'vendor-state';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('@dnd-kit')) return 'vendor-dnd';
+          if (id.includes('dexie')) return 'vendor-db';
         },
       },
     },
