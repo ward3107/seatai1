@@ -117,6 +117,27 @@ test.describe('Optimize → render → print', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
   });
+
+  test('locks and unlocks a seat from the keyboard (L)', async ({ page }) => {
+    await page.goto('/');
+    await dismissTips(page);
+    await seedClass(page, 8);
+    const optimize = page.getByTestId('optimize-button');
+    await expect(optimize).toBeEnabled({ timeout: 15000 });
+    await optimize.click();
+    await expect.poll(
+      () => getState(page, (s) => (s as { result: unknown }).result !== null),
+      { timeout: 20000 },
+    ).toBe(true);
+
+    // Arrow selects an occupied seat; L toggles its lock (previously only
+    // reachable by mouse right-click / touch long-press).
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('l');
+    await expect.poll(() => getState(page, (s) => (s as { lockedSeats: string[] }).lockedSeats.length)).toBe(1);
+    await page.keyboard.press('l');
+    await expect.poll(() => getState(page, (s) => (s as { lockedSeats: string[] }).lockedSeats.length)).toBe(0);
+  });
 });
 
 test.describe('CSV import', () => {

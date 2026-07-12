@@ -462,7 +462,15 @@
     "min_fitness": "Min Fitness",
     "max_fitness": "Max Fitness",
     "improvement": "Improvement",
-    "avg_fitness": "Avg Fitness"
+    "avg_fitness": "Avg Fitness",
+    "seat_locked_announce": "{{name}}'s seat locked",
+    "seat_unlocked_announce": "{{name}}'s seat unlocked",
+    "drag_pickup": "Picked up {{name}}",
+    "drag_over_valid": "Row {{row}}, column {{col}} — swap allowed",
+    "drag_over_invalid": "Row {{row}}, column {{col}} — would break a rule",
+    "drag_over_plain": "Row {{row}}, column {{col}}",
+    "drag_dropped": "Dropped on row {{row}}, column {{col}}",
+    "drag_cancelled": "Drag cancelled"
   },
   "optimization": {
     "title": "Optimization",

@@ -7,6 +7,12 @@ interface Options {
   setSelectedSeat: (key: string | null) => void;
   setDetailsTarget: (id: string | null) => void;
   gridContainerRef: RefObject<HTMLDivElement>;
+  /** Current locked seat keys — read to decide the new state when toggling. */
+  lockedSeats: string[];
+  /** Toggle the lock on a seat ("row-col"). */
+  toggleLockSeat: (seatKey: string) => void;
+  /** Announce a lock change to assistive tech (nowLocked = the resulting state). */
+  announceLockChange: (seatKey: string, nowLocked: boolean) => void;
 }
 
 /**
@@ -14,8 +20,10 @@ interface Options {
  *
  * Arrow keys move the selected seat (or pick the top-left seat if
  * nothing is selected yet). Enter opens the detail drawer for the
- * student in the selected seat. Escape clears the selection.
- * Disabled when focus is in a text input so we don't fight typing.
+ * student in the selected seat. `L` locks/unlocks the selected occupied
+ * seat (the only lock affordance was previously mouse-right-click / touch
+ * long-press). Escape clears the selection. Disabled when focus is in a
+ * text input so we don't fight typing.
  *
  * When the selection moves, real DOM focus follows it onto the seat's
  * button (via its data-seat-key attribute) so screen readers announce
@@ -27,6 +35,9 @@ export function useGridKeyboardNav({
   setSelectedSeat,
   setDetailsTarget,
   gridContainerRef,
+  lockedSeats,
+  toggleLockSeat,
+  announceLockChange,
 }: Options) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -38,6 +49,20 @@ export function useGridKeyboardNav({
         tag === 'SELECT' ||
         target?.isContentEditable
       ) return;
+
+      // L: lock / unlock the selected occupied seat.
+      if (e.key === 'l' || e.key === 'L') {
+        if (!selectedSeatKey) return;
+        const seat = seats.find(
+          (s) => `${s.position.row}-${s.position.col}` === selectedSeatKey,
+        );
+        if (!seat?.student_id) return; // locking an empty seat has no effect
+        e.preventDefault();
+        const nowLocked = !lockedSeats.includes(selectedSeatKey);
+        toggleLockSeat(selectedSeatKey);
+        announceLockChange(selectedSeatKey, nowLocked);
+        return;
+      }
 
       if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) return;
 
@@ -126,5 +151,5 @@ export function useGridKeyboardNav({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedSeatKey, seats, setSelectedSeat, setDetailsTarget, gridContainerRef]);
+  }, [selectedSeatKey, seats, setSelectedSeat, setDetailsTarget, gridContainerRef, lockedSeats, toggleLockSeat, announceLockChange]);
 }

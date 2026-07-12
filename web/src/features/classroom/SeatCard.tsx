@@ -140,6 +140,7 @@ export default memo(function SeatCard({
       // truncates on small/zoomed-out grids, so this recovers the full name.
       title={student ? student.name : undefined}
       aria-pressed={isSelected}
+      aria-keyshortcuts="L"
       className={clsx(
         'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[88px]',
         'border-2 transition-all duration-150 select-none text-left',
@@ -181,6 +182,20 @@ export default memo(function SeatCard({
         isLocked && 'opacity-60',
       )}
     >
+      {/* Drop-target validity — a ✓ / ✕ glyph in addition to the green/red
+          ring, so the valid/invalid state isn't conveyed by color alone. */}
+      {isOver && !isDragging && (
+        <div
+          className={clsx(
+            'absolute top-1 left-1/2 -translate-x-1/2 rounded-full w-4 h-4 flex items-center justify-center text-white text-[10px] font-bold pointer-events-none',
+            dropPreview === 'invalid' ? 'bg-red-500' : 'bg-green-500',
+          )}
+          aria-hidden="true"
+        >
+          {dropPreview === 'invalid' ? '✕' : '✓'}
+        </div>
+      )}
+
       {/* Lock badge */}
       {isLocked && (
         <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-400 pointer-events-none">

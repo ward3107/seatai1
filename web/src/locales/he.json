@@ -462,7 +462,15 @@
     "min_fitness": "כושר מינימלי",
     "max_fitness": "כושר מקסימלי",
     "improvement": "שיפור",
-    "avg_fitness": "כושר ממוצע"
+    "avg_fitness": "כושר ממוצע",
+    "seat_locked_announce": "המושב של {{name}} ננעל",
+    "seat_unlocked_announce": "המושב של {{name}} שוחרר",
+    "drag_pickup": "הורם {{name}}",
+    "drag_over_valid": "שורה {{row}}, עמודה {{col}} — החלפה מותרת",
+    "drag_over_invalid": "שורה {{row}}, עמודה {{col}} — תפר כלל",
+    "drag_over_plain": "שורה {{row}}, עמודה {{col}}",
+    "drag_dropped": "שוחרר בשורה {{row}}, עמודה {{col}}",
+    "drag_cancelled": "הגרירה בוטלה"
   },
   "optimization": {
     "title": "מיטוב",
