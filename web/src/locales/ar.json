@@ -462,7 +462,15 @@
     "min_fitness": "الحد الأدنى للملاءمة",
     "max_fitness": "الحد الأقصى للملاءمة",
     "improvement": "التحسين",
-    "avg_fitness": "متوسط الملاءمة"
+    "avg_fitness": "متوسط الملاءمة",
+    "seat_locked_announce": "تم قفل مقعد {{name}}",
+    "seat_unlocked_announce": "تم فتح مقعد {{name}}",
+    "drag_pickup": "تم التقاط {{name}}",
+    "drag_over_valid": "الصف {{row}}، العمود {{col}} — التبديل مسموح",
+    "drag_over_invalid": "الصف {{row}}، العمود {{col}} — سيخالف قاعدة",
+    "drag_over_plain": "الصف {{row}}، العمود {{col}}",
+    "drag_dropped": "أُفلت في الصف {{row}}، العمود {{col}}",
+    "drag_cancelled": "أُلغي السحب"
   },
   "optimization": {
     "title": "التحسين",

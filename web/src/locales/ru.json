@@ -462,7 +462,15 @@
     "min_fitness": "Мин. пригодность",
     "max_fitness": "Макс. пригодность",
     "improvement": "Улучшение",
-    "avg_fitness": "Средн. пригодность"
+    "avg_fitness": "Средн. пригодность",
+    "seat_locked_announce": "Место {{name}} заблокировано",
+    "seat_unlocked_announce": "Место {{name}} разблокировано",
+    "drag_pickup": "Взято: {{name}}",
+    "drag_over_valid": "Ряд {{row}}, столбец {{col}} — обмен разрешён",
+    "drag_over_invalid": "Ряд {{row}}, столбец {{col}} — нарушит правило",
+    "drag_over_plain": "Ряд {{row}}, столбец {{col}}",
+    "drag_dropped": "Помещено в ряд {{row}}, столбец {{col}}",
+    "drag_cancelled": "Перетаскивание отменено"
   },
   "optimization": {
     "title": "Оптимизация",

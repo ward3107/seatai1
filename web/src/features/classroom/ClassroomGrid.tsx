@@ -136,6 +136,16 @@ export default function ClassroomGrid() {
   // red/green tinting that previews whether the swap keeps rules satisfied.
   const [overSeatKey, setOverSeatKey] = useState<string | null>(null);
 
+  // Off-screen live region for keyboard-driven seat actions (lock/unlock). A
+  // trailing NBSP alternates each call so the SR re-announces even when the
+  // text would otherwise be identical.
+  const [liveMessage, setLiveMessage] = useState('');
+  const liveCounter = useRef(0);
+  const announce = useCallback((msg: string) => {
+    liveCounter.current += 1;
+    setLiveMessage(msg + ' '.repeat(liveCounter.current % 2));
+  }, []);
+
   // Set of student IDs whose row/col changed between the previous and
   // current optimization run. Only computed when the user has the
   // "show movement" toggle on AND both a current result and a previous
@@ -230,32 +240,75 @@ export default function ClassroomGrid() {
   // two affected seats satisfied? Returns 'valid' / 'invalid' (null when we
   // can't tell — no result, or badges off). Recomputed only when the hover
   // target changes, so it's cheap.
+  // Would swapping `srcKey` into `tgtKey` keep both seats' rules satisfied?
+  // Shared by the visual drop preview and the drag announcements so keyboard
+  // and pointer users get the exact same verdict.
+  const evaluateSwap = useCallback(
+    (srcKey: string, tgtKey: string): 'valid' | 'invalid' | null => {
+      if (!showConstraintBadges || !result || srcKey === tgtKey) return null;
+      const sim: OptimizationResult = {
+        ...result,
+        layout: {
+          ...result.layout,
+          seats: result.layout.seats.map((s) => ({ ...s, position: { ...s.position } })),
+        },
+      };
+      const [ar, ac] = srcKey.split('-').map(Number);
+      const [br, bc] = tgtKey.split('-').map(Number);
+      const seatA = sim.layout.seats.find((s) => s.position.row === ar && s.position.col === ac);
+      const seatB = sim.layout.seats.find((s) => s.position.row === br && s.position.col === bc);
+      if (!seatA || !seatB) return null;
+      const tmp = seatA.student_id;
+      seatA.student_id = seatB.student_id;
+      seatA.is_empty = seatB.student_id === undefined;
+      seatB.student_id = tmp;
+      seatB.is_empty = tmp === undefined;
+      const st = getConstraintStatus(sim, students, constraints, layoutDef);
+      return st.get(srcKey)?.violated || st.get(tgtKey)?.violated ? 'invalid' : 'valid';
+    },
+    [showConstraintBadges, result, students, constraints, layoutDef],
+  );
+
   const dropPreview = useMemo<'valid' | 'invalid' | null>(() => {
-    if (!showConstraintBadges || !result || !activeDragSeatKey || !overSeatKey) return null;
-    if (activeDragSeatKey === overSeatKey) return null;
-    // Simulate the swap on a shallow clone and re-check the two seats.
-    const sim: OptimizationResult = {
-      ...result,
-      layout: {
-        ...result.layout,
-        seats: result.layout.seats.map((s) => ({ ...s, position: { ...s.position } })),
+    if (!activeDragSeatKey || !overSeatKey) return null;
+    return evaluateSwap(activeDragSeatKey, overSeatKey);
+  }, [evaluateSwap, activeDragSeatKey, overSeatKey]);
+
+  // Spoken announcements for keyboard-driven drag (dnd-kit KeyboardSensor).
+  // Critically, the over-target message states whether the swap is allowed or
+  // would break a rule — the same verdict the sighted user sees as a green/red
+  // ring — so keyboard/SR users aren't relying on color they can't perceive.
+  const dndAnnouncements = useMemo(() => {
+    const nameOf = (id: string) => {
+      const [r, c] = id.split('-').map(Number);
+      const seat = seats.find((s) => s.position.row === r && s.position.col === c);
+      return seat?.student_id ? (studentMap.get(seat.student_id)?.name ?? '') : '';
+    };
+    const pos = (id: string) => {
+      const [r, c] = id.split('-').map(Number);
+      return { row: r + 1, col: c + 1 };
+    };
+    return {
+      onDragStart({ active }: { active: { id: string | number } }) {
+        return t('classroom.drag_pickup', { name: nameOf(String(active.id)) });
+      },
+      onDragOver({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) {
+        if (!over) return undefined;
+        const p = pos(String(over.id));
+        const v = evaluateSwap(String(active.id), String(over.id));
+        if (v === 'valid') return t('classroom.drag_over_valid', p);
+        if (v === 'invalid') return t('classroom.drag_over_invalid', p);
+        return t('classroom.drag_over_plain', p);
+      },
+      onDragEnd({ over }: { active: { id: string | number }; over: { id: string | number } | null }) {
+        if (!over) return t('classroom.drag_cancelled');
+        return t('classroom.drag_dropped', pos(String(over.id)));
+      },
+      onDragCancel() {
+        return t('classroom.drag_cancelled');
       },
     };
-    const [ar, ac] = activeDragSeatKey.split('-').map(Number);
-    const [br, bc] = overSeatKey.split('-').map(Number);
-    const seatA = sim.layout.seats.find((s) => s.position.row === ar && s.position.col === ac);
-    const seatB = sim.layout.seats.find((s) => s.position.row === br && s.position.col === bc);
-    if (!seatA || !seatB) return null;
-    const tmp = seatA.student_id;
-    seatA.student_id = seatB.student_id;
-    seatA.is_empty = seatB.student_id === undefined;
-    seatB.student_id = tmp;
-    seatB.is_empty = tmp === undefined;
-    const st = getConstraintStatus(sim, students, constraints, layoutDef);
-    const aBad = st.get(activeDragSeatKey)?.violated;
-    const bBad = st.get(overSeatKey)?.violated;
-    return aBad || bBad ? 'invalid' : 'valid';
-  }, [showConstraintBadges, result, activeDragSeatKey, overSeatKey, students, constraints, layoutDef]);
+  }, [seats, studentMap, t, evaluateSwap]);
 
   const setDetailsTarget = useStore((s) => s.setDetailsTarget);
 
@@ -304,6 +357,19 @@ export default function ClassroomGrid() {
     setContextMenu({ x: e.clientX, y: e.clientY, seatKey });
   }, []);
 
+  // Announce a keyboard lock/unlock to assistive tech, naming the occupant.
+  const announceLockChange = useCallback(
+    (seatKey: string, nowLocked: boolean) => {
+      const [r, c] = seatKey.split('-').map(Number);
+      const seat = seats.find((s) => s.position.row === r && s.position.col === c);
+      const name = seat?.student_id ? (studentMap.get(seat.student_id)?.name ?? '') : '';
+      announce(
+        t(nowLocked ? 'classroom.seat_locked_announce' : 'classroom.seat_unlocked_announce', { name }),
+      );
+    },
+    [seats, studentMap, announce, t],
+  );
+
   // ── Keyboard navigation ──────────────────────────────────────────────────
   useGridKeyboardNav({
     seats,
@@ -311,6 +377,9 @@ export default function ClassroomGrid() {
     setSelectedSeat,
     setDetailsTarget,
     gridContainerRef,
+    lockedSeats,
+    toggleLockSeat,
+    announceLockChange,
   });
 
   // ── Active drag ghost ─────────────────────────────────────────────────────
@@ -366,6 +435,11 @@ export default function ClassroomGrid() {
       className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 sm:p-6"
       onClick={() => setContextMenu(null)}
     >
+      {/* Off-screen live region for keyboard seat lock/unlock announcements. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {liveMessage}
+      </div>
+
       {/* Toolbar */}
       <GridControls
         interactionMode={interactionMode}
@@ -387,6 +461,7 @@ export default function ClassroomGrid() {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        accessibility={{ announcements: dndAnnouncements }}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
