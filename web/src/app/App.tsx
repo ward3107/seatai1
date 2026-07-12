@@ -123,7 +123,7 @@ function App() {
   });
 
   return (
-    <div className={clsx('min-h-screen flex relative', SCALE_CLASS[uiScale])}>
+    <div className={clsx('h-screen overflow-hidden flex relative', SCALE_CLASS[uiScale])}>
       {/* Skip link — first focusable element, so keyboard users can jump past
           the header/sidebar straight to the seating area. Visually hidden
           until focused. */}
