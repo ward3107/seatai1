@@ -13,6 +13,7 @@ import {
   MAX_SEATMATES,
   type SurveyAnswers,
   type NoiseSensitivity,
+  type Likert5,
 } from './surveyMapping';
 
 interface Props {
@@ -298,6 +299,68 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                         onClick={() => setAnswers((a) => ({ ...a, noise: a.noise === n ? null : (n as NoiseSensitivity) }))}
                         className={choiceBtn(answers.noise === n)}
                         aria-label={t(`questionnaire.noise_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* B5 — Sense of belonging (PSSM proxy). Concrete behavioural
+                    phrasing ("someone to talk to at recess") is easier for
+                    children than the abstract "do you feel a part of the
+                    class?" and works as a validated proxy. Neutral wording. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_belonging')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_belonging_scale')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, belonging: a.belonging === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.belonging === n)}
+                        aria-label={t(`questionnaire.belonging_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* B6 — Learning-style preference (Johnson & Johnson,
+                    Cooperative Learning). Uses "in a pair" (בצמד / in pairs),
+                    which is gender-neutral in Hebrew (unlike "with a partner"
+                    which forces a masculine noun). */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_learning_style')}</p>
+                  <div className="flex gap-2">
+                    {(['alone', 'pair', 'group'] as const).map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setAnswers((a) => ({ ...a, learningStyle: a.learningStyle === v ? null : v }))}
+                        className={choiceBtn(answers.learningStyle === v)}
+                      >
+                        {t(`questionnaire.learn_${v}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* B7 — Teacher-attention access (UDL Engagement / action-zone
+                    outcome). Phrased in gender-neutral form: "the teacher"
+                    (המורה) rather than a gendered verb, and "getting
+                    attention" rather than "being heard". Low ratings reinforce
+                    front-row placement in surveyToStudentPatch. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_teacher_attention')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_teacher_attention_scale')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, teacherAttention: a.teacherAttention === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.teacherAttention === n)}
+                        aria-label={t(`questionnaire.attention_${n}`)}
                       >
                         {n}
                       </button>
