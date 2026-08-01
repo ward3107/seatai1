@@ -14,6 +14,9 @@ import type { LayoutDef } from '../core/layouts';
 type InMessage =
   | {
       type: 'optimize';
+      /** Monotonic id assigned by the caller; echoed back on progress/result/error
+       *  so a superseded run's late reply can be discarded by the host. */
+      reqId: number;
       students: Student[];
       rows: number;
       cols: number;
@@ -32,9 +35,9 @@ type InMessage =
 
 type OutMessage =
   | { type: 'ready' }
-  | { type: 'progress'; generation: number; totalGenerations: number; bestFitness: number }
-  | { type: 'result'; result: OptimizationResult; cancelled?: boolean }
-  | { type: 'error'; error: string };
+  | { type: 'progress'; reqId: number; generation: number; totalGenerations: number; bestFitness: number }
+  | { type: 'result'; reqId: number; result: OptimizationResult; cancelled?: boolean }
+  | { type: 'error'; reqId: number; error: string };
 
 // Set when a 'cancel' message arrives mid-run; polled by the optimizer via
 // shouldStop between generation chunks. Reset at the start of each run.
@@ -53,6 +56,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
   if (msg.type !== 'optimize') return;
 
   const {
+    reqId,
     students, rows, cols, layoutDef, weights, config, constraints,
     recentPairPenalties, avoidRecentStrength, pinned,
   } = msg;
@@ -78,7 +82,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
       // Already throttled by the optimizer (~every 10 generations).
       onProgress: ({ generation, totalGenerations, bestFitness }) => {
         self.postMessage({
-          type: 'progress', generation, totalGenerations, bestFitness,
+          type: 'progress', reqId, generation, totalGenerations, bestFitness,
         } satisfies OutMessage);
       },
       shouldStop: () => cancelRequested,
@@ -86,6 +90,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
 
     self.postMessage({
       type: 'result',
+      reqId,
       result,
       // Back-compat: only present (true) when the run was cut short.
       cancelled: cancelRequested || undefined,
@@ -93,6 +98,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
   } catch (err) {
     self.postMessage({
       type: 'error',
+      reqId,
       error: err instanceof Error ? err.message : 'Optimization failed',
     } satisfies OutMessage);
   }

@@ -5,11 +5,9 @@ node_modules/
 # Build outputs
 dist/
 build/
-target/
-*.wasm
 
-# WASM generated files
-web/src/wasm/
+# TypeScript incremental build cache
+*.tsbuildinfo
 
 # Environment files
 .env

@@ -166,6 +166,9 @@ export class ClassroomOptimizer {
    *  full width (e.g. a circle, whose x is bounded to ~[0.08, 0.92]). */
   private xMin = 0;
   private xMax = 1;
+  /** Cached max slot row for the back-row penalty; recomputed on setLayout so
+   *  the hot fitness() loop doesn't spread `this.slots` on every call. */
+  private maxRow = 0;
 
   constructor(
     students: Student[],
@@ -183,21 +186,25 @@ export class ClassroomOptimizer {
     this.recomputeSlotBounds();
   }
 
-  /** Refresh the cached x-extent whenever the slot set changes. */
+  /** Refresh the cached x-extent and max-row whenever the slot set changes. */
   private recomputeSlotBounds() {
     if (this.slots.length === 0) {
       this.xMin = 0;
       this.xMax = 1;
+      this.maxRow = 0;
       return;
     }
     let lo = Infinity;
     let hi = -Infinity;
+    let maxRow = -Infinity;
     for (const s of this.slots) {
       if (s.x < lo) lo = s.x;
       if (s.x > hi) hi = s.x;
+      if (s.row > maxRow) maxRow = s.row;
     }
     this.xMin = lo;
     this.xMax = hi;
+    this.maxRow = maxRow;
   }
 
   /** Aisle / window classification. Delegates to the shared `seatGeometry`
@@ -238,6 +245,11 @@ export class ClassroomOptimizer {
     this.layoutDef = def;
     this.slots = generateSlots(def);
     this.recomputeSlotBounds();
+    // Pins are slot-index-keyed; changing the layout invalidates them. Without
+    // this, a pin at slotIdx 50 survives a switch to a 30-slot layout — the
+    // pinned student is excluded from the GA search yet has no slot to sit in,
+    // silently vanishing from the chart and corrupting the chromosome length.
+    this.pinned = new Map();
   }
   /** Pin students to seats so a re-optimize keeps them in place and only
    *  rearranges the rest. `pinned` maps slotIndex → studentId; entries whose
@@ -878,13 +890,12 @@ export class ClassroomOptimizer {
       else score -= 0.5 * slot.row;
     }
     if (this.constraints.back_row_ids.length > 0) {
-      const maxRow = Math.max(...this.slots.map((s) => s.row));
       for (const id of this.constraints.back_row_ids) {
         const pos = posOf.get(id) ?? -1;
         if (pos === -1) continue;
         const slot = this.slots[pos];
         if (slot.isBack) score += 1;
-        else score -= 0.5 * (maxRow - slot.row);
+        else score -= 0.5 * (this.maxRow - slot.row);
       }
     }
 
