@@ -141,6 +141,13 @@
     "dark": "Dark",
     "system": "Follow system"
   },
+  "backup_reminder": {
+    "message_never": "You've made {{count}} changes and never exported a backup. If your browser storage is cleared, this class is gone.",
+    "message_since_last": "You've made {{count}} changes since your last backup. Save one now so a cleared browser doesn't wipe your work.",
+    "download_now": "Backup now",
+    "later": "Later",
+    "later_aria": "Snooze the backup reminder for 24 hours"
+  },
   "guide": {
     "title": "User Guide",
     "close": "Close",

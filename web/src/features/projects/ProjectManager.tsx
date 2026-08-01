@@ -5,7 +5,8 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Pencil, DownloadCloud, UploadCloud, AlertTriangle } from 'lucide-react';
 import type { ClassProject } from '../../types';
-import { buildBackup, parseBackup, type BackupData } from './backup';
+import { parseBackup, type BackupData } from './backup';
+import { downloadBackup } from './downloadBackup';
 
 export default function ProjectManager() {
   const projects = useStore((s) => s.projects);
@@ -30,40 +31,7 @@ export default function ProjectManager() {
 
   const currentProject = projects.find(p => p.id === currentProjectId);
 
-  const handleBackup = () => {
-    // Pull a fresh snapshot from the store rather than relying on the
-    // hooked values — guarantees the file matches the exact moment of
-    // the click even if the user just edited something.
-    const s = useStore.getState();
-    const file = buildBackup({
-      students: s.students,
-      rows: s.rows,
-      cols: s.cols,
-      layoutDef: s.layoutDef,
-      weights: s.weights,
-      config: s.config,
-      constraints: s.constraints,
-      avoidRecentNeighbors: s.avoidRecentNeighbors,
-      projects: s.projects,
-      currentProjectId: s.currentProjectId,
-      result: s.result,
-      resultHistory: s.resultHistory,
-      rotationPlan: s.rotationPlan,
-      savedArrangements: s.savedArrangements,
-      questionnaire: s.questionnaire,
-      uiLanguage: s.uiLanguage,
-      uiScale: s.uiScale,
-      theme: s.theme,
-      aiSettings: { enabled: s.aiSettings.enabled, model: s.aiSettings.model },
-    });
-    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `seatai-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const handleBackup = () => downloadBackup();
 
   const handleRestoreFile = async (file: File) => {
     setRestoreError('');
