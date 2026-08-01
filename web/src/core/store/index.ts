@@ -62,6 +62,24 @@ interface AppState {
   setResult: (result: OptimizationResult | null) => void;
   setShowMovementDiff: (v: boolean) => void;
 
+  /** Number of user-meaningful data changes since the last successful backup
+   *  export. Drives the backup-reminder banner: teachers who never export
+   *  are one cleared cache away from losing everything. Bumped by
+   *  setResult, add/remove/updateStudent, saveProject, saveArrangement. */
+  changesSinceBackup: number;
+  /** ISO timestamp of the last time the user exported a backup, or null. */
+  lastBackupAt: string | null;
+  /** ISO timestamp until which the reminder banner is suppressed after the
+   *  teacher clicks "Later". null means not snoozed. */
+  backupReminderSnoozedUntil: string | null;
+  /** Increment the change counter. Called from data-mutating actions. */
+  bumpChangesSinceBackup: (n?: number) => void;
+  /** Mark that a successful backup export just happened. Resets the
+   *  counter, updates lastBackupAt, and clears any snooze. */
+  markBackedUp: () => void;
+  /** Suppress the reminder banner for `hours` hours (default 24). */
+  snoozeBackupReminder: (hours?: number) => void;
+
   // Weights
   weights: ObjectiveWeights;
   setWeights: (weights: ObjectiveWeights) => void;
@@ -294,12 +312,14 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
+          state.changesSinceBackup += 1;
         }),
       updateStudent: (id, updates) =>
         set((state) => {
           const index = state.students.findIndex((s: Student) => s.id === id);
           if (index !== -1) {
             state.students[index] = { ...state.students[index], ...updates };
+            state.changesSinceBackup += 1;
           }
         }),
       removeStudent: (id) =>
@@ -309,6 +329,7 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
+          state.changesSinceBackup += 1;
           // An emptied roster has no chart — clear the stale result so the
           // header score / Print / Compare don't render over an empty class.
           if (state.students.length === 0) {
@@ -325,6 +346,9 @@ export const useStore = create<AppState>()(
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
+          // A bulk roster swap (CSV import, Google Classroom) is a bigger
+          // change than a single edit — weight it accordingly.
+          state.changesSinceBackup += 3;
           if (students.length === 0) {
             state.result = null;
             state.previousPositions = null;
@@ -422,6 +446,31 @@ export const useStore = create<AppState>()(
           // New optimization clears undo history
           state.history = [];
           state.historyFuture = [];
+
+          // A successful optimization is a change worth backing up.
+          if (result) state.changesSinceBackup += 1;
+        }),
+
+      // Backup-reminder tracking. Defaults live below in the initial state
+      // block; these actions are the only writers.
+      changesSinceBackup: 0,
+      lastBackupAt: null,
+      backupReminderSnoozedUntil: null,
+      bumpChangesSinceBackup: (n = 1) =>
+        set((state) => {
+          state.changesSinceBackup += n;
+        }),
+      markBackedUp: () =>
+        set((state) => {
+          state.changesSinceBackup = 0;
+          state.lastBackupAt = new Date().toISOString();
+          state.backupReminderSnoozedUntil = null;
+        }),
+      snoozeBackupReminder: (hours = 24) =>
+        set((state) => {
+          state.backupReminderSnoozedUntil = new Date(
+            Date.now() + hours * 60 * 60 * 1000,
+          ).toISOString();
         }),
 
       // Weights
@@ -539,6 +588,7 @@ export const useStore = create<AppState>()(
             result: structuredClone(current(state.result)) as OptimizationResult,
           });
           state.activeArrangementId = id;
+          state.changesSinceBackup += 1;
         }),
       loadArrangement: (id) =>
         set((state) => {
@@ -816,6 +866,9 @@ export const useStore = create<AppState>()(
             });
             state.currentProjectId = id;
           }
+          // "Save project" writes to IndexedDB but not to an exportable file —
+          // still a data change worth backing up.
+          state.changesSinceBackup += 1;
         }),
 
       loadProject: (id) =>
@@ -961,6 +1014,11 @@ export const useStore = create<AppState>()(
           state.selectedSeatKey = null;
           state.previousPositions = null;
         }
+        // Backup-reminder fields were added later; older persisted stores
+        // don't have them, and `undefined + 1 = NaN` would poison the counter.
+        if (typeof state.changesSinceBackup !== 'number') state.changesSinceBackup = 0;
+        if (state.lastBackupAt === undefined) state.lastBackupAt = null;
+        if (state.backupReminderSnoozedUntil === undefined) state.backupReminderSnoozedUntil = null;
       },
       partialize: (state) => ({
         students: state.students,
@@ -989,6 +1047,9 @@ export const useStore = create<AppState>()(
         rotationPlan: state.rotationPlan,
         savedArrangements: state.savedArrangements,
         questionnaire: state.questionnaire,
+        changesSinceBackup: state.changesSinceBackup,
+        lastBackupAt: state.lastBackupAt,
+        backupReminderSnoozedUntil: state.backupReminderSnoozedUntil,
       }),
     }
   )

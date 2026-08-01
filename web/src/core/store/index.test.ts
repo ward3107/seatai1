@@ -423,4 +423,87 @@ describe('Zustand Store', () => {
       expect(result.current.selectedSeatKey).toBeNull();
     });
   });
+
+  describe('Backup Reminder', () => {
+    beforeEach(() => {
+      useStore.setState({
+        changesSinceBackup: 0,
+        lastBackupAt: null,
+        backupReminderSnoozedUntil: null,
+      });
+    });
+
+    it('addStudent bumps the change counter by 1', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => { result.current.addStudent(mockStudent); });
+      expect(result.current.changesSinceBackup).toBe(1);
+    });
+
+    it('removeStudent bumps the change counter by 1', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => {
+        result.current.addStudent(mockStudent);
+        result.current.removeStudent(mockStudent.id);
+      });
+      // 1 (add) + 1 (remove) = 2
+      expect(result.current.changesSinceBackup).toBe(2);
+    });
+
+    it('setStudents bulk swap counts as 3 changes', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => { result.current.setStudents([mockStudent]); });
+      expect(result.current.changesSinceBackup).toBe(3);
+    });
+
+    it('setResult with a non-null result bumps the counter', () => {
+      const { result } = renderHook(() => useStore());
+      // Only the fields setResult() touches; cast avoids restating the
+      // whole (evolving) OptimizationResult shape in a smoke test.
+      const fakeResult = {
+        fitness_score: 0.9,
+        layout: { layout_type: 'rows', rows: 5, cols: 6, total_seats: 30, seats: [] },
+        student_positions: {},
+      } as unknown as OptimizationResult;
+      act(() => { result.current.setResult(fakeResult); });
+      expect(result.current.changesSinceBackup).toBe(1);
+    });
+
+    it('setResult(null) does NOT bump the counter', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => { result.current.setResult(null); });
+      expect(result.current.changesSinceBackup).toBe(0);
+    });
+
+    it('markBackedUp resets counter, sets timestamp, clears snooze', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => {
+        result.current.bumpChangesSinceBackup(5);
+        result.current.snoozeBackupReminder(24);
+        result.current.markBackedUp();
+      });
+      expect(result.current.changesSinceBackup).toBe(0);
+      expect(result.current.lastBackupAt).not.toBeNull();
+      expect(result.current.backupReminderSnoozedUntil).toBeNull();
+    });
+
+    it('snoozeBackupReminder writes a future ISO timestamp', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => { result.current.snoozeBackupReminder(1); });
+      const until = result.current.backupReminderSnoozedUntil;
+      expect(until).not.toBeNull();
+      // Within the next 90 minutes (1 hour with slack for slow CI).
+      const delta = Date.parse(until!) - Date.now();
+      expect(delta).toBeGreaterThan(0);
+      expect(delta).toBeLessThan(90 * 60 * 1000);
+    });
+
+    it('bumpChangesSinceBackup(n) adds n to the counter', () => {
+      const { result } = renderHook(() => useStore());
+      act(() => {
+        result.current.bumpChangesSinceBackup(3);
+        result.current.bumpChangesSinceBackup(2);
+      });
+      expect(result.current.changesSinceBackup).toBe(5);
+    });
+  });
 });

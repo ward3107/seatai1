@@ -22,6 +22,7 @@ import OnboardingView from '../features/onboarding/OnboardingView';
 import StudentDetailPanel from '../features/students/StudentDetailPanel';
 import WelcomeTipsModal from '../components/WelcomeTipsModal';
 import ErrorBoundary from '../components/ErrorBoundary';
+import BackupReminderBanner from '../components/BackupReminderBanner';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { useLtiImport } from '../hooks/useLtiImport';
@@ -166,6 +167,13 @@ function App() {
           onShowPrint={() => setShowPrint(true)}
           onShowGuide={() => setShowGuide(true)}
         />
+
+        {/* Rendered above the content but below the TopBar so it doesn't
+            crowd the main workspace. Component gates its own visibility
+            (change threshold + snooze window), so this is a no-op most of
+            the time — including during the wizard, where the counter is
+            fresh at 0. */}
+        <BackupReminderBanner />
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-3 sm:p-6">
