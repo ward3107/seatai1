@@ -40,11 +40,12 @@ function buildPinned(
 
 type WorkerOut =
   | { type: 'ready' }
-  | { type: 'progress'; generation: number; totalGenerations: number; bestFitness: number }
-  | { type: 'result'; result: OptimizationResult; cancelled?: boolean }
-  | { type: 'error'; error: string };
+  | { type: 'progress'; reqId: number; generation: number; totalGenerations: number; bestFitness: number }
+  | { type: 'result'; reqId: number; result: OptimizationResult; cancelled?: boolean }
+  | { type: 'error'; reqId: number; error: string };
 
 type PendingPromise = {
+  reqId: number;
   resolve: (r: OptimizationResult | null) => void;
 };
 
@@ -62,6 +63,11 @@ export function useOptimizer() {
   const workerRef = useRef<Worker | null>(null);
   const pendingRef = useRef<PendingPromise | null>(null);
   const loadedRef = useRef(false);
+  // Monotonic request id assigned to every worker `optimize` message; the
+  // worker echoes it on every reply. Replies whose id != pendingRef's id are
+  // from a superseded run and must be dropped — otherwise a slow first run's
+  // late `result` overwrites the fresh state of a second, in-flight run.
+  const reqIdRef = useRef(0);
 
   const students = useStore((s) => s.students);
   const rows = useStore((s) => s.rows);
@@ -103,8 +109,16 @@ export function useOptimizer() {
 
         if (msg.type === 'ready') {
           if (import.meta.env.DEV) console.log('✅ Worker ready');
+          return;
+        }
 
-        } else if (msg.type === 'progress') {
+        // Discard replies from superseded runs: their pending promise was
+        // already resolved(null) by the newer optimize() call, and applying
+        // their result/progress/error to the store would clobber the fresh run.
+        const current = pendingRef.current;
+        if (!current || msg.reqId !== current.reqId) return;
+
+        if (msg.type === 'progress') {
           setProgress({
             generation: msg.generation,
             totalGenerations: msg.totalGenerations,
@@ -116,14 +130,14 @@ export function useOptimizer() {
           setResult(msg.result);
           setOptimizing(false);
           setProgress(null);
-          pendingRef.current?.resolve(msg.result);
+          current.resolve(msg.result);
           pendingRef.current = null;
 
         } else if (msg.type === 'error') {
           setError(msg.error);
           setOptimizing(false);
           setProgress(null);
-          pendingRef.current?.resolve(null);
+          current.resolve(null);
           pendingRef.current = null;
         }
       };
@@ -191,15 +205,20 @@ export function useOptimizer() {
 
     // Use worker if available
     if (workerRef.current) {
-      // If a run is already in flight, the worker will deliver only ONE more
-      // 'result' and it resolves whichever promise is current. Resolve the
-      // previous caller now (with null) so its `await optimize()` doesn't hang
-      // forever when a second run replaces it.
-      pendingRef.current?.resolve(null);
+      // Supersede any in-flight run: resolve its promise with null so its
+      // `await optimize()` doesn't hang, and post a `cancel` so the worker
+      // stops burning CPU instead of running the old GA to completion. The
+      // reqId bump below causes any late replies to be dropped in onmessage.
+      if (pendingRef.current) {
+        pendingRef.current.resolve(null);
+        workerRef.current.postMessage({ type: 'cancel' });
+      }
+      const reqId = ++reqIdRef.current;
       return new Promise<OptimizationResult | null>((resolve) => {
-        pendingRef.current = { resolve };
+        pendingRef.current = { reqId, resolve };
         workerRef.current!.postMessage({
           type: 'optimize',
+          reqId,
           students,
           rows,
           cols,
