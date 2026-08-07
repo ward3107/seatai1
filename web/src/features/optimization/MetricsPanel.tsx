@@ -113,7 +113,7 @@ export default function MetricsPanel() {
 
       {/* Overall Score */}
       <div className="text-center mb-6">
-        <div className="text-5xl font-bold bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent">
+        <div className="text-5xl font-bold text-primary-700 dark:text-primary-300">
           {getDisplayScorePct(result)}%
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('optimization.overall_fitness_score')}</p>

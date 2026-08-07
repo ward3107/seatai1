@@ -83,7 +83,7 @@ export default function SettingsPanel() {
           {/* Reset */}
           <button
             onClick={resetToDemo}
-            className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:shadow-md transition-shadow"
+            className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors"
           >
             <RotateCcw size={16} />
             {t('settings.load_demo')}

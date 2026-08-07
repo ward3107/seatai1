@@ -176,7 +176,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
               data-testid="optimize-button"
               disabled={!wasmReady || isOptimizing || students.length < 2 || students.length > slotCount(layoutDef)}
               aria-busy={isOptimizing}
-              className="w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
+              className="w-full py-3 px-4 bg-primary-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-700 transition-colors"
             >
               {isOptimizing ? (
                 <>
@@ -208,7 +208,7 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                   })}
                 >
                   <div
-                    className="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-[width] duration-300"
+                    className="h-full bg-primary-600 rounded-full transition-[width] duration-300"
                     style={{
                       width: `${Math.min(100, Math.round((progress.generation / Math.max(progress.totalGenerations, 1)) * 100))}%`,
                     }}

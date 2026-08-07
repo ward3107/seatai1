@@ -79,7 +79,7 @@ export default function WizardGenerate({ wasmReady, isOptimizing, optimize, prog
         onClick={handleGenerate}
         disabled={!canGenerate}
         aria-busy={isOptimizing}
-        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 px-8 py-3.5 text-base font-semibold text-white shadow hover:shadow-lg transition-shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+        className="flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isOptimizing ? (
           <>

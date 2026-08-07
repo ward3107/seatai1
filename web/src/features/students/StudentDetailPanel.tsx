@@ -71,7 +71,7 @@ function ScoreBar({ label, value, max = 100 }: { label: string; value: number; m
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-primary-400 to-accent-400"
+          className="h-full bg-primary-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -268,7 +268,7 @@ export default function StudentDetailPanel() {
               generated paragraph. Errors surface inline without
               breaking the rest of the drawer. */}
           {aiSettings.enabled && aiSettings.apiKey && explanation && (
-            <section className="bg-gradient-to-br from-primary-50 to-accent-50 dark:from-slate-700 dark:to-slate-800 rounded-xl p-3 border border-primary-200 dark:border-slate-600">
+            <section className="bg-primary-50 dark:bg-slate-700 rounded-xl p-3 border border-primary-200 dark:border-slate-600">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide">
                   {t('detail.ai_summary')}

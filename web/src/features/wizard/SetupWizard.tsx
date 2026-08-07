@@ -187,7 +187,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
               type="button"
               onClick={goNext}
               disabled={!canAdvance}
-              className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-accent-500 px-5 py-2 text-sm font-semibold text-white shadow hover:shadow-lg transition-shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {step === 0 && !enoughStudents ? t('wizard.need_two_students') : t('wizard.next')}
               <ChevronRight size={16} className="rtl:rotate-180" />
