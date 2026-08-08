@@ -220,7 +220,7 @@ export default function PrintView({ onClose }: Props) {
                         flex flex-col items-center justify-center
                         ${student
                           ? hasNeeds
-                            ? 'border-purple-300 bg-purple-50'
+                            ? 'border-accent-400 bg-accent-50'
                             : 'border-gray-300 bg-white'
                           : 'border-dashed border-gray-200 bg-gray-50'
                         }
@@ -297,7 +297,7 @@ export default function PrintView({ onClose }: Props) {
                                 items-center justify-center gap-0.5
                                 ${name
                                   ? hasNeeds
-                                    ? 'border-purple-300 bg-purple-50'
+                                    ? 'border-accent-400 bg-accent-50'
                                     : 'border-gray-300 bg-white'
                                   : 'border-dashed border-gray-200 bg-gray-50'
                                 }
@@ -342,7 +342,13 @@ export default function PrintView({ onClose }: Props) {
                   <span>⭐ {t('print.legend_front_row')}</span>
                 </>
               )}
-              <span className="text-purple-600">{t('print.legend_special_needs')}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-3 h-3 rounded border-2 border-accent-400 bg-accent-50"
+                />
+                {t('print.legend_special_needs')}
+              </span>
             </div>
 
             {/* Warnings */}

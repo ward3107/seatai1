@@ -630,7 +630,7 @@
     "legend_below_basic": "Ниже базового",
     "legend_mobility": "Потребности в передвижении",
     "legend_front_row": "Требуется первый ряд",
-    "legend_special_needs": "Фиолетовая рамка = особые потребности",
+    "legend_special_needs": "Особые потребности",
     "warnings": "Предупреждения"
   },
   "export": {

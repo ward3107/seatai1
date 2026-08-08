@@ -630,7 +630,7 @@
     "legend_below_basic": "Below basic",
     "legend_mobility": "Mobility needs",
     "legend_front_row": "Front row required",
-    "legend_special_needs": "Purple border = special needs",
+    "legend_special_needs": "Special needs",
     "warnings": "Warnings"
   },
   "export": {
