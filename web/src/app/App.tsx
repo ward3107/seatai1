@@ -26,7 +26,7 @@ import BackupReminderBanner from '../components/BackupReminderBanner';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { useLtiImport } from '../hooks/useLtiImport';
-import { getDisplayScorePct } from '../utils/seatingUtils';
+import { getDisplayScorePct, getScoreRating } from '../utils/seatingUtils';
 import { slotCount } from '../core/layouts';
 import clsx from 'clsx';
 import { ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
@@ -228,7 +228,8 @@ function App() {
                       <span className="font-semibold">{t('optimization.results_title')}</span>
                       <span className="text-gray-400 dark:text-gray-400">·</span>
                       <span>
-                        {t('app.score')}: <strong>{getDisplayScorePct(result)}%</strong>
+                        <strong className="text-primary-700 dark:text-primary-300">{t(`score.${getScoreRating(result)}`)}</strong>
+                        <span className="text-gray-500 dark:text-gray-400 ms-1 tabular-nums">({getDisplayScorePct(result)}%)</span>
                       </span>
                       <span className="text-gray-400 dark:text-gray-400 hidden sm:inline">·</span>
                       <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">

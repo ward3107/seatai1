@@ -184,72 +184,74 @@ function getAdjacentIds(
 // ─── helper: calculate compatibility score between two students ─────────────────
 // Simplified for teachers - practical explanations backed by research
 
+interface PairReason {
+  text: string;
+  /** Drives the chip color in the JSX. Kept as a real type instead of the
+   *  previous substring-match on the English text, so localization can move
+   *  the strings without silently re-coloring every chip. */
+  type: 'good' | 'note';
+}
+
 function calculatePairCompatibility(
   studentA: Student,
   studentB: Student,
-  _allStudents: Map<string, Student>
-): { score: number; reasons: string[] } {
-  const reasons: string[] = [];
+  _allStudents: Map<string, Student>,
+  t: (key: string, values?: Record<string, string | number>) => string
+): { score: number; reasons: PairReason[] } {
+  const reasons: PairReason[] = [];
   let score = 0;
 
-  // Friends work better together (proven by research)
   const isFriends = studentA.friends_ids.includes(studentB.id) || studentB.friends_ids.includes(studentA.id);
   if (isFriends) {
     score += 25;
-    reasons.push('🤝 Friends: More comfortable collaborating and helping each other');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_friends') });
   }
 
-  // No conflicts = better learning environment
   const hasConflict = studentA.incompatible_ids.includes(studentB.id) || studentB.incompatible_ids.includes(studentA.id);
   if (!hasConflict) {
     score += 25;
-    reasons.push('✓ No conflicts: Safe, focused learning environment');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_no_conflicts') });
   }
 
-  // Academic levels - similar OR mixed both work well
   const academicDiff = Math.abs(studentA.academic_score - studentB.academic_score);
   if (academicDiff <= 15) {
     score += 15;
-    reasons.push('📚 Similar levels: Can work together independently');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_similar_levels') });
   } else if (academicDiff <= 35) {
     score += 15;
-    reasons.push('📚 Mixed levels: Stronger students can help peers learn');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_mixed_levels') });
   } else {
     score += 5;
-    reasons.push('📚 Academic gap: May need extra teacher support');
+    reasons.push({ type: 'note', text: t('explanation.pair_reason_academic_gap') });
   }
 
-  // Behavior - similar means fewer disruptions
   const behaviorDiff = Math.abs(studentA.behavior_score - studentB.behavior_score);
   if (behaviorDiff <= 15) {
     score += 15;
-    reasons.push('😊 Similar behavior: Less likely to distract each other');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_similar_behavior') });
   } else if (behaviorDiff <= 30) {
     score += 8;
-    reasons.push('😊 Compatible behavior: Can work together with guidance');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_compatible_behavior') });
   }
 
-  // Special needs - keeping them together makes support easier
   if (studentA.requires_front_row && studentB.requires_front_row) {
     score += 10;
-    reasons.push('👁️ Both need front row: Easier to provide support');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_front') });
   }
 
   if (studentA.requires_quiet_area && studentB.requires_quiet_area) {
     score += 10;
-    reasons.push('🔇 Both need quiet: Reduced distractions help them focus');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_quiet') });
   }
 
-  // Mixed genders = better collaboration skills
   if (studentA.gender !== studentB.gender) {
     score += 5;
-    reasons.push('👥 Mixed genders: Builds collaboration across groups');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_mixed_genders') });
   }
 
-  // Bilingual = can support each other in both languages
   if (studentA.is_bilingual && studentB.is_bilingual) {
     score += 5;
-    reasons.push('🌐 Both bilingual: Can support each other in two languages');
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_bilingual') });
   }
 
   return { score, reasons };
@@ -356,16 +358,16 @@ export default function ExplanationPanel() {
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
           />
         </div>
 
         {/* Pair cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPairs.map(({ studentA, studentB, row, col }) => {
-            const compatibility = studentB
-              ? calculatePairCompatibility(studentA, studentB, studentMap)
-              : { score: 0, reasons: [studentA.name + ' (unpaired)'] };
+            const compatibility: { score: number; reasons: PairReason[] } = studentB
+              ? calculatePairCompatibility(studentA, studentB, studentMap, t)
+              : { score: 0, reasons: [{ type: 'note', text: `${studentA.name} ${t('explanation.pair_unpaired_suffix')}` }] };
 
             const hasWarn = compatibility.score < 30;
             if (hasWarn) warnCount++;
@@ -374,26 +376,26 @@ export default function ExplanationPanel() {
               <div
                 key={studentA.id + (studentB?.id || '')}
                 className={clsx(
-                  'rounded-xl border p-4',
+                  'rounded-xl border p-2.5',
                   hasWarn
-                    ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30'
-                    : 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30'
+                    ? 'border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-900/20'
+                    : 'border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20'
                 )}
               >
                 {/* Compatibility score badge */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                     {row + 1}-{col + 1}
                     {studentB && ` - ${row + 1}-${col + 2}`}
                   </span>
                   <span
                     className={clsx(
-                      'px-2 py-1 rounded-lg text-xs font-bold',
+                      'px-2 py-0.5 rounded-lg text-xs font-bold text-white',
                       compatibility.score >= 70
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-primary-600'
                         : compatibility.score >= 40
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-400 text-white'
+                          ? 'bg-primary-400'
+                          : 'bg-gray-400'
                     )}
                   >
                     {Math.min(compatibility.score, 100)}%
@@ -401,7 +403,7 @@ export default function ExplanationPanel() {
                 </div>
 
                 {/* Students in pair */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="flex -space-x-2">
                     {/* Student A */}
                     <div
@@ -440,24 +442,22 @@ export default function ExplanationPanel() {
                   </div>
                 </div>
 
-                {/* Reasons for pairing - based on educational research */}
-                <div className="space-y-1.5">
+                {/* Reasons for pairing — 2 tones, driven by the reason's type.
+                    The previous 8-pastel ramp derived color from substring
+                    matches on English text, which broke as soon as strings
+                    localized and made the panel read as visual noise. */}
+                <div className="space-y-1">
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">
-                    {studentB ? 'Why paired together:' : 'Seat status:'}
+                    {studentB ? t('explanation.pair_header_why') : t('explanation.pair_header_status')}
                   </p>
                   {compatibility.reasons.map((reason, i) => (
                     <div key={i} className={clsx(
-                      'text-[11px] px-2 py-1.5 rounded-md leading-snug',
-                      reason.includes('Friends') ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' :
-                      reason.includes('No conflicts') ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' :
-                      reason.includes('levels') ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300' :
-                      reason.includes('behavior') ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300' :
-                      reason.includes('front row') || reason.includes('quiet') ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300' :
-                      reason.includes('genders') ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300' :
-                      reason.includes('bilingual') ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-300' :
-                      'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                      'text-[11px] px-2 py-1 rounded-md leading-snug',
+                      reason.type === 'note'
+                        ? 'bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300'
+                        : 'bg-primary-100/70 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200'
                     )}>
-                      {reason}
+                      {reason.text}
                     </div>
                   ))}
                 </div>
@@ -503,7 +503,7 @@ export default function ExplanationPanel() {
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
           />
         </div>
 
@@ -588,18 +588,18 @@ export default function ExplanationPanel() {
   }
 
   return (
-    <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden mb-6">
+    <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl overflow-hidden mb-3">
       {/* Header toggle */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
             {isPairsMode ? (
-              <Heart size={16} className="text-indigo-600 dark:text-indigo-300" />
+              <Heart size={14} className="text-primary-700 dark:text-primary-300" />
             ) : (
-              <Info size={16} className="text-indigo-600 dark:text-indigo-300" />
+              <Info size={14} className="text-primary-700 dark:text-primary-300" />
             )}
           </div>
           <div className="text-left">

@@ -61,7 +61,7 @@ export default function RotationPanel() {
     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="w-full p-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">

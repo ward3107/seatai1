@@ -69,7 +69,7 @@ export default function SettingsPanel() {
     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="w-full p-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
           <Settings size={18} className="text-gray-500 dark:text-gray-400" />
@@ -79,7 +79,7 @@ export default function SettingsPanel() {
       </button>
 
       {isOpen && (
-        <div className="p-4 pt-0 space-y-4">
+        <div className="p-3 pt-0 space-y-3">
           {/* Reset */}
           <button
             onClick={resetToDemo}

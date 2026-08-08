@@ -23,28 +23,31 @@ export default function OnboardingView() {
     setHomeView(false);
   }
 
+  // Four onboarding steps in the sage/ochre family — two primary shades
+  // (import, manual) and two accent shades (optimize, export) so the tiles
+  // read as one system instead of a four-color rainbow.
   const steps = [
     {
       icon: Upload,
-      color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
+      color: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300',
       title: t('onboarding.import_title'),
       desc: t('onboarding.import_desc'),
     },
     {
       icon: UserPlus,
-      color: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300',
+      color: 'bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200',
       title: t('onboarding.manual_title'),
       desc: t('onboarding.manual_desc'),
     },
     {
       icon: Sparkles,
-      color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300',
+      color: 'bg-accent-100 dark:bg-accent-900/30 text-accent-800 dark:text-accent-300',
       title: t('onboarding.optimize_title'),
       desc: t('onboarding.optimize_desc'),
     },
     {
       icon: FileText,
-      color: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300',
+      color: 'bg-accent-50 dark:bg-accent-900/20 text-accent-800 dark:text-accent-200',
       title: t('onboarding.export_title'),
       desc: t('onboarding.export_desc'),
     },

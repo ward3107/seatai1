@@ -80,11 +80,11 @@ export default function WelcomeTipsModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        <ul className="p-5 space-y-3">
+        <ul className="p-4 space-y-1.5">
           {tips.map(({ Icon, key }) => (
             <li
               key={key}
-              className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-700"
+              className="flex items-start gap-3 p-2 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-700"
             >
               <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 flex items-center justify-center flex-shrink-0">
                 <Icon size={14} />
@@ -96,7 +96,7 @@ export default function WelcomeTipsModal({ open, onClose }: Props) {
           ))}
           {/* Privacy reassurance — the single most important sentence a
               teacher needs to see before trusting the app with a roster. */}
-          <li className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+          <li className="flex items-start gap-3 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
               <ShieldCheck size={14} aria-hidden="true" />
             </div>

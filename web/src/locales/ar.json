@@ -124,6 +124,10 @@
     "print": "طباعة",
     "print_title": "طباعة خطة المقاعد",
     "open_sidebar": "فتح الشريط الجانبي",
+    "preferences": "خيارات العرض",
+    "group_class": "الفصل الخاص بي",
+    "group_rules": "قواعد وطلبات",
+    "group_advanced": "متقدم",
     "home": "الرئيسية",
     "back_to_chart": "العودة إلى مخطط الجلوس",
     "close_sidebar": "إغلاق الشريط الجانبي",
@@ -630,7 +634,7 @@
     "legend_below_basic": "دون الأساسي",
     "legend_mobility": "احتياجات الحركة",
     "legend_front_row": "يتطلب الصف الأمامي",
-    "legend_special_needs": "إطار بنفسجي = احتياجات خاصة",
+    "legend_special_needs": "احتياجات خاصة",
     "warnings": "تحذيرات"
   },
   "export": {
@@ -777,7 +781,27 @@
     "reason_kept_together": "مُحافظ على البقاء معًا مع {{name}} (قاعدة المعلم)",
     "reason_seated_near_friend": "جالس بالقرب من صديق: {{name}}",
     "reason_separated_from": "مُنفصل عن {{name}} (قاعدة المعلم)",
-    "reason_location": "الصف {{row}}، المقعد {{seat}}"
+    "reason_location": "الصف {{row}}، المقعد {{seat}}",
+    "pair_header_why": "لماذا زُوّجا معًا:",
+    "pair_header_status": "حالة المقعد:",
+    "pair_unpaired_suffix": "(بدون زميل)",
+    "pair_reason_friends": "🤝 أصدقاء: أكثر ارتياحًا في التعاون والمساعدة المتبادلة",
+    "pair_reason_no_conflicts": "✓ لا خلافات: بيئة تعلم آمنة ومركّزة",
+    "pair_reason_similar_levels": "📚 مستويات متشابهة: يمكنهما العمل باستقلالية",
+    "pair_reason_mixed_levels": "📚 مستويات مختلطة: الأقوى يساعد الآخر على التعلّم",
+    "pair_reason_academic_gap": "📚 فجوة أكاديمية: قد يحتاجان دعمًا إضافيًا من المعلم",
+    "pair_reason_similar_behavior": "😊 سلوك متشابه: أقل احتمالًا للتشتيت المتبادل",
+    "pair_reason_compatible_behavior": "😊 سلوك متوافق: يمكنهما العمل معًا بتوجيه",
+    "pair_reason_both_front": "👁️ كلاهما بحاجة للصف الأمامي: أسهل لتقديم الدعم",
+    "pair_reason_both_quiet": "🔇 كلاهما بحاجة للهدوء: تشتيت أقل يساعد على التركيز",
+    "pair_reason_mixed_genders": "👥 أجناس مختلطة: يبني تعاونًا بين المجموعات",
+    "pair_reason_both_bilingual": "🌐 كلاهما ثنائي اللغة: يدعمان بعضهما بلغتين"
+  },
+  "score": {
+    "excellent": "ترتيب ممتاز",
+    "good": "ترتيب جيد",
+    "basic": "ترتيب أساسي",
+    "needs_work": "بحاجة لتحسين"
   },
   "gridControls": {
     "heatmap_default": "الافتراضي",

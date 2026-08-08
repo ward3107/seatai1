@@ -62,17 +62,17 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
   };
 
   return (
-    <section className="rounded-lg border bg-violet-50/40 dark:bg-violet-900/30 border-violet-100 dark:border-violet-800 p-3 space-y-2">
+    <section className="rounded-lg border bg-accent-50/60 dark:bg-accent-900/20 border-accent-100 dark:border-accent-800 p-3 space-y-2">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-violet-500 dark:text-violet-400" aria-hidden="true" />
+          <Sparkles size={14} className="text-accent-600 dark:text-accent-400" aria-hidden="true" />
           <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-100">{t('constraints.ai_title')}</h4>
         </div>
         <button
           type="button"
           onClick={fetchSuggestions}
           disabled={loading}
-          className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+          className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-accent-600 text-white hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
         >
           {loading ? (
             <>
@@ -99,7 +99,7 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
           {suggestions.map((s) => (
             <li
               key={`${s.kind}|${s.a}|${s.b ?? ''}`}
-              className="flex items-start gap-2 p-2 bg-white dark:bg-gray-800 rounded border border-violet-100 dark:border-violet-800 text-[11px]"
+              className="flex items-start gap-2 p-2 bg-white dark:bg-gray-800 rounded border border-accent-100 dark:border-accent-800 text-[11px]"
             >
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-gray-800 dark:text-gray-100">

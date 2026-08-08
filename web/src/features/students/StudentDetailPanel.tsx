@@ -48,10 +48,10 @@ const TONE_STYLES: Record<ExplanationLine['tone'], string> = {
 };
 
 const RELATION_BADGE: Record<NeighborBreakdown['relation'], { cls: string; key: string }> = {
-  friend: { cls: 'bg-pink-100 text-pink-800', key: 'detail.relation_friend' },
-  incompatible: { cls: 'bg-red-100 text-red-800', key: 'detail.relation_incompatible' },
-  mentor: { cls: 'bg-violet-100 text-violet-800', key: 'detail.relation_mentor' },
-  mentee: { cls: 'bg-indigo-100 text-indigo-800', key: 'detail.relation_mentee' },
+  friend: { cls: 'bg-primary-100 text-primary-800', key: 'detail.relation_friend' },
+  incompatible: { cls: 'bg-rose-100 text-rose-800', key: 'detail.relation_incompatible' },
+  mentor: { cls: 'bg-accent-100 text-accent-800', key: 'detail.relation_mentor' },
+  mentee: { cls: 'bg-accent-50 text-accent-800', key: 'detail.relation_mentee' },
   neutral: { cls: 'bg-gray-100 text-gray-700', key: 'detail.relation_neutral' },
 };
 
@@ -387,7 +387,7 @@ export default function StudentDetailPanel() {
                 )}
                 {student.requires_quiet_area && (
                   <li className="flex items-center gap-2 text-sm text-gray-700">
-                    <Eye size={14} className="text-violet-500" />
+                    <Eye size={14} className="text-accent-600" />
                     {t('detail.quiet_area')}
                   </li>
                 )}
@@ -422,7 +422,7 @@ export default function StudentDetailPanel() {
                     <Sparkles size={12} /> {t('detail.why_this_seat')}
                   </h3>
                   {surveyed && (
-                    <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2.5 py-1">
+                    <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary-700 bg-primary-50 border border-primary-100 rounded-full px-2.5 py-1">
                       <ClipboardList size={11} /> {t('detail.from_questionnaire')}
                     </p>
                   )}
@@ -536,7 +536,7 @@ export default function StudentDetailPanel() {
                                 const rel = relativeTime(hist.lastAdjacentAt);
                                 return (
                                   <span
-                                    className="inline-flex items-center gap-1 text-violet-600"
+                                    className="inline-flex items-center gap-1 text-accent-700"
                                     title={t('detail.rotation_tooltip', { count: hist.timesAdjacent })}
                                   >
                                     🔄 {t('detail.last_together')} {rel}

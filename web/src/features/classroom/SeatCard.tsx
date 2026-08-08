@@ -142,7 +142,7 @@ export default memo(function SeatCard({
       aria-pressed={isSelected}
       aria-keyshortcuts="L"
       className={clsx(
-        'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[72px]',
+        'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[60px]',
         'border-2 transition-all duration-150 select-none text-left',
         // Tailwind reset for native button (no inherited bg/colors)
         'bg-transparent appearance-none',
@@ -264,7 +264,7 @@ export default memo(function SeatCard({
           {/* Special needs icons */}
           {icons.length > 0 && (
             <div className="flex gap-0.5 mt-0.5 text-[10px] leading-none">
-              {icons.slice(0, 3).map(({ icon, label }) => (
+              {icons.slice(0, 2).map(({ icon, label }) => (
                 <span key={icon} role="img" aria-label={label} title={label}>
                   {icon}
                 </span>
@@ -302,7 +302,7 @@ export default memo(function SeatCard({
               )}
               {student.special_needs?.length > 0 && (
                 <span
-                  className="px-1 rounded text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                  className="px-1 rounded text-[9px] font-bold bg-accent-100 dark:bg-accent-900/30 text-accent-800 dark:text-accent-300"
                   title={t('classroom.has_iep')}
                 >
                   IEP
