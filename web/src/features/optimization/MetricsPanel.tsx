@@ -83,40 +83,44 @@ export default function MetricsPanel() {
     },
   ];
 
+  // Metric swatches map into the sage/ochre family — same visual system as
+  // the rest of the app, tuned so the four tiles read as related-not-identical.
   const colorClasses = {
-    blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
-    green: 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300',
-    purple: 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300',
-    orange: 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300',
+    blue: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300',
+    green: 'bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300',
+    purple: 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300',
+    orange: 'bg-accent-50 dark:bg-accent-900/20 text-accent-800 dark:text-accent-300',
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/90 dark:bg-gray-800 backdrop-blur-sm rounded-2xl shadow-xl p-6"
+      className="bg-white/90 dark:bg-gray-800 backdrop-blur-sm rounded-2xl p-4"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('optimization.results_title')}</h2>
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+      {/* Header — the score already appears in the TopBar and the disclosure
+          summary, so keep this row tight and let the metric tiles carry the
+          weight. */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('optimization.results_title')}</h2>
+        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-1">
-            <Clock size={14} />
+            <Clock size={13} />
             <span>{Math.round(result.computation_time_ms)}ms</span>
           </div>
           <div className="flex items-center gap-1">
-            <Zap size={14} />
+            <Zap size={13} />
             <span>{result.generations} {t('optimization.generations')}</span>
           </div>
         </div>
       </div>
 
       {/* Overall Score */}
-      <div className="text-center mb-6">
-        <div className="text-5xl font-bold text-primary-700 dark:text-primary-300">
+      <div className="text-center mb-4">
+        <div className="text-3xl font-bold text-primary-700 dark:text-primary-300 leading-none">
           {getDisplayScorePct(result)}%
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('optimization.overall_fitness_score')}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('optimization.overall_fitness_score')}</p>
         {/* Honest framing — the GA finds a strong (near-optimal) plan via a
             heuristic search; it isn't a proven mathematical optimum. We say so
             plainly and show how the search actually terminated. */}
@@ -162,12 +166,12 @@ export default function MetricsPanel() {
                   transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
                   className={`h-full rounded-full ${
                     metric.color === 'blue'
-                      ? 'bg-blue-500'
+                      ? 'bg-primary-600'
                       : metric.color === 'green'
-                      ? 'bg-green-500'
+                      ? 'bg-primary-500'
                       : metric.color === 'purple'
-                      ? 'bg-purple-500'
-                      : 'bg-orange-500'
+                      ? 'bg-accent-600'
+                      : 'bg-accent-500'
                   }`}
                 />
               </div>
@@ -201,9 +205,9 @@ export default function MetricsPanel() {
       {/* Whole-class AI summary — only when the teacher has opted in to AI
           features in Settings. Sends aggregate facts, not the roster. */}
       {aiSettings.enabled && aiSettings.apiKey && (
-        <div className="mt-4 p-3 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 rounded-lg">
+        <div className="mt-4 p-3 bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-violet-800 dark:text-violet-300 flex items-center gap-1.5">
+            <p className="text-sm font-medium text-accent-800 dark:text-accent-300 flex items-center gap-1.5">
               <Sparkles size={14} aria-hidden="true" />
               {t('optimization.ai_summary_title')}
             </p>
@@ -211,7 +215,7 @@ export default function MetricsPanel() {
               type="button"
               onClick={generateSummary}
               disabled={aiLoading}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent-600 text-white hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
             >
               {aiLoading ? (
                 <>
@@ -224,13 +228,13 @@ export default function MetricsPanel() {
             </button>
           </div>
           {!aiText && !aiError && (
-            <p className="mt-1 text-xs text-violet-600 dark:text-violet-300">{t('optimization.ai_summary_hint')}</p>
+            <p className="mt-1 text-xs text-accent-700 dark:text-accent-300">{t('optimization.ai_summary_hint')}</p>
           )}
           {aiError && (
             <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-300">{aiError}</p>
           )}
           {aiText && (
-            <p className="mt-2 text-sm text-violet-900 whitespace-pre-wrap">{aiText}</p>
+            <p className="mt-2 text-sm text-accent-900 dark:text-accent-100 whitespace-pre-wrap">{aiText}</p>
           )}
         </div>
       )}

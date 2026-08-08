@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
 import { getDisplayScorePct } from '../utils/seatingUtils';
@@ -5,7 +6,7 @@ import ExportButton from '../features/export/ExportButton';
 import LanguageSelector from '../components/LanguageSelector';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
-import { Menu, Home, Users, Printer, Undo2, Redo2, HelpCircle, GitCompare } from 'lucide-react';
+import { Menu, Home, Users, Printer, Undo2, Redo2, HelpCircle, GitCompare, MoreVertical } from 'lucide-react';
 
 interface TopBarProps {
   onShowCompare: () => void;
@@ -14,9 +15,13 @@ interface TopBarProps {
 }
 
 /**
- * App header: sidebar toggle, undo/redo, score chip, and the
- * compare / print / help / theme / language / export controls.
- * Wraps onto a second line on narrow phones instead of overflowing.
+ * App header. Structure — from the primary actions to the ambient ones:
+ *   [Menu · Home] · [Undo · Redo] · Score · [Compare · Print · Export] · [⋮ display prefs]
+ *
+ * The four display prefs (theme / text size / language / help) live inside
+ * one overflow menu so the bar has a single visual weight. They shipped
+ * previously as separate top-level buttons and drowned out the primary
+ * actions on small viewports.
  */
 export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopBarProps) {
   const students = useStore((s) => s.students);
@@ -35,15 +40,38 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   const canUndo = history.length > 0;
   const canRedo = historyFuture.length > 0;
 
+  const [prefsOpen, setPrefsOpen] = useState(false);
+  const prefsRef = useRef<HTMLDivElement>(null);
+
+  // Dismiss the prefs menu on outside click or Escape. Only attached while
+  // open so the listeners aren't always paying attention.
+  useEffect(() => {
+    if (!prefsOpen) return;
+    const onPointer = (e: MouseEvent) => {
+      if (prefsRef.current && !prefsRef.current.contains(e.target as Node)) {
+        setPrefsOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPrefsOpen(false);
+    };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [prefsOpen]);
+
   return (
-    <header className="min-h-14 bg-white/90 backdrop-blur-sm shadow-sm flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
+    <header className="min-h-14 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
       {!sidebarOpen && !wizardActive && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           aria-label={t('app.open_sidebar')}
         >
-          <Menu size={20} className="text-gray-600" aria-hidden="true" />
+          <Menu size={20} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
         </button>
       )}
 
@@ -65,20 +93,20 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         <button
           onClick={undo}
           disabled={!canUndo}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label={t('app.undo')}
           title={t('app.undo')}
         >
-          <Undo2 size={18} className="text-gray-600" aria-hidden="true" />
+          <Undo2 size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
         </button>
         <button
           onClick={redo}
           disabled={!canRedo}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label={t('app.redo')}
           title={t('app.redo')}
         >
-          <Redo2 size={18} className="text-gray-600" aria-hidden="true" />
+          <Redo2 size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
         </button>
       </div>
 
@@ -88,22 +116,23 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
       <div className="hidden sm:block sm:flex-1" />
 
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        {/* Student count is also shown in the sidebar, so hide the chip
-            on the narrowest screens to save header space. */}
-        <div className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-          <Users size={16} className="text-gray-500" />
-          <span className="text-sm font-medium text-gray-600">
+        {/* Student count is also shown in the sidebar header (visible on md+
+            when the sidebar is docked), so surface the chip only on small
+            screens where the sidebar is a hidden drawer. */}
+        <div className="hidden xs:flex md:hidden items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <Users size={16} className="text-gray-500 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {students.length} {t('app.students')}
           </span>
         </div>
 
         {result && (
           <div
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-lg"
+            className="flex items-center gap-2 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-lg"
             role="status"
             aria-label={`${t('app.score')}: ${getDisplayScorePct(result)}%`}
           >
-            <span className="text-sm font-medium text-green-700">
+            <span className="text-sm font-medium text-primary-800 dark:text-primary-200 tabular-nums">
               {t('app.score')}: {getDisplayScorePct(result)}%
             </span>
           </div>
@@ -112,10 +141,10 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         {result && (
           <button
             onClick={onShowCompare}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors"
             title={t('compare.title')}
           >
-            <GitCompare size={15} className="text-gray-500" />
+            <GitCompare size={15} className="text-gray-500 dark:text-gray-400" />
             <span className="hidden sm:inline">{t('compare.button')}</span>
           </button>
         )}
@@ -124,25 +153,52 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           <button
             onClick={onShowPrint}
             data-testid="print-button"
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors"
             title={t('app.print_title')}
           >
-            <Printer size={15} className="text-gray-500" />
+            <Printer size={15} className="text-gray-500 dark:text-gray-400" />
             <span className="hidden sm:inline">{t('app.print')}</span>
           </button>
         )}
-        <button
-          onClick={onShowGuide}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          aria-label={t('guide.title')}
-          title={t('guide.title')}
-        >
-          <HelpCircle size={18} className="text-gray-500 dark:text-slate-400" aria-hidden="true" />
-        </button>
-        <ThemeToggle />
-        <TextSizeToggle />
-        <LanguageSelector />
+
         <ExportButton />
+
+        {/* Display preferences — collapsed into a single overflow menu so
+            theme / text size / language / help stop competing with the
+            primary actions for visual weight. */}
+        <div ref={prefsRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setPrefsOpen((v) => !v)}
+            aria-label={t('app.preferences')}
+            aria-expanded={prefsOpen}
+            aria-haspopup="menu"
+            title={t('app.preferences')}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <MoreVertical size={18} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
+          </button>
+          {prefsOpen && (
+            <div
+              role="menu"
+              className="absolute top-full end-0 mt-1 min-w-[13rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-1.5 z-40 flex flex-col gap-0.5"
+            >
+              <button
+                onClick={() => { setPrefsOpen(false); onShowGuide(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors text-start"
+                role="menuitem"
+              >
+                <HelpCircle size={16} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
+                {t('guide.title')}
+              </button>
+              <div className="flex items-center justify-between px-1 py-1 gap-2 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2">
+                <ThemeToggle />
+                <TextSizeToggle />
+                <LanguageSelector />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
