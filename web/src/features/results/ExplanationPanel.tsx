@@ -195,7 +195,8 @@ interface PairReason {
 function calculatePairCompatibility(
   studentA: Student,
   studentB: Student,
-  _allStudents: Map<string, Student>
+  _allStudents: Map<string, Student>,
+  t: (key: string, values?: Record<string, string | number>) => string
 ): { score: number; reasons: PairReason[] } {
   const reasons: PairReason[] = [];
   let score = 0;
@@ -203,54 +204,54 @@ function calculatePairCompatibility(
   const isFriends = studentA.friends_ids.includes(studentB.id) || studentB.friends_ids.includes(studentA.id);
   if (isFriends) {
     score += 25;
-    reasons.push({ type: 'good', text: '🤝 Friends: More comfortable collaborating and helping each other' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_friends') });
   }
 
   const hasConflict = studentA.incompatible_ids.includes(studentB.id) || studentB.incompatible_ids.includes(studentA.id);
   if (!hasConflict) {
     score += 25;
-    reasons.push({ type: 'good', text: '✓ No conflicts: Safe, focused learning environment' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_no_conflicts') });
   }
 
   const academicDiff = Math.abs(studentA.academic_score - studentB.academic_score);
   if (academicDiff <= 15) {
     score += 15;
-    reasons.push({ type: 'good', text: '📚 Similar levels: Can work together independently' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_similar_levels') });
   } else if (academicDiff <= 35) {
     score += 15;
-    reasons.push({ type: 'good', text: '📚 Mixed levels: Stronger students can help peers learn' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_mixed_levels') });
   } else {
     score += 5;
-    reasons.push({ type: 'note', text: '📚 Academic gap: May need extra teacher support' });
+    reasons.push({ type: 'note', text: t('explanation.pair_reason_academic_gap') });
   }
 
   const behaviorDiff = Math.abs(studentA.behavior_score - studentB.behavior_score);
   if (behaviorDiff <= 15) {
     score += 15;
-    reasons.push({ type: 'good', text: '😊 Similar behavior: Less likely to distract each other' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_similar_behavior') });
   } else if (behaviorDiff <= 30) {
     score += 8;
-    reasons.push({ type: 'good', text: '😊 Compatible behavior: Can work together with guidance' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_compatible_behavior') });
   }
 
   if (studentA.requires_front_row && studentB.requires_front_row) {
     score += 10;
-    reasons.push({ type: 'good', text: '👁️ Both need front row: Easier to provide support' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_front') });
   }
 
   if (studentA.requires_quiet_area && studentB.requires_quiet_area) {
     score += 10;
-    reasons.push({ type: 'good', text: '🔇 Both need quiet: Reduced distractions help them focus' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_quiet') });
   }
 
   if (studentA.gender !== studentB.gender) {
     score += 5;
-    reasons.push({ type: 'good', text: '👥 Mixed genders: Builds collaboration across groups' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_mixed_genders') });
   }
 
   if (studentA.is_bilingual && studentB.is_bilingual) {
     score += 5;
-    reasons.push({ type: 'good', text: '🌐 Both bilingual: Can support each other in two languages' });
+    reasons.push({ type: 'good', text: t('explanation.pair_reason_both_bilingual') });
   }
 
   return { score, reasons };
@@ -365,8 +366,8 @@ export default function ExplanationPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPairs.map(({ studentA, studentB, row, col }) => {
             const compatibility: { score: number; reasons: PairReason[] } = studentB
-              ? calculatePairCompatibility(studentA, studentB, studentMap)
-              : { score: 0, reasons: [{ type: 'note', text: studentA.name + ' (unpaired)' }] };
+              ? calculatePairCompatibility(studentA, studentB, studentMap, t)
+              : { score: 0, reasons: [{ type: 'note', text: `${studentA.name} ${t('explanation.pair_unpaired_suffix')}` }] };
 
             const hasWarn = compatibility.score < 30;
             if (hasWarn) warnCount++;
@@ -447,7 +448,7 @@ export default function ExplanationPanel() {
                     localized and made the panel read as visual noise. */}
                 <div className="space-y-1">
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">
-                    {studentB ? 'Why paired together:' : 'Seat status:'}
+                    {studentB ? t('explanation.pair_header_why') : t('explanation.pair_header_status')}
                   </p>
                   {compatibility.reasons.map((reason, i) => (
                     <div key={i} className={clsx(

@@ -125,6 +125,9 @@
     "print_title": "הדפס מפת מושבים",
     "open_sidebar": "פתח סרגל צד",
     "preferences": "העדפות תצוגה",
+    "group_class": "הכיתה שלי",
+    "group_rules": "חוקים ובקשות",
+    "group_advanced": "מתקדם",
     "home": "דף הבית",
     "back_to_chart": "חזרה למפת הישיבה",
     "close_sidebar": "סגור סרגל צד",
@@ -778,7 +781,27 @@
     "reason_kept_together": "נשמר יחד עם {{name}} (כלל מורה)",
     "reason_seated_near_friend": "יושב ליד חבר: {{name}}",
     "reason_separated_from": "הופרד מ-{{name}} (כלל מורה)",
-    "reason_location": "שורה {{row}}, מושב {{seat}}"
+    "reason_location": "שורה {{row}}, מושב {{seat}}",
+    "pair_header_why": "למה שובצו יחד:",
+    "pair_header_status": "סטטוס מושב:",
+    "pair_unpaired_suffix": "(ללא זוג)",
+    "pair_reason_friends": "🤝 חברים: משתפים פעולה בנוחות ועוזרים זה לזה",
+    "pair_reason_no_conflicts": "✓ בלי סתירות: סביבה בטוחה וממוקדת ללמידה",
+    "pair_reason_similar_levels": "📚 רמות דומות: יכולים לעבוד יחד באופן עצמאי",
+    "pair_reason_mixed_levels": "📚 רמות מעורבות: החזקים יעזרו לחלשים ללמוד",
+    "pair_reason_academic_gap": "📚 פער אקדמי: עשוי לדרוש תמיכה נוספת מהמורה",
+    "pair_reason_similar_behavior": "😊 התנהגות דומה: פחות סיכוי להסחת דעת הדדית",
+    "pair_reason_compatible_behavior": "😊 התנהגות תואמת: יעבדו יחד בהכוונה",
+    "pair_reason_both_front": "👁️ שניהם צריכים שורה קדמית: קל יותר לתמוך",
+    "pair_reason_both_quiet": "🔇 שניהם צריכים שקט: פחות הסחות דעת ללמידה",
+    "pair_reason_mixed_genders": "👥 מגדרים מעורבים: מפתח שיתוף פעולה בין קבוצות",
+    "pair_reason_both_bilingual": "🌐 שניהם דו-לשוניים: יכולים לתמוך זה בזה בשתי שפות"
+  },
+  "score": {
+    "excellent": "סידור מצוין",
+    "good": "סידור טוב",
+    "basic": "סידור בסיסי",
+    "needs_work": "צריך שיפור"
   },
   "gridControls": {
     "heatmap_default": "ברירת מחדל",

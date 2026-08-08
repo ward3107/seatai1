@@ -125,6 +125,9 @@
     "print_title": "Печать рассадки",
     "open_sidebar": "Открыть боковую панель",
     "preferences": "Настройки отображения",
+    "group_class": "Мой класс",
+    "group_rules": "Правила и запросы",
+    "group_advanced": "Расширенные",
     "home": "Главная",
     "back_to_chart": "Назад к рассадке",
     "close_sidebar": "Закрыть боковую панель",
@@ -778,7 +781,27 @@
     "reason_kept_together": "Держится вместе с {{name}} (правило учителя)",
     "reason_seated_near_friend": "Сидит рядом с другом: {{name}}",
     "reason_separated_from": "Разделен с {{name}} (правило учителя)",
-    "reason_location": "Ряд {{row}}, место {{seat}}"
+    "reason_location": "Ряд {{row}}, место {{seat}}",
+    "pair_header_why": "Почему в паре:",
+    "pair_header_status": "Статус места:",
+    "pair_unpaired_suffix": "(без пары)",
+    "pair_reason_friends": "🤝 Друзья: комфортнее сотрудничают и помогают друг другу",
+    "pair_reason_no_conflicts": "✓ Нет конфликтов: безопасная среда для обучения",
+    "pair_reason_similar_levels": "📚 Похожие уровни: могут работать самостоятельно",
+    "pair_reason_mixed_levels": "📚 Разные уровни: сильные помогут другим учиться",
+    "pair_reason_academic_gap": "📚 Академический разрыв: может понадобиться помощь учителя",
+    "pair_reason_similar_behavior": "😊 Похожее поведение: реже отвлекают друг друга",
+    "pair_reason_compatible_behavior": "😊 Совместимое поведение: могут работать вместе с направлением",
+    "pair_reason_both_front": "👁️ Обоим нужен передний ряд: легче оказывать поддержку",
+    "pair_reason_both_quiet": "🔇 Обоим нужна тишина: меньше отвлечений",
+    "pair_reason_mixed_genders": "👥 Разные полы: развивает сотрудничество между группами",
+    "pair_reason_both_bilingual": "🌐 Оба двуязычные: поддерживают друг друга на двух языках"
+  },
+  "score": {
+    "excellent": "Отличная рассадка",
+    "good": "Хорошая рассадка",
+    "basic": "Базовая рассадка",
+    "needs_work": "Нужна доработка"
   },
   "gridControls": {
     "heatmap_default": "По умолчанию",

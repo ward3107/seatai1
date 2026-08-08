@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
-import { getDisplayScorePct } from '../utils/seatingUtils';
+import { getDisplayScorePct, getScoreRating } from '../utils/seatingUtils';
 import ExportButton from '../features/export/ExportButton';
 import LanguageSelector from '../components/LanguageSelector';
 import TextSizeToggle from '../components/TextSizeToggle';
@@ -130,10 +130,13 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           <div
             className="flex items-center gap-2 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-lg"
             role="status"
-            aria-label={`${t('app.score')}: ${getDisplayScorePct(result)}%`}
+            aria-label={`${t(`score.${getScoreRating(result)}`)} · ${getDisplayScorePct(result)}%`}
           >
-            <span className="text-sm font-medium text-primary-800 dark:text-primary-200 tabular-nums">
-              {t('app.score')}: {getDisplayScorePct(result)}%
+            <span className="text-sm font-medium text-primary-800 dark:text-primary-200">
+              {t(`score.${getScoreRating(result)}`)}
+            </span>
+            <span className="text-xs text-primary-700/70 dark:text-primary-300/70 tabular-nums">
+              {getDisplayScorePct(result)}%
             </span>
           </div>
         )}

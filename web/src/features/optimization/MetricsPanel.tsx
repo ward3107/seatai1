@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
-import { getDisplayScorePct } from '../../utils/seatingUtils';
+import { getDisplayScorePct, getScoreRating } from '../../utils/seatingUtils';
 import { aiSummarizeClass } from '../../utils/aiSummary';
 import { BookOpen, Users, Globe, Accessibility, Clock, Zap, Sparkles, RefreshCw } from 'lucide-react';
 
@@ -115,12 +115,15 @@ export default function MetricsPanel() {
         </div>
       </div>
 
-      {/* Overall Score */}
+      {/* Overall Score — lead with the verbal rating; the percentage is
+          available underneath for teachers who want the number. */}
       <div className="text-center mb-4">
-        <div className="text-3xl font-bold text-primary-700 dark:text-primary-300 leading-none">
-          {getDisplayScorePct(result)}%
+        <div className="text-xl font-semibold text-primary-700 dark:text-primary-300 leading-none">
+          {t(`score.${getScoreRating(result)}`)}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('optimization.overall_fitness_score')}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 tabular-nums">
+          {getDisplayScorePct(result)}% · {t('optimization.overall_fitness_score')}
+        </p>
         {/* Honest framing — the GA finds a strong (near-optimal) plan via a
             heuristic search; it isn't a proven mathematical optimum. We say so
             plainly and show how the search actually terminated. */}

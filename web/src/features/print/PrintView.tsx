@@ -3,7 +3,7 @@ import { X, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { getDisplayScorePct } from '../../utils/seatingUtils';
+import { getDisplayScorePct, getScoreRating } from '../../utils/seatingUtils';
 
 interface Props {
   onClose: () => void;
@@ -141,7 +141,7 @@ export default function PrintView({ onClose }: Props) {
           <div>
             <h2 id="print-title" className="text-lg font-bold text-gray-800">{t('print.title')}</h2>
             <p className="text-sm text-gray-500">
-              {students.length} {t('app.students')} · {t('app.score')}: {getDisplayScorePct(result)}% ·{' '}
+              {students.length} {t('app.students')} · {t(`score.${getScoreRating(result)}`)} ({getDisplayScorePct(result)}%) ·{' '}
               {new Date().toLocaleDateString()}
             </p>
           </div>

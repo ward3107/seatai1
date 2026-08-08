@@ -16,7 +16,7 @@ import { useStore } from '../core/store';
 import { slotCount } from '../core/layouts';
 import type { OptimizerProgress } from '../hooks/useOptimizer';
 import clsx from 'clsx';
-import { X, Play, RefreshCw, ShieldCheck } from 'lucide-react';
+import { X, Play, RefreshCw, ShieldCheck, ChevronDown } from 'lucide-react';
 
 interface SidebarProps {
   wasmReady: boolean;
@@ -118,50 +118,90 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             </button>
           </div>
 
-          {/* Content — ordered by workflow: add students → review roster →
-              survey → room → rules → rotation/arrangements → projects →
-              settings. Each block is a self-collapsing card, collapsed by
-              default, so the sidebar stays scannable. */}
-          <div className="flex-1 overflow-auto p-4 space-y-3">
-            {/* 1 · Students — all four add-methods unified behind tabs. */}
-            <ErrorBoundary name="Add Students" inline>
-              <AddStudentsPanel />
-            </ErrorBoundary>
+          {/* Content — three teacher-facing groups instead of the previous
+              flat stack of nine cards. "My class" and "Rules" carry every
+              action a teacher needs on a first run; "Advanced" is collapsed
+              by default via native <details> so rotation/arrangements/
+              projects/settings don't crowd the initial view. */}
+          <div className="flex-1 overflow-auto p-4 space-y-5">
+            {/* 1 · My class — students, room, and the optional survey. */}
+            <section aria-labelledby="sidebar-group-class">
+              <h2
+                id="sidebar-group-class"
+                className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400"
+              >
+                {t('app.group_class')}
+              </h2>
+              <div className="space-y-3">
+                <ErrorBoundary name="Add Students" inline>
+                  <AddStudentsPanel />
+                </ErrorBoundary>
 
-            <ErrorBoundary name="Student List" inline>
-              <StudentList />
-            </ErrorBoundary>
+                <ErrorBoundary name="Student List" inline>
+                  <StudentList />
+                </ErrorBoundary>
 
-            <ErrorBoundary name="Questionnaire" inline>
-              <QuestionnairePanel />
-            </ErrorBoundary>
+                <ErrorBoundary name="Questionnaire" inline>
+                  <QuestionnairePanel />
+                </ErrorBoundary>
 
-            {/* 2 · Room */}
-            <ErrorBoundary name="Layout" inline>
-              <LayoutPanel />
-            </ErrorBoundary>
+                <ErrorBoundary name="Layout" inline>
+                  <LayoutPanel />
+                </ErrorBoundary>
+              </div>
+            </section>
 
-            {/* 3 · Rules */}
-            <ErrorBoundary name="Seating Rules" inline>
-              <ConstraintsPanel />
-            </ErrorBoundary>
+            {/* 2 · Rules & requests. */}
+            <section aria-labelledby="sidebar-group-rules">
+              <h2
+                id="sidebar-group-rules"
+                className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400"
+              >
+                {t('app.group_rules')}
+              </h2>
+              <div className="space-y-3">
+                <ErrorBoundary name="Seating Rules" inline>
+                  <ConstraintsPanel />
+                </ErrorBoundary>
+              </div>
+            </section>
 
-            {/* 4 · Advanced / management */}
-            <ErrorBoundary name="Rotation Planner" inline>
-              <RotationPanel />
-            </ErrorBoundary>
+            {/* 3 · Advanced — native <details> collapses the whole group
+                so first-time teachers aren't confronted by rotation planners
+                and algorithm settings. The chevron rotates via the `open`
+                attribute, no JS state. */}
+            <section aria-labelledby="sidebar-group-advanced">
+              <details className="group">
+                <summary
+                  id="sidebar-group-advanced"
+                  className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 cursor-pointer list-none flex items-center justify-between hover:text-gray-700 dark:hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                >
+                  <span>{t('app.group_advanced')}</span>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="transition-transform group-open:rotate-180"
+                  />
+                </summary>
+                <div className="space-y-3 pt-1">
+                  <ErrorBoundary name="Rotation Planner" inline>
+                    <RotationPanel />
+                  </ErrorBoundary>
 
-            <ErrorBoundary name="Saved Arrangements" inline>
-              <ArrangementsPanel />
-            </ErrorBoundary>
+                  <ErrorBoundary name="Saved Arrangements" inline>
+                    <ArrangementsPanel />
+                  </ErrorBoundary>
 
-            <ErrorBoundary name="Projects" inline>
-              <ProjectManager />
-            </ErrorBoundary>
+                  <ErrorBoundary name="Projects" inline>
+                    <ProjectManager />
+                  </ErrorBoundary>
 
-            <ErrorBoundary name="Settings" inline>
-              <SettingsPanel />
-            </ErrorBoundary>
+                  <ErrorBoundary name="Settings" inline>
+                    <SettingsPanel />
+                  </ErrorBoundary>
+                </div>
+              </details>
+            </section>
           </div>
 
           {/* Footer */}

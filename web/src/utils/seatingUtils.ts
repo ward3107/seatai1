@@ -160,3 +160,18 @@ export function getDisplayScorePct(result: OptimizationResult): number {
     (o.academic_balance + o.behavioral_balance + o.diversity + o.special_needs) / 4;
   return Math.round(avg * 10) / 10;
 }
+
+/**
+ * Bucket the display score into a plain-language rating. Teachers reported
+ * that "81.5%" reads as a math grade — a verbal label ("Good seating") is
+ * quicker to interpret at a glance. The numeric % stays alongside for the
+ * cases where they want the detail.
+ */
+export type ScoreRating = 'excellent' | 'good' | 'basic' | 'needs_work';
+export function getScoreRating(result: OptimizationResult): ScoreRating {
+  const pct = getDisplayScorePct(result);
+  if (pct >= 85) return 'excellent';
+  if (pct >= 70) return 'good';
+  if (pct >= 50) return 'basic';
+  return 'needs_work';
+}

@@ -323,14 +323,14 @@ function RowPicker({
   const tone =
     variant === 'front'
       ? {
-          on: 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 text-indigo-900',
-          box: 'bg-indigo-50/40 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800',
-          icon: 'text-indigo-500 dark:text-indigo-400',
+          on: 'bg-primary-100 dark:bg-primary-900/40 border-primary-400 text-primary-900 dark:text-primary-100',
+          box: 'bg-primary-50/40 dark:bg-primary-900/30 border-primary-100 dark:border-primary-800',
+          icon: 'text-primary-600 dark:text-primary-300',
         }
       : {
-          on: 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 text-amber-900',
-          box: 'bg-amber-50/40 dark:bg-amber-900/30 border-amber-100 dark:border-amber-800',
-          icon: 'text-amber-500 dark:text-amber-400',
+          on: 'bg-accent-100 dark:bg-accent-900/40 border-accent-400 text-accent-900 dark:text-accent-100',
+          box: 'bg-accent-50/40 dark:bg-accent-900/20 border-accent-100 dark:border-accent-800',
+          icon: 'text-accent-600 dark:text-accent-300',
         };
 
   const filtered = useMemo(() => {
@@ -563,7 +563,7 @@ export default function ConstraintsPanel({ defaultOpen = false }: { defaultOpen?
             {t('constraints.title')}
           </span>
           {totalRules > 0 && (
-            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-xs tabular-nums">
+            <span className="px-1.5 py-0.5 bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded-full text-xs tabular-nums">
               {totalRules}
             </span>
           )}

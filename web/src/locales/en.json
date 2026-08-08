@@ -125,6 +125,9 @@
     "print_title": "Print seating chart",
     "open_sidebar": "Open sidebar",
     "preferences": "Display preferences",
+    "group_class": "My class",
+    "group_rules": "Rules & requests",
+    "group_advanced": "Advanced",
     "home": "Home",
     "back_to_chart": "Back to seating chart",
     "close_sidebar": "Close sidebar",
@@ -778,7 +781,27 @@
     "reason_kept_together": "Kept together with {{name}} (teacher rule)",
     "reason_seated_near_friend": "Seated near friend: {{name}}",
     "reason_separated_from": "Separated from {{name}} (teacher rule)",
-    "reason_location": "Row {{row}}, seat {{seat}}"
+    "reason_location": "Row {{row}}, seat {{seat}}",
+    "pair_header_why": "Why paired together:",
+    "pair_header_status": "Seat status:",
+    "pair_unpaired_suffix": "(unpaired)",
+    "pair_reason_friends": "🤝 Friends: More comfortable collaborating and helping each other",
+    "pair_reason_no_conflicts": "✓ No conflicts: Safe, focused learning environment",
+    "pair_reason_similar_levels": "📚 Similar levels: Can work together independently",
+    "pair_reason_mixed_levels": "📚 Mixed levels: Stronger students can help peers learn",
+    "pair_reason_academic_gap": "📚 Academic gap: May need extra teacher support",
+    "pair_reason_similar_behavior": "😊 Similar behavior: Less likely to distract each other",
+    "pair_reason_compatible_behavior": "😊 Compatible behavior: Can work together with guidance",
+    "pair_reason_both_front": "👁️ Both need front row: Easier to provide support",
+    "pair_reason_both_quiet": "🔇 Both need quiet: Reduced distractions help them focus",
+    "pair_reason_mixed_genders": "👥 Mixed genders: Builds collaboration across groups",
+    "pair_reason_both_bilingual": "🌐 Both bilingual: Can support each other in two languages"
+  },
+  "score": {
+    "excellent": "Excellent seating",
+    "good": "Good seating",
+    "basic": "Basic seating",
+    "needs_work": "Needs work"
   },
   "gridControls": {
     "heatmap_default": "Default",

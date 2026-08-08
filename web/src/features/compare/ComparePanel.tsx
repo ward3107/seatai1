@@ -289,7 +289,7 @@ export default function ComparePanel({
               type="button"
               onClick={acceptAlternative}
               disabled={!alternative}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-40 transition-colors"
             >
               <Check size={16} aria-hidden="true" />
               {t('compare.use_alternative')}
