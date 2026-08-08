@@ -104,7 +104,7 @@ export default function OnboardingView() {
       >
         <button
           onClick={() => startWizard()}
-          className="px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-xl font-semibold shadow hover:shadow-lg transition-shadow flex items-center gap-2"
+          className="px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
         >
           <UserPlus size={18} />
           {t('onboarding.get_started')}
