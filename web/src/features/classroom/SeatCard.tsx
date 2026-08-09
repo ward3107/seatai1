@@ -147,7 +147,7 @@ export default memo(function SeatCard({
         // Tailwind reset for native button (no inherited bg/colors)
         'bg-transparent appearance-none',
         // Keyboard focus ring — visible only on keyboard nav
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
 
         // Empty seat
         seat.is_empty && 'border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 cursor-default',
@@ -160,7 +160,7 @@ export default memo(function SeatCard({
         ],
 
         // Selected (click mode)
-        isSelected && 'ring-2 ring-blue-500 ring-offset-1 border-blue-400 scale-105',
+        isSelected && 'ring-2 ring-primary-500 ring-offset-1 border-primary-400 scale-105',
 
         // Drop target highlight — red/green when we have a live constraint
         // preview, neutral green otherwise.
@@ -175,8 +175,10 @@ export default memo(function SeatCard({
         // Violation glow
         isViolated && !isDragging && heatMapMode === 'none' && 'border-red-400 bg-red-50 dark:bg-red-900/30',
 
-        // Moved between optimization runs
-        isMoved && !isDragging && 'ring-2 ring-amber-400/70 ring-offset-1',
+        // Moved between optimization runs. Uses the accent (ochre) at
+        // reduced opacity so 20+ moved seats don't overwhelm the map —
+        // still visible against the calmer sage/ochre surfaces.
+        isMoved && !isDragging && 'ring-2 ring-accent-500/50 ring-offset-1',
 
         // Locked
         isLocked && 'opacity-60',
@@ -206,7 +208,7 @@ export default memo(function SeatCard({
       {/* Moved badge */}
       {isMoved && (
         <div
-          className="absolute top-1 left-1 text-amber-600 dark:text-amber-300 pointer-events-none bg-amber-100 dark:bg-amber-900/40 rounded-full p-0.5"
+          className="absolute top-1 left-1 text-accent-700 dark:text-accent-300 pointer-events-none bg-accent-100 dark:bg-accent-900/40 rounded-full p-0.5"
           title={t('classroom.moved_from_previous')}
         >
           <ArrowRightLeft size={9} />

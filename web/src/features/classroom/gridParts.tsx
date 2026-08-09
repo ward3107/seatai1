@@ -178,7 +178,7 @@ export function StaticLegend({ t }: { t: (key: string) => string }) {
   return (
     <div className="mt-5 flex flex-wrap justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
       <div className="flex items-center gap-1.5">
-        <div className="w-3.5 h-3.5 rounded bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800" />
+        <div className="w-3.5 h-3.5 rounded bg-primary-50 dark:bg-primary-900/30 border-2 border-primary-300 dark:border-primary-700" />
         {t('classroom.legend_front_row')}
       </div>
       <div className="flex items-center gap-1.5">
@@ -215,14 +215,14 @@ export function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => s
       : mode === 'conflicts'
       ? [
           { color: 'bg-emerald-200', label: t('classroom.legend_no_violation') },
-          { color: 'bg-red-200', label: t('classroom.legend_violation') },
+          { color: 'bg-rose-200', label: t('classroom.legend_violation') },
         ]
       : [
           { color: 'bg-emerald-200', label: '85–100' },
-          { color: 'bg-green-200', label: '70–84' },
-          { color: 'bg-yellow-200', label: '55–69' },
-          { color: 'bg-orange-200', label: '40–54' },
-          { color: 'bg-red-200', label: '0–39' },
+          { color: 'bg-primary-200', label: '70–84' },
+          { color: 'bg-amber-200', label: '55–69' },
+          { color: 'bg-accent-200', label: '40–54' },
+          { color: 'bg-rose-200', label: '0–39' },
         ];
 
   return (

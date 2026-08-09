@@ -103,20 +103,23 @@ export function getHeatMapColor(
 
   switch (mode) {
     case 'academic': {
+      // Semantic ramp — good→needs-work — but softened so 30 filled seats
+      // on the grid don't shout. Uses one lightness step per band with
+      // muted borders (-300 instead of -400) and pastel fills (-50).
       const s = student.academic_score;
-      if (s >= 85) return 'bg-emerald-100 border-emerald-400';
-      if (s >= 70) return 'bg-green-100 border-green-400';
-      if (s >= 55) return 'bg-yellow-100 border-yellow-400';
-      if (s >= 40) return 'bg-orange-100 border-orange-400';
-      return 'bg-red-100 border-red-400';
+      if (s >= 85) return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700';
+      if (s >= 70) return 'bg-primary-50 border-primary-300 dark:bg-primary-900/20 dark:border-primary-700';
+      if (s >= 55) return 'bg-amber-50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700';
+      if (s >= 40) return 'bg-accent-50 border-accent-300 dark:bg-accent-900/20 dark:border-accent-700';
+      return 'bg-rose-50 border-rose-300 dark:bg-rose-900/20 dark:border-rose-700';
     }
     case 'behavior': {
       const s = student.behavior_score;
-      if (s >= 85) return 'bg-emerald-100 border-emerald-400';
-      if (s >= 70) return 'bg-green-100 border-green-400';
-      if (s >= 55) return 'bg-yellow-100 border-yellow-400';
-      if (s >= 40) return 'bg-orange-100 border-orange-400';
-      return 'bg-red-100 border-red-400';
+      if (s >= 85) return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700';
+      if (s >= 70) return 'bg-primary-50 border-primary-300 dark:bg-primary-900/20 dark:border-primary-700';
+      if (s >= 55) return 'bg-amber-50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700';
+      if (s >= 40) return 'bg-accent-50 border-accent-300 dark:bg-accent-900/20 dark:border-accent-700';
+      return 'bg-rose-50 border-rose-300 dark:bg-rose-900/20 dark:border-rose-700';
     }
     case 'gender': {
       if (student.gender === 'male') return 'bg-blue-100 border-blue-400';
