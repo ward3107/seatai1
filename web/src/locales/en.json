@@ -115,6 +115,8 @@
     "q_self_efficacy_hint": "1 = strongly disagree · 5 = strongly agree",
     "q_movement": "How much do you need to move to focus?",
     "q_movement_hint": "1 = never · 5 = a lot",
+    "q_vision": "How hard is it to see what is written on the board?",
+    "q_vision_hint": "1 = clearly · 5 = very hard to see. If it's hard, tell your teacher or a parent too.",
     "rating_1": "1 · Never / not at all",
     "rating_2": "2 · A little",
     "rating_3": "3 · Sometimes",

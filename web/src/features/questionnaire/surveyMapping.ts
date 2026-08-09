@@ -84,6 +84,11 @@ export const LOW_SELF_EFFICACY_THRESHOLD: Likert5 = 2;
  *  seat-type preference (aisle or back row). Matches SPM-P body-awareness
  *  cut for "raised" — 4 or above. */
 export const HIGH_MOVEMENT_THRESHOLD: Likert5 = 4;
+/** Threshold at (or above) which self-reported vision difficulty triggers
+ *  front-row placement independent of the student's stated preference.
+ *  Clinically unambiguous — a child who reports trouble seeing the board
+ *  belongs at the front regardless of what they'd otherwise pick. */
+export const HIGH_VISION_DIFFICULTY_THRESHOLD: Likert5 = 4;
 
 /**
  * Additional constructs added on top of B1–B4:
@@ -133,6 +138,15 @@ export const HIGH_MOVEMENT_THRESHOLD: Likert5 = 4;
  *   movement (aisle, back row, wobble cushion). Rating ≥ 4 is stored for
  *   the teacher's downstream review — actual routing to a movement-tolerant
  *   seat needs a room-shape signal we don't yet expose in the optimizer.
+ *
+ * B11 — VISION AT THE BOARD (single-item self-screening; adapted from
+ *   Snellen-style item / CISS — Convergence Insufficiency Symptom Survey).
+ *   Distinct from every other item — a child who reports trouble seeing
+ *   the board belongs at the front regardless of what B3 (preference), B7
+ *   (attention) or B8 (focus) say. Rating ≥ HIGH_VISION_DIFFICULTY_
+ *   THRESHOLD triggers requires_front_row directly. This is a screening
+ *   proxy, not a diagnostic — teachers should still forward a positive
+ *   report to the school nurse / optometrist.
  */
 
 export interface SurveyAnswers {
@@ -173,6 +187,10 @@ export interface SurveyAnswers {
    *  Awareness proxy. Captured for review; downstream routing to
    *  movement-tolerant seats pending. */
   movement: Likert5 | null;
+  /** B11 — vision at the board (1 = never hard, 5 = very hard). Snellen /
+   *  CISS proxy. Rating ≥ HIGH_VISION_DIFFICULTY_THRESHOLD triggers
+   *  requires_front_row unconditionally — clinically unambiguous. */
+  visionDifficulty: Likert5 | null;
 }
 
 export function emptyAnswers(): SurveyAnswers {
@@ -187,6 +205,7 @@ export function emptyAnswers(): SurveyAnswers {
     focusDifficulty: null,
     selfEfficacy: null,
     movement: null,
+    visionDifficulty: null,
   };
 }
 
@@ -220,6 +239,7 @@ export function answersFromStudent(
     focusDifficulty: null,
     selfEfficacy: null,
     movement: null,
+    visionDifficulty: null,
   };
 }
 
@@ -235,18 +255,26 @@ export function surveyToStudentPatch(
     .filter((id) => id !== studentId)
     .slice(0, MAX_SEATMATES);
 
-  // Front-row placement is triggered by EITHER a stated front preference OR a
-  // low teacher-attention rating OR high self-reported focus difficulty —
-  // the UDL principle that outcome trumps stated wish when the outcome is
-  // engagement/attention (Adams & Biddle; CAST 2018; BSCS).
+  // Front-row placement is triggered by ANY of: a stated front preference,
+  // a low teacher-attention rating, high focus difficulty, or high vision
+  // difficulty. Vision is clinically unambiguous — a child who can't see
+  // the board belongs at the front regardless of what they'd otherwise
+  // pick. The rest follow UDL: outcome trumps stated wish when the outcome
+  // is engagement/attention (Adams & Biddle; CAST 2018; BSCS).
   const lowAttention =
     answers.teacherAttention !== null && answers.teacherAttention <= LOW_ATTENTION_THRESHOLD;
   const highFocusDifficulty =
     answers.focusDifficulty !== null && answers.focusDifficulty >= HIGH_FOCUS_DIFFICULTY_THRESHOLD;
+  const highVisionDifficulty =
+    answers.visionDifficulty !== null && answers.visionDifficulty >= HIGH_VISION_DIFFICULTY_THRESHOLD;
 
   return {
     friends_ids: seatmates,
-    requires_front_row: answers.frontPreference === 'front' || lowAttention || highFocusDifficulty,
+    requires_front_row:
+      answers.frontPreference === 'front' ||
+      lowAttention ||
+      highFocusDifficulty ||
+      highVisionDifficulty,
     // Quiet area is triggered by high noise sensitivity OR high focus
     // difficulty — both point to a lower-sensory-load location.
     requires_quiet_area:

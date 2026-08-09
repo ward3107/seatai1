@@ -102,6 +102,14 @@ export function buildHandoutHtml(students: Student[], o: HandoutOptions): string
       `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
     ),
   );
+  // B11 — vision at the board (Snellen / CISS proxy).
+  parts.push(
+    question(
+      t('questionnaire.q_vision'),
+      t('questionnaire.q_vision_hint'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
+    ),
+  );
 
   // Roster reference so students can spell classmates' names correctly.
   const roster =

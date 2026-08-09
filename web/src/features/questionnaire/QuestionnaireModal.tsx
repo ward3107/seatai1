@@ -442,6 +442,27 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                     ))}
                   </div>
                 </div>
+
+                {/* B11 — Vision at the board. Snellen/CISS proxy. Clinically
+                    unambiguous — a child who can't see the board belongs at
+                    the front regardless of anything else. Rating ≥ 4 routes
+                    directly to requires_front_row. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_vision')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_vision_hint')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, visionDifficulty: a.visionDifficulty === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.visionDifficulty === n)}
+                        aria-label={t(`questionnaire.rating_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Footer */}
