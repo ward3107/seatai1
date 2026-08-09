@@ -78,6 +78,38 @@ export function buildHandoutHtml(students: Student[], o: HandoutOptions): string
       `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(`${n} — ${t(`questionnaire.attention_${n}`)}`)).join('')}</div>`,
     ),
   );
+  // B8 — self-reported focus difficulty (BSCS proxy).
+  parts.push(
+    question(
+      t('questionnaire.q_focus_difficulty'),
+      t('questionnaire.q_focus_difficulty_hint'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
+    ),
+  );
+  // B9 — academic self-efficacy (MSLQ single item).
+  parts.push(
+    question(
+      t('questionnaire.q_self_efficacy'),
+      t('questionnaire.q_self_efficacy_hint'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
+    ),
+  );
+  // B10 — movement / fidget need (SPM-P Body Awareness proxy).
+  parts.push(
+    question(
+      t('questionnaire.q_movement'),
+      t('questionnaire.q_movement_hint'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
+    ),
+  );
+  // B11 — vision at the board (Snellen / CISS proxy).
+  parts.push(
+    question(
+      t('questionnaire.q_vision'),
+      t('questionnaire.q_vision_hint'),
+      `<div class="opts">${([1, 2, 3, 4, 5] as const).map((n) => checkbox(t(`questionnaire.rating_${n}`))).join('')}</div>`,
+    ),
+  );
 
   // Roster reference so students can spell classmates' names correctly.
   const roster =

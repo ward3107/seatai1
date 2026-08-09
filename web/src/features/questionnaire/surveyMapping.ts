@@ -71,6 +71,24 @@ export const NOISE_QUIET_THRESHOLD: NoiseSensitivity = 4;
  *  2 means the student rarely gets teacher attention — action-zone research
  *  (Adams & Biddle) says moving them forward materially improves this. */
 export const LOW_ATTENTION_THRESHOLD: Likert5 = 2;
+/** Threshold at (or above) which self-reported focus difficulty triggers
+ *  front-row + quiet-area placement. 4 matches the BSCS/self-control
+ *  literature's "often/very often" cut. */
+export const HIGH_FOCUS_DIFFICULTY_THRESHOLD: Likert5 = 4;
+/** Threshold at (or below) which low academic self-efficacy is stored on the
+ *  student for the teacher's downstream review (e.g. peer-mentor pairing).
+ *  Two means the student rarely feels they can succeed — MSLQ-style single
+ *  items with a rating of 1–2 are the most stable predictors. */
+export const LOW_SELF_EFFICACY_THRESHOLD: Likert5 = 2;
+/** Threshold at (or above) which high movement need is captured as a
+ *  seat-type preference (aisle or back row). Matches SPM-P body-awareness
+ *  cut for "raised" — 4 or above. */
+export const HIGH_MOVEMENT_THRESHOLD: Likert5 = 4;
+/** Threshold at (or above) which self-reported vision difficulty triggers
+ *  front-row placement independent of the student's stated preference.
+ *  Clinically unambiguous — a child who reports trouble seeing the board
+ *  belongs at the front regardless of what they'd otherwise pick. */
+export const HIGH_VISION_DIFFICULTY_THRESHOLD: Likert5 = 4;
 
 /**
  * Additional constructs added on top of B1–B4:
@@ -95,6 +113,40 @@ export const LOW_ATTENTION_THRESHOLD: Likert5 = 2;
  *   heard. A low score with a "middle/back" preference still routes to the
  *   front, because the outcome trumps the preference when it comes to
  *   learning (UDL Principle 3: Multiple Means of Engagement).
+ *
+ * B8 — SELF-REPORTED FOCUS DIFFICULTY (BSCS proxy; Tangney, Baumeister,
+ *   Boone 2004). A single-item self-control / focus-difficulty rating.
+ *   Student self-report on inattention is fair-to-good from ~age 8, and
+ *   Brief Self-Control Scale items correlate with classroom on-task
+ *   behaviour (r ≈ .3–.5). A rating ≥ 4 reinforces BOTH requires_front_row
+ *   and requires_quiet_area — line-of-sight to the teacher plus a lower
+ *   sensory-load location together move the intervention window into the
+ *   student's favour.
+ *
+ * B9 — ACADEMIC SELF-EFFICACY (MSLQ; Pintrich 1991; Bandura 1997).
+ *   A single-item efficacy stem ("I believe I can do well in this class")
+ *   is the most widely validated brief measure — meta-analytic path
+ *   coefficient to achievement β ≈ .30 (Multon, Brown & Lent 1991). Kept
+ *   as an ANSWER-ONLY field for now (no direct seat routing): teachers
+ *   commonly use low ratings as a signal to pair the student with a
+ *   peer-mentor (nominated separately in B2), and downstream we can
+ *   surface it in the student card.
+ *
+ * B10 — MOVEMENT / FIDGET NEED (Sensory Processing Measure – Home form,
+ *   Body Awareness / Proprioception subscale; Miller-Kuhaneck et al.
+ *   2007). Predicts benefit from seat types that accommodate small
+ *   movement (aisle, back row, wobble cushion). Rating ≥ 4 is stored for
+ *   the teacher's downstream review — actual routing to a movement-tolerant
+ *   seat needs a room-shape signal we don't yet expose in the optimizer.
+ *
+ * B11 — VISION AT THE BOARD (single-item self-screening; adapted from
+ *   Snellen-style item / CISS — Convergence Insufficiency Symptom Survey).
+ *   Distinct from every other item — a child who reports trouble seeing
+ *   the board belongs at the front regardless of what B3 (preference), B7
+ *   (attention) or B8 (focus) say. Rating ≥ HIGH_VISION_DIFFICULTY_
+ *   THRESHOLD triggers requires_front_row directly. This is a screening
+ *   proxy, not a diagnostic — teachers should still forward a positive
+ *   report to the school nurse / optometrist.
  */
 
 export interface SurveyAnswers {
@@ -123,6 +175,22 @@ export interface SurveyAnswers {
    *  class (1 = very hard, 5 = very easy). UDL Engagement construct. A rating
    *  ≤ LOW_ATTENTION_THRESHOLD reinforces front-row placement. */
   teacherAttention: Likert5 | null;
+  /** B8 — self-reported focus difficulty (1 = never hard, 5 = very hard).
+   *  BSCS proxy (Tangney/Baumeister/Boone 2004). Rating ≥
+   *  HIGH_FOCUS_DIFFICULTY_THRESHOLD reinforces front-row + quiet-area. */
+  focusDifficulty: Likert5 | null;
+  /** B9 — academic self-efficacy (1 = not at all, 5 = strongly agree).
+   *  MSLQ single-item stem (Pintrich 1991). Captured for the teacher's
+   *  review; no direct routing yet. */
+  selfEfficacy: Likert5 | null;
+  /** B10 — movement / fidget need (1 = never, 5 = a lot). SPM-P Body
+   *  Awareness proxy. Captured for review; downstream routing to
+   *  movement-tolerant seats pending. */
+  movement: Likert5 | null;
+  /** B11 — vision at the board (1 = never hard, 5 = very hard). Snellen /
+   *  CISS proxy. Rating ≥ HIGH_VISION_DIFFICULTY_THRESHOLD triggers
+   *  requires_front_row unconditionally — clinically unambiguous. */
+  visionDifficulty: Likert5 | null;
 }
 
 export function emptyAnswers(): SurveyAnswers {
@@ -134,6 +202,10 @@ export function emptyAnswers(): SurveyAnswers {
     belonging: null,
     learningStyle: null,
     teacherAttention: null,
+    focusDifficulty: null,
+    selfEfficacy: null,
+    movement: null,
+    visionDifficulty: null,
   };
 }
 
@@ -164,6 +236,10 @@ export function answersFromStudent(
     belonging: null,
     learningStyle: null,
     teacherAttention: null,
+    focusDifficulty: null,
+    selfEfficacy: null,
+    movement: null,
+    visionDifficulty: null,
   };
 }
 
@@ -179,17 +255,30 @@ export function surveyToStudentPatch(
     .filter((id) => id !== studentId)
     .slice(0, MAX_SEATMATES);
 
-  // Front-row placement is triggered by EITHER a stated front preference OR a
-  // low teacher-attention rating — the UDL principle that outcome trumps
-  // stated wish when the outcome is engagement/attention (Adams & Biddle;
-  // CAST 2018).
+  // Front-row placement is triggered by ANY of: a stated front preference,
+  // a low teacher-attention rating, high focus difficulty, or high vision
+  // difficulty. Vision is clinically unambiguous — a child who can't see
+  // the board belongs at the front regardless of what they'd otherwise
+  // pick. The rest follow UDL: outcome trumps stated wish when the outcome
+  // is engagement/attention (Adams & Biddle; CAST 2018; BSCS).
   const lowAttention =
     answers.teacherAttention !== null && answers.teacherAttention <= LOW_ATTENTION_THRESHOLD;
+  const highFocusDifficulty =
+    answers.focusDifficulty !== null && answers.focusDifficulty >= HIGH_FOCUS_DIFFICULTY_THRESHOLD;
+  const highVisionDifficulty =
+    answers.visionDifficulty !== null && answers.visionDifficulty >= HIGH_VISION_DIFFICULTY_THRESHOLD;
 
   return {
     friends_ids: seatmates,
-    requires_front_row: answers.frontPreference === 'front' || lowAttention,
-    requires_quiet_area: answers.noise !== null && answers.noise >= NOISE_QUIET_THRESHOLD,
+    requires_front_row:
+      answers.frontPreference === 'front' ||
+      lowAttention ||
+      highFocusDifficulty ||
+      highVisionDifficulty,
+    // Quiet area is triggered by high noise sensitivity OR high focus
+    // difficulty — both point to a lower-sensory-load location.
+    requires_quiet_area:
+      (answers.noise !== null && answers.noise >= NOISE_QUIET_THRESHOLD) || highFocusDifficulty,
   };
 }
 

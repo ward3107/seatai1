@@ -137,7 +137,18 @@ export default function ComparePanel({
       try {
         const optimizer = new ClassroomOptimizer(students, layoutDef);
         optimizer.setWeights(weights);
-        optimizer.setConfig(config);
+        // The alternative gets at least 3 GA restarts regardless of the
+        // teacher's quality setting. Reason: the current plan is already
+        // the best result of the last live run; a fresh single-start GA
+        // often lands on a worse local optimum, which reads as "the
+        // alternative is always worse than what I have". Boosting starts
+        // (a compare-only override, doesn't touch the stored config)
+        // gives the alternative a fair shot at matching or beating the
+        // current plan without silently changing the main Optimize button.
+        optimizer.setConfig({
+          ...config,
+          multiStart: Math.max(3, config.multiStart ?? 1),
+        });
         optimizer.setConstraints(constraints);
         if (avoidRecentNeighbors && resultHistory.length > 0) {
           optimizer.setRotationAvoidance(
