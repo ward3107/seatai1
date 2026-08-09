@@ -263,10 +263,19 @@ export default function PrintView({ onClose }: Props) {
                         {rowIdx + 1}
                       </td>
                       {rowSeats.map((sid, colIdx) => {
+                        // Pair grouping: when the room is set up as `rows` with
+                        // an even column count, teachers commonly seat students
+                        // in pairs (0-1, 2-3, 4-5…). The printed chart makes
+                        // each pair-boundary explicit by adding extra padding
+                        // at the start of each even column, so pairs cluster
+                        // visually instead of forming a uniform grid.
+                        const isPairLayout = layoutDef.type === 'rows' && gridCols % 2 === 0 && gridCols >= 4;
+                        const isPairBoundary = isPairLayout && colIdx > 0 && colIdx % 2 === 0;
+                        const cellClass = `p-1 ${isPairBoundary ? 'ps-4' : ''}`;
                         const blockedKind = blockedAt.get(`${rowIdx}|${colIdx}`);
                         if (blockedKind) {
                           return (
-                            <td key={colIdx} className="p-1">
+                            <td key={colIdx} className={cellClass}>
                               <div
                                 className={`border-2 rounded-lg p-2 text-center min-h-[56px] flex items-center justify-center text-[10px] font-semibold ${
                                   blockedKind === 'desk'
@@ -290,7 +299,7 @@ export default function PrintView({ onClose }: Props) {
                           student.special_needs.length > 0
                         );
                         return (
-                          <td key={colIdx} className="p-1">
+                          <td key={colIdx} className={cellClass}>
                             <div
                               className={`
                                 border-2 rounded-lg p-2 text-center min-h-[56px] flex flex-col
