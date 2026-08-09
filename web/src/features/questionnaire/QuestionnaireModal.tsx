@@ -379,6 +379,69 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                     ))}
                   </div>
                 </div>
+
+                {/* B8 — Self-reported focus difficulty. BSCS proxy (Tangney/
+                    Baumeister/Boone 2004). A rating ≥ 4 reinforces both
+                    front-row and quiet-area placement — line-of-sight + lower
+                    sensory load. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_focus_difficulty')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_focus_difficulty_hint')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, focusDifficulty: a.focusDifficulty === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.focusDifficulty === n)}
+                        aria-label={t(`questionnaire.rating_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* B9 — Academic self-efficacy. MSLQ single-item stem
+                    (Pintrich 1991; Bandura 1997 backing). Captured for the
+                    teacher's downstream review; a low rating typically signals
+                    a peer-mentor pairing benefit. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_self_efficacy')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_self_efficacy_hint')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, selfEfficacy: a.selfEfficacy === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.selfEfficacy === n)}
+                        aria-label={t(`questionnaire.rating_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* B10 — Movement / fidget need. SPM-P Body Awareness proxy
+                    (Miller-Kuhaneck et al. 2007). Captured for review; routing
+                    to movement-tolerant seats (aisle, back row) pending an
+                    optimizer-side signal for those seat types. */}
+                <div>
+                  <p className={clsx('font-semibold text-gray-700 dark:text-gray-300 mb-2', sm ? 'text-base' : 'text-sm')}>{t('questionnaire.q_movement')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('questionnaire.q_movement_hint')}</p>
+                  <div className="flex gap-2">
+                    {([1, 2, 3, 4, 5] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setAnswers((a) => ({ ...a, movement: a.movement === n ? null : (n as Likert5) }))}
+                        className={choiceBtn(answers.movement === n)}
+                        aria-label={t(`questionnaire.rating_${n}`)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Footer */}
