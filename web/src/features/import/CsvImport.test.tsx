@@ -116,6 +116,24 @@ describe('CsvImport Component', () => {
   });
 
   describe('File input', () => {
+    it.each(['Enter', ' '])('opens the file picker with the %s key', (key) => {
+      render(<CsvImport />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      const dropZone = screen.getByRole('button', { name: /Drop CSV here/ });
+      expect(dropZone).toHaveAttribute('tabindex', '0');
+      fireEvent.keyDown(dropZone, { key });
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('exposes the selected import mode to assistive technology', async () => {
+      render(<CsvImport />);
+      expect(screen.getByRole('button', { name: 'Add to class' })).toHaveAttribute('aria-pressed', 'true');
+      await userEvent.click(screen.getByRole('button', { name: 'Replace class' }));
+      expect(screen.getByRole('button', { name: 'Replace class' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Add to class' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
     it('should have hidden file input', () => {
       render(<CsvImport />);
 
