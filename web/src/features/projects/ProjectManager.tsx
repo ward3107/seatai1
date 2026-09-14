@@ -5,7 +5,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { getDisplayScorePct } from '../../utils/seatingUtils';
 import { FolderOpen, Save, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Pencil, DownloadCloud, UploadCloud, AlertTriangle } from 'lucide-react';
 import type { ClassProject } from '../../types';
-import { parseBackup, type BackupData } from './backup';
+import { readBackupFile, type BackupData } from './backup';
 import { downloadBackup } from './downloadBackup';
 
 export default function ProjectManager() {
@@ -35,8 +35,8 @@ export default function ProjectManager() {
 
   const handleRestoreFile = async (file: File) => {
     setRestoreError('');
-    const text = await file.text();
-    const result = parseBackup(text);
+    setPendingRestore(null);
+    const result = await readBackupFile(file);
     if (!result.ok) {
       const key =
         result.kind === 'invalid-json'

@@ -94,7 +94,7 @@ fully translated.
 
 ### Prerequisites
 
-- **Node.js 20+** — [nodejs.org](https://nodejs.org)
+- **Node.js 22.12+** — [nodejs.org](https://nodejs.org)
 
 ### Installation
 

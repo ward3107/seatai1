@@ -153,11 +153,11 @@ export type ParseResult =
 /** Hard ceiling on a backup file we'll attempt to parse. A SeatAI backup is a
  *  handful of small classes; anything past this is corrupt or hostile, and
  *  JSON.parsing a multi-hundred-MB string would freeze the tab. */
-const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
+export const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
 
 export function parseBackup(json: string): ParseResult {
-  // `.length` is UTF-16 code units — a cheap upper bound on byte size that
-  // avoids allocating a Blob just to measure an oversized file.
+  // Limit already-loaded strings as well; uploaded files are checked in bytes
+  // before reading by readBackupFile.
   if (json.length > MAX_BACKUP_BYTES) {
     return {
       ok: false,
@@ -190,7 +190,7 @@ export function parseBackup(json: string): ParseResult {
 
   const file = parsed as Partial<BackupFile>;
   const version = typeof file.version === 'number' ? file.version : 0;
-  if (version < 1 || version > BACKUP_SCHEMA_VERSION) {
+  if (!Number.isInteger(version) || version < 1 || version > BACKUP_SCHEMA_VERSION) {
     return {
       ok: false,
       kind: 'unsupported-version',
@@ -225,4 +225,17 @@ export function parseBackup(json: string): ParseResult {
     data: data as BackupData,
     exportedAt: file.exportedAt ?? '',
   };
+}
+
+/** Reject oversized uploads before allocating their text; read failures never
+ * replace the current roster or escape as unhandled promise rejections. */
+export async function readBackupFile(file: Pick<File, 'size' | 'text'>): Promise<ParseResult> {
+  if (file.size > MAX_BACKUP_BYTES) {
+    return { ok: false, kind: 'invalid-json', message: 'Backup exceeds the 20 MiB limit' };
+  }
+  try {
+    return parseBackup(await file.text());
+  } catch {
+    return { ok: false, kind: 'invalid-json', message: 'Could not read backup file' };
+  }
 }
