@@ -28,6 +28,7 @@ export async function createSampleClass(page: Page, count = 8) {
   }));
   await page.evaluate((students) => {
     const s = window.__ZUSTAND_STORE__.getState();
+    s.setLayoutDef({ type: 'rows', rows: Math.max(4, Math.ceil(students.length / 5)), cols: 5 });
     s.setStudents(students);
     s.setConfig({ ...s.config, populationSize: 20, maxGenerations: 15, earlyStopPatience: 5 });
   }, roster);
@@ -44,7 +45,7 @@ export async function runOptimization(page: Page) {
 export async function switchLanguage(page: Page, language: 'he' | 'ar') {
   await page.getByRole('button', { name: 'Display preferences', exact: true }).click();
   await page.getByRole('button', { name: 'Language', exact: true }).click();
-  await page.getByRole('menuitemradio').filter({ hasText: language === 'he' ? 'Hebrew' : 'Arabic' }).click();
+  await page.getByRole('menuitemradio').filter({ hasText: language === 'he' ? 'עברית' : 'عربية' }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', language);
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 }

@@ -12,7 +12,7 @@ export default defineConfig({
         name: 'SeatAI — Classroom Seating Optimizer',
         short_name: 'SeatAI',
         description:
-          'AI-powered classroom seating arrangements. Runs entirely in your browser.',
+          'Classroom seating arrangements. Local by default, with optional online integrations.',
         theme_color: '#3b82f6',
         background_color: '#f8fafc',
         display: 'standalone',
@@ -29,9 +29,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // The app loads everything statically — once cached, it works
-        // offline forever (no API calls, no remote fonts). Bump cache
-        // limit so jsPDF + html2canvas chunks fit.
+        // Cache the core app for offline use. External AI and roster services
+        // still require connectivity; browser storage can be evicted.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',

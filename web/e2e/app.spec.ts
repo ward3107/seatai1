@@ -77,7 +77,7 @@ test.describe('Projects', () => {
   async function save(page: Page, name: string) {
     await page.getByRole('textbox', { name: 'Class name…', exact: true }).fill(name);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(page.getByText(name, { exact: true })).toBeVisible();
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
   }
   test('saves and loads the actual roster', async ({ page }) => {
     await save(page, 'Test Class');
@@ -92,7 +92,7 @@ test.describe('Projects', () => {
   test('requires confirmation to delete a saved project', async ({ page }) => {
     await save(page, 'To Delete');
     await page.getByTitle('Delete', { exact: true }).click();
-    await expect(page.getByText('To Delete', { exact: true })).toBeVisible();
+    await expect(page.getByText('To Delete', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Confirm', exact: true }).click();
     await expect(page.getByText('To Delete', { exact: true })).toHaveCount(0);
   });
