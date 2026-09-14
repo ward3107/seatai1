@@ -749,6 +749,7 @@
     "ru": "Русский"
   },
   "csvImport": {
+    "confirm_replace": "Replace the current class with {{count}} imported students? The existing roster will be replaced. Cancel to keep it unchanged.",
     "title": "Import CSV",
     "import_mode": "Import mode:",
     "add_to_class": "Add to class",

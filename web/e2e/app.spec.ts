@@ -1,393 +1,119 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openApp, createSampleClass, runOptimization, switchLanguage, openProjects, getStudentNames, flushStorage } from './helpers';
 
-/**
- * E2E Tests for Critical App Flows
- *
- * Tests core user journeys:
- * - Language switching (i18n)
- * - Onboarding experience
- * - Student management (add, edit, delete)
- * - Optimization flow
- * - Project management
- */
+test.beforeEach(async ({ page }) => openApp(page));
 
-test.describe('Language Switching', () => {
-  test('should switch to Hebrew and apply RTL', async ({ page }) => {
-    await page.goto('/');
-
-    // Check default language is English
-    await expect(page.getByRole('heading', { name: /seatai/i })).toBeVisible();
-
-    // Find and click language selector
-    const languageButton = page.getByRole('button', { name: /language|english/i });
-    await languageButton.click();
-
-    // Select Hebrew
-    const hebrewOption = page.getByRole('option', { name: /עברית|hebrew/i });
-    await hebrewOption.click();
-
-    // Verify RTL direction is applied
+test.describe('Language switching', () => {
+  test('switches to Hebrew and applies RTL', async ({ page }) => {
+    await switchLanguage(page, 'he');
+  });
+  test('persists the language across reloads', async ({ page }) => {
+    await switchLanguage(page, 'he');
+    await flushStorage(page);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'he');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-
-    // Verify Hebrew content is visible
-    await expect(page.getByText(/שיוש כיתה/i)).toBeVisible();
   });
+});
 
-  test('should persist language choice across page reloads', async ({ page }) => {
-    await page.goto('/');
-
-    // Switch to Hebrew
-    const languageButton = page.getByRole('button', { name: /language|english/i });
-    await languageButton.click();
-    await page.getByRole('option', { name: /עברית|hebrew/i }).click();
-
-    // Reload page
+test.describe('Onboarding', () => {
+  test('starts the guided setup for a new class', async ({ page }) => {
+    await page.getByRole('button', { name: /get started/i }).click();
+    await expect(page.getByRole('navigation', { name: /set ?up your class/i })).toBeVisible();
+  });
+  test('restores a returning teacher roster', async ({ page }) => {
+    await createSampleClass(page);
+    await flushStorage(page);
     await page.reload();
-
-    // Verify language persists
-    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByText(/שיוש כיתה/i)).toBeVisible();
+    await expect.poll(() => getStudentNames(page)).toHaveLength(8);
+    await expect(page.getByTestId('optimize-button')).toBeVisible();
   });
 });
 
-test.describe('Onboarding Flow', () => {
-  test('first-time user should see onboarding screen', async ({ page }) => {
-    // Clear localStorage to simulate first-time visit
-    await page.context().clearCookies();
-    await page.goto('/');
+async function openStudentWizard(page: Page) {
+  await page.evaluate(() => window.__ZUSTAND_STORE__.getState().startWizard());
+  await expect(page.getByRole('navigation', { name: /set ?up your class/i })).toBeVisible();
+}
+async function addStudent(page: Page, name: string) {
+  await page.getByRole('button', { name: 'Add Student', exact: true }).click();
+  await page.getByPlaceholder('Student name', { exact: true }).fill(name);
+  await page.getByRole('button', { name: 'Add Student', exact: true }).click();
+  await expect.poll(() => getStudentNames(page)).toContain(name);
+}
 
-    // Should show onboarding
-    await expect(page.getByText(/welcome|getting started|התחלה/i)).toBeVisible();
-
-    // Click through onboarding
-    const nextButton = page.getByRole('button', { name: /next|continue|הבא/i });
-    await nextButton.click();
-
-    // Should complete onboarding and show main app
-    await expect(page.getByRole('button', { name: /add student/i })).toBeVisible();
+test.describe('Student management', () => {
+  test.beforeEach(async ({ page }) => openStudentWizard(page));
+  test('adds a student', async ({ page }) => {
+    await addStudent(page, 'Test Student');
   });
+  test('edits a student', async ({ page }) => {
+    await addStudent(page, 'Original Name');
+    await page.getByRole('button', { name: 'Edit Original Name', exact: true }).click();
+    await page.getByPlaceholder('Student name', { exact: true }).fill('Updated Name');
+    await page.getByRole('button', { name: 'Update Student', exact: true }).click();
+    await expect.poll(() => getStudentNames(page)).toEqual(['Updated Name']);
+  });
+  test('removes a student', async ({ page }) => {
+    await addStudent(page, 'To Be Deleted');
+    await page.getByRole('button', { name: 'Remove To Be Deleted', exact: true }).click();
+    await expect.poll(() => getStudentNames(page)).toEqual([]);
+  });
+});
 
-  test('returning user should skip onboarding', async ({ page }) => {
-    // Set onboarding complete flag
-    await page.goto('/');
+test.describe('Optimization', () => {
+  test.beforeEach(async ({ page }) => createSampleClass(page));
+  test('runs optimization and renders results', async ({ page }) => runOptimization(page));
+  test('adjusts priorities and re-optimizes', async ({ page }) => {
+    await page.locator('summary#sidebar-group-advanced').click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('slider', { name: 'Academic', exact: true }).fill('50');
+    expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().weights.academic_balance)).toBe(0.5);
+    await runOptimization(page);
+  });
+});
+
+test.describe('Projects', () => {
+  test.beforeEach(async ({ page }) => { await createSampleClass(page); await openProjects(page); });
+  async function save(page: Page, name: string) {
+    await page.getByRole('textbox', { name: 'Class name…', exact: true }).fill(name);
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
+  }
+  test('saves and loads the actual roster', async ({ page }) => {
+    await save(page, 'Test Class');
     await page.evaluate(() => {
-      localStorage.setItem('hasCompletedOnboarding', 'true');
+      const store = window.__ZUSTAND_STORE__;
+      store.getState().setStudents([]);
+      store.setState({ currentProjectId: null });
     });
-    await page.reload();
-
-    // Should go directly to main app
-    await expect(page.getByRole('button', { name: /add student/i })).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: 'Load', exact: true }).click();
+    await expect.poll(() => getStudentNames(page)).toHaveLength(8);
+  });
+  test('requires confirmation to delete a saved project', async ({ page }) => {
+    await save(page, 'To Delete');
+    await page.getByTitle('Delete', { exact: true }).click();
+    await expect(page.getByText('To Delete', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await expect(page.getByText('To Delete', { exact: true })).toHaveCount(0);
   });
 });
 
-test.describe('Student Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Skip onboarding if present
-    const skipButton = page.getByRole('button', { name: /skip|דלג/i });
-    if (await skipButton.isVisible()) {
-      await skipButton.click();
-    }
+test.describe('Export and import', () => {
+  test('downloads a PDF of the generated layout', async ({ page }) => {
+    await createSampleClass(page);
+    await runOptimization(page);
+    await page.getByRole('button', { name: /^Export$/i }).click();
+    const download = page.waitForEvent('download');
+    await page.getByRole('menuitem', { name: /Save as PDF/i }).click();
+    expect((await download).suggestedFilename()).toMatch(/\.pdf$/i);
   });
-
-  test('should add a new student', async ({ page }) => {
-    // Click add student button
-    const addButton = page.getByRole('button', { name: /add student|הוסף תלמיד/i });
-    await addButton.click();
-
-    // Fill student form
-    await page.getByRole('textbox', { name: /name|שם/i }).fill('Test Student');
-    await page.getByRole('combobox', { name: /gender|מגדר/i }).selectOption('female');
-
-    // Select academic level
-    await page.getByRole('button', { name: /academic level|רמה אקדמית/i }).click();
-    await page.getByRole('option', { name: /proficient|מצטיין/i }).click();
-
-    // Save student
-    await page.getByRole('button', { name: /save|save student|שמור/i }).click();
-
-    // Verify student appears in list
-    await expect(page.getByText('Test Student')).toBeVisible();
-  });
-
-  test('should edit an existing student', async ({ page }) => {
-    // Add a student first
-    const addButton = page.getByRole('button', { name: /add student|הוסף תלמיד/i });
-    await addButton.click();
-    await page.getByRole('textbox', { name: /name|שם/i }).fill('Original Name');
-    await page.getByRole('combobox', { name: /gender|מגדר/i }).selectOption('male');
-    await page.getByRole('button', { name: /save|save student|שמור/i }).click();
-
-    // Edit the student
-    const studentCard = page.getByText('Original Name');
-    await studentCard.click();
-    const editButton = page.getByRole('button', { name: /edit|ערוך/i });
-    await editButton.click();
-
-    // Update name
-    await page.getByRole('textbox', { name: /name|שם/i }).fill('Updated Name');
-    await page.getByRole('button', { name: /save|save student|שמור/i }).click();
-
-    // Verify update
-    await expect(page.getByText('Updated Name')).toBeVisible();
-    await expect(page.getByText('Original Name')).not.toBeVisible();
-  });
-
-  test('should delete a student', async ({ page }) => {
-    // Add a student first
-    const addButton = page.getByRole('button', { name: /add student|הוסף תלמיד/i });
-    await addButton.click();
-    await page.getByRole('textbox', { name: /name|שם/i }).fill('To Be Deleted');
-    await page.getByRole('combobox', { name: /gender|מגדר/i }).selectOption('female');
-    await page.getByRole('button', { name: /save|save student|שמור/i }).click();
-
-    // Delete the student
-    const studentCard = page.getByText('To Be Deleted');
-    await studentCard.click();
-    const deleteButton = page.getByRole('button', { name: /delete|מחק/i });
-    await deleteButton.click();
-
-    // Confirm deletion
-    const confirmButton = page.getByRole('button', { name: /confirm|confirm deletion|אשר/i });
-    await confirmButton.click();
-
-    // Verify deletion
-    await expect(page.getByText('To Be Deleted')).not.toBeVisible();
-  });
-});
-
-test.describe('Optimization Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Skip onboarding and add sample students
-    const skipButton = page.getByRole('button', { name: /skip|דלג/i });
-    if (await skipButton.isVisible()) {
-      await skipButton.click();
-    }
-
-    // Add a few students via state
-    await page.evaluate(() => {
-      const store = (window as any).__ZUSTAND_STORE__;
-      if (store) {
-        store.setState({
-          students: [
-            {
-              id: 's1',
-              name: 'Alice',
-              gender: 'female',
-              academic_level: 'proficient',
-              academic_score: 85,
-              behavior_level: 'good',
-              behavior_score: 80,
-              friends_ids: [],
-              incompatible_ids: [],
-              special_needs: [],
-              requires_front_row: false,
-              requires_quiet_area: false,
-              has_mobility_issues: false,
-              is_bilingual: false
-            },
-            {
-              id: 's2',
-              name: 'Bob',
-              gender: 'male',
-              academic_level: 'developing',
-              academic_score: 65,
-              behavior_level: 'good',
-              behavior_score: 75,
-              friends_ids: [],
-              incompatible_ids: [],
-              special_needs: [],
-              requires_front_row: false,
-              requires_quiet_area: false,
-              has_mobility_issues: false,
-              is_bilingual: false
-            }
-          ]
-        });
-      }
+  test('imports CSV into the roster', async ({ page }) => {
+    await openStudentWizard(page);
+    await page.getByRole('tab', { name: /CSV/i }).click();
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'students.csv', mimeType: 'text/csv',
+      buffer: Buffer.from('name,gender\nTest Student 1,female\nTest Student 2,male'),
     });
-  });
-
-  test('should run optimization and display results', async ({ page }) => {
-    // Click optimize button
-    const optimizeButton = page.getByRole('button', { name: /optimize|הפעל אופטימיזציה/i });
-    await optimizeButton.click();
-
-    // Wait for optimization to complete
-    await expect(page.getByText(/optimization complete|האופטימיזציה הושלמה/i)).toBeVisible({ timeout: 10000 });
-
-    // Verify results are displayed
-    await expect(page.getByText(/fitness score|ניקוד כושר/i)).toBeVisible();
-    await expect(page.locator('.classroom-grid')).toBeVisible();
-  });
-
-  test('should adjust weights and re-optimize', async ({ page }) => {
-    // Open settings
-    const settingsButton = page.getByRole('button', { name: /settings|הגדרות/i });
-    await settingsButton.click();
-
-    // Adjust academic balance weight
-    const academicSlider = page.getByRole('slider', { name: /academic|אקדמי/i });
-    await academicSlider.fill('50');
-
-    // Close settings
-    await page.keyboard.press('Escape');
-
-    // Run optimization
-    const optimizeButton = page.getByRole('button', { name: /optimize|הפעל אופטימיזציה/i });
-    await optimizeButton.click();
-
-    // Verify optimization completes
-    await expect(page.getByText(/optimization complete|האופטימיזציה הושלמה/i)).toBeVisible({ timeout: 10000 });
-  });
-});
-
-test.describe('Project Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    const skipButton = page.getByRole('button', { name: /skip|דלג/i });
-    if (await skipButton.isVisible()) {
-      await skipButton.click();
-    }
-  });
-
-  test('should save and load a project', async ({ page }) => {
-    // Create a project
-    const projectsButton = page.getByRole('button', { name: /projects|פרויקטים/i });
-    await projectsButton.click();
-
-    const saveButton = page.getByRole('button', { name: /save project|שמור פרויקט/i });
-    await saveButton.click();
-
-    // Enter project name
-    await page.getByRole('textbox', { name: /project name|שם פרויקט/i }).fill('Test Class');
-    await page.getByRole('button', { name: /save|שמור/i }).click();
-
-    // Verify project appears in list
-    await expect(page.getByText('Test Class')).toBeVisible();
-
-    // Clear current state and reload
-    await page.evaluate(() => localStorage.clear());
-    await page.reload();
-
-    // Load the project
-    await projectsButton.click();
-    await page.getByText('Test Class').click();
-    const loadButton = page.getByRole('button', { name: /load|טען/i });
-    await loadButton.click();
-
-    // Verify project loaded
-    await expect(projectsButton).toBeVisible();
-  });
-
-  test('should delete a project', async ({ page }) => {
-    // Create and save a project
-    const projectsButton = page.getByRole('button', { name: /projects|פרויקטים/i });
-    await projectsButton.click();
-
-    const saveButton = page.getByRole('button', { name: /save project|שמור פרויקט/i });
-    await saveButton.click();
-    await page.getByRole('textbox', { name: /project name|שם פרויקט/i }).fill('To Delete');
-    await page.getByRole('button', { name: /save|שמור/i }).click();
-
-    // Delete the project
-    await page.getByText('To Delete').click();
-    const deleteButton = page.getByRole('button', { name: /delete|מחק/i });
-    await deleteButton.click();
-
-    // Confirm deletion
-    await page.getByRole('button', { name: /confirm|אשר/i }).click();
-
-    // Verify deletion
-    await expect(page.getByText('To Delete')).not.toBeVisible();
-  });
-});
-
-test.describe('Export and Import', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    const skipButton = page.getByRole('button', { name: /skip|דלג/i });
-    if (await skipButton.isVisible()) {
-      await skipButton.click();
-    }
-  });
-
-  test('should export classroom layout as PDF', async ({ page }) => {
-    // Set up a simple layout first
-    await page.evaluate(() => {
-      const store = (window as any).__ZUSTAND_STORE__;
-      if (store) {
-        store.setState({
-          students: [
-            {
-              id: 's1',
-              name: 'Export Test',
-              gender: 'female',
-              academic_level: 'proficient',
-              academic_score: 85,
-              behavior_level: 'good',
-              behavior_score: 80,
-              friends_ids: [],
-              incompatible_ids: [],
-              special_needs: [],
-              requires_front_row: false,
-              requires_quiet_area: false,
-              has_mobility_issues: false,
-              is_bilingual: false
-            }
-          ],
-          result: {
-            layout: {
-              layout_type: 'rows',
-              rows: 5,
-              cols: 6,
-              total_seats: 30,
-              seats: [{ position: { row: 0, col: 0 }, student_id: 's1' }]
-            },
-            student_positions: { s1: { row: 0, col: 0 } },
-            fitness_score: 85,
-            objective_scores: { academic_balance: 80, behavioral_balance: 85, diversity: 75, special_needs: 90 },
-            generations: 50,
-            computation_time_ms: 100,
-            warnings: []
-          }
-        });
-      }
-    });
-
-    // Click export button
-    const exportButton = page.getByRole('button', { name: /export|ייצוא/i });
-    await exportButton.click();
-
-    // Select PDF option
-    const pdfOption = page.getByRole('menuitem', { name: /pdf|ייצא כ-pdf/i });
-    await pdfOption.click();
-
-    // Wait for download
-    const downloadPromise = page.waitForEvent('download');
-    await downloadPromise;
-  });
-
-  test('should import students from CSV', async ({ page }) => {
-    // Create a CSV file
-    const csv = `name,gender,academic_level,behavior_level
-Test Student 1,female,proficient,good
-Test Student 2,male,developing,excellent`;
-
-    // Upload the file
-    const importButton = page.getByRole('button', { name: /import|ייבוא/i });
-    await importButton.click();
-
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles({
-      name: 'students.csv',
-      mimeType: 'text/csv',
-      buffer: Buffer.from(csv)
-    });
-
-    // Verify import
-    await expect(page.getByText('Test Student 1')).toBeVisible();
-    await expect(page.getByText('Test Student 2')).toBeVisible();
+    await expect.poll(() => getStudentNames(page)).toEqual(['Test Student 1', 'Test Student 2']);
   });
 });

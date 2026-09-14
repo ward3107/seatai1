@@ -14,6 +14,7 @@ export default function OnboardingView() {
   function loadSampleClass(id: typeof SAMPLE_CLASSES[number]['id']) {
     const sample = SAMPLE_CLASSES.find((c) => c.id === id);
     if (!sample) return;
+    if (useStore.getState().students.length > 0 && !window.confirm(t('wizard.confirm_sample_replace'))) return;
     // Make a deep copy so the user can edit students without mutating the
     // original sample data (otherwise switching back returns edited names).
     setStudents(JSON.parse(JSON.stringify(sample.students)));

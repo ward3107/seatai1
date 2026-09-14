@@ -26,6 +26,8 @@ jobs:
         run: npm ci
       - name: Run linter
         run: npm run lint
+      - name: Typecheck browser tests
+        run: npx tsc -p web/tsconfig.e2e.json --noEmit
 
   test:
     name: Test
@@ -78,6 +80,7 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -89,23 +92,10 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: web
-      # Reliable, maintained flows — a real gate. These seed state through the
-      # store test hook and use stable data-testid selectors, so they don't rot
-      # with UI copy/markup changes. Add specs here as more of the suite is
-      # brought current.
-      - name: Run e2e flows (gating)
-        run: npx playwright test flows.spec.ts --project=chromium
-        working-directory: web
-      # Informational only for now: the older specs are stale relative to the
-      # current UI and fail identically on main. `continue-on-error` on the STEP
-      # keeps the check green while they're repaired — job-level
-      # continue-on-error still surfaces a red check, which blocks the merge
-      # button. Drop this once the whole suite is green.
-      # Chromium-only in CI: the cross-browser matrix is for local runs.
-      - name: Run full e2e suite (informational)
+      # Every desktop, mobile and RTL scenario is now a merge gate.
+      - name: Run full e2e suite
         run: npx playwright test --project=chromium
         working-directory: web
-        continue-on-error: true
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

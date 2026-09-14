@@ -67,7 +67,7 @@ describe('CsvImport Component', () => {
     vi.stubGlobal('FileReader', MockFileReader);
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
   describe('Rendering', () => {
     it('should render import UI', () => {
@@ -215,6 +215,31 @@ describe('CsvImport Component', () => {
   });
 
   describe('Import result display', () => {
+    it.each([true, false])('only replaces a valid class when confirmed: %s', async (confirmed) => {
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(confirmed);
+      render(<CsvImport />);
+      await userEvent.click(screen.getByText('Replace class'));
+      fireEvent.change(document.querySelector('input[type="file"]')!, {
+        target: { files: [new File([fileReaderContent], 'class.csv')] },
+      });
+      await waitFor(() => expect(confirm).toHaveBeenCalled());
+      expect(mockSetStudents).toHaveBeenCalledTimes(confirmed ? 1 : 0);
+      expect(mockAddStudent).not.toHaveBeenCalled();
+    });
+
+    it('does not replace a class with a partially invalid roster', async () => {
+      fileReaderContent = 'name,gender\nValid,female\n,male';
+      const confirm = vi.spyOn(window, 'confirm');
+      render(<CsvImport />);
+      await userEvent.click(screen.getByText('Replace class'));
+      fireEvent.change(document.querySelector('input[type="file"]')!, {
+        target: { files: [new File([fileReaderContent], 'invalid.csv')] },
+      });
+      await waitFor(() => expect(screen.getByText('0 students imported')).toBeInTheDocument());
+      expect(mockSetStudents).not.toHaveBeenCalled();
+      expect(confirm).not.toHaveBeenCalled();
+    });
+
     it('should show success message after import', async () => {
       const mockFileContent = 'name,gender,academic_level\nTest Student,female,proficient';
       fileReaderContent = mockFileContent;

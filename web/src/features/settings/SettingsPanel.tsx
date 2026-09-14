@@ -59,6 +59,7 @@ export default function SettingsPanel() {
   const fieldId = (key: string) => `${panelId}-${key}`;
 
   const resetToDemo = () => {
+    if (useStore.getState().students.length > 0 && !window.confirm(t('wizard.confirm_sample_replace'))) return;
     setStudents(sampleStudents);
     setResult(null);
     setRows(5);
@@ -152,6 +153,7 @@ export default function SettingsPanel() {
                   <span className="text-xs text-gray-500 dark:text-gray-400 w-24">{label}</span>
                   <input
                     type="range" min="0" max="100"
+                    aria-label={label}
                     value={(weights[key as keyof typeof weights] || 0) * 100}
                     onChange={(e) => setWeights({ ...weights, [key]: Number(e.target.value) / 100 })}
                     className="flex-1 h-2"

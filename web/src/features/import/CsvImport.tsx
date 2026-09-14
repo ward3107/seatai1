@@ -59,6 +59,13 @@ export default function CsvImport() {
       // upload. A valid replacement is one atomic store update, which also
       // avoids persisting an observable empty-class intermediate state.
       if (mode === 'replace' && students.length > 0) {
+        // A partially valid file must not silently drop pupils whose rows
+        // failed validation. Ask the teacher to fix those rows first.
+        if (errors.length > 0) {
+          setResult({ added: 0, errors, warnings });
+          return;
+        }
+        if (!window.confirm(t('csvImport.confirm_replace', { count: students.length }))) return;
         useStore.getState().setStudents(students);
       } else if (mode === 'append') {
         students.forEach(s => addStudent(s));

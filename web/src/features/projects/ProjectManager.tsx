@@ -122,6 +122,7 @@ export default function ProjectManager() {
           <div className="flex gap-2">
             <input
               type="text"
+              aria-label={t('projects.class_placeholder')}
               placeholder={currentProject?.name ?? t('projects.class_placeholder')}
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
@@ -217,11 +218,11 @@ export default function ProjectManager() {
                       </button>
                       {confirmDelete === p.id ? (
                         <>
-                          <button onClick={() => { deleteProject(p.id); setConfirmDelete(null); }}
+                          <button aria-label={t('common.confirm')} onClick={() => { deleteProject(p.id); setConfirmDelete(null); }}
                             className="p-1.5 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 rounded transition-colors">
                             <Check size={12} className="text-red-600 dark:text-red-300" />
                           </button>
-                          <button onClick={() => setConfirmDelete(null)}
+                          <button aria-label={t('common.cancel')} onClick={() => setConfirmDelete(null)}
                             className="p-1.5 hover:bg-gray-200 rounded transition-colors">
                             <X size={12} className="text-gray-500 dark:text-gray-400" />
                           </button>
