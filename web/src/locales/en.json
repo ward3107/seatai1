@@ -148,7 +148,7 @@
     "redo": "Redo (Ctrl+Y)",
     "history_controls": "History controls",
     "text_size": "Text size",
-    "privacy_local_only": "All data stays on this device — no servers, no accounts, no tracking.",
+    "privacy_local_only": "Class data stays on this device by default. Optional AI and LTI integrations transfer only the data needed for the feature after you enable it.",
     "privacy_badge": "Local-only",
     "skip_to_content": "Skip to content"
   },
@@ -598,7 +598,7 @@
     "ai_hide_key": "Hide key",
     "ai_forget_key": "Forget key (clear from this browser)",
     "ai_model": "Model",
-    "ai_security_note": "Your key is stored only in this browser. Don't enable on a shared computer. Each generation costs roughly $0.001.",
+    "ai_security_note": "Your key is not saved and is forgotten when this page closes or reloads. Don't use AI with student data unless your school has approved it. Each generation costs roughly $0.001.",
     "seating_rules": "Seating Rules",
     "must_separate": "Must be separated (placed far apart)",
     "should_sit_near": "Should sit near each other",

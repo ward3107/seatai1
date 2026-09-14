@@ -49,11 +49,10 @@ export default defineConfig({
     // upgrades. Anything newer (top-level await, decorators) is unsupported.
     // The corresponding browser floor lives in package.json `browserslist`.
     target: 'es2022',
-    // 'hidden' still emits .map files (upload them to an error tracker if you
-    // use one) but omits the `//# sourceMappingURL` comment, so the original
-    // TypeScript source isn't advertised to — or trivially fetched by —
-    // anyone browsing the deployed bundle.
-    sourcemap: 'hidden',
+    // A hidden source map is still public when dist/ is deployed. Keep source
+    // maps out of the production artifact; generate/upload them only inside a
+    // private error-tracking CI step if one is added later.
+    sourcemap: false,
     rollupOptions: {
       output: {
         // Split large, independently-versioned vendor libraries into their

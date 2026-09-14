@@ -27,25 +27,29 @@ and users have had a reasonable window to update.
 
 ## Trust Model
 
-SeatAI is a browser-only application:
+SeatAI is local-first. Its core manual/CSV workflow is browser-only, while
+optional integrations add narrowly scoped network paths:
 
 - All student data is stored in the user's own browser
   (IndexedDB / localStorage). No server-side component receives,
   stores, or processes roster data.
 - There is no authentication, no multi-tenancy, and no cross-user
   data path. Each browser holds exactly its own teacher's data.
-- The only outbound network calls are:
+- Outbound or serverless data flows are:
   - First-load asset requests to the origin serving the app.
   - Optional, opt-in calls to a language-model API when the teacher
     has explicitly enabled AI explanations and entered their own
-    API key. The key never leaves the teacher's browser except in
-    the Authorization header on that direct request.
+    API key. The key is not persisted and never leaves the teacher's browser except in
+    the authentication header on that direct request. Relevant placement
+    facts or teacher notes are included in the prompt.
+  - Optional Google Classroom roster imports, called browser-to-Google.
+  - Optional LTI 1.3 serverless endpoints, which validate the LMS launch and
+    process a roster transiently without persisting it.
 
-Because there is no backend, classes of vulnerability that depend on
-shared server state (account hijacking, lateral access, server-side
-injection, mass data exfiltration) do not apply to the hosted app.
-What does apply: anything that could compromise an individual
-teacher's local data or cause incorrect behavior in their browser.
+There are no SeatAI user accounts or shared application database, so account
+hijacking and cross-tenant access do not apply to the core app. Browser data,
+the optional LTI endpoints, supply-chain integrity, and third-party integration
+boundaries remain in scope.
 
 ## Scope
 

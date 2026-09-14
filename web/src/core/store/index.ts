@@ -241,9 +241,8 @@ interface AppState {
   welcomeTipsDismissed: boolean;
   setWelcomeTipsDismissed: (v: boolean) => void;
 
-  /** Optional client-side LLM integration. Off by default. The API
-   *  key is stored only in this browser's IndexedDB — no server, no
-   *  telemetry. */
+  /** Optional client-side LLM integration. Off by default. The API key is
+   *  kept in memory for the current page session and is never persisted. */
   aiSettings: {
     enabled: boolean;
     apiKey: string;
@@ -997,6 +996,9 @@ export const useStore = create<AppState>()(
             (merged as unknown as Record<string, unknown>)[key] = { ...base, ...over };
           }
         }
+        // API credentials are deliberately session-only. This also strips a
+        // key saved by versions that persisted the entire aiSettings object.
+        merged.aiSettings = { ...merged.aiSettings, apiKey: '' };
         return merged;
       },
       storage: createJSONStorage(() => dexieStorage),
@@ -1039,7 +1041,11 @@ export const useStore = create<AppState>()(
         uiScale: state.uiScale,
         theme: state.theme,
         welcomeTipsDismissed: state.welcomeTipsDismissed,
-        aiSettings: state.aiSettings,
+        aiSettings: {
+          enabled: state.aiSettings.enabled,
+          model: state.aiSettings.model,
+          apiKey: '',
+        },
         resultHistory: state.resultHistory,
         resultsCollapsed: state.resultsCollapsed,
         showConstraintBadges: state.showConstraintBadges,

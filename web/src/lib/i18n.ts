@@ -47,13 +47,20 @@ function interpolate(text: string, values: Record<string, string | number>): str
   });
 }
 
-// Get translation by key path (e.g., 'students.add')
-export function t(key: string, values?: Record<string, string | number>): string {
+/** Resolve a translation for an explicit locale. Shared by the React hook and
+ * the non-React helper so lookup and interpolation behave identically. */
+export function translate(
+  locale: UILanguage,
+  key: string,
+  values?: Record<string, string | number>,
+): string {
   const keys = key.split('.');
-  let value: any = translations[currentLocale];
+  let value: unknown = translations[locale];
 
   for (const k of keys) {
-    value = value?.[k];
+    value = value && typeof value === 'object'
+      ? (value as Record<string, unknown>)[k]
+      : undefined;
   }
 
   if (typeof value !== 'string') {
@@ -62,6 +69,11 @@ export function t(key: string, values?: Record<string, string | number>): string
   }
 
   return values ? interpolate(value, values) : value;
+}
+
+// Get translation by key path (e.g., 'students.add')
+export function t(key: string, values?: Record<string, string | number>): string {
+  return translate(currentLocale, key, values);
 }
 
 // Set current locale

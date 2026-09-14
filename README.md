@@ -9,8 +9,9 @@
 
 Classroom seating arrangement tool that uses a genetic algorithm to find good
 student placements based on academic balance, behavioral compatibility,
-diversity, and special needs. Runs entirely in the browser — no server, no
-sign-in, no internet required after first load.
+diversity, and special needs. The core app runs entirely in the browser — no
+sign-in and no internet required after first load. Optional LTI and AI features
+have clearly documented network data flows.
 
 ## Features
 
@@ -36,21 +37,26 @@ sign-in, no internet required after first load.
 
 ## For schools & IT
 
-SeatAI is built to be deployable inside a school with **zero data flowing
-off the device**. The whole thing is a static web app — there is no
-backend, no API to call, and no account to create.
+SeatAI is built so its **default workflow keeps class data on the device**.
+The core is a static web app with no account to create. Optional integrations
+are isolated and can be left disabled by a school.
 
 ### Data & privacy
 
-- **Local-only.** Every roster, note, photo, and saved seating plan lives in
-  the teacher's own browser via IndexedDB. Nothing is sent to a server.
+- **Local by default.** Every roster, note, photo, and saved seating plan lives
+  in the teacher's own browser via IndexedDB during normal manual/CSV use.
 - **No accounts.** No login, no email, no signup. Open the URL and you're
   working.
 - **No tracking.** No analytics, no telemetry, no third-party scripts.
 - **Optional AI explanations** are off by default. If a teacher turns them
-  on, the API key they enter is stored only in their browser and the call
+  on, the API key is held only for the current page session and the call
   goes **direct from their browser** to the LLM provider — SeatAI's host
-  never sees the key or the prompt.
+  never sees the key or the prompt. The selected student's placement facts,
+  and notes when using rule suggestions, are sent to that provider.
+- **Optional roster integrations.** Google Classroom calls run directly from
+  the browser. LTI 1.3 uses short-lived serverless endpoints to authenticate
+  the LMS and fetch a roster; the endpoint does not persist the roster, but it
+  does process it transiently before handing it to the browser.
 - **Backup.** Because the data lives on the device, teachers should use the
   built-in "Backup all data" button in the Projects panel periodically to
   keep an off-browser copy (a single `.json` they can email themselves or

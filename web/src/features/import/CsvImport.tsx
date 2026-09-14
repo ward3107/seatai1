@@ -46,6 +46,8 @@ export default function CsvImport() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [mode, setMode] = useState<'replace' | 'append'>('append');
+  const dropPrompt = t('csvImport.drop_here');
+  const dropParts = dropPrompt.match(/^(.*?)<span>(.*?)<\/span>(.*)$/);
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -53,11 +55,14 @@ export default function CsvImport() {
       const text = e.target?.result as string;
       const { students, errors, warnings } = parseCsv(text, t);
 
-      if (mode === 'replace') {
-        useStore.getState().setStudents([]);
+      // Never erase the current class for an empty or completely invalid
+      // upload. A valid replacement is one atomic store update, which also
+      // avoids persisting an observable empty-class intermediate state.
+      if (mode === 'replace' && students.length > 0) {
+        useStore.getState().setStudents(students);
+      } else if (mode === 'append') {
+        students.forEach(s => addStudent(s));
       }
-
-      students.forEach(s => addStudent(s));
       setResult({ added: students.length, errors, warnings });
     };
     reader.onerror = () => {
@@ -104,7 +109,13 @@ export default function CsvImport() {
       >
         <Upload size={20} className="text-gray-400 dark:text-gray-400" />
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          {t('csvImport.drop_here').replace('<span>', '<span className="text-primary-500 underline">')}
+          {dropParts ? (
+            <>
+              {dropParts[1]}
+              <span className="text-primary-600 dark:text-primary-400 underline">{dropParts[2]}</span>
+              {dropParts[3]}
+            </>
+          ) : dropPrompt.replace(/<\/?span>/g, '')}
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-400">Columns: name, gender, academic_level, score…</p>
         <input
@@ -150,7 +161,12 @@ export default function CsvImport() {
                 <p key={`w-${i}`} className="text-amber-700 dark:text-amber-300 mt-0.5">• {warn}</p>
               ))}
             </div>
-            <button onClick={() => setResult(null)} className="shrink-0 p-0.5 hover:bg-black/5 rounded">
+            <button
+              type="button"
+              onClick={() => setResult(null)}
+              className="shrink-0 p-1 hover:bg-black/5 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label={t('common.close')}
+            >
               <X size={12} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>

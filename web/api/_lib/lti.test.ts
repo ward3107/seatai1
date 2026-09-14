@@ -242,3 +242,14 @@ describe('fetchRoster', () => {
     expect(fetched).toBe(false);
   });
 });
+
+describe('handoffPage', () => {
+  it('gives a blocked iframe launch a user-activated top-level fallback', () => {
+    const html = lib.handoffPage(
+      { sourceId: 'course-1', name: 'Class A', students: [] },
+      'https://tool.test',
+    );
+    expect(html).toContain('target="_top"');
+    expect(html).toContain('rel="noopener"');
+  });
+});

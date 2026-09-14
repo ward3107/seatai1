@@ -41,6 +41,20 @@ jobs:
       - name: Run tests
         run: npm test
 
+  security:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Block production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
   build:
     name: Build
     runs-on: ubuntu-latest
