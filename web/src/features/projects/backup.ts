@@ -16,6 +16,8 @@
  *     A backup is data; the UI session that opens it picks its own view.
  */
 
+import { validBackupData } from './backupValidation';
+
 import type {
   Student,
   ObjectiveWeights,
@@ -220,9 +222,13 @@ export function parseBackup(json: string): ParseResult {
     };
   }
 
+  if (!validBackupData(data) || (file.exportedAt !== undefined && typeof file.exportedAt !== 'string')) {
+    return { ok: false, kind: 'invalid-json', message: 'Backup contains invalid field values' };
+  }
+
   return {
     ok: true,
-    data: data as BackupData,
+    data: { ...data, currentProjectId: data.currentProjectId ?? null } as BackupData,
     exportedAt: file.exportedAt ?? '',
   };
 }

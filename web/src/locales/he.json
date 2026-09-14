@@ -672,7 +672,7 @@
     "restore_confirm_body": "פעולה זו תחליף את התלמידים והפרויקטים הנוכחיים בגיבוי מ-{{date}} ({{students}} תלמידים, {{projects}} פרויקטים).",
     "restore_confirm_yes": "החלף נתונים",
     "restore_confirm_no": "ביטול",
-    "restore_error_invalid_json": "לא ניתן לקרוא את הקובץ (לא JSON תקין).",
+    "restore_error_invalid_json": "לא ניתן לקרוא את הגיבוי, או שתוכנו אינו תקין.",
     "restore_error_wrong_schema": "הקובץ אינו גיבוי SeatAI.",
     "restore_error_unsupported_version": "הגיבוי הזה נוצר בגרסה חדשה יותר של SeatAI.",
     "restore_error_missing_fields": "בקובץ הגיבוי חסרים נתונים נדרשים.",

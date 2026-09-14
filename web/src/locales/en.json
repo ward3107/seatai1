@@ -672,7 +672,7 @@
     "restore_confirm_body": "This will replace your current students and projects with the backup from {{date}} ({{students}} students, {{projects}} projects).",
     "restore_confirm_yes": "Replace data",
     "restore_confirm_no": "Cancel",
-    "restore_error_invalid_json": "Couldn't read the file (not valid JSON).",
+    "restore_error_invalid_json": "Couldn't read the backup, or its contents are invalid.",
     "restore_error_wrong_schema": "This file isn't a SeatAI backup.",
     "restore_error_unsupported_version": "This backup was made by a newer version of SeatAI.",
     "restore_error_missing_fields": "The backup file is missing required data.",

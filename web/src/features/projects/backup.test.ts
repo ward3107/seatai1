@@ -148,3 +148,36 @@ describe('backup file reading', () => {
     expect(parseBackup(JSON.stringify(file)).ok).toBe(false);
   });
 });
+
+describe('backup runtime field validation', () => {
+  it.each([
+    ['students', null], ['students', {}], ['rows', -1], ['cols', '5'],
+    ['layoutDef', { type: 'unknown', rows: 4, cols: 5 }],
+    ['weights', null], ['config', { populationSize: 'many' }],
+    ['constraints', { separate_pairs: [null] }], ['projects', [null]],
+    ['result', { layout: null }], ['savedArrangements', [null]],
+    ['rotationPlan', { periods: {} }], ['questionnaire', { surveyedIds: 'all' }],
+    ['resultHistory', [{ positions: [] }]], ['uiLanguage', 'invalid'],
+  ])('rejects invalid %s before restore', (key, value) => {
+    const file = buildBackup(baseState());
+    const changed = { ...file, data: { ...file.data, [key]: value } };
+    expect(parseBackup(JSON.stringify(changed)).ok).toBe(false);
+  });
+  it('rejects a malformed nested student', () => {
+    const file = buildBackup(baseState());
+    file.data.students[0].friends_ids = null as unknown as string[];
+    expect(parseBackup(JSON.stringify(file)).ok).toBe(false);
+  });
+  it('rejects duplicate student identities', () => {
+    const file = buildBackup(baseState());
+    file.data.students.push({ ...file.data.students[0] });
+    expect(parseBackup(JSON.stringify(file)).ok).toBe(false);
+  });
+  it('accepts legacy backups without optional fields and unknown future fields', () => {
+    const file = buildBackup(baseState());
+    const { currentProjectId: _omitted, ...data } = file.data;
+    const parsed = parseBackup(JSON.stringify({ ...file, data: { ...data, futureField: true } }));
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(parsed.data.currentProjectId).toBeNull();
+  });
+});
