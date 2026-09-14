@@ -1,36 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useStore } from '../core/store';
-import { type UILanguage } from '../lib/i18n';
-import en from '../locales/en.json';
-import he from '../locales/he.json';
-import ar from '../locales/ar.json';
-import ru from '../locales/ru.json';
-
-const translations: Record<UILanguage, any> = { en, he, ar, ru };
-
-// Simple interpolation for {{variable}} placeholders
-function interpolate(text: string, values: Record<string, string | number>): string {
-  return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-    return values[key]?.toString() || match;
-  });
-}
-
-// Get translation by key path for a specific locale
-function getTranslation(locale: UILanguage, key: string, values?: Record<string, string | number>): string {
-  const keys = key.split('.');
-  let value: any = translations[locale];
-
-  for (const k of keys) {
-    value = value?.[k];
-  }
-
-  if (typeof value !== 'string') {
-    console.warn(`Translation not found: ${key}`);
-    return key;
-  }
-
-  return values ? interpolate(value, values) : value;
-}
+import { translate, type UILanguage } from '../lib/i18n';
 
 const RTL_LANGS: UILanguage[] = ['he', 'ar'];
 
@@ -56,7 +26,7 @@ export function useLanguage() {
 
   // Create a reactive translation function that depends on uiLanguage
   const t = useCallback((key: string, values?: Record<string, string | number>) => {
-    return getTranslation(uiLanguage, key, values);
+    return translate(uiLanguage, key, values);
   }, [uiLanguage]);
 
   useEffect(() => {

@@ -12,13 +12,13 @@
  * `x-forwarded-for` entry, which an attacker can rotate to mint a fresh
  * window per value.
  */
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { ApiRequest, ApiResponse } from './httpTypes';
 import { incrWithTtl } from './kvStore';
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
 
-function clientIp(req: VercelRequest): string {
+function clientIp(req: ApiRequest): string {
   // `x-real-ip` is set by Vercel's edge to the actual connecting client and
   // is not overwritable by the client. Fall back to the last XFF hop (closest
   // to our edge, so least attacker-influenced) and then the socket address.
@@ -37,8 +37,8 @@ function clientIp(req: VercelRequest): string {
  * 429 response (with Retry-After) and the handler should return immediately.
  */
 export async function rateLimit(
-  req: VercelRequest,
-  res: VercelResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<boolean> {
   const key = `lti:rl:${clientIp(req)}`;
   const count = await incrWithTtl(key, WINDOW_MS);

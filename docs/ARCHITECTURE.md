@@ -19,7 +19,7 @@ This document describes the current architecture of SeatAI.
 
 ## System Overview
 
-SeatAI is a **client-side single-page application** for classroom seating optimization. The entire application runs in the browser with no server-side requirements.
+SeatAI is a **local-first single-page application** for classroom seating optimization. The core application runs in the browser; optional LTI roster import uses narrowly scoped serverless endpoints.
 
 ### Key Characteristics
 
@@ -386,8 +386,8 @@ Since SeatAI is client-side only:
 | Risk | Mitigation |
 |------|------------|
 | XSS from user input | Sanitize all inputs, use React's default escaping |
-| Data leakage | All data local, no server transmission |
-| CSRF | Not applicable (no server) |
+| Data leakage | Local-by-default storage; explicit disclosures and narrow boundaries for optional AI, Google Classroom, and LTI flows |
+| CSRF | Core app has no authenticated server session; LTI uses signed, expiring state and nonce validation |
 | Injection | No SQL, validate CSV imports |
 
 ---

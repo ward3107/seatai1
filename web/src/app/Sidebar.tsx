@@ -1,12 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import StudentList from '../features/students/StudentList';
-import SettingsPanel from '../features/settings/SettingsPanel';
 import AddStudentsPanel from '../features/import/AddStudentsPanel';
-import ProjectManager from '../features/projects/ProjectManager';
 import ConstraintsPanel from '../features/constraints/ConstraintsPanel';
-import RotationPanel from '../features/rotation/RotationPanel';
-import ArrangementsPanel from '../features/arrangements/ArrangementsPanel';
 import QuestionnairePanel from '../features/questionnaire/QuestionnairePanel';
 import ConstraintWarnings from '../features/constraints/ConstraintWarnings';
 import LayoutPanel from '../features/layout/LayoutPanel';
@@ -17,6 +13,8 @@ import { slotCount } from '../core/layouts';
 import type { OptimizerProgress } from '../hooks/useOptimizer';
 import clsx from 'clsx';
 import { X, Play, RefreshCw, ShieldCheck, ChevronDown } from 'lucide-react';
+
+const AdvancedPanels = lazy(() => import('./AdvancedPanels'));
 
 interface SidebarProps {
   wasmReady: boolean;
@@ -40,6 +38,9 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
   const setHomeView = useStore((s) => s.setHomeView);
   const { t } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
+  // Load once on demand, then retain mounted panels to preserve edits when
+  // the teacher collapses and reopens the group.
+  const [advancedLoaded, setAdvancedLoaded] = useState(false);
 
   // When the sidebar is collapsed it's still in the DOM (translated off-screen
   // on mobile, width:0 on desktop), so `aria-hidden` alone leaves all its
@@ -171,7 +172,9 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                 and algorithm settings. The chevron rotates via the `open`
                 attribute, no JS state. */}
             <section aria-labelledby="sidebar-group-advanced">
-              <details className="group">
+              <details className="group" onToggle={(event) => {
+                if (event.currentTarget.open) setAdvancedLoaded(true);
+              }}>
                 <summary
                   id="sidebar-group-advanced"
                   className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 cursor-pointer list-none flex items-center justify-between hover:text-gray-700 dark:hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
@@ -183,23 +186,13 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
                     className="transition-transform group-open:rotate-180"
                   />
                 </summary>
-                <div className="space-y-3 pt-1">
-                  <ErrorBoundary name="Rotation Planner" inline>
-                    <RotationPanel />
+                {advancedLoaded && (
+                  <ErrorBoundary name="Advanced tools" inline>
+                    <Suspense fallback={<p role="status">{t('common.loading')}</p>}>
+                      <AdvancedPanels />
+                    </Suspense>
                   </ErrorBoundary>
-
-                  <ErrorBoundary name="Saved Arrangements" inline>
-                    <ArrangementsPanel />
-                  </ErrorBoundary>
-
-                  <ErrorBoundary name="Projects" inline>
-                    <ProjectManager />
-                  </ErrorBoundary>
-
-                  <ErrorBoundary name="Settings" inline>
-                    <SettingsPanel />
-                  </ErrorBoundary>
-                </div>
+                )}
               </details>
             </section>
           </div>

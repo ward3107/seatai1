@@ -8,12 +8,13 @@
   ],
   "overrides": {
     "flatted": "^3.4.2",
-    "undici": "^7.28.0"
+    "undici": "^7.29.1",
+    "vite": "^8.3.0"
   },
   "scripts": {
     "dev": "cd web && npm run dev",
     "build": "cd web && npm run build",
-    "test": "cd web && npm test",
+    "test": "cd web && npm run test:run",
     "lint": "cd web && npm run lint",
     "clean": "rm -rf web/dist"
   },
@@ -25,5 +26,8 @@
     "education"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.3.0"
+  }
 }

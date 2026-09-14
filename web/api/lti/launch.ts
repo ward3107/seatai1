@@ -4,7 +4,7 @@
  * platform's JWKS, confirm the nonce, then call NRPS for the class roster and
  * hand it to the SPA via a fragment redirect.
  */
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { ApiRequest, ApiResponse } from '../_lib/httpTypes';
 import { parsePlatforms, findPlatform, validateLaunchClaims } from '../../src/core/lti/ltiCore';
 import {
   verifyState,
@@ -27,7 +27,7 @@ function str(v: unknown): string {
   return typeof v === 'string' ? v : '';
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!(await rateLimit(req, res))) return;
   try {
     if (req.method !== 'POST') {

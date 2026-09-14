@@ -17,15 +17,15 @@ const TEMPLATE_HEADERS = [
 ];
 
 const TEMPLATE_EXAMPLE = [
-  ['Alice Cohen', 'female', '10', 'advanced', '92', 'excellent', '90', 'Hebrew', 'true', 'false', 'false', 'false', '', 'Strong reader, helps neighbors'],
-  ['Yossi Levi', 'male', '9', 'basic', '55', 'challenging', '48', 'Hebrew', 'false', 'true', 'false', 'false', 'ADHD', 'Needs frequent check-ins'],
-  ['Mariam Hassan', 'female', '10', 'proficient', '75', 'good', '80', 'Arabic', 'true', 'false', 'false', 'false', 'dyslexia;anxiety', ''],
+  ['Example Student 1', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+  ['Example Student 2', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+  ['Example Student 3', '', '', '', '', '', '', '', '', '', '', '', '', ''],
 ];
 
 function downloadTemplate() {
   const rows = [TEMPLATE_HEADERS, ...TEMPLATE_EXAMPLE];
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -46,6 +46,8 @@ export default function CsvImport() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [mode, setMode] = useState<'replace' | 'append'>('append');
+  const dropPrompt = t('csvImport.drop_here');
+  const dropParts = dropPrompt.match(/^(.*?)<span>(.*?)<\/span>(.*)$/);
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -53,11 +55,21 @@ export default function CsvImport() {
       const text = e.target?.result as string;
       const { students, errors, warnings } = parseCsv(text, t);
 
-      if (mode === 'replace') {
-        useStore.getState().setStudents([]);
+      // Never erase the current class for an empty or completely invalid
+      // upload. A valid replacement is one atomic store update, which also
+      // avoids persisting an observable empty-class intermediate state.
+      if (mode === 'replace' && students.length > 0) {
+        // A partially valid file must not silently drop pupils whose rows
+        // failed validation. Ask the teacher to fix those rows first.
+        if (errors.length > 0) {
+          setResult({ added: 0, errors, warnings });
+          return;
+        }
+        if (!window.confirm(t('csvImport.confirm_replace', { count: students.length }))) return;
+        useStore.getState().setStudents(students);
+      } else if (mode === 'append') {
+        students.forEach(s => addStudent(s));
       }
-
-      students.forEach(s => addStudent(s));
       setResult({ added: students.length, errors, warnings });
     };
     reader.onerror = () => {
@@ -69,7 +81,7 @@ export default function CsvImport() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file?.name.endsWith('.csv')) handleFile(file);
+    if (file?.name.toLowerCase().endsWith('.csv')) handleFile(file);
   };
 
   return (
@@ -78,6 +90,8 @@ export default function CsvImport() {
       <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
         <span>{t('csvImport.import_mode')}</span>
         <button
+          type="button"
+          aria-pressed={mode === 'append'}
           onClick={() => setMode('append')}
           className={`px-2 py-0.5 rounded-full border transition-colors ${
             mode === 'append' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
@@ -86,6 +100,8 @@ export default function CsvImport() {
           {t('csvImport.add_to_class')}
         </button>
         <button
+          type="button"
+          aria-pressed={mode === 'replace'}
           onClick={() => setMode('replace')}
           className={`px-2 py-0.5 rounded-full border transition-colors ${
             mode === 'replace' ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-400 text-orange-700 dark:text-orange-300' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
@@ -97,6 +113,15 @@ export default function CsvImport() {
 
       {/* Drop zone */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={dropPrompt.replace(/<\/?span>/g, '')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
@@ -104,7 +129,13 @@ export default function CsvImport() {
       >
         <Upload size={20} className="text-gray-400 dark:text-gray-400" />
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          {t('csvImport.drop_here').replace('<span>', '<span className="text-primary-500 underline">')}
+          {dropParts ? (
+            <>
+              {dropParts[1]}
+              <span className="text-primary-600 dark:text-primary-400 underline">{dropParts[2]}</span>
+              {dropParts[3]}
+            </>
+          ) : dropPrompt.replace(/<\/?span>/g, '')}
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-400">Columns: name, gender, academic_level, score…</p>
         <input
@@ -112,12 +143,18 @@ export default function CsvImport() {
           type="file"
           accept=".csv"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = '';
+          }}
         />
       </div>
 
       {/* Download template */}
       <button
+        type="button"
         onClick={downloadTemplate}
         className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 transition-colors"
       >
@@ -137,7 +174,7 @@ export default function CsvImport() {
         const Icon = hasErrors || hasWarnings ? AlertCircle : CheckCircle2;
         const iconCls = hasErrors ? 'text-red-500 dark:text-red-400' : hasWarnings ? 'text-amber-500 dark:text-amber-400' : 'text-green-500 dark:text-green-400';
         return (
-          <div className={`rounded-lg p-3 flex items-start gap-2 ${bannerCls}`}>
+          <div role="status" aria-live="polite" className={`rounded-lg p-3 flex items-start gap-2 ${bannerCls}`}>
             <Icon size={16} className={`${iconCls} shrink-0 mt-0.5`} />
             <div className="flex-1 text-xs">
               <p className="font-medium text-gray-700 dark:text-gray-300">
@@ -150,7 +187,12 @@ export default function CsvImport() {
                 <p key={`w-${i}`} className="text-amber-700 dark:text-amber-300 mt-0.5">• {warn}</p>
               ))}
             </div>
-            <button onClick={() => setResult(null)} className="shrink-0 p-0.5 hover:bg-black/5 rounded">
+            <button
+              type="button"
+              onClick={() => setResult(null)}
+              className="shrink-0 p-1 hover:bg-black/5 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label={t('common.close')}
+            >
               <X size={12} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>

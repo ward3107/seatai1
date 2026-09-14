@@ -4,7 +4,7 @@
  * redirect the browser to the platform's authorization endpoint. Accepts the
  * params via GET query or POST form, per the spec.
  */
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { ApiRequest, ApiResponse } from '../_lib/httpTypes';
 import { parsePlatforms, findPlatform, buildAuthRequestUrl } from '../../src/core/lti/ltiCore';
 import { signState, toolBaseUrl } from '../_lib/lti';
 import { rateLimit } from '../_lib/rateLimit';
@@ -14,7 +14,7 @@ function str(v: unknown): string {
   return typeof v === 'string' ? v : '';
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!(await rateLimit(req, res))) return;
   try {
     const src = (req.method === 'POST' ? req.body : req.query) ?? {};

@@ -19,7 +19,7 @@ import {
   type JWK,
 } from 'jose';
 import { lookup } from 'node:dns/promises';
-import type { VercelRequest } from '@vercel/node';
+import type { ApiRequest } from './httpTypes';
 import {
   NRPS_SCOPE,
   mapMembersToRoster,
@@ -53,7 +53,7 @@ async function fetchWithTimeout(
   }
 }
 
-export function toolBaseUrl(req: VercelRequest): string {
+export function toolBaseUrl(req: ApiRequest): string {
   if (process.env.LTI_TOOL_URL) return process.env.LTI_TOOL_URL.replace(/\/$/, '');
   const proto = (req.headers['x-forwarded-proto'] as string) ?? 'https';
   const host = req.headers.host;
@@ -232,7 +232,7 @@ export function handoffPage(roster: RosterClass, toolUrl: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>SeatAI</title></head>
 <body style="font-family:system-ui;padding:2rem;text-align:center">
 <p>Imported ${roster.students.length} students from ${escapeHtml(roster.name)}. Opening SeatAI…</p>
-<p><a id="go" href="${destHref}">Open SeatAI</a></p>
+<p><a id="go" href="${destHref}" target="_top" rel="noopener">Open SeatAI</a></p>
 <script>
 (function(){
   try{ (window.top||window).location.replace(${destLiteral}); }

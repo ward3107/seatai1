@@ -148,7 +148,7 @@
     "redo": "Redo (Ctrl+Y)",
     "history_controls": "History controls",
     "text_size": "Text size",
-    "privacy_local_only": "All data stays on this device — no servers, no accounts, no tracking.",
+    "privacy_local_only": "Class data stays on this device by default. Optional AI and LTI integrations transfer only the data needed for the feature after you enable it.",
     "privacy_badge": "Local-only",
     "skip_to_content": "Skip to content"
   },
@@ -184,7 +184,7 @@
     "section_export_title": "Exporting and printing",
     "section_export_body": "1. After running an optimization, the Export menu (top-right) is enabled.\n2. PNG: image of the seating chart, useful for slides or messaging.\n3. PDF: A4 landscape with title, score, and the chart fitted to one page; warnings (if any) appear on a second page.\n4. CSV: one row per seat with the student's full profile — open in Excel/Sheets, share with admin staff.\n5. JSON: full structured snapshot (layout + students + result + warnings) for power users.\n6. Print button (next to the score chip): opens a print-optimized view. The browser's native print dialog handles the rest.\n7. All exports happen entirely in the browser — nothing is uploaded.",
     "section_personalize_title": "Photos and teacher notes",
-    "section_personalize_body": "1. Open the Add/Edit Student form. The first field is a photo placeholder — click it to upload an image from your device.\n2. The photo is automatically resized to ~30 KB so storage stays small even with 40 students.\n3. The photo replaces the colored initial circle in every place a student appears (grid, sidebar, detail drawer, neighbor cards).\n4. Below the form there's a \"Teacher notes\" textarea — write private observations like \"struggles after lunch\", \"helps neighbors with reading\", etc.\n5. Notes appear at the top of the AI reasoning drawer so they're visible whenever you tap that student.\n6. Photos and notes are stored only on your device — never uploaded.",
+    "section_personalize_body": "1. Open the Add/Edit Student form. The first field is a photo placeholder — click it to upload an image from your device.\n2. The photo is automatically resized to ~30 KB so storage stays small even with 40 students.\n3. The photo replaces the colored initial circle in every place a student appears (grid, sidebar, detail drawer, neighbor cards).\n4. Below the form there's a \"Teacher notes\" textarea — write private observations like \"struggles after lunch\", \"helps neighbors with reading\", etc.\n5. Notes appear at the top of the AI reasoning drawer so they're visible whenever you tap that student.\n6. Data is stored locally by default. Optional AI and integrations exchange relevant data with external services. Use only with school authorization.",
     "section_ai_title": "Optional AI explanations (paid)",
     "section_ai_body": "1. SeatAI's built-in reasoning is rule-based and free. If you want fully natural-language paragraphs explaining each placement, you can plug in a language model.\n2. Open Settings → AI explanations and check \"Enable AI explanations\".\n3. Get an API key from console.anthropic.com (you'll need an Anthropic account).\n4. Paste the key into the field. The eye icon toggles visibility for verification; the trash icon next to it forgets the key from this browser.\n5. Pick a model: Haiku 4.5 (fast and cheap, ~$0.001 per generation) or Sonnet 4.6 (slower, more nuanced).\n6. Open any student's reasoning drawer and click \"Generate AI explanation\" — a paragraph appears at the top within a few seconds.\n7. Important: the API key stays only in your browser; calls go directly from your browser to Anthropic. Don't enable on a shared computer.\n8. Privacy note: when you generate an AI explanation, the student's name and your teacher notes for that student are sent to Anthropic as part of the prompt. If a student's notes contain sensitive medical, legal, or family details, either keep AI off for that student or trim the notes first.",
     "section_projects_title": "Managing multiple classes",
@@ -598,7 +598,7 @@
     "ai_hide_key": "Hide key",
     "ai_forget_key": "Forget key (clear from this browser)",
     "ai_model": "Model",
-    "ai_security_note": "Your key is stored only in this browser. Don't enable on a shared computer. Each generation costs roughly $0.001.",
+    "ai_security_note": "Your key is not saved and is forgotten when this page closes or reloads. Don't use AI with student data unless your school has approved it. Each generation costs roughly $0.001.",
     "seating_rules": "Seating Rules",
     "must_separate": "Must be separated (placed far apart)",
     "should_sit_near": "Should sit near each other",
@@ -713,7 +713,7 @@
     "sample_demo-small": "Small class",
     "sample_demo-standard": "Standard class",
     "sample_demo-large": "Large class",
-    "privacy": "All data stays in your browser — nothing is sent to any server.",
+    "privacy": "Data is stored locally by default. Optional AI and integrations exchange relevant data with external services. Use only with school authorization.",
     "step1Title": "Your Classroom",
     "step1Desc": "Enter your classroom dimensions (rows × columns)",
     "step2Title": "Add Students",
@@ -749,6 +749,7 @@
     "ru": "Русский"
   },
   "csvImport": {
+    "confirm_replace": "Replace the current class with {{count}} imported students? The existing roster will be replaced. Cancel to keep it unchanged.",
     "title": "Import CSV",
     "import_mode": "Import mode:",
     "add_to_class": "Add to class",
@@ -899,6 +900,7 @@
     "imported_from": "Imported {{count}} students from {{class}}."
   },
   "wizard": {
+    "confirm_sample_replace": "Loading a sample will replace the current students and classroom layout. Continue?",
     "title": "Set up your class",
     "step_students": "Students",
     "step_classroom": "Classroom",

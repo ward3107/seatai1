@@ -64,7 +64,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   }, [prefsOpen]);
 
   return (
-    <header className="min-h-14 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
+    <header className="relative z-20 min-h-14 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
       {!sidebarOpen && !wizardActive && (
         <button
           onClick={() => setSidebarOpen(true)}

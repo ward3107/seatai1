@@ -2,7 +2,7 @@
  * Tests for CSV Import Component
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CsvImport from './CsvImport';
@@ -41,15 +41,33 @@ vi.mock('../../hooks/useLanguage', () => ({
 
 const mockAddStudent = vi.fn();
 const mockSetStudents = vi.fn();
+let fileReaderContent = 'name,gender\nTest Student,female';
 
 describe('CsvImport Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as any).mockReturnValue({
+    fileReaderContent = 'name,gender\nTest Student,female';
+    const state = {
       addStudent: mockAddStudent,
       setStudents: mockSetStudents,
-    });
+    };
+    (useStore as unknown as Mock).mockImplementation(
+      (selector: (store: typeof state) => unknown) => selector(state),
+    );
+    Object.assign(useStore, { getState: () => state });
+
+    class MockFileReader {
+      onload: ((event: { target: { result: string } }) => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      readAsText() {
+        queueMicrotask(() => this.onload?.({ target: { result: fileReaderContent } }));
+      }
+    }
+    vi.stubGlobal('FileReader', MockFileReader);
   });
+
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
   describe('Rendering', () => {
     it('should render import UI', () => {
@@ -98,6 +116,24 @@ describe('CsvImport Component', () => {
   });
 
   describe('File input', () => {
+    it.each(['Enter', ' '])('opens the file picker with the %s key', (key) => {
+      render(<CsvImport />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      const dropZone = screen.getByRole('button', { name: /Drop CSV here/ });
+      expect(dropZone).toHaveAttribute('tabindex', '0');
+      fireEvent.keyDown(dropZone, { key });
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('exposes the selected import mode to assistive technology', async () => {
+      render(<CsvImport />);
+      expect(screen.getByRole('button', { name: 'Add to class' })).toHaveAttribute('aria-pressed', 'true');
+      await userEvent.click(screen.getByRole('button', { name: 'Replace class' }));
+      expect(screen.getByRole('button', { name: 'Replace class' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Add to class' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
     it('should have hidden file input', () => {
       render(<CsvImport />);
 
@@ -179,28 +215,61 @@ describe('CsvImport Component', () => {
   });
 
   describe('Import result display', () => {
-    it('should show success message after import', async () => {
-      // Mock FileReader
-      const mockFileContent = 'name,gender,academic_level\nTest Student,female,proficient';
-      const file = new File([mockFileContent], 'test.csv', { type: 'text/csv' });
+    it.each([true, false])('only replaces a valid class when confirmed: %s', async (confirmed) => {
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(confirmed);
+      render(<CsvImport />);
+      await userEvent.click(screen.getByText('Replace class'));
+      fireEvent.change(document.querySelector('input[type="file"]')!, {
+        target: { files: [new File([fileReaderContent], 'class.csv')] },
+      });
+      await waitFor(() => expect(confirm).toHaveBeenCalled());
+      expect(mockSetStudents).toHaveBeenCalledTimes(confirmed ? 1 : 0);
+      expect(mockAddStudent).not.toHaveBeenCalled();
+    });
 
-      globalThis.FileReader = vi.fn().mockImplementation(() => ({
-        readAsText: vi.fn(),
-        onload: null,
-        result: mockFileContent,
-      })) as any;
+    it('does not replace a class with a partially invalid roster', async () => {
+      fileReaderContent = 'name,gender\nValid,female\n,male';
+      const confirm = vi.spyOn(window, 'confirm');
+      render(<CsvImport />);
+      await userEvent.click(screen.getByText('Replace class'));
+      fireEvent.change(document.querySelector('input[type="file"]')!, {
+        target: { files: [new File([fileReaderContent], 'invalid.csv')] },
+      });
+      await waitFor(() => expect(screen.getByText('0 students imported')).toBeInTheDocument());
+      expect(mockSetStudents).not.toHaveBeenCalled();
+      expect(confirm).not.toHaveBeenCalled();
+    });
+
+    it('should show success message after import', async () => {
+      const mockFileContent = 'name,gender,academic_level\nTest Student,female,proficient';
+      fileReaderContent = mockFileContent;
+      const file = new File([mockFileContent], 'test.csv', { type: 'text/csv' });
 
       render(<CsvImport />);
 
       // Trigger file import
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
 
-      await waitFor(() => {
-        fireEvent.change(input, { target: { files: [file] } });
-      });
+      fireEvent.change(input, { target: { files: [file] } });
 
-      // Result should be shown (this is a simplified test)
-      // In real scenario, FileReader would trigger onload
+      await waitFor(() => {
+        expect(screen.getByText('1 students imported')).toBeInTheDocument();
+      });
+      expect(mockAddStudent).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not erase the class when a replacement CSV has no students', async () => {
+      fileReaderContent = 'name,gender\n';
+      render(<CsvImport />);
+      await userEvent.click(screen.getByText('Replace class'));
+
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = new File([fileReaderContent], 'empty.csv', { type: 'text/csv' });
+      fireEvent.change(input, { target: { files: [file] } });
+
+      await waitFor(() => expect(screen.getByText('0 students imported')).toBeInTheDocument());
+      expect(mockSetStudents).not.toHaveBeenCalled();
+      expect(mockAddStudent).not.toHaveBeenCalled();
     });
 
     it('should clear result when X button clicked', async () => {
@@ -243,6 +312,7 @@ describe('CsvImport Component', () => {
       dropZone?.dispatchEvent(dropEvent);
 
       expect(dropEvent.preventDefault).toHaveBeenCalled();
+      await waitFor(() => expect(mockAddStudent).toHaveBeenCalledTimes(1));
     });
 
     it('should ignore non-CSV files on drop', async () => {
