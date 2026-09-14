@@ -105,10 +105,13 @@ export function useGridKeyboardNav({
       // Start from current position and walk until we find an existing
       // seat or run out of rows/cols (3 attempts is enough for normal
       // grids; for irregular layouts we try harder).
-      let nextSeat: Seat | undefined;
+      let nextSeat: Seat | undefined = !selectedSeatKey
+        ? seats.find((seat) => !!seat.student_id)
+        : undefined;
       for (let step = 1; step < 20 && !nextSeat; step++) {
         nextSeat = seats.find(
           (s) =>
+            !!s.student_id &&
             s.position.row === row + dr * step &&
             s.position.col === col + dc * step,
         );
@@ -117,10 +120,10 @@ export function useGridKeyboardNav({
       // layouts), jump to the seat with the closest row/col in that
       // half-plane.
       if (!nextSeat) {
-        const candidates = seats.filter((s) =>
+        const candidates = seats.filter((s) => !!s.student_id && (
           dr !== 0
             ? Math.sign(s.position.row - row) === dr
-            : Math.sign(s.position.col - col) === dc,
+            : Math.sign(s.position.col - col) === dc),
         );
         if (candidates.length > 0) {
           nextSeat = candidates.reduce((closest, s) => {

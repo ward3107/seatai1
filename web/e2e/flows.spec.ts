@@ -148,6 +148,8 @@ test.describe('Optimize → render → print', () => {
       { timeout: 20000 },
     ).toBe(true);
 
+    await expect(page.locator('#seating-grid-export')).toBeVisible();
+
     // Arrow selects an occupied seat; L toggles its lock (previously only
     // reachable by mouse right-click / touch long-press).
     await page.keyboard.press('ArrowRight');
