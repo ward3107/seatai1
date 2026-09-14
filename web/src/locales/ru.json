@@ -672,7 +672,7 @@
     "restore_confirm_body": "Это заменит текущих учеников и проекты на резервную копию от {{date}} ({{students}} учеников, {{projects}} проектов).",
     "restore_confirm_yes": "Заменить данные",
     "restore_confirm_no": "Отмена",
-    "restore_error_invalid_json": "Не удалось прочитать файл (некорректный JSON).",
+    "restore_error_invalid_json": "Не удалось прочитать резервную копию, или её содержимое некорректно.",
     "restore_error_wrong_schema": "Это не файл резервной копии SeatAI.",
     "restore_error_unsupported_version": "Эта резервная копия создана более новой версией SeatAI.",
     "restore_error_missing_fields": "В файле резервной копии не хватает обязательных данных.",

@@ -672,7 +672,7 @@
     "restore_confirm_body": "سيستبدل هذا الطلاب والمشاريع الحالية بالنسخة الاحتياطية من {{date}} ({{students}} طالب، {{projects}} مشروع).",
     "restore_confirm_yes": "استبدال البيانات",
     "restore_confirm_no": "إلغاء",
-    "restore_error_invalid_json": "تعذّر قراءة الملف (ليس JSON صالحًا).",
+    "restore_error_invalid_json": "تعذّر قراءة النسخة الاحتياطية أو أن محتواها غير صالح.",
     "restore_error_wrong_schema": "هذا الملف ليس نسخة احتياطية لـ SeatAI.",
     "restore_error_unsupported_version": "تم إنشاء هذه النسخة الاحتياطية بإصدار أحدث من SeatAI.",
     "restore_error_missing_fields": "النسخة الاحتياطية تفتقد بيانات مطلوبة.",

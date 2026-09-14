@@ -1,11 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { openApp, createSampleClass, openProjects, getStudentNames, flushStorage } from './helpers';
+import { openApp, createSampleClass, openProjects, getStudentNames, flushStorage, runOptimization } from './helpers';
 
 test('backup restores a roster on another browser and survives reload', async ({ page, browser }) => {
   await openApp(page);
   await createSampleClass(page);
   const names = await getStudentNames(page);
+  await runOptimization(page);
   await openProjects(page);
+  await page.getByRole('textbox', { name: 'Class name…', exact: true }).fill('Recovery class');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Backup all data', exact: true }).click();
   const download = await pending;
@@ -27,6 +30,8 @@ test('backup restores a roster on another browser and survives reload', async ({
     await input.setInputFiles(path!);
     await dialog.getByRole('button', { name: 'Replace data', exact: true }).click();
     await expect.poll(() => getStudentNames(target)).toEqual(names);
+    expect(await target.evaluate(() => window.__ZUSTAND_STORE__.getState().projects[0].name)).toBe('Recovery class');
+    await expect(target.locator('#seating-grid-export')).toBeVisible();
     await flushStorage(target);
     await target.reload();
     await target.waitForFunction(() => window.__ZUSTAND_STORE__?.persist.hasHydrated());
@@ -44,7 +49,7 @@ test('invalid backup preserves the current class', async ({ page }) => {
   await page.locator('input[type="file"][accept="application/json,.json"]').setInputFiles({
     name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{broken'),
   });
-  await expect(page.getByText("Couldn't read the file (not valid JSON).", { exact: true })).toBeVisible();
+  await expect(page.getByText("Couldn't read the backup, or its contents are invalid.", { exact: true })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await getStudentNames(page)).toEqual(names);
 });
