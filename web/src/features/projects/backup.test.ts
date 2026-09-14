@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
+  readBackupFile,
+  MAX_BACKUP_BYTES,
   buildBackup,
   parseBackup,
   BACKUP_SCHEMA,
@@ -124,5 +126,25 @@ describe('parseBackup', () => {
       expect(r.missing).toContain('layoutDef');
       expect(r.missing).toContain('constraints');
     }
+  });
+});
+
+describe('backup file reading', () => {
+  it('rejects oversized uploads without reading them', async () => {
+    const text = vi.fn();
+    expect((await readBackupFile({ size: MAX_BACKUP_BYTES + 1, text })).ok).toBe(false);
+    expect(text).not.toHaveBeenCalled();
+  });
+  it('handles device read errors', async () => {
+    const result = await readBackupFile({ size: 10, text: async () => { throw new Error('unavailable'); } });
+    expect(result.ok).toBe(false);
+  });
+  it('reads valid portable backups', async () => {
+    const json = JSON.stringify(buildBackup(baseState()));
+    expect((await readBackupFile({ size: json.length, text: async () => json })).ok).toBe(true);
+  });
+  it('rejects fractional schema versions', () => {
+    const file = { ...buildBackup(baseState()), version: 1.5 };
+    expect(parseBackup(JSON.stringify(file)).ok).toBe(false);
   });
 });
