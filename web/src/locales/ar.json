@@ -899,6 +899,7 @@
     "imported_from": "تم استيراد {{count}} طالبًا من {{class}}."
   },
   "wizard": {
+    "confirm_sample_replace": "سيؤدي تحميل صف تجريبي إلى استبدال الطلاب وتخطيط الصف الحاليين. هل تريد المتابعة؟",
     "title": "إعداد الصف",
     "step_students": "الطلاب",
     "step_classroom": "الصف",

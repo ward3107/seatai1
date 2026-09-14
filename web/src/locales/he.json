@@ -899,6 +899,7 @@
     "imported_from": "יובאו {{count}} תלמידים מתוך {{class}}."
   },
   "wizard": {
+    "confirm_sample_replace": "טעינת כיתת דוגמה תחליף את התלמידים ואת מבנה הכיתה הנוכחיים. להמשיך?",
     "title": "הגדרת הכיתה",
     "step_students": "תלמידים",
     "step_classroom": "הכיתה",

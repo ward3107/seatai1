@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { PenLine, Upload, GraduationCap, Database, Sparkles, Users } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
@@ -21,7 +21,9 @@ const TABS: { key: Tab; icon: typeof PenLine; labelKey: string }[] = [
 ];
 
 export default function WizardStudents() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const tabsId = useId();
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const students = useStore((s) => s.students);
   const setStudents = useStore((s) => s.setStudents);
   const setLayoutDef = useStore((s) => s.setLayoutDef);
@@ -30,6 +32,7 @@ export default function WizardStudents() {
   function loadSampleClass(id: (typeof SAMPLE_CLASSES)[number]['id']) {
     const sample = SAMPLE_CLASSES.find((c) => c.id === id);
     if (!sample) return;
+    if (students.length > 0 && !window.confirm(t('wizard.confirm_sample_replace'))) return;
     setStudents(JSON.parse(JSON.stringify(sample.students)));
     setLayoutDef({ type: 'rows', rows: sample.rows, cols: sample.cols });
   }
@@ -43,9 +46,26 @@ export default function WizardStudents() {
 
       {/* Method tabs */}
       <div role="tablist" aria-label={t('wizard.students_title')} className="flex flex-wrap gap-1.5">
-        {TABS.map(({ key, icon: Icon, labelKey }) => (
+        {TABS.map(({ key, icon: Icon, labelKey }, index) => (
           <button
             key={key}
+            type="button"
+            id={`${tabsId}-${key}`}
+            aria-controls={`${tabsId}-panel`}
+            tabIndex={tab === key ? 0 : -1}
+            ref={(node) => { tabRefs.current[index] = node; }}
+            onKeyDown={(event) => {
+              let next = index;
+              if (event.key === 'Home') next = 0;
+              else if (event.key === 'End') next = TABS.length - 1;
+              else if (event.key === 'ArrowRight') next += isRTL ? -1 : 1;
+              else if (event.key === 'ArrowLeft') next += isRTL ? 1 : -1;
+              else return;
+              event.preventDefault();
+              next = (next + TABS.length) % TABS.length;
+              setTab(TABS[next].key);
+              tabRefs.current[next]?.focus();
+            }}
             role="tab"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
@@ -63,7 +83,7 @@ export default function WizardStudents() {
       </div>
 
       {/* Active method */}
-      <div role="tabpanel" className="min-h-[8rem]">
+      <div role="tabpanel" id={`${tabsId}-panel`} aria-labelledby={`${tabsId}-${tab}`} tabIndex={0} className="min-h-[8rem]">
         {tab === 'manual' && <StudentForm />}
         {tab === 'csv' && <CsvImport />}
         {tab === 'classroom' && <GoogleClassroomImport />}
@@ -73,6 +93,7 @@ export default function WizardStudents() {
             {SAMPLE_CLASSES.map((sample) => (
               <button
                 key={sample.id}
+                type="button"
                 onClick={() => loadSampleClass(sample.id)}
                 className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 transition-colors"
               >

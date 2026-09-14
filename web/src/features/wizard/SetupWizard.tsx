@@ -83,6 +83,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
                   disabled={!reachable}
                   onClick={() => reachable && setStep(i)}
                   aria-current={current ? 'step' : undefined}
+                  aria-label={label}
                   className={clsx(
                     'flex items-center gap-2 rounded-lg px-2 py-1 transition-colors',
                     reachable ? 'cursor-pointer' : 'cursor-not-allowed',

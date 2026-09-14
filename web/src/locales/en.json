@@ -899,6 +899,7 @@
     "imported_from": "Imported {{count}} students from {{class}}."
   },
   "wizard": {
+    "confirm_sample_replace": "Loading a sample will replace the current students and classroom layout. Continue?",
     "title": "Set up your class",
     "step_students": "Students",
     "step_classroom": "Classroom",
