@@ -72,6 +72,24 @@ function getState<T>(page: Page, read: (s: Record<string, unknown>) => T): Promi
 }
 
 test.describe('Setup wizard', () => {
+  test('loads advanced tools on demand and retains them when collapsed', async ({ page }) => {
+    await page.goto('/');
+    await dismissTips(page);
+    await seedClass(page, 8);
+    const panels = page.getByTestId('advanced-panels');
+    await expect(panels).toHaveCount(0);
+    const toggle = page.locator('summary#sidebar-group-advanced');
+    await toggle.click();
+    await expect(panels).toBeVisible();
+    // Mark this DOM instance to detect a remount (and potential lost edits).
+    await panels.evaluate((element) => element.setAttribute('data-retained', 'yes'));
+    await toggle.click();
+    await expect(panels).toBeHidden();
+    await toggle.click();
+    await expect(panels).toBeVisible();
+    await expect(panels).toHaveAttribute('data-retained', 'yes');
+  });
+
   test('advances through the steps and closes back to the workspace', async ({ page }) => {
     await page.goto('/');
     await dismissTips(page);
