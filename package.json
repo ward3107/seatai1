@@ -15,6 +15,7 @@
     "dev": "cd web && npm run dev",
     "build": "cd web && npm run build",
     "test": "cd web && npm run test:run",
+    "benchmark": "cd web && npm run benchmark",
     "lint": "cd web && npm run lint",
     "clean": "rm -rf web/dist"
   },
