@@ -77,7 +77,10 @@ npm run lint        # ESLint
 npx tsc --noEmit    # Typecheck
 ```
 
-All three should pass before deploy.
+All four should pass before deploy.
+
+The production build also enforces a 500 kB budget for the initial JavaScript
+entry chunk. Feature and export chunks loaded after a user action are excluded.
 
 ---
 

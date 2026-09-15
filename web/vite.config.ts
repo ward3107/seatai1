@@ -1,10 +1,33 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+
+const ENTRY_CHUNK_BUDGET_BYTES = 500_000;
+
+function entryChunkBudget(): Plugin {
+  return {
+    name: 'entry-chunk-budget',
+    generateBundle(_options, bundle) {
+      for (const output of Object.values(bundle)) {
+        if (output.type !== 'chunk' || !output.isEntry) continue;
+        const bytes = new TextEncoder().encode(output.code).byteLength;
+        if (bytes > ENTRY_CHUNK_BUDGET_BYTES) {
+          this.error(
+            `Entry chunk ${output.fileName} is ${(bytes / 1_000).toFixed(1)} kB; ` +
+              `budget is ${ENTRY_CHUNK_BUDGET_BYTES / 1_000} kB. Defer non-critical UI before raising it.`,
+          );
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    // Treat entry-size regressions as build failures instead of an easy-to-miss
+    // warning. Large on-demand export chunks are intentionally exempt.
+    entryChunkBudget(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['seatai-logo.svg'],

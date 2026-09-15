@@ -2,10 +2,6 @@ import { useEffect, Suspense, lazy, useState } from 'react';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import ClassroomGrid from '../features/classroom/ClassroomGrid';
-import MetricsPanel from '../features/optimization/MetricsPanel';
-import ExplanationPanel from '../features/results/ExplanationPanel';
-import QuestionnaireModal from '../features/questionnaire/QuestionnaireModal';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
@@ -18,9 +14,17 @@ const PrintView = lazy(() => import('../features/print/PrintView'));
 const ComparePanel = lazy(() => import('../features/compare/ComparePanel'));
 const UserGuide = lazy(() => import('../components/UserGuide'));
 const SetupWizard = lazy(() => import('../features/wizard/SetupWizard'));
-import OnboardingView from '../features/onboarding/OnboardingView';
-import StudentDetailPanel from '../features/students/StudentDetailPanel';
-import WelcomeTipsModal from '../components/WelcomeTipsModal';
+// Mutually exclusive or interaction-gated workspace views. Keeping them out
+// of the entry chunk avoids making a first-time visitor download the full
+// seating canvas, result analysis, survey, and student dossier before any of
+// those views can be shown.
+const OnboardingView = lazy(() => import('../features/onboarding/OnboardingView'));
+const ClassroomGrid = lazy(() => import('../features/classroom/ClassroomGrid'));
+const MetricsPanel = lazy(() => import('../features/optimization/MetricsPanel'));
+const ExplanationPanel = lazy(() => import('../features/results/ExplanationPanel'));
+const QuestionnaireModal = lazy(() => import('../features/questionnaire/QuestionnaireModal'));
+const StudentDetailPanel = lazy(() => import('../features/students/StudentDetailPanel'));
+const WelcomeTipsModal = lazy(() => import('../components/WelcomeTipsModal'));
 import ErrorBoundary from '../components/ErrorBoundary';
 import BackupReminderBanner from '../components/BackupReminderBanner';
 import { useLanguage } from '../hooks/useLanguage';
@@ -59,6 +63,7 @@ function App() {
   const setResultsCollapsed = useStore((s) => s.setResultsCollapsed);
   const questionnaireOpen = useStore((s) => s.questionnaireOpen);
   const setQuestionnaireOpen = useStore((s) => s.setQuestionnaireOpen);
+  const detailsTargetStudentId = useStore((s) => s.detailsTargetStudentId);
 
   const { wasmReady, isOptimizing, error, optimize, progress, cancel } = useOptimizer();
   const { t } = useLanguage();
@@ -207,7 +212,9 @@ function App() {
                   </button>
                 </div>
               )}
-              <OnboardingView />
+              <Suspense fallback={null}>
+                <OnboardingView />
+              </Suspense>
             </>
           ) : (
             <>
@@ -259,21 +266,25 @@ function App() {
                           <span>{t('optimization.show_movement_diff')}</span>
                         </label>
                       )}
-                      <ErrorBoundary name="Metrics Panel" inline>
-                        <MetricsPanel />
-                      </ErrorBoundary>
-                      <ErrorBoundary name="Explanation Panel" inline>
-                        <ExplanationPanel />
-                      </ErrorBoundary>
+                      <Suspense fallback={null}>
+                        <ErrorBoundary name="Metrics Panel" inline>
+                          <MetricsPanel />
+                        </ErrorBoundary>
+                        <ErrorBoundary name="Explanation Panel" inline>
+                          <ExplanationPanel />
+                        </ErrorBoundary>
+                      </Suspense>
                     </div>
                   )}
                 </div>
               )}
 
               {/* Classroom Grid — main attraction */}
-              <ErrorBoundary name="Seating Grid">
-                <ClassroomGrid />
-              </ErrorBoundary>
+              <Suspense fallback={null}>
+                <ErrorBoundary name="Seating Grid">
+                  <ClassroomGrid />
+                </ErrorBoundary>
+              </Suspense>
             </>
           )}
         </div>
@@ -290,14 +301,26 @@ function App() {
         </Suspense>
       )}
 
-      <QuestionnaireModal open={questionnaireOpen} onClose={() => setQuestionnaireOpen(false)} />
+      {questionnaireOpen && (
+        <Suspense fallback={null}>
+          <QuestionnaireModal open onClose={() => setQuestionnaireOpen(false)} />
+        </Suspense>
+      )}
 
       {/* Student detail drawer — opens when a student is clicked from
           the grid or the sidebar student list. */}
-      <StudentDetailPanel />
+      {detailsTargetStudentId && (
+        <Suspense fallback={null}>
+          <StudentDetailPanel />
+        </Suspense>
+      )}
 
       {/* Welcome tips — auto-pops on first roster load (one time only). */}
-      <WelcomeTipsModal open={showTips} onClose={() => setShowTips(false)} />
+      {showTips && (
+        <Suspense fallback={null}>
+          <WelcomeTipsModal open onClose={() => setShowTips(false)} />
+        </Suspense>
+      )}
 
       {/* Comprehensive user guide — opens from the help button in the header. */}
       {showGuide && (
