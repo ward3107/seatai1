@@ -13,6 +13,7 @@ import type {
   ObjectiveScores,
   ObjectiveWeights,
   GeneticConfig,
+  SeatingStrategy,
   SeatingConstraints,
   Seat,
   SeatPosition,
@@ -151,6 +152,11 @@ export class ClassroomOptimizer {
   private avoidRecentStrength = 0;
   /** Exam / anti-cheating mode — see EXAM_* constants. */
   private examMode = false;
+  /** Academic grouping purpose selected by the teacher. */
+  private seatingStrategy: SeatingStrategy = 'mixed';
+  private academicMean = 0;
+  private academicPairGap = 0;
+  private behaviorMean = 0;
   /** Locked seats: slotIndex → studentId. Those students stay put; the GA
    *  only rearranges the rest among the unpinned slots. Empty when nothing
    *  is locked — in which case every pinned-aware operation below reduces to
@@ -183,7 +189,96 @@ export class ClassroomOptimizer {
       this.layoutDef = rowsOrLayout;
     }
     this.slots = generateSlots(this.layoutDef);
+    this.recomputeClassProfile();
     this.recomputeSlotBounds();
+  }
+
+  /** Class-level reference values used by the mixed-attainment score. */
+  private recomputeClassProfile() {
+    if (this.students.length === 0) {
+      this.academicMean = 0;
+      this.academicPairGap = 0;
+      this.behaviorMean = 0;
+      return;
+    }
+    this.academicMean =
+      this.students.reduce((sum, student) => sum + student.academic_score, 0) /
+      this.students.length;
+    this.behaviorMean =
+      this.students.reduce((sum, student) => sum + student.behavior_score, 0) /
+      this.students.length;
+    let totalGap = 0;
+    let pairs = 0;
+    for (let i = 0; i < this.students.length; i++) {
+      for (let j = i + 1; j < this.students.length; j++) {
+        totalGap += Math.abs(
+          this.students[i].academic_score - this.students[j].academic_score,
+        );
+        pairs++;
+      }
+    }
+    this.academicPairGap = pairs > 0 ? totalGap / pairs : 0;
+  }
+
+  private academicFit(student: Student, neighbors: Student[]): number {
+    if (neighbors.length === 0) return 0;
+    const average =
+      neighbors.reduce((sum, neighbor) => sum + neighbor.academic_score, 0) /
+      neighbors.length;
+
+    if (this.seatingStrategy === 'similar') {
+      return Math.max(0, 1 - Math.abs(student.academic_score - average) / 100);
+    }
+
+    if (this.seatingStrategy === 'peer_support') {
+      const comparison =
+        student.academic_score <= this.academicMean
+          ? Math.max(...neighbors.map((neighbor) => neighbor.academic_score)) -
+            student.academic_score
+          : student.academic_score -
+            Math.min(...neighbors.map((neighbor) => neighbor.academic_score));
+      // A useful support gap is meaningful but not extreme. 25 points is the
+      // centre; gaps of 0 or 50 receive half credit, avoiding brittle cliffs.
+      return Math.max(0, 1 - Math.abs(comparison - 25) / 50);
+    }
+
+    // Mixed attainment: reward neighborhoods that resemble the class as a
+    // whole and contain roughly the class's natural amount of score spread.
+    const localMean =
+      (student.academic_score +
+        neighbors.reduce((sum, neighbor) => sum + neighbor.academic_score, 0)) /
+      (neighbors.length + 1);
+    const localGap =
+      neighbors.reduce(
+        (sum, neighbor) =>
+          sum + Math.abs(student.academic_score - neighbor.academic_score),
+        0,
+      ) / neighbors.length;
+    const meanFit = Math.max(0, 1 - Math.abs(localMean - this.academicMean) / 50);
+    const spreadScale = Math.max(20, this.academicPairGap);
+    const spreadFit = Math.max(
+      0,
+      1 - Math.abs(localGap - this.academicPairGap) / spreadScale,
+    );
+    return (meanFit + spreadFit) / 2;
+  }
+
+  /** Reward behaviorally balanced neighborhoods while explicitly avoiding a
+   * cluster of students who currently need high behavioral support. */
+  private behavioralFit(student: Student, neighbors: Student[]): number {
+    if (neighbors.length === 0) return 0;
+    const localMean =
+      (student.behavior_score +
+        neighbors.reduce((sum, neighbor) => sum + neighbor.behavior_score, 0)) /
+      (neighbors.length + 1);
+    const balance = Math.max(
+      0,
+      1 - Math.abs(localMean - this.behaviorMean) / 50,
+    );
+    const challengingCluster =
+      student.behavior_score < 60 &&
+      neighbors.some((neighbor) => neighbor.behavior_score < 60);
+    return Math.max(0, balance - (challengingCluster ? 0.75 : 0));
   }
 
   /** Refresh the cached x-extent and max-row whenever the slot set changes. */
@@ -223,6 +318,7 @@ export class ClassroomOptimizer {
   setConfig(c: OptimizerConfig) {
     this.config = { ...c };
     this.examMode = !!c.examMode;
+    this.seatingStrategy = c.seatingStrategy ?? 'mixed';
     // Seeded reproducible runs: a numeric seed swaps in a deterministic
     // PRNG. Absent seed leaves the current RNG untouched (Math.random by
     // default, or whatever a prior setRng() installed).
@@ -834,20 +930,14 @@ export class ClassroomOptimizer {
       if (neighbors.length === 0) continue;
 
       // Academic balance
-      const avgA =
-        neighbors.reduce((sum, n) => sum + n.academic_score, 0) /
-        neighbors.length;
       score +=
         this.weights.academic_balance *
-        (1 - Math.abs(student.academic_score - avgA) / 100);
+        this.academicFit(student, neighbors);
 
       // Behavioral balance
-      const avgB =
-        neighbors.reduce((sum, n) => sum + n.behavior_score, 0) /
-        neighbors.length;
       score +=
         this.weights.behavioral_balance *
-        (1 - Math.abs(student.behavior_score - avgB) / 100);
+        this.behavioralFit(student, neighbors);
 
       // Diversity (gender mix)
       const sameG = neighbors.filter((n) => n.gender === student.gender).length;
@@ -998,15 +1088,9 @@ export class ClassroomOptimizer {
       if (neighbors.length === 0) continue;
       count++;
 
-      const avgA =
-        neighbors.reduce((sum, n) => sum + n.academic_score, 0) /
-        neighbors.length;
-      academicSum += 1 - Math.abs(s.academic_score - avgA) / 100;
+      academicSum += this.academicFit(s, neighbors);
 
-      const avgB =
-        neighbors.reduce((sum, n) => sum + n.behavior_score, 0) /
-        neighbors.length;
-      behavioralSum += 1 - Math.abs(s.behavior_score - avgB) / 100;
+      behavioralSum += this.behavioralFit(s, neighbors);
 
       const sameG = neighbors.filter((n) => n.gender === s.gender).length;
       diversitySum += 1 - sameG / neighbors.length;

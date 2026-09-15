@@ -39,6 +39,7 @@ const config = object({
   populationSize: positive, maxGenerations: positive, crossoverRate: ratio, mutationRate: ratio,
   tournamentSize: positive, earlyStopPatience: positive, multiStart: optional(positive),
   timeLimitMs: optional(num), examMode: optional(bool), seed: optional(num),
+  seatingStrategy: optional(oneOf('mixed', 'similar', 'peer_support')),
 });
 const constraints = object({
   separate_pairs: array(pair), keep_together_pairs: array(pair), front_row_ids: strings, back_row_ids: strings,

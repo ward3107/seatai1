@@ -27,6 +27,7 @@ import type {
   Student,
   OptimizationResult,
   SeatingConstraints,
+  SeatingStrategy,
 } from '../types';
 import { generateSlots, type LayoutDef } from '../core/layouts';
 import { slotXExtent, edgeMargin, isWindowSlot } from '../core/seatGeometry';
@@ -86,6 +87,7 @@ export function explainPlacement(
   layoutDef: LayoutDef,
   allStudents: Student[],
   constraints: SeatingConstraints,
+  seatingStrategy: SeatingStrategy = 'mixed',
 ): PlacementExplanation {
   const slots = generateSlots(layoutDef);
   const pos = result.student_positions[student.id];
@@ -228,18 +230,47 @@ export function explainPlacement(
       neighbors.reduce((s, n) => s + n.student.academic_score, 0) /
       neighbors.length;
     const acadGap = Math.abs(student.academic_score - avgAcad);
-    if (acadGap <= PERCENTILE_CLOSE) {
+    if (seatingStrategy === 'similar' && acadGap <= PERCENTILE_CLOSE) {
       strengths.push({
-        key: 'explain.peer_academic_balance',
+        key: 'explain.peer_academic_similar',
         vars: { avg: Math.round(avgAcad) },
         tone: 'positive',
       });
+    } else if (seatingStrategy === 'mixed') {
+      const scores = neighbors.map((neighbor) => neighbor.student.academic_score);
+      if (Math.max(...scores) - Math.min(...scores) >= 15 || acadGap >= 15) {
+        strengths.push({
+          key: 'explain.peer_academic_mixed',
+          vars: { avg: Math.round(avgAcad) },
+          tone: 'positive',
+        });
+      }
+    } else {
+      const hasSupportMatch = neighbors.some((neighbor) => {
+        const gap = Math.abs(student.academic_score - neighbor.student.academic_score);
+        return gap >= 10 && gap <= 40;
+      });
+      if (hasSupportMatch) {
+        strengths.push({
+          key: 'explain.peer_academic_support',
+          tone: 'positive',
+        });
+      }
     }
     const avgBeh =
       neighbors.reduce((s, n) => s + n.student.behavior_score, 0) /
       neighbors.length;
-    const behGap = Math.abs(student.behavior_score - avgBeh);
-    if (behGap <= PERCENTILE_CLOSE) {
+    const classBehavior =
+      allStudents.reduce((sum, peer) => sum + peer.behavior_score, 0) /
+      Math.max(1, allStudents.length);
+    const localBehavior =
+      (student.behavior_score +
+        neighbors.reduce((sum, neighbor) => sum + neighbor.student.behavior_score, 0)) /
+      (neighbors.length + 1);
+    const clustersHighSupport =
+      student.behavior_score < 60 &&
+      neighbors.some((neighbor) => neighbor.student.behavior_score < 60);
+    if (!clustersHighSupport && Math.abs(localBehavior - classBehavior) <= PERCENTILE_CLOSE) {
       strengths.push({
         key: 'explain.peer_behavior_balance',
         vars: { avg: Math.round(avgBeh) },

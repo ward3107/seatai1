@@ -70,6 +70,20 @@ test.describe('Optimization', () => {
     expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().weights.academic_balance)).toBe(0.5);
     await runOptimization(page);
   });
+  test('switches academic strategy and re-scores the visible chart', async ({ page }) => {
+    await runOptimization(page);
+    const positionsBefore = await page.evaluate(() =>
+      window.__ZUSTAND_STORE__.getState().result?.student_positions,
+    );
+    await page.locator('summary#sidebar-group-advanced').click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('radio', { name: /Similar readiness/i }).click();
+
+    const state = await page.evaluate(() => window.__ZUSTAND_STORE__.getState());
+    expect(state.config.seatingStrategy).toBe('similar');
+    expect(state.result?.student_positions).toEqual(positionsBefore);
+    await expect(page.getByText('Similar-Readiness Fit', { exact: true })).toBeVisible();
+  });
 });
 
 test.describe('Projects', () => {

@@ -84,6 +84,11 @@ export interface ObjectiveWeights {
   special_needs: number;
 }
 
+/** Teacher-selected academic purpose for the seating chart. There is no
+ * universally best grouping pattern, so the optimizer makes the trade-off
+ * explicit instead of hiding it behind an ambiguous "balance" score. */
+export type SeatingStrategy = 'mixed' | 'similar' | 'peer_support';
+
 export interface OptimizationResult {
   layout: ClassroomLayout;
   student_positions: Record<string, SeatPosition>;
@@ -117,6 +122,8 @@ export interface GeneticConfig {
   mutationRate: number;
   tournamentSize: number;
   earlyStopPatience: number;
+  /** How academic fit is scored. Missing in older projects => `mixed`. */
+  seatingStrategy?: SeatingStrategy;
   /** Number of independent GA restarts. 1 = fastest, 3 = balanced
    *  (recommended), 5+ = highest quality for the same problem.
    *  Optional for back-compat with persisted projects from before

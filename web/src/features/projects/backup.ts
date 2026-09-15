@@ -48,6 +48,7 @@ export interface BackupData {
   resultHistory?: Array<{
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
+    layoutDef?: LayoutDef;
   }>;
   /** Optional saved term rotation plan. */
   rotationPlan?: RotationPlan | null;
@@ -96,6 +97,7 @@ export function buildBackup(state: {
   resultHistory?: Array<{
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
+    layoutDef?: LayoutDef;
   }>;
   rotationPlan?: RotationPlan | null;
   savedArrangements?: SavedArrangement[];
