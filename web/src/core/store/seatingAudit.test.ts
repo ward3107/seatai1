@@ -81,6 +81,8 @@ describe('result lifecycle after input changes', () => {
     expect(state.students[1].id).toBe('b');
     expect(state.result?.student_positions).toEqual(before.student_positions);
     expect(state.result?.objective_scores.special_needs).toBe(0);
+    expect(state.result?.provenance?.operation).toBe('rescored');
+    expect(state.result?.provenance?.inputHash).not.toBe(before.provenance?.inputHash);
     expect(state.history).toEqual([]);
   });
 

@@ -10,6 +10,7 @@
 import type {
   Student,
   OptimizationResult,
+  OptimizationProvenance,
   ObjectiveScores,
   ObjectiveWeights,
   GeneticConfig,
@@ -84,6 +85,36 @@ export const EXAM_FRIEND = 0.6;
  *  GA treats hard rules as effectively inviolable — it will only leave one
  *  unmet when the hard rules are contradictory or physically impossible. */
 export const HARD_PENALTY = 1000;
+export const OPTIMIZER_ENGINE_VERSION = 'seatai-ga-ts-1';
+
+function canonicalJson(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .filter((key) => record[key] !== undefined)
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'undefined';
+}
+
+function clonePlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/** Small deterministic, non-cryptographic signature for run provenance. */
+export function optimizationInputHash(value: unknown): string {
+  const serialized = canonicalJson(value);
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < serialized.length; i++) {
+    hash ^= serialized.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}`;
+}
 
 /** Pluggable RNG so tests can seed it for deterministic runs. Defaults
  *  to Math.random in production. */
@@ -374,6 +405,43 @@ export class ClassroomOptimizer {
     this.pickRandom = makePickRandom(rng);
   }
 
+  private buildProvenance(
+    operation: OptimizationProvenance['operation'],
+  ): OptimizationProvenance {
+    const normalizedConfig: GeneticConfig = {
+      ...this.config,
+      seatingStrategy: this.seatingStrategy,
+      examMode: this.examMode,
+    };
+    const rotationAvoidance = {
+      strength: this.avoidRecentStrength,
+      pairPenalties: { ...this.recentPairPenalties },
+    };
+    const provenanceInput = {
+      students: this.students,
+      layoutDef: this.layoutDef,
+      weights: this.weights,
+      config: normalizedConfig,
+      constraints: this.constraints,
+      pinned: [...this.pinned.entries()],
+      rotationAvoidance,
+    };
+    return {
+      schemaVersion: 1,
+      operation,
+      engineVersion: OPTIMIZER_ENGINE_VERSION,
+      generatedAt: new Date().toISOString(),
+      inputHash: optimizationInputHash(provenanceInput),
+      studentCount: this.students.length,
+      layoutDef: clonePlain(this.layoutDef),
+      weights: clonePlain(this.weights),
+      config: clonePlain(normalizedConfig),
+      constraints: clonePlain(this.constraints),
+      pinned: [...this.pinned.entries()],
+      rotationAvoidance,
+    };
+  }
+
   /** Score an existing chart without searching or moving any student. */
   evaluateSeating(seats: import('../types').Seat[]) {
     const byPosition = new Map(seats.map(s => [`${s.position.row}-${s.position.col}`, s.student_id]));
@@ -383,6 +451,7 @@ export class ClassroomOptimizer {
       fitness_score: this.fitness(chrom, students),
       objective_scores: this.scoreObjectives(chrom, students),
       unmet_hard_rules: this.countHardViolations(chrom) || undefined,
+      provenance: this.buildProvenance('rescored'),
     };
   }
 
@@ -649,7 +718,6 @@ export class ClassroomOptimizer {
     // that no feasible arrangement exists. Reported via the dedicated `unmet_hard_rules` field so the UI
     // can show a localized message (rather than an English warning string).
     const unmetHard = this.countHardViolations(bestChrom);
-
     return {
       layout,
       student_positions: studentPositions,
@@ -666,6 +734,7 @@ export class ClassroomOptimizer {
       computation_time_ms: computationTimeMs,
       warnings,
       algorithm: 'genetic',
+      provenance: this.buildProvenance('optimized'),
     };
   }
 

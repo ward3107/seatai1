@@ -3,7 +3,12 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ClassroomOptimizer, mulberry32 } from './optimizer';
+import {
+  ClassroomOptimizer,
+  mulberry32,
+  optimizationInputHash,
+  OPTIMIZER_ENGINE_VERSION,
+} from './optimizer';
 import { generateSlots } from './layouts';
 import type { OptimizeProgress } from './optimizer';
 import type { Student, ObjectiveWeights, GeneticConfig, SeatingConstraints } from '../types';
@@ -1072,6 +1077,37 @@ describe('ClassroomOptimizer', () => {
       });
       expect(result.generations).toBeLessThan(500);
       expect(Object.keys(result.student_positions)).toHaveLength(students.length);
+    });
+  });
+
+  describe('Run provenance', () => {
+    it('hashes equivalent object inputs identically regardless of key order', () => {
+      expect(optimizationInputHash({ b: 2, a: { y: 4, x: 3 } })).toBe(
+        optimizationInputHash({ a: { x: 3, y: 4 }, b: 2 }),
+      );
+      expect(optimizationInputHash({ a: 1 })).not.toBe(
+        optimizationInputHash({ a: 2 }),
+      );
+    });
+
+    it('attaches the exact optimizer settings and a support-safe run reference', () => {
+      const optimizer = new ClassroomOptimizer(students, 3, 4);
+      optimizer.setWeights(weights);
+      optimizer.setConfig({ ...config, seed: 17, seatingStrategy: 'peer_support' });
+      optimizer.setPinned(new Map([[0, '1']]));
+      const result = optimizer.optimize();
+
+      expect(result.provenance).toMatchObject({
+        schemaVersion: 1,
+        operation: 'optimized',
+        engineVersion: OPTIMIZER_ENGINE_VERSION,
+        studentCount: students.length,
+        inputHash: expect.stringMatching(/^fnv1a-[0-9a-f]{8}$/),
+        config: { seed: 17, seatingStrategy: 'peer_support', examMode: false },
+        weights,
+        pinned: [[0, '1']],
+      });
+      expect(new Date(result.provenance!.generatedAt).toString()).not.toBe('Invalid Date');
     });
   });
 });

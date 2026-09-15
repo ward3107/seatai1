@@ -2,6 +2,7 @@
  * tolerated for forward compatibility; known fields must have safe shapes. */
 type Check = (value: unknown) => boolean;
 const str: Check = v => typeof v === 'string';
+const isoDate: Check = v => str(v) && !Number.isNaN(Date.parse(v as string));
 const bool: Check = v => typeof v === 'boolean';
 const num: Check = v => typeof v === 'number' && Number.isFinite(v);
 const integer: Check = v => num(v) && Number.isInteger(v) && (v as number) >= 0;
@@ -45,6 +46,13 @@ const constraints = object({
   separate_pairs: array(pair), keep_together_pairs: array(pair), front_row_ids: strings, back_row_ids: strings,
   aisle_ids: optional(strings), near_window_ids: optional(strings), peer_mentor_pairs: optional(array(pair)), hard: optional(record(bool)),
 });
+const provenance = object({
+  schemaVersion: oneOf(1), operation: oneOf('optimized', 'rescored'),
+  engineVersion: str, generatedAt: isoDate, inputHash: str,
+  studentCount: integer, layoutDef: layout, weights: scores, config, constraints,
+  pinned: array(v => Array.isArray(v) && v.length === 2 && integer(v[0]) && str(v[1])),
+  rotationAvoidance: object({ strength: num, pairPenalties: record(num) }),
+});
 const result = object({
   layout: object({ ...dimensions, layout_type: oneOf('rows', 'pairs', 'clusters', 'u-shape', 'circle', 'custom-rows', 'flexible'),
     total_seats: integer, seats: array(object({ position, student_id: optional(str), is_empty: bool })) }),
@@ -52,6 +60,7 @@ const result = object({
   generations: integer, computation_time_ms: num, warnings: strings, unmet_hard_rules: optional(integer),
   stop_reason: optional(oneOf('generations', 'converged', 'time', 'cancelled')),
   algorithm: optional(oneOf('genetic', 'simulated_annealing', 'greedy', 'random_search')),
+  provenance: optional(provenance),
 });
 const questionnaire = object({ consentAck: bool, surveyedIds: strings, skipPeers: bool, peerSurveyEnabled: optional(bool), simpleMode: optional(bool) });
 const rotation = object({ id: str, createdAt: str, periods: uniqueArray(object({ id: str, label: str, result, createdAt: str })) });
