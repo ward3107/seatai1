@@ -1,42 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../core/store';
 import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
-import { slotCount, generateSlots } from '../core/layouts';
+import { slotCount } from '../core/layouts';
 import { getRecentPairPenalties } from '../utils/rotationHistory';
 import { useLanguage } from './useLanguage';
-import type { OptimizationResult, ClassroomLayout } from '../types';
-import type { LayoutDef } from '../core/layouts';
+import type { OptimizationResult } from '../types';
+import { buildPinned } from '../utils/pinnedSeats';
 
-/**
- * Turn the teacher's locked seats into optimizer pins. A lock means "the
- * student currently sitting here stays here"; we resolve each locked seat
- * key ("row-col") to its slot index in the current layout and the student
- * the previous result placed there. Locked-but-empty seats yield no pin.
- */
-function buildPinned(
-  lockedSeats: string[],
-  result: { layout: ClassroomLayout } | null,
-  layoutDef: LayoutDef,
-): [number, string][] {
-  if (!result || lockedSeats.length === 0) return [];
-  const slotIndexByPos = new Map<string, number>();
-  for (const slot of generateSlots(layoutDef)) {
-    slotIndexByPos.set(`${slot.row}-${slot.col}`, slot.index);
-  }
-  const studentByPos = new Map<string, string>();
-  for (const seat of result.layout.seats) {
-    if (seat.student_id) {
-      studentByPos.set(`${seat.position.row}-${seat.position.col}`, seat.student_id);
-    }
-  }
-  const pins: [number, string][] = [];
-  for (const key of lockedSeats) {
-    const slotIdx = slotIndexByPos.get(key);
-    const sid = studentByPos.get(key);
-    if (slotIdx !== undefined && sid) pins.push([slotIdx, sid]);
-  }
-  return pins;
-}
 
 type WorkerOut =
   | { type: 'ready' }
