@@ -44,6 +44,10 @@ export default defineConfig({
     }),
   ],
   build: {
+    // The PWA plugin scans the finished directory when generating its
+    // precache manifest. Always clear it first so repeated local/CI builds do
+    // not retain hashed chunks from older releases and cache dead code.
+    emptyOutDir: true,
     // Locked to es2022 so the output stays predictable across Vite/esbuild
     // upgrades. Anything newer (top-level await, decorators) is unsupported.
     // The corresponding browser floor lives in package.json `browserslist`.
@@ -54,9 +58,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Split large, independently-versioned vendor libraries into their
-        // own chunks. They change far less often than app code, so browsers
-        // keep them cached across deploys, and the initial parse cost drops.
         // Split large, independently-versioned vendor libraries into their own
         // chunks by node_modules path — the function form matches subpath
         // imports (react-dom/client, dexie-react-hooks) that the object form
