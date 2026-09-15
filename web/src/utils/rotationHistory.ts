@@ -20,26 +20,28 @@ export interface RotationEntry {
   timesAdjacent: number;
 }
 
+interface HistorySnapshot {
+  timestamp: string;
+  positions: Record<string, { row: number; col: number }>;
+  /** Absent in history written before layout-aware snapshots shipped. */
+  layoutDef?: LayoutDef;
+}
+
 export function getNeighborHistory(
   studentId: string,
   layoutDef: LayoutDef,
-  resultHistory: Array<{
-    timestamp: string;
-    positions: Record<string, { row: number; col: number }>;
-  }>,
+  resultHistory: HistorySnapshot[],
 ): RotationEntry[] {
   if (resultHistory.length === 0) return [];
-
-  // Generate slots once. We rebuild adjacency per snapshot since the
-  // layout might have changed between runs.
-  const slots = generateSlots(layoutDef);
-  // Map (row,col) → slot.index, plus slot.neighbors → student-id-set.
-  const slotByCoord = new Map<string, number>();
-  for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
 
   const seen = new Map<string, RotationEntry>();
 
   for (const snapshot of resultHistory) {
+    // New snapshots carry their original room shape. Old persisted entries
+    // fall back to the current layout for backwards compatibility.
+    const slots = generateSlots(snapshot.layoutDef ?? layoutDef);
+    const slotByCoord = new Map<string, number>();
+    for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
     const pos = snapshot.positions[studentId];
     if (!pos) continue;
     const myIdx = slotByCoord.get(`${pos.row}|${pos.col}`);
@@ -86,10 +88,7 @@ export function getNeighborHistory(
  */
 export function getRecentPairPenalties(
   layoutDef: LayoutDef,
-  resultHistory: Array<{
-    timestamp: string;
-    positions: Record<string, { row: number; col: number }>;
-  }>,
+  resultHistory: HistorySnapshot[],
   options?: { maxSnapshots?: number; decay?: number },
 ): Record<string, number> {
   const maxSnapshots = options?.maxSnapshots ?? 5;
@@ -97,12 +96,11 @@ export function getRecentPairPenalties(
   const penalties: Record<string, number> = {};
   if (resultHistory.length === 0) return penalties;
 
-  const slots = generateSlots(layoutDef);
-  const slotByCoord = new Map<string, number>();
-  for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
-
   resultHistory.slice(0, maxSnapshots).forEach((snapshot, i) => {
     const weight = Math.pow(decay, i); // i = 0 is the most recent run
+    const slots = generateSlots(snapshot.layoutDef ?? layoutDef);
+    const slotByCoord = new Map<string, number>();
+    for (const s of slots) slotByCoord.set(`${s.row}|${s.col}`, s.index);
     const idBySlot = new Map<number, string>();
     for (const [id, p] of Object.entries(snapshot.positions)) {
       const idx = slotByCoord.get(`${p.row}|${p.col}`);

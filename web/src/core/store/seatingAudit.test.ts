@@ -20,7 +20,78 @@ beforeEach(() => {
   const result = optimizer.optimize();
   useStore.setState({ students, layoutDef, rows: 2, cols: 1, constraints, result,
     history: [], historyFuture: [], lockedSeats: [], avoidRecentNeighbors: false,
-    resultHistory: [], changesSinceBackup: 0 });
+    resultHistory: [], changesSinceBackup: 0, selectedStudentId: null,
+    detailsTargetStudentId: null,
+    questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false,
+      peerSurveyEnabled: true, simpleMode: false, lessonStyle: null } });
+});
+
+describe('result lifecycle after input changes', () => {
+  it('clears a structurally incomplete chart when a student is added', () => {
+    useStore.setState({ lockedSeats: ['0-0'], history: [structuredClone(useStore.getState().result!)] });
+
+    useStore.getState().addStudent({ ...students[0], id: 'c', name: 'c' });
+
+    expect(useStore.getState().result).toBeNull();
+    expect(useStore.getState().lockedSeats).toEqual([]);
+    expect(useStore.getState().history).toEqual([]);
+  });
+
+  it('removes every dangling reference when a student is deleted', () => {
+    useStore.setState({
+      students: [
+        { ...students[0], friends_ids: ['b'], incompatible_ids: ['b'] },
+        students[1],
+      ],
+      constraints: {
+        separate_pairs: [['a', 'b']], keep_together_pairs: [['a', 'b']],
+        front_row_ids: ['a', 'b'], back_row_ids: ['b'], aisle_ids: ['b'],
+        near_window_ids: ['b'], peer_mentor_pairs: [['a', 'b']],
+      },
+      selectedStudentId: 'b',
+      detailsTargetStudentId: 'b',
+      questionnaire: { ...useStore.getState().questionnaire, surveyedIds: ['a', 'b'] },
+      resultHistory: [{ timestamp: '2026-01-01T00:00:00.000Z', positions: {
+        a: { row: 0, col: 0 }, b: { row: 1, col: 0 },
+      } }],
+    });
+
+    useStore.getState().removeStudent('b');
+
+    const state = useStore.getState();
+    expect(state.result).toBeNull();
+    expect(state.students[0].friends_ids).toEqual([]);
+    expect(state.students[0].incompatible_ids).toEqual([]);
+    expect(state.constraints).toMatchObject({
+      separate_pairs: [], keep_together_pairs: [], front_row_ids: ['a'],
+      back_row_ids: [], aisle_ids: [], near_window_ids: [], peer_mentor_pairs: [],
+    });
+    expect(state.questionnaire.surveyedIds).toEqual(['a']);
+    expect(state.resultHistory[0].positions).toEqual({ a: { row: 0, col: 0 } });
+    expect(state.selectedStudentId).toBeNull();
+    expect(state.detailsTargetStudentId).toBeNull();
+  });
+
+  it('preserves identity and re-scores optimizer-relevant student edits', () => {
+    const before = useStore.getState().result!;
+
+    useStore.getState().updateStudent('b', { id: 'changed', requires_front_row: true });
+
+    const state = useStore.getState();
+    expect(state.students[1].id).toBe('b');
+    expect(state.result?.student_positions).toEqual(before.student_positions);
+    expect(state.result?.objective_scores.special_needs).toBe(0);
+    expect(state.history).toEqual([]);
+  });
+
+  it('re-scores hard-rule violations immediately after constraints change', () => {
+    useStore.getState().setConstraints({
+      separate_pairs: [['a', 'b']], keep_together_pairs: [],
+      front_row_ids: [], back_row_ids: [], hard: { separate_pairs: true },
+    });
+
+    expect(useStore.getState().result?.unmet_hard_rules).toBe(1);
+  });
 });
 describe('manual seating edits', () => {
   it('updates required-rule violations and score, with undo and redo', () => {

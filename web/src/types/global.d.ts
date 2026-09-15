@@ -213,6 +213,15 @@ export interface ClassProject {
   resultHistory?: Array<{
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
+    /** Layout used by that historical run. Missing in older snapshots. */
+    layoutDef?: {
+      type: 'rows' | 'clusters' | 'u-shape' | 'circle' | 'custom-rows';
+      rows: number;
+      cols: number;
+      customRowSizes?: number[];
+      clusterSize?: number;
+      blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
+    };
   }>;
   /** Whether the freshen-seating penalty was enabled for this class. */
   avoidRecentNeighbors?: boolean;
