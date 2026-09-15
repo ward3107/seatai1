@@ -133,6 +133,18 @@ describe('getNeighborHistory', () => {
     expect(result[0].lastAdjacentAt).toBe('2026-05-10T09:00:00Z');
   });
 
+  it('uses each snapshot original layout when the room shape changed', () => {
+    const history = [{
+      timestamp: '2026-05-10T09:00:00Z',
+      layoutDef: { type: 'circle' as const, rows: 1, cols: 4 },
+      // First and last ring seats are neighbors, but are far apart in rows.
+      positions: positionsAt([['a', 0, 0], ['b', 0, 3]]),
+    }];
+
+    expect(getNeighborHistory('a', { type: 'rows', rows: 1, cols: 4 }, history))
+      .toMatchObject([{ otherId: 'b', timesAdjacent: 1 }]);
+  });
+
   it('returns multiple neighbors from a single snapshot', () => {
     // Center seat (1,1) has up to 8 neighbors on a 3x3 grid; assert at
     // least the four cardinal ones are reported.
@@ -218,6 +230,17 @@ describe('getRecentPairPenalties', () => {
       },
     ];
     expect(getRecentPairPenalties(layout3x3, history)).toEqual({});
+  });
+
+  it('calculates penalties with the layout stored on each snapshot', () => {
+    const history = [{
+      timestamp: '2026-05-12T09:00:00Z',
+      layoutDef: { type: 'circle' as const, rows: 1, cols: 4 },
+      positions: positionsAt([['a', 0, 0], ['b', 0, 3]]),
+    }];
+
+    expect(getRecentPairPenalties({ type: 'rows', rows: 1, cols: 4 }, history))
+      .toEqual({ 'a|b': 1 });
   });
 });
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { dexieStorage } from '../db';
-import { current } from 'immer';
+import { current, isDraft, type Draft } from 'immer';
 import { setLocale, detectDefaultLocale } from '../../lib/i18n';
 import type {
   Student,
@@ -58,6 +58,8 @@ interface AppState {
   resultHistory: Array<{
     timestamp: string;
     positions: Record<string, { row: number; col: number }>;
+    /** Room shape used for this run. Optional for persisted pre-v2 entries. */
+    layoutDef?: LayoutDef;
   }>;
   showMovementDiff: boolean;
   setOptimizing: (value: boolean) => void;
@@ -301,6 +303,64 @@ const defaultConstraints: SeatingConstraints = {
   back_row_ids: [],
 };
 
+type ResultHistoryEntry = AppState['resultHistory'][number];
+
+/** Re-score a saved chart against the inputs that are active now. The seat
+ * assignment stays untouched; only the score breakdown and required-rule
+ * status change. */
+function rescoreResult(
+  result: OptimizationResult,
+  students: Student[],
+  layoutDef: LayoutDef,
+  weights: ObjectiveWeights,
+  config: GeneticConfig,
+  constraints: SeatingConstraints,
+  avoidRecentNeighbors: boolean,
+  resultHistory: ResultHistoryEntry[],
+): OptimizationResult {
+  const evaluator = new ClassroomOptimizer(students, layoutDef);
+  evaluator.setWeights(weights);
+  evaluator.setConfig(config);
+  evaluator.setConstraints(constraints);
+  if (avoidRecentNeighbors) {
+    evaluator.setRotationAvoidance(
+      getRecentPairPenalties(layoutDef, resultHistory.slice(1)),
+      ROTATION_STRENGTH,
+    );
+  }
+  return { ...result, ...evaluator.evaluateSeating(result.layout.seats) };
+}
+
+const OPTIMIZER_STUDENT_FIELDS = new Set<keyof Student>([
+  'gender',
+  'academic_score',
+  'behavior_score',
+  'friends_ids',
+  'incompatible_ids',
+  'requires_front_row',
+  'requires_quiet_area',
+  'has_mobility_issues',
+]);
+
+function rescoreCurrentResult(state: Draft<AppState>): void {
+  if (!state.result) return;
+  const clone = <T,>(value: T): T =>
+    structuredClone(isDraft(value) ? current(value) : value);
+  state.result = rescoreResult(
+    clone(state.result),
+    clone(state.students),
+    clone(state.layoutDef),
+    { ...state.weights },
+    { ...state.config },
+    clone(state.constraints),
+    state.avoidRecentNeighbors,
+    clone(state.resultHistory),
+  );
+  // Undo snapshots carry scores calculated from the previous inputs.
+  state.history = [];
+  state.historyFuture = [];
+}
+
 export const useStore = create<AppState>()(
   persist(
     immer((set) => ({
@@ -309,6 +369,14 @@ export const useStore = create<AppState>()(
       addStudent: (student) =>
         set((state) => {
           state.students.push(student);
+          // The old chart does not contain the new student. Do not leave a
+          // complete-looking result on screen with a silently partial roster.
+          state.result = null;
+          state.previousPositions = null;
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.history = [];
+          state.historyFuture = [];
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
@@ -319,30 +387,93 @@ export const useStore = create<AppState>()(
         set((state) => {
           const index = state.students.findIndex((s: Student) => s.id === id);
           if (index !== -1) {
-            state.students[index] = { ...state.students[index], ...updates };
+            const affectsOptimizer = Object.keys(updates).some((key) =>
+              OPTIMIZER_STUDENT_FIELDS.has(key as keyof Student),
+            );
+            // Student ids are identity keys used throughout constraints,
+            // histories and results; an edit must never mutate that key.
+            state.students[index] = { ...state.students[index], ...updates, id };
+            if (affectsOptimizer) rescoreCurrentResult(state);
             state.changesSinceBackup += 1;
           }
         }),
       removeStudent: (id) =>
         set((state) => {
+          if (!state.students.some((student) => student.id === id)) return;
           state.students = state.students.filter((s: Student) => s.id !== id);
+          for (const student of state.students) {
+            student.friends_ids = student.friends_ids.filter((otherId) => otherId !== id);
+            student.incompatible_ids = student.incompatible_ids.filter((otherId) => otherId !== id);
+          }
+          state.constraints.separate_pairs = state.constraints.separate_pairs.filter(
+            ([a, b]) => a !== id && b !== id,
+          );
+          state.constraints.keep_together_pairs = state.constraints.keep_together_pairs.filter(
+            ([a, b]) => a !== id && b !== id,
+          );
+          state.constraints.peer_mentor_pairs = state.constraints.peer_mentor_pairs?.filter(
+            ([a, b]) => a !== id && b !== id,
+          );
+          state.constraints.front_row_ids = state.constraints.front_row_ids.filter((studentId) => studentId !== id);
+          state.constraints.back_row_ids = state.constraints.back_row_ids.filter((studentId) => studentId !== id);
+          state.constraints.aisle_ids = state.constraints.aisle_ids?.filter((studentId) => studentId !== id);
+          state.constraints.near_window_ids = state.constraints.near_window_ids?.filter((studentId) => studentId !== id);
+          state.questionnaire.surveyedIds = state.questionnaire.surveyedIds.filter((studentId) => studentId !== id);
+          state.resultHistory = state.resultHistory.map((entry) => {
+            const positions = { ...entry.positions };
+            delete positions[id];
+            return { ...entry, positions };
+          });
+          if (state.selectedStudentId === id) state.selectedStudentId = null;
+          if (state.detailsTargetStudentId === id) state.detailsTargetStudentId = null;
+          // Membership changes invalidate the seat assignment itself, even
+          // when other students remain in the class.
+          state.result = null;
+          state.previousPositions = null;
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.history = [];
+          state.historyFuture = [];
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
           state.activeArrangementId = null;
           state.changesSinceBackup += 1;
-          // An emptied roster has no chart — clear the stale result so the
-          // header score / Print / Compare don't render over an empty class.
-          if (state.students.length === 0) {
-            state.result = null;
-            state.previousPositions = null;
-            state.lockedSeats = [];
-            state.selectedSeatKey = null;
-          }
         }),
       setStudents: (students) =>
         set((state) => {
-          state.students = students;
+          const validIds = new Set(students.map((student) => student.id));
+          state.students = students.map((student) => ({
+            ...student,
+            friends_ids: student.friends_ids.filter((id) => validIds.has(id)),
+            incompatible_ids: student.incompatible_ids.filter((id) => validIds.has(id)),
+          }));
+          state.constraints.separate_pairs = state.constraints.separate_pairs.filter(
+            ([a, b]) => validIds.has(a) && validIds.has(b),
+          );
+          state.constraints.keep_together_pairs = state.constraints.keep_together_pairs.filter(
+            ([a, b]) => validIds.has(a) && validIds.has(b),
+          );
+          state.constraints.peer_mentor_pairs = state.constraints.peer_mentor_pairs?.filter(
+            ([a, b]) => validIds.has(a) && validIds.has(b),
+          );
+          state.constraints.front_row_ids = state.constraints.front_row_ids.filter((id) => validIds.has(id));
+          state.constraints.back_row_ids = state.constraints.back_row_ids.filter((id) => validIds.has(id));
+          state.constraints.aisle_ids = state.constraints.aisle_ids?.filter((id) => validIds.has(id));
+          state.constraints.near_window_ids = state.constraints.near_window_ids?.filter((id) => validIds.has(id));
+          state.questionnaire.surveyedIds = state.questionnaire.surveyedIds.filter((id) => validIds.has(id));
+          state.resultHistory = state.resultHistory.map((entry) => ({
+            ...entry,
+            positions: Object.fromEntries(
+              Object.entries(entry.positions).filter(([id]) => validIds.has(id)),
+            ),
+          }));
+          state.result = null;
+          state.previousPositions = null;
+          state.lockedSeats = [];
+          state.selectedSeatKey = null;
+          state.history = [];
+          state.historyFuture = [];
           state.rotationPlan = null;
           state.activeRotationPeriodId = null;
           state.savedArrangements = [];
@@ -350,12 +481,6 @@ export const useStore = create<AppState>()(
           // A bulk roster swap (CSV import, Google Classroom) is a bigger
           // change than a single edit — weight it accordingly.
           state.changesSinceBackup += 3;
-          if (students.length === 0) {
-            state.result = null;
-            state.previousPositions = null;
-            state.lockedSeats = [];
-            state.selectedSeatKey = null;
-          }
         }),
 
       // Layout
@@ -394,8 +519,11 @@ export const useStore = create<AppState>()(
           state.cols = def.cols;
           if (shapeChanged) {
             state.result = null;
+            state.previousPositions = null;
             state.lockedSeats = [];
             state.selectedSeatKey = null;
+            state.history = [];
+            state.historyFuture = [];
             // A saved rotation plan's seat coordinates no longer map onto
             // the new room shape, so drop it too.
             state.rotationPlan = null;
@@ -439,7 +567,11 @@ export const useStore = create<AppState>()(
               positions[id] = { row: p.row, col: p.col };
             }
             state.resultHistory = [
-              { timestamp: new Date().toISOString(), positions },
+              {
+                timestamp: new Date().toISOString(),
+                positions,
+                layoutDef: structuredClone(current(state.layoutDef)),
+              },
               ...state.resultHistory,
             ].slice(0, 20);
           }
@@ -479,13 +611,16 @@ export const useStore = create<AppState>()(
       setWeights: (weights) =>
         set((state) => {
           state.weights = weights;
+          rescoreCurrentResult(state);
         }),
 
       // Config
       config: defaultConfig,
       setConfig: (config) =>
         set((state) => {
+          const scoringChanged = state.config.examMode !== config.examMode;
           state.config = config;
+          if (scoringChanged) rescoreCurrentResult(state);
         }),
 
       // Constraints
@@ -493,12 +628,14 @@ export const useStore = create<AppState>()(
       setConstraints: (constraints) =>
         set((state) => {
           state.constraints = constraints;
+          rescoreCurrentResult(state);
         }),
 
       avoidRecentNeighbors: false,
       setAvoidRecentNeighbors: (v) =>
         set((state) => {
           state.avoidRecentNeighbors = v;
+          rescoreCurrentResult(state);
         }),
 
       rotationPlan: null,
@@ -571,7 +708,16 @@ export const useStore = create<AppState>()(
             state.previousPositions = state.result.student_positions;
           }
           state.activeRotationPeriodId = periodId;
-          state.result = period.result;
+          state.result = rescoreResult(
+            structuredClone(current(period.result)),
+            structuredClone(current(state.students)),
+            structuredClone(current(state.layoutDef)),
+            { ...state.weights },
+            { ...state.config },
+            structuredClone(current(state.constraints)),
+            state.avoidRecentNeighbors,
+            structuredClone(current(state.resultHistory)),
+          );
           state.history = [];
           state.historyFuture = [];
         }),
@@ -603,7 +749,16 @@ export const useStore = create<AppState>()(
           state.activeArrangementId = id;
           // `arr` is an immer draft here — unwrap with current() before cloning
           // so structuredClone doesn't choke on the proxy.
-          state.result = structuredClone(current(arr.result)) as OptimizationResult;
+          state.result = rescoreResult(
+            structuredClone(current(arr.result)),
+            structuredClone(current(state.students)),
+            structuredClone(current(state.layoutDef)),
+            { ...state.weights },
+            { ...state.config },
+            structuredClone(current(state.constraints)),
+            state.avoidRecentNeighbors,
+            structuredClone(current(state.resultHistory)),
+          );
           state.history = [];
           state.historyFuture = [];
         }),
