@@ -11,9 +11,12 @@ of Education approval. Do not describe a proposed capability as implemented.
 - Loading demonstration data requires confirmation when a roster already exists.
 - Setup wizard supports RTL-aware keyboard navigation and accessible step names.
 - Advanced sidebar tools load on first use and remain mounted to preserve edits.
-- Unit tests, lint, production build, dependency audit and E2E typechecking are CI gates.
+- Unit tests, deterministic optimizer benchmarks, lint, production build,
+  dependency audit and E2E typechecking are CI gates.
 - The full Chromium regression suite is configured to fail CI on failures.
   Its run result must still be checked for each commit.
+- The initial production JavaScript entry is limited to 500 kB; interaction-
+  gated classroom, analysis, survey and export views are loaded on demand.
 
 ## Before a real-student pilot
 
@@ -41,6 +44,7 @@ Run from the repository root:
 ```sh
 npm ci
 npm test
+npm run benchmark
 npm run lint
 npm run build
 npm audit --omit=dev --audit-level=high
