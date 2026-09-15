@@ -1,121 +1,142 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../core/store';
-import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
+import { createRotationPlan } from '../core/rotationPlanner';
+import type { RotationPlanInput } from '../core/rotationPlanner';
 import { buildPinned } from '../utils/pinnedSeats';
 import { slotCount } from '../core/layouts';
-import { getRecentPairPenalties } from '../utils/rotationHistory';
-import type { RotationPeriod, RotationPlan } from '../types';
+import type { RotationPlan } from '../types';
 
-/** Rotation avoidance pushes harder inside the planner than it does for a
- *  single "freshen" run — we want each period to deliberately differ from
- *  every earlier one in the same term, not just nudge away from them. */
-const PLANNER_STRENGTH = Math.max(ROTATION_STRENGTH, 0.6);
-
-/** How many periods a single plan may hold. Kept small: a term is a
- *  handful of arrangements, and each one runs the full optimizer. */
 export const MIN_PERIODS = 2;
 export const MAX_PERIODS = 8;
 
-/**
- * Generates a term rotation plan: a sequence of seating charts where each
- * period is optimized to avoid the neighbour pairings of every earlier
- * period in the plan. Reuses the existing optimizer + pair-penalty machinery.
- *
- * Generation runs on the main thread (one optimize() per period, each
- * sub-second for typical classes) with a yield between periods so the
- * progress indicator can paint. This keeps the planner independent of the
- * shared optimization worker, which only handles one in-flight run.
- */
+type WorkerOut =
+  | { type: 'progress'; reqId: number; current: number; total: number }
+  | { type: 'result'; reqId: number; plan: RotationPlan | null }
+  | { type: 'error'; reqId: number; error: string };
+
+type PendingRun = {
+  reqId: number;
+  resolve: (plan: RotationPlan | null) => void;
+  reject: (error: Error) => void;
+};
+
+/** Generate a multi-period plan in a dedicated worker so the UI remains usable. */
 export function useRotationPlanner() {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const pendingRef = useRef<PendingRun | null>(null);
+  const reqIdRef = useRef(0);
+  const mountedRef = useRef(true);
 
-  const setRotationPlan = useStore((s) => s.setRotationPlan);
+  const setRotationPlan = useStore((state) => state.setRotationPlan);
 
-  const generatePlan = useCallback(
-    async (count: number, periodLabel: string): Promise<RotationPlan | null> => {
-      const periods = Math.min(MAX_PERIODS, Math.max(MIN_PERIODS, Math.round(count)));
-      const { students, layoutDef, weights, config, constraints, lockedSeats, result: currentResult } = useStore.getState();
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      workerRef.current?.terminate();
+      pendingRef.current?.resolve(null);
+      workerRef.current = null;
+      pendingRef.current = null;
+    };
+  }, []);
 
-      if (students.length < 2) {
-        setError('need-students');
-        return null;
-      }
-      const seats = slotCount(layoutDef);
-      if (students.length > seats) {
-        setError('too-many-students');
-        return null;
-      }
+  const finish = useCallback((plan: RotationPlan | null) => {
+    if (plan) setRotationPlan(plan);
+    if (mountedRef.current) {
+      setGenerating(false);
+      setProgress(null);
+    }
+    return plan;
+  }, [setRotationPlan]);
 
-      const pins = buildPinned(lockedSeats, currentResult, layoutDef);
-      setError(null);
-      setGenerating(true);
-      setProgress({ current: 0, total: periods });
+  const runInWorker = useCallback(async (input: RotationPlanInput) => {
+    const { default: WorkerConstructor } = await import('../workers/rotation.worker?worker');
+    const worker: Worker = new WorkerConstructor();
+    workerRef.current = worker;
+    const reqId = ++reqIdRef.current;
 
-      try {
-        const built: RotationPeriod[] = [];
-        // Snapshots of already-generated periods, newest-first, in the shape
-        // getRecentPairPenalties expects.
-        const history: Array<{
-          timestamp: string;
-          positions: Record<string, { row: number; col: number }>;
-        }> = [];
-
-        for (let i = 0; i < periods; i++) {
-          setProgress({ current: i + 1, total: periods });
-          // Let React paint the progress update before the synchronous run.
-          await new Promise((r) => setTimeout(r, 0));
-
-          const penalties =
-            history.length > 0
-              ? getRecentPairPenalties(layoutDef, history, {
-                  maxSnapshots: history.length,
-                  // Weight earlier periods almost as much as recent ones so
-                  // the plan spreads pairings across the whole term.
-                  decay: 0.85,
-                })
-              : {};
-
-          const optimizer = new ClassroomOptimizer(students, layoutDef);
-          optimizer.setWeights(weights);
-          optimizer.setConfig(config);
-          optimizer.setConstraints(constraints);
-          optimizer.setPinned(new Map(pins));
-          optimizer.setRotationAvoidance(penalties, history.length > 0 ? PLANNER_STRENGTH : 0);
-          const result = optimizer.optimize();
-
-          built.push({
-            id: `period_${Date.now()}_${i}`,
-            label: `${periodLabel} ${i + 1}`,
-            result,
-            createdAt: new Date().toISOString(),
-          });
-
-          const positions: Record<string, { row: number; col: number }> = {};
-          for (const [id, p] of Object.entries(result.student_positions)) {
-            positions[id] = { row: p.row, col: p.col };
+    return new Promise<RotationPlan | null>((resolve, reject) => {
+      pendingRef.current = { reqId, resolve, reject };
+      worker.onmessage = (event: MessageEvent<WorkerOut>) => {
+        const message = event.data;
+        if (message.reqId !== pendingRef.current?.reqId) return;
+        if (message.type === 'progress') {
+          if (mountedRef.current) {
+            setProgress({ current: message.current, total: message.total });
           }
-          history.unshift({ timestamp: new Date().toISOString(), positions });
+          return;
         }
 
-        const plan: RotationPlan = {
-          id: `plan_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          periods: built,
-        };
-        setRotationPlan(plan);
-        return plan;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'generation-failed');
-        return null;
-      } finally {
-        setGenerating(false);
-        setProgress(null);
+        worker.terminate();
+        workerRef.current = null;
+        pendingRef.current = null;
+        if (message.type === 'error') {
+          reject(new Error(message.error));
+        } else {
+          resolve(message.plan);
+        }
+      };
+      worker.onerror = (event) => {
+        worker.terminate();
+        workerRef.current = null;
+        pendingRef.current = null;
+        reject(new Error(event.message || 'generation-failed'));
+      };
+      worker.postMessage({ type: 'generate', reqId, input });
+    });
+  }, []);
+
+  const generatePlan = useCallback(async (
+    count: number,
+    periodLabel: string,
+  ): Promise<RotationPlan | null> => {
+    const periods = Math.min(MAX_PERIODS, Math.max(MIN_PERIODS, Math.round(count)));
+    const state = useStore.getState();
+    if (state.students.length < 2) {
+      setError('need-students');
+      return null;
+    }
+    if (state.students.length > slotCount(state.layoutDef)) {
+      setError('too-many-students');
+      return null;
+    }
+
+    const input: RotationPlanInput = {
+      periods,
+      periodLabel,
+      students: state.students,
+      layoutDef: state.layoutDef,
+      weights: state.weights,
+      config: state.config,
+      constraints: state.constraints,
+      pinned: buildPinned(state.lockedSeats, state.result, state.layoutDef),
+    };
+    setError(null);
+    setGenerating(true);
+    setProgress({ current: 0, total: periods });
+
+    try {
+      try {
+        return finish(await runInWorker(input));
+      } catch (workerError) {
+        console.warn('Rotation worker unavailable; using async fallback:', workerError);
+        const plan = await createRotationPlan(input, {
+          onProgress: (current, total) => {
+            if (mountedRef.current) setProgress({ current, total });
+          },
+        });
+        return finish(plan);
       }
-    },
-    [setRotationPlan],
-  );
+    } catch (generationError) {
+      if (mountedRef.current) {
+        setError(generationError instanceof Error ? generationError.message : 'generation-failed');
+      }
+      return finish(null);
+    }
+  }, [finish, runInWorker]);
 
   return { generating, progress, error, generatePlan };
 }
