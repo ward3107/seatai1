@@ -89,6 +89,33 @@ export interface ObjectiveWeights {
  * explicit instead of hiding it behind an ambiguous "balance" score. */
 export type SeatingStrategy = 'mixed' | 'similar' | 'peer_support';
 
+export interface OptimizationProvenance {
+  schemaVersion: 1;
+  operation: 'optimized' | 'rescored';
+  engineVersion: string;
+  generatedAt: string;
+  /** Stable signature of every optimizer-relevant input. It contains no
+   * readable student data and lets support staff detect stale/mismatched runs. */
+  inputHash: string;
+  studentCount: number;
+  layoutDef: {
+    type: 'rows' | 'clusters' | 'u-shape' | 'circle' | 'custom-rows';
+    rows: number;
+    cols: number;
+    customRowSizes?: number[];
+    clusterSize?: number;
+    blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
+  };
+  weights: ObjectiveWeights;
+  config: GeneticConfig;
+  constraints: SeatingConstraints;
+  pinned: [number, string][];
+  rotationAvoidance: {
+    strength: number;
+    pairPenalties: Record<string, number>;
+  };
+}
+
 export interface OptimizationResult {
   layout: ClassroomLayout;
   student_positions: Record<string, SeatPosition>;
@@ -113,6 +140,9 @@ export interface OptimizationResult {
   unmet_hard_rules?: number;
   /** Algorithm used for optimization (if applicable) */
   algorithm?: 'genetic' | 'simulated_annealing' | 'greedy' | 'random_search';
+  /** Exact run context for audit, support, and reproducibility checks.
+   * Optional so older saved projects and backups continue to load. */
+  provenance?: OptimizationProvenance;
 }
 
 export interface GeneticConfig {

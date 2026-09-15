@@ -63,6 +63,12 @@ test.describe('Student management', () => {
 test.describe('Optimization', () => {
   test.beforeEach(async ({ page }) => createSampleClass(page));
   test('runs optimization and renders results', async ({ page }) => runOptimization(page));
+  test('exposes an auditable reference for the generated chart', async ({ page }) => {
+    await runOptimization(page);
+    await page.getByText('Run details', { exact: true }).click();
+    await expect(page.getByText(/Run reference: fnv1a-[0-9a-f]{8}/)).toBeVisible();
+    await expect(page.getByText('New optimized chart', { exact: true })).toBeVisible();
+  });
   test('adjusts priorities and re-optimizes', async ({ page }) => {
     await page.locator('summary#sidebar-group-advanced').click();
     await page.getByRole('button', { name: 'Settings', exact: true }).click();

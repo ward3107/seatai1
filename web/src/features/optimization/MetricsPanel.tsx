@@ -141,6 +141,25 @@ export default function MetricsPanel() {
         </p>
       </div>
 
+      {result.provenance && (
+        <details className="mb-4 text-[11px] text-gray-500 dark:text-gray-400">
+          <summary className="cursor-pointer text-center hover:text-gray-700 dark:hover:text-gray-200">
+            {t('optimization.run_details')}
+          </summary>
+          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 tabular-nums">
+            <span>{t('optimization.run_reference')}: {result.provenance.inputHash}</span>
+            <span>{t('optimization.engine_version')}: {result.provenance.engineVersion}</span>
+            <span>{t(`optimization.run_${result.provenance.operation}`)}</span>
+            <span>
+              {t('optimization.generated_at')}: {new Intl.DateTimeFormat(uiLanguage, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }).format(new Date(result.provenance.generatedAt))}
+            </span>
+          </div>
+        </details>
+      )}
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-4 gap-4">
         {metrics.map((metric, index) => {
