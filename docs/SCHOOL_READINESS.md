@@ -13,8 +13,9 @@ of Education approval. Do not describe a proposed capability as implemented.
 - Advanced sidebar tools load on first use and remain mounted to preserve edits.
 - Unit tests, deterministic optimizer benchmarks, lint, production build,
   dependency audit and E2E typechecking are CI gates.
-- The full Chromium regression suite is configured to fail CI on failures.
-  Its run result must still be checked for each commit.
+- Desktop Chromium, Firefox and WebKit plus a mobile-Chromium regression suite
+  are configured to fail CI on failures. Their results must still be checked
+  for each commit.
 - The initial production JavaScript entry is limited to 500 kB; interaction-
   gated classroom, analysis, survey and export views are loaded on demand.
 
@@ -54,12 +55,12 @@ npx tsc -p web/tsconfig.e2e.json --noEmit
 Run browser checks from `web/` after installing the Playwright browsers:
 
 ```sh
-npx playwright install chromium
-npx playwright test --project=chromium
+npx playwright install chromium firefox webkit
+npx playwright test
 ```
 
-Firefox and WebKit projects are configured but are not covered by the Chromium CI
-job. Validate them before claiming cross-browser readiness. A successful build or
+CI coverage improves compatibility confidence but does not replace testing on the
+school's managed devices and actual Safari/iOS hardware. A successful build or
 green dependency scan alone does not establish application security.
 
 ## Pilot measurement

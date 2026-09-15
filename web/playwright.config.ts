@@ -25,6 +25,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /mobile\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         // Allow pointing at a pre-installed Chromium (e.g. a sandbox that ships
@@ -37,15 +38,19 @@ export default defineConfig({
     },
     {
       name: 'firefox',
+      testIgnore: /mobile\.spec\.ts/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      testIgnore: /mobile\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
-    // Test mobile viewport
+    // Mobile-only project: avoid rerunning desktop workflows under phone
+    // emulation while still exercising touch/mobile browser behavior.
     {
-      name: 'Mobile Chrome',
+      name: 'mobile-chrome',
+      testMatch: /mobile\.spec\.ts/,
       use: { ...devices['Pixel 5'] },
     },
   ],
