@@ -16,6 +16,8 @@ of Education approval. Do not describe a proposed capability as implemented.
 - Desktop Chromium, Firefox and WebKit plus a mobile-Chromium regression suite
   are configured to fail CI on failures. Their results must still be checked
   for each commit.
+- A production-build smoke test installs the generated service worker, disables
+  network access and verifies that the cached application shell reloads.
 - The initial production JavaScript entry is limited to 500 kB; interaction-
   gated classroom, analysis, survey and export views are loaded on demand.
 
@@ -26,7 +28,9 @@ of Education approval. Do not describe a proposed capability as implemented.
 - [ ] Confirm the applicable privacy, security, accessibility and procurement requirements.
 - [ ] Review supplier terms and retention before enabling an external AI service.
 - [ ] Complete an accessibility audit with keyboard and screen-reader users.
-- [ ] Test the deployed PWA on school devices, weak networks and offline reloads.
+- [ ] Test the deployed PWA on school devices and weak networks. Automated CI
+  covers an offline application-shell reload, but not managed-device policies,
+  cache eviction or the school's actual network.
 - [ ] Verify backup export, restore and recovery on a different device.
 - [ ] Establish support ownership and an incident-response contact.
 - [ ] Use synthetic student data for demonstrations and test automation.

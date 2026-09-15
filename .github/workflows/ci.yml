@@ -114,3 +114,29 @@ jobs:
           name: playwright-report-${{ matrix.project }}
           path: web/playwright-report/
           retention-days: 7
+
+  pwa:
+    name: PWA offline reload
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Verify production offline reload
+        run: npx playwright test --config=playwright.pwa.config.ts
+        working-directory: web
+      - name: Upload PWA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pwa
+          path: web/playwright-report-pwa/
+          retention-days: 7

@@ -25,7 +25,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /mobile\.spec\.ts/,
+      testIgnore: [/mobile\.spec\.ts/, /pwa\//],
       use: {
         ...devices['Desktop Chrome'],
         // Allow pointing at a pre-installed Chromium (e.g. a sandbox that ships
@@ -38,12 +38,12 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      testIgnore: /mobile\.spec\.ts/,
+      testIgnore: [/mobile\.spec\.ts/, /pwa\//],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: /mobile\.spec\.ts/,
+      testIgnore: [/mobile\.spec\.ts/, /pwa\//],
       use: { ...devices['Desktop Safari'] },
     },
     // Mobile-only project: avoid rerunning desktop workflows under phone
