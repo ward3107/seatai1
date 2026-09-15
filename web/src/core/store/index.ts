@@ -16,6 +16,8 @@ import type {
   SavedArrangement,
 } from '../../types';
 import type { LayoutDef } from '../layouts';
+import { ClassroomOptimizer, ROTATION_STRENGTH } from '../optimizer';
+import { getRecentPairPenalties } from '../../utils/rotationHistory';
 
 export type HeatMapMode = 'none' | 'academic' | 'behavior' | 'gender' | 'conflicts';
 export type ViewMode = 'rows' | 'pairs' | 'clusters';
@@ -710,11 +712,7 @@ export const useStore = create<AppState>()(
       swapStudents: (seatKeyA, seatKeyB) =>
         set((state) => {
           if (!state.result || seatKeyA === seatKeyB) return;
-
-          // Snapshot current result for undo
-          const snapshot = structuredClone(current(state.result)) as OptimizationResult;
-          state.history = [...state.history, snapshot].slice(-20);
-          state.historyFuture = [];
+          if (state.lockedSeats.includes(seatKeyA) || state.lockedSeats.includes(seatKeyB)) return;
 
           // Parse seat keys
           const [rowA, colA] = seatKeyA.split('-').map(Number);
@@ -728,6 +726,11 @@ export const useStore = create<AppState>()(
             (s: Seat) => s.position.row === rowB && s.position.col === colB
           );
           if (!seatA || !seatB) return;
+
+          // Snapshot current result for undo
+          const snapshot = structuredClone(current(state.result)) as OptimizationResult;
+          state.history = [...state.history, snapshot].slice(-20);
+          state.historyFuture = [];
 
           const studentIdA = seatA.student_id;
           const studentIdB = seatB.student_id;
@@ -745,6 +748,17 @@ export const useStore = create<AppState>()(
           if (studentIdB !== undefined) {
             state.result.student_positions[studentIdB] = { ...seatA.position };
           }
+
+          const evaluator = new ClassroomOptimizer(state.students, state.layoutDef);
+          evaluator.setWeights(state.weights);
+          evaluator.setConfig(state.config);
+          evaluator.setConstraints(state.constraints);
+          if (state.avoidRecentNeighbors) {
+            // The newest snapshot belongs to this chart, not an earlier run.
+            evaluator.setRotationAvoidance(getRecentPairPenalties(state.layoutDef, state.resultHistory.slice(1)), ROTATION_STRENGTH);
+          }
+          Object.assign(state.result, evaluator.evaluateSeating(seats));
+          state.changesSinceBackup += 1;
         }),
 
       // Undo / Redo

@@ -278,6 +278,18 @@ export class ClassroomOptimizer {
     this.pickRandom = makePickRandom(rng);
   }
 
+  /** Score an existing chart without searching or moving any student. */
+  evaluateSeating(seats: import('../types').Seat[]) {
+    const byPosition = new Map(seats.map(s => [`${s.position.row}-${s.position.col}`, s.student_id]));
+    const chrom = this.slots.map(s => byPosition.get(`${s.row}-${s.col}`) ?? '');
+    const students = new Map(this.students.map(s => [s.id, s]));
+    return {
+      fitness_score: this.fitness(chrom, students),
+      objective_scores: this.scoreObjectives(chrom, students),
+      unmet_hard_rules: this.countHardViolations(chrom) || undefined,
+    };
+  }
+
   // ── Main entry point ──────────────────────────────────────────────────────
 
   /**
@@ -537,8 +549,8 @@ export class ClassroomOptimizer {
     const studentPositions = this.buildStudentPositions(bestChrom);
     const objectiveScores = this.scoreObjectives(bestChrom, studentMap);
 
-    // Any hard rule still unmet means the required rules were contradictory or
-    // impossible. Reported via the dedicated `unmet_hard_rules` field so the UI
+    // Unmet rules describe this candidate only. Heuristic search cannot prove
+    // that no feasible arrangement exists. Reported via the dedicated `unmet_hard_rules` field so the UI
     // can show a localized message (rather than an English warning string).
     const unmetHard = this.countHardViolations(bestChrom);
 
@@ -806,6 +818,19 @@ export class ClassroomOptimizer {
         continue;
       }
 
+      // Front-row need
+      if (student.requires_front_row || student.has_mobility_issues) {
+        score +=
+          this.weights.special_needs * (slot.isFront ? 1 : -0.5);
+      }
+
+      // Quiet area: prefer perimeter (front, back, or edge cols)
+      if (student.requires_quiet_area) {
+        // Treat slots against a side wall or the front/back rows as "edge"
+        const isEdge = this.isAisleSlot(slot) || slot.isFront || slot.isBack;
+        score += this.weights.special_needs * (isEdge ? 0.5 : 0);
+      }
+
       if (neighbors.length === 0) continue;
 
       // Academic balance
@@ -828,19 +853,6 @@ export class ClassroomOptimizer {
       const sameG = neighbors.filter((n) => n.gender === student.gender).length;
       score +=
         this.weights.diversity * (1 - sameG / neighbors.length);
-
-      // Front-row need
-      if (student.requires_front_row || student.has_mobility_issues) {
-        score +=
-          this.weights.special_needs * (slot.isFront ? 1 : -0.5);
-      }
-
-      // Quiet area: prefer perimeter (front, back, or edge cols)
-      if (student.requires_quiet_area) {
-        // Treat slots against a side wall or the front/back rows as "edge"
-        const isEdge = this.isAisleSlot(slot) || slot.isFront || slot.isBack;
-        score += this.weights.special_needs * (isEdge ? 0.5 : 0);
-      }
 
       // Friend bonus
       if (student.friends_ids.length > 0) {

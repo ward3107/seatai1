@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useStore } from '../core/store';
 import { ClassroomOptimizer, ROTATION_STRENGTH } from '../core/optimizer';
+import { buildPinned } from '../utils/pinnedSeats';
 import { slotCount } from '../core/layouts';
 import { getRecentPairPenalties } from '../utils/rotationHistory';
 import type { RotationPeriod, RotationPlan } from '../types';
@@ -35,7 +36,7 @@ export function useRotationPlanner() {
   const generatePlan = useCallback(
     async (count: number, periodLabel: string): Promise<RotationPlan | null> => {
       const periods = Math.min(MAX_PERIODS, Math.max(MIN_PERIODS, Math.round(count)));
-      const { students, layoutDef, weights, config, constraints } = useStore.getState();
+      const { students, layoutDef, weights, config, constraints, lockedSeats, result: currentResult } = useStore.getState();
 
       if (students.length < 2) {
         setError('need-students');
@@ -47,6 +48,7 @@ export function useRotationPlanner() {
         return null;
       }
 
+      const pins = buildPinned(lockedSeats, currentResult, layoutDef);
       setError(null);
       setGenerating(true);
       setProgress({ current: 0, total: periods });
@@ -79,6 +81,7 @@ export function useRotationPlanner() {
           optimizer.setWeights(weights);
           optimizer.setConfig(config);
           optimizer.setConstraints(constraints);
+          optimizer.setPinned(new Map(pins));
           optimizer.setRotationAvoidance(penalties, history.length > 0 ? PLANNER_STRENGTH : 0);
           const result = optimizer.optimize();
 
