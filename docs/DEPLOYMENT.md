@@ -72,6 +72,7 @@ Verify:
 ```bash
 cd web
 npm test -- --run   # Vitest, no watch
+npm run benchmark   # Deterministic optimizer quality/performance guardrails
 npm run lint        # ESLint
 npx tsc --noEmit    # Typecheck
 ```

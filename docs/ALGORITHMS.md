@@ -344,20 +344,28 @@ After:  [1, 2, 7, 4, 5, 6, 3, 8]
 
 - **Space:** O(P × N) for storing population
 
-### Benchmarks
+### Regression benchmark
 
-| Students | Seats | Time (ms) | Fitness |
-|----------|-------|-----------|---------|
-| 15 | 15 | ~30 | 85-90 |
-| 30 | 30 | ~80 | 82-88 |
-| 50 | 50 | ~200 | 80-86 |
-| 100 | 100 | ~600 | 78-84 |
+Run `npm run benchmark` from the repository root. The deterministic harness
+checks three representative scenarios rather than publishing machine-specific
+speed claims:
 
-*Benchmarks on M1 MacBook Pro, default config*
+| Scenario | Students | Strategy | CI time ceiling |
+|----------|----------|----------|-----------------|
+| Small | 12 | Similar readiness | 500 ms |
+| Typical | 30 | Mixed attainment | 1,000 ms |
+| Large | 48 | Peer support | 2,000 ms |
+
+Each scenario must also preserve every student exactly once, satisfy its hard
+rules, keep all objective scores in the 0–100 range, and equal or improve a
+fixed sequential baseline. The ceilings intentionally leave headroom for
+shared CI runners while still catching order-of-magnitude regressions. The
+harness prints measured time, fitness, baseline fitness, and generations for
+trend inspection.
 
 ### Optimization Tips
 
-1. **Use web workers** for large classes (> 50 students)
+1. **Use web workers** for optimization and multi-period rotation planning
 2. **Reduce generations** for faster results (minor quality impact)
 3. **Lower population** for quick previews
 4. **Enable early stopping** - already default
