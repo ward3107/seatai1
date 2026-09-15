@@ -112,6 +112,22 @@ test.describe('Projects', () => {
   });
 });
 
+test.describe('Rotation planning', () => {
+  test('generates a complete multi-period plan in the background', async ({ page }) => {
+    await createSampleClass(page);
+    await page.locator('summary#sidebar-group-advanced').click();
+    await page.getByRole('button', { name: 'Term rotation planner', exact: true }).click();
+    await page.getByRole('button', { name: 'Generate rotation plan', exact: true }).click();
+
+    await expect.poll(
+      () => page.evaluate(() => window.__ZUSTAND_STORE__.getState().rotationPlan?.periods.length ?? 0),
+      { timeout: 30_000 },
+    ).toBe(4);
+    await expect(page.getByRole('button', { name: /Week 1/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Week 4/ })).toBeVisible();
+  });
+});
+
 test.describe('Export and import', () => {
   test('downloads a PDF of the generated layout', async ({ page }) => {
     await createSampleClass(page);
