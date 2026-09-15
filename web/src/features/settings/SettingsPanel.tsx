@@ -3,7 +3,8 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2, ShieldAlert } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
-import type { ObjectiveWeights } from '../../types';
+import type { ObjectiveWeights, SeatingStrategy } from '../../types';
+import SeatingStrategyPicker from './SeatingStrategyPicker';
 
 // Quick-pick priority profiles. Each sets all four objective weights at once
 // so teachers can pick an intent ("focus on behaviour") without reasoning
@@ -13,6 +14,7 @@ const WEIGHT_PRESETS: {
   labelKey: string;
   descKey: string;
   weights: ObjectiveWeights;
+  strategy?: SeatingStrategy;
 }[] = [
   {
     key: 'balanced',
@@ -31,6 +33,7 @@ const WEIGHT_PRESETS: {
     labelKey: 'settings.preset_academic',
     descKey: 'settings.preset_academic_desc',
     weights: { academic_balance: 0.5, behavioral_balance: 0.2, diversity: 0.15, special_needs: 0.15 },
+    strategy: 'mixed',
   },
   {
     key: 'inclusion',
@@ -112,6 +115,9 @@ export default function SettingsPanel() {
             </div>
           </div>
 
+          {/* Pedagogical intent — changes what "academic fit" means. */}
+          <SeatingStrategyPicker />
+
           {/* Objective Weights */}
           <div>
             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{t('settings.objective_weights')}</label>
@@ -126,7 +132,12 @@ export default function SettingsPanel() {
                   <button
                     key={preset.key}
                     type="button"
-                    onClick={() => setWeights({ ...preset.weights })}
+                    onClick={() => {
+                      setWeights({ ...preset.weights });
+                      if (preset.strategy) {
+                        setConfig({ ...config, seatingStrategy: preset.strategy, examMode: false });
+                      }
+                    }}
                     aria-pressed={active}
                     title={t(preset.descKey)}
                     className={

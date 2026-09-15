@@ -94,6 +94,7 @@ export default function StudentDetailPanel() {
   const result = useStore((s) => s.result);
   const layoutDef = useStore((s) => s.layoutDef);
   const constraints = useStore((s) => s.constraints);
+  const seatingStrategy = useStore((s) => s.config.seatingStrategy ?? 'mixed');
   const aiSettings = useStore((s) => s.aiSettings);
   const resultHistory = useStore((s) => s.resultHistory);
   const surveyedIds = useStore((s) => s.questionnaire.surveyedIds);
@@ -151,7 +152,7 @@ export default function StudentDetailPanel() {
   if (!open || !student) return null;
 
   const explanation = result
-    ? explainPlacement(student, result, layoutDef, students, constraints)
+    ? explainPlacement(student, result, layoutDef, students, constraints, seatingStrategy)
     : null;
 
   // True when this student filled out the Step-1 questionnaire — lets us show

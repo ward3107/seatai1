@@ -11,6 +11,7 @@ export default function MetricsPanel() {
   const students = useStore((s) => s.students);
   const constraints = useStore((s) => s.constraints);
   const layoutDef = useStore((s) => s.layoutDef);
+  const config = useStore((s) => s.config);
   const aiSettings = useStore((s) => s.aiSettings);
   const { t, uiLanguage } = useLanguage();
 
@@ -58,7 +59,11 @@ export default function MetricsPanel() {
 
   const metrics = [
     {
-      label: t('optimization.academic_balance'),
+      label: t(
+        config.examMode
+          ? 'optimization.academic_fit'
+          : `optimization.academic_${config.seatingStrategy ?? 'mixed'}`,
+      ),
       value: result.objective_scores.academic_balance,
       icon: BookOpen,
       color: 'blue',

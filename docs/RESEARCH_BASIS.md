@@ -101,20 +101,22 @@ teacher, safe egress), not a measured achievement boost.
 
 ---
 
-## 5. Mixing ability among neighbours (the `academic_balance` objective)
+## 5. Academic grouping purpose (the `academic_balance` objective)
 
-**What the app does:** rewards seating each student near neighbours whose
-academic level is close to theirs — i.e. avoids isolating very weak or very
-strong students and avoids hard ability‑grouping.
+**What the app does:** asks the teacher to choose the purpose rather than
+assuming one grouping pattern is universally best. `mixed` builds local
+neighbourhoods that resemble the class range, `similar` groups close current
+readiness for targeted instruction, and `peer_support` prefers moderate rather
+than extreme readiness gaps. The score means "fit for the selected purpose".
 
 **Evidence: Moderate, with an honest caveat.** Peer effects are real: lower‑
 achieving students tend to **gain** from being seated near higher‑achieving
 peers, and helping the weakest students can benefit the whole class. **But**
-reshuffling a class purely by prior achievement does **not** raise the class
-*average*, and pairing a top student directly with a very weak one can slightly
-lower the top student's outcome. SeatAI therefore aims for *balance* (avoiding
-extremes), which is the defensible reading of this literature — not a promise of
-higher average grades.
+reshuffling a class purely by prior achievement does **not** reliably raise the
+class *average*, and pairing a top student directly with a very weak one can be
+counterproductive. SeatAI therefore exposes these as teacher-controlled lesson
+strategies and avoids extreme peer-support gaps; it does not promise higher
+grades from seating alone.
 
 - Burke, M. A., & Sass, T. R. (2013). Classroom peer effects and student
   achievement. *Journal of Labor Economics, 31*(1), 51–82.

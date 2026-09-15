@@ -290,6 +290,7 @@ const defaultConfig: GeneticConfig = {
   mutationRate: 0.2,
   tournamentSize: 3,
   earlyStopPatience: 20,
+  seatingStrategy: 'mixed',
   // 3 independent starts strikes a good balance: noticeably better
   // results than 1 (especially on conflict-heavy classes), still
   // sub-second for typical 30-student rosters.
@@ -618,7 +619,10 @@ export const useStore = create<AppState>()(
       config: defaultConfig,
       setConfig: (config) =>
         set((state) => {
-          const scoringChanged = state.config.examMode !== config.examMode;
+          const scoringChanged =
+            state.config.examMode !== config.examMode ||
+            (state.config.seatingStrategy ?? 'mixed') !==
+              (config.seatingStrategy ?? 'mixed');
           state.config = config;
           if (scoringChanged) rescoreCurrentResult(state);
         }),

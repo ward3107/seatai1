@@ -8,6 +8,7 @@ import LayoutPanel from '../layout/LayoutPanel';
 import ConstraintsPanel from '../constraints/ConstraintsPanel';
 import WizardStudents from './WizardStudents';
 import WizardGenerate from './WizardGenerate';
+import SeatingStrategyPicker from '../settings/SeatingStrategyPicker';
 import type { OptimizerProgress } from '../../hooks/useOptimizer';
 
 interface Props {
@@ -148,6 +149,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('wizard.rules_title')}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('wizard.rules_desc')}</p>
             </div>
+            <SeatingStrategyPicker />
             <ConstraintsPanel defaultOpen />
           </div>
         )}
