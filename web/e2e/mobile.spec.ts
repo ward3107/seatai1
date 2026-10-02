@@ -14,7 +14,7 @@ async function closeSidebar(page: Page) {
 
 test('onboarding does not scroll horizontally', async ({ page }) => {
   await closeSidebar(page);
-  await expect(page.getByRole('button', { name: /get started/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /create a new class/i })).toBeVisible();
   await noOverflow(page);
 });
 
