@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { UserPlus, Sparkles, FileText, Users, LayoutGrid, ListChecks } from 'lucide-react';
+import { UserPlus, Sparkles, FileText, Users, LayoutGrid, ListChecks, UserRound } from 'lucide-react';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { SAMPLE_CLASSES } from '../../utils/sampleData';
@@ -54,8 +54,8 @@ export default function OnboardingView() {
   ];
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col items-center justify-center min-h-[60vh] px-2 py-8 text-center">
-      <div className="grid w-full items-center gap-10 lg:grid-cols-2 mb-10">
+    <div className="mx-auto flex max-w-6xl flex-col items-center justify-center px-1 py-5 sm:px-3 sm:py-8 text-center">
+      <div className="grid w-full items-center gap-8 lg:gap-14 lg:grid-cols-2 mb-10 sm:mb-14">
       {/* Hero */}
       <motion.div
         className="text-start"
@@ -63,30 +63,30 @@ export default function OnboardingView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <img src="/seatai-logo.svg" alt="" aria-hidden="true" className="w-20 h-20 rounded-2xl mb-5 shadow-lg" width={80} height={80} />
+        <img src="/seatai-logo.svg" alt="" aria-hidden="true" className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl mb-5 shadow-sm" width={80} height={80} />
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-800 dark:text-gray-100 mb-3">
+        <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight text-gray-800 dark:text-gray-100 mb-3">
           {t('homeRefresh.title')}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-base max-w-lg leading-relaxed">
           {t('homeRefresh.intro')}
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button type="button" onClick={() => startWizard()} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary-600 px-7 py-3 font-semibold text-white hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-600"><UserPlus size={20} aria-hidden="true" />{t('onboarding.get_started')}</button>
+          <button type="button" onClick={() => startWizard()} className="inline-flex min-h-12 items-center gap-2 rounded-2xl shadow-lg shadow-teal-900/10 transition-all hover:-translate-y-0.5 bg-primary-600 px-7 py-3 font-semibold text-white hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-600"><UserPlus size={20} aria-hidden="true" />{t('onboarding.get_started')}</button>
           <a href="#sample-classes" className="inline-flex min-h-12 items-center rounded-xl px-4 text-sm font-medium text-primary-700 underline underline-offset-4 dark:text-primary-300">{t('teacherFlow.tryDemo')}</a>
         </div>
         <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{t('teacherDesign.reassurance')}</p>
       </motion.div>
 
-      <motion.div className="relative rounded-[2rem] border border-teal-100 dark:border-teal-800 bg-gradient-to-br from-teal-50 via-sky-50 to-violet-50 dark:from-teal-950 dark:via-gray-900 dark:to-violet-950 p-6 sm:p-10 overflow-hidden"
+      <motion.div className="relative w-full max-w-lg mx-auto rounded-[2rem] border border-teal-100 dark:border-teal-800 bg-teal-50/70 dark:bg-gray-900 p-5 sm:p-7 overflow-hidden"
         initial={reducedMotion ? false : { opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}>
         <div className="flex items-center justify-between mb-5 text-sm font-semibold text-teal-900 dark:text-teal-100"><span>{t('homeRefresh.preview')}</span><Sparkles size={19} /></div>
-        <div className="rounded-2xl bg-white/90 dark:bg-gray-800 p-5 shadow-xl border border-white dark:border-gray-700">
+        <div className="rounded-2xl bg-white dark:bg-gray-800 p-4 sm:p-5 shadow-[0_12px_32px_-12px_rgba(15,118,110,0.25)] border border-teal-100 dark:border-gray-700">
           <div className="mx-auto mb-5 w-24 rounded-lg bg-amber-100 py-2 text-xs text-amber-900">{t('classroom.teacher_desk')}</div>
-          <div className="grid grid-cols-4 gap-3" aria-hidden="true">
-            {Array.from({ length: 16 }, (_, i) => <motion.div key={i} className="aspect-square rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
+          <div className="grid grid-cols-4 gap-x-3 gap-y-2" aria-hidden="true">
+            {Array.from({ length: 16 }, (_, i) => <motion.div key={i} className="h-14 sm:h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm"
               animate={reducedMotion ? {} : { y: [0, -5, 0] }} transition={{ duration: 2, delay: i * 0.08, ease: 'easeInOut' }}>
-              <span className={`h-7 w-7 sm:h-9 sm:w-9 rounded-full flex items-center justify-center text-white ${['bg-teal-500', 'bg-violet-400', 'bg-sky-400', 'bg-rose-400'][i % 4]}`}><Users size={15} /></span>
+              <span className={`h-7 w-7 sm:h-9 sm:w-9 rounded-full flex items-center justify-center text-white ${['bg-teal-500', 'bg-violet-400', 'bg-sky-400', 'bg-rose-400'][i % 4]}`}><UserRound size={16} /></span>
             </motion.div>)}
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function OnboardingView() {
           return (
             <li
               key={i}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 text-start"
+              className="relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 text-start shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="mb-3 flex items-center justify-between">
                 <span className={`w-10 h-10 rounded-lg flex items-center justify-center ${step.color}`}><Icon size={20} aria-hidden="true" /></span>
@@ -122,11 +122,11 @@ export default function OnboardingView() {
 
       {/* Primary CTA */}
       <motion.div
-        className="flex flex-col items-center gap-4"
+        className="w-full"
       >
 
         {/* Or pick a pre-built demo class */}
-        <div id="sample-classes" className="flex scroll-mt-6 flex-col items-center gap-3 rounded-2xl bg-sky-50 p-5 dark:bg-slate-800">
+        <div id="sample-classes" className="flex scroll-mt-6 flex-col sm:flex-row sm:justify-between items-center gap-4 rounded-2xl border border-sky-100 bg-sky-50/70 p-5 dark:border-gray-700 dark:bg-slate-800">
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {t('onboarding.or_try_a_sample')}
           </span>

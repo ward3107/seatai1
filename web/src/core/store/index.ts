@@ -967,7 +967,7 @@ export const useStore = create<AppState>()(
       setUiScale: (scale) =>
         set((state) => { state.uiScale = scale; }),
 
-      theme: 'system',
+      theme: 'light',
       setTheme: (theme) =>
         set((state) => { state.theme = theme; }),
 
@@ -1149,7 +1149,13 @@ export const useStore = create<AppState>()(
     })),
     {
       name: 'seatai-storage',
-      version: 1,
+      version: 2,
+      // The former default followed the OS. Move those installations to light;
+      // preserve an explicit dark choice. Future system choices remain intact.
+      migrate: (persisted) => {
+        const previous = (persisted ?? {}) as Partial<AppState>;
+        return { ...previous, theme: previous.theme === 'dark' ? 'dark' : 'light' };
+      },
       // Zustand's default merge is a shallow spread, so a persisted nested
       // object (questionnaire / config / weights / aiSettings) replaces the
       // default wholesale — any key we later ADD to a default is lost for
