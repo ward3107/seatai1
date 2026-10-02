@@ -13,6 +13,7 @@ for (const mode of ['rows', 'pairs'] as const) {
         s.setSidebarOpen(false);
         s.setUiLanguage('he'); s.setViewMode(mode); s.setZoomLevel(zoom);
       }, { mode, zoom });
+      await expect(page.locator('aside')).toHaveCSS('width', '0px');
       const keys = await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result!.layout.seats.filter((s) => s.student_id).slice(0, 2).map((s) => `${s.position.row}-${s.position.col}`));
       const source = page.locator(`[data-seat-key="${keys[0]}"]`);
       const target = page.locator(`[data-seat-key="${keys[1]}"]`);
@@ -38,6 +39,9 @@ for (const mode of ['rows', 'pairs'] as const) {
       expect(y).toBeLessThanOrEqual(g.y + g.height + 2);
       const b = (await target.boundingBox())!;
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
+      // Wait for the rendered drop target before releasing: WebKit can
+      // deliver synthetic pointer moves ahead of the next React paint.
+      await expect(target.getByText(/^[✓✕]$/)).toBeVisible();
       await page.mouse.up();
       await expect.poll(() => page.evaluate((key) => window.__ZUSTAND_STORE__.getState().result!.layout.seats.find((s) => `${s.position.row}-${s.position.col}` === key)!.student_id, keys[1])).toBe(original);
     });
