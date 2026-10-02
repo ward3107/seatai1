@@ -40,6 +40,8 @@ export const db = new SeatAIDatabase();
 const WRITE_DEBOUNCE_MS = 400;
 const pendingWrites = new Map<string, string>();
 const flushTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const activeWrites = new Set<Promise<void>>();
+let writesSuspended = false;
 
 async function flushKey(name: string): Promise<void> {
   const timer = flushTimers.get(name);
@@ -50,15 +52,12 @@ async function flushKey(name: string): Promise<void> {
   if (!pendingWrites.has(name)) return;
   const value = pendingWrites.get(name)!;
   pendingWrites.delete(name);
-  try {
-    await db.kv.put({ key: name, value });
-  } catch {
-    try {
-      localStorage.setItem(name, value);
-    } catch {
-      /* storage unavailable — best effort */
-    }
-  }
+  const write = (async () => {
+    try { await db.kv.put({ key: name, value }); }
+    catch { try { localStorage.setItem(name, value); } catch { /* storage unavailable */ } }
+  })();
+  activeWrites.add(write);
+  try { await write; } finally { activeWrites.delete(write); }
 }
 
 function flushAll(): void {
@@ -68,6 +67,26 @@ function flushAll(): void {
 /** Await all buffered writes (test hook / explicit flush). */
 export async function flushPendingWrites(): Promise<void> {
   await Promise.all([...pendingWrites.keys()].map((name) => flushKey(name)));
+  await Promise.all([...activeWrites]);
+}
+
+/** Delete only SeatAI data, after draining already-started writes. Reload after
+ * success; other tabs must be closed before starting this user-requested action. */
+export async function eraseDeviceData(): Promise<void> {
+  writesSuspended = true;
+  __clearPendingWrites();
+  try {
+    await Promise.all([...activeWrites]);
+    if (typeof indexedDB !== 'undefined') await db.kv.clear();
+    for (const storage of [localStorage, sessionStorage]) {
+      for (const key of Object.keys(storage)) {
+        if (key.startsWith('seatai-')) storage.removeItem(key);
+      }
+    }
+  } catch (error) {
+    writesSuspended = false;
+    throw error;
+  }
 }
 
 /** Drop buffered writes without persisting them (test isolation hook). */
@@ -107,6 +126,7 @@ export const dexieStorage: StateStorage = {
   },
 
   setItem: async (name: string, value: string): Promise<void> => {
+    if (writesSuspended) return;
     // Buffer the latest value and (re)arm a trailing flush; rapid successive
     // writes to the same key collapse into one Dexie put.
     pendingWrites.set(name, value);
@@ -122,9 +142,12 @@ export const dexieStorage: StateStorage = {
       clearTimeout(timer);
       flushTimers.delete(name);
     }
+    await Promise.all([...activeWrites]);
     try {
       await db.kv.delete(name);
     } catch {
+      // Fall back when IndexedDB is unavailable.
+    } finally {
       localStorage.removeItem(name);
     }
   },

@@ -1,5 +1,5 @@
 import { generateSlots, type LayoutDef } from './layouts';
-import { slotXExtent, isAisleSlot, isWindowSlot } from './seatGeometry';
+import { slotXExtent, isAisleSlot, isRoomWindowSlot } from './seatGeometry';
 import type { OptimizationResult, SeatingConstraints, Student } from '../types';
 
 /**
@@ -191,7 +191,7 @@ export function getConstraintStatus(
   for (const id of constraints.near_window_ids ?? []) {
     const idx = slotOfStudent.get(id);
     if (idx === undefined) continue;
-    if (!isWindowSlot(slots[idx].x, xMin, xMax)) {
+    if (!isRoomWindowSlot(slots[idx], xMin, xMax, layoutDef.roomFeatures)) {
       flag(slots[idx].row, slots[idx].col, 'seatstatus.window_violated', { name: nm(id) });
     }
   }

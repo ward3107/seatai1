@@ -83,7 +83,7 @@ describe('i18n Translation System', () => {
     });
   });
 
-  describe('detectDefaultLocale() - Browser language detection', () => {
+  describe('detectDefaultLocale() - Hebrew first-visit default', () => {
     const setLangs = (langs: string[] | undefined, single = 'en-US') => {
       vi.spyOn(navigator, 'languages', 'get').mockReturnValue(langs as readonly string[]);
       vi.spyOn(navigator, 'language', 'get').mockReturnValue(single);
@@ -94,19 +94,19 @@ describe('i18n Translation System', () => {
       expect(detectDefaultLocale()).toBe('he');
     });
 
-    it('skips unsupported languages and picks the first supported one', () => {
+    it('defaults to Hebrew despite a different supported browser language', () => {
       setLangs(['fr-FR', 'de-DE', 'ru-RU']);
-      expect(detectDefaultLocale()).toBe('ru');
+      expect(detectDefaultLocale()).toBe('he');
     });
 
-    it('falls back to English when nothing is supported', () => {
+    it('defaults to Hebrew for unsupported browser languages', () => {
       setLangs(['fr-FR', 'es-ES']);
-      expect(detectDefaultLocale()).toBe('en');
+      expect(detectDefaultLocale()).toBe('he');
     });
 
-    it('falls back to navigator.language when languages is empty', () => {
+    it('defaults to Hebrew when browser preferences are empty', () => {
       setLangs([], 'ar-EG');
-      expect(detectDefaultLocale()).toBe('ar');
+      expect(detectDefaultLocale()).toBe('he');
     });
   });
 

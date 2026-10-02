@@ -1,3 +1,4 @@
+import PhoneSurveyPanel from './PhoneSurveyPanel';
 import { useState } from 'react';
 import { ClipboardList, ChevronDown, ChevronUp, Play, RotateCcw, Smartphone, Printer } from 'lucide-react';
 import { useStore } from '../../core/store';
@@ -24,7 +25,7 @@ export default function QuestionnairePanel() {
   const resetQuestionnaire = useStore((s) => s.resetQuestionnaire);
   const setQuestionnaireOpen = useStore((s) => s.setQuestionnaireOpen);
 
-  const peerEnabled = peerSurveyEnabled ?? true;
+  const peerEnabled = peerSurveyEnabled ?? false;
 
   const total = students.length;
   const done = surveyedIds.filter((id) => students.some((s) => s.id === id)).length;
@@ -37,7 +38,7 @@ export default function QuestionnairePanel() {
         className="w-full p-4 flex items-center justify-between hover:bg-indigo-100/50 dark:hover:bg-indigo-900/40 transition-colors"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 text-start">
           <ClipboardList size={18} className="text-indigo-500 dark:text-indigo-400" />
           <span className="font-medium text-gray-700 dark:text-gray-300">{t('questionnaire.title')}</span>
           <span className="text-[10px] uppercase tracking-wide bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded-full font-semibold">
@@ -50,6 +51,8 @@ export default function QuestionnairePanel() {
       {open && (
         <div className="p-4 pt-0 space-y-3">
           <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">{t('questionnaire.intro')}</p>
+          <p className="text-xs rounded-lg bg-white dark:bg-gray-800 p-3 text-gray-700 dark:text-gray-300">{t('surveyReview.basis')}</p>
+          <p className="text-xs font-semibold">{t('surveyReview.pending', { count: students.filter(s => s.surveyAnswers && !s.surveyReviewed).length })}</p>
 
           {total === 0 ? (
             <p className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-200 dark:border-gray-700">
@@ -71,8 +74,13 @@ export default function QuestionnairePanel() {
                 </span>
               </label>
 
-              {/* Options */}
-              <div className="space-y-1.5">
+              <PhoneSurveyPanel />
+
+              <h3 className="pt-2 text-sm font-semibold text-gray-800 dark:text-gray-100">{t('teacherFlow.localSurvey')}</h3>
+              {/* Device-only options must not imply that they change phone links. */}
+              <details className="rounded-lg border border-indigo-200 p-3 dark:border-indigo-800">
+                <summary className="cursor-pointer text-xs font-medium">{t('teacherFlow.surveyOptions')}</summary>
+              <div className="mt-3 space-y-3">
                 <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                   <input
                     type="checkbox"
@@ -83,7 +91,7 @@ export default function QuestionnairePanel() {
                   {t('questionnaire.peer_enabled')}
                 </label>
                 {peerEnabled && (
-                  <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer pl-5">
+                  <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer ps-5">
                     <input
                       type="checkbox"
                       checked={skipPeers}
@@ -103,6 +111,7 @@ export default function QuestionnairePanel() {
                   {t('questionnaire.simple_mode')}
                 </label>
               </div>
+              </details>
 
               {/* Progress */}
               <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">

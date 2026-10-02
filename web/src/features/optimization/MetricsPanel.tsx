@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../core/store';
+import { externalAiAllowed } from '../../lib/schoolPolicy';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getDisplayScorePct, getScoreRating } from '../../utils/seatingUtils';
 import { aiSummarizeClass } from '../../utils/aiSummary';
@@ -161,7 +162,7 @@ export default function MetricsPanel() {
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           // objective_scores are already in [0, 100] — don't multiply again.
@@ -231,7 +232,7 @@ export default function MetricsPanel() {
 
       {/* Whole-class AI summary — only when the teacher has opted in to AI
           features in Settings. Sends aggregate facts, not the roster. */}
-      {aiSettings.enabled && aiSettings.apiKey && (
+      {externalAiAllowed() && aiSettings.enabled && aiSettings.apiKey && (
         <div className="mt-4 p-3 bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-accent-800 dark:text-accent-300 flex items-center gap-1.5">

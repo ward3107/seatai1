@@ -1,3 +1,5 @@
+> Implementation clarification (2026-10-02): For the custom student survey, see [QUESTIONNAIRE_METHOD.md](QUESTIONNAIRE_METHOD.md). Individual adapted items and product cutoffs are not independently validated. Historical claims below do not establish clinical cutoffs, causal seat-level predictions, or validation of this app. Student reports require teacher review.
+
 # SeatAI — Scientific Basis for the Seating Engine
 
 This document records the **research evidence behind every rule and

@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { useStore } from '../../core/store';
+import { externalAiAllowed } from '../../lib/schoolPolicy';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Settings, ChevronDown, ChevronUp, RotateCcw, Sparkles, Eye, EyeOff, Trash2, ShieldAlert } from 'lucide-react';
 import { sampleStudents } from '../../utils/sampleData';
@@ -320,7 +321,8 @@ export default function SettingsPanel() {
             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={aiSettings.enabled}
+                disabled={!externalAiAllowed()}
+                checked={externalAiAllowed() && aiSettings.enabled}
                 onChange={(e) =>
                   setAiSettings({ ...aiSettings, enabled: e.target.checked })
                 }
@@ -329,7 +331,8 @@ export default function SettingsPanel() {
               <span>{t('settings.ai_enable')}</span>
             </label>
 
-            {aiSettings.enabled && (
+            {!externalAiAllowed() && <p className="text-sm text-gray-600 dark:text-gray-300">{t('privacyHub.aiBlocked')}</p>}
+            {externalAiAllowed() && aiSettings.enabled && (
               <div className="space-y-2">
                 <div>
                   <label htmlFor={fieldId('api-key')} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">

@@ -37,11 +37,13 @@ describe('aiExplainPlacement', () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
+    vi.stubEnv('VITE_ALLOW_EXTERNAL_AI', 'true');
     fetchSpy = vi.fn();
     globalThis.fetch = fetchSpy as unknown as typeof fetch;
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     globalThis.fetch = originalFetch;
     vi.clearAllMocks();
   });

@@ -15,24 +15,9 @@ const translations: Record<UILanguage, Translations> = {
   ru,
 };
 
-const SUPPORTED: UILanguage[] = ['en', 'he', 'ar', 'ru'];
-
-/**
- * Best supported UI language for a fresh visitor, derived from the browser's
- * language preferences. Falls back to English when nothing matches (so the
- * app no longer defaults everyone to Hebrew). Matches on the primary subtag,
- * e.g. `en-US` → `en`, `he-IL` → `he`.
- */
+/** Fresh visitors start in Hebrew. Persisted user choices still take precedence. */
 export function detectDefaultLocale(): UILanguage {
-  if (typeof navigator === 'undefined') return 'en';
-  const prefs = navigator.languages?.length
-    ? navigator.languages
-    : [navigator.language];
-  for (const pref of prefs) {
-    const primary = pref?.toLowerCase().split('-')[0] as UILanguage | undefined;
-    if (primary && SUPPORTED.includes(primary)) return primary;
-  }
-  return 'en';
+  return 'he';
 }
 
 // Initialized to the detected language so the static `t` below is correct

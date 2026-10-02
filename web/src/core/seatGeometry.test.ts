@@ -1,8 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { slotXExtent, edgeMargin, isWindowSlot, isAisleSlot } from './seatGeometry';
+import { slotXExtent, edgeMargin, isWindowSlot, isAisleSlot, isRoomWindowSlot, isNearTeacherSlot, roomFeatureDistance } from './seatGeometry';
 import { generateSlots } from './layouts';
 
 describe('seatGeometry', () => {
+  it('uses actual window locations, including right and rear walls, and explicit absence', () => {
+    const features = [{ id: 'right', kind: 'window' as const, x: 1, y: 0.5 }];
+    expect(isRoomWindowSlot({ x: 0.9, y: 0.5 }, 0, 1, features)).toBe(true);
+    expect(isRoomWindowSlot({ x: 0.05, y: 0.5 }, 0, 1, features)).toBe(false);
+    expect(isRoomWindowSlot({ x: 0.9, y: 0.05 }, 0, 1, features)).toBe(false);
+    expect(isRoomWindowSlot({ x: 0, y: 0.5 }, 0, 1, [])).toBe(false);
+    expect(isRoomWindowSlot({ x: 0, y: 0.5 }, 0, 1)).toBe(true);
+    expect(isRoomWindowSlot({ x: 0.5, y: 0.9 }, 0, 1, [{ id: 'rear', kind: 'window', x: 0.5, y: 1 }])).toBe(true);
+  });
+  it('keeps board-facing front independent of a relocated teacher desk', () => {
+    const features = [{ id: 'desk', kind: 'teacher' as const, x: 0.8, y: 0.8 }];
+    expect(isNearTeacherSlot({ x: 0.8, y: 0.8, isFront: false }, features)).toBe(true);
+    expect(isNearTeacherSlot({ x: 0.5, y: 0, isFront: true }, features)).toBe(false);
+    expect(roomFeatureDistance({x:0,y:0}, 'door', features)).toBeNull();
+  });
   it('measures the x-extent of a slot set (and falls back to 0..1 when empty)', () => {
     expect(slotXExtent([{ x: 0.2 }, { x: 0.8 }, { x: 0.5 }])).toEqual({ xMin: 0.2, xMax: 0.8 });
     expect(slotXExtent([])).toEqual({ xMin: 0, xMax: 1 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sparkles, Check, X, RefreshCw } from 'lucide-react';
 import { useStore } from '../../core/store';
+import { externalAiAllowed } from '../../lib/schoolPolicy';
 import { useLanguage } from '../../hooks/useLanguage';
 import { aiSuggestRules, type RuleSuggestion } from '../../utils/aiSuggestRules';
 import type { Student } from '../../types';
@@ -26,7 +27,7 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
   const [error, setError] = useState<string | null>(null);
 
   const hasNotes = students.some((s) => s.notes && s.notes.trim().length > 0);
-  if (!aiSettings.enabled || !aiSettings.apiKey || !hasNotes) return null;
+  if (!externalAiAllowed() || !aiSettings.enabled || !aiSettings.apiKey || !hasNotes) return null;
 
   const nameOf = (id: string) => students.find((s: Student) => s.id === id)?.name ?? id;
 

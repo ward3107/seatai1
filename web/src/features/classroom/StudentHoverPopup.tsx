@@ -3,6 +3,8 @@ import { X, BookOpen, Users, Accessibility, Heart, AlertTriangle, Globe } from '
 import clsx from 'clsx';
 import { useEffect } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useStore } from '../../core/store';
+import { explainPlacement } from '../../utils/explainPlacement';
 import type { Student } from '../../types';
 
 /**
@@ -18,6 +20,18 @@ export default function StudentHoverPopup({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
+  const result = useStore((s) => s.result);
+  const layoutDef = useStore((s) => s.layoutDef);
+  const students = useStore((s) => s.students);
+  const constraints = useStore((s) => s.constraints);
+  const strategy = useStore((s) => s.config.seatingStrategy ?? 'mixed');
+  const setDetailsTarget = useStore((s) => s.setDetailsTarget);
+  const explanation = student && result
+    ? explainPlacement(student, result, layoutDef, students, constraints, strategy)
+    : null;
+  const reasons = explanation
+    ? [...explanation.reasons, ...explanation.weaknesses, ...explanation.strengths].slice(0, 4)
+    : [];
 
   // Escape closes the popup — keyboard users would otherwise be stuck
   // with it (the popup only disappears on mouse-leave or the X button).
@@ -72,6 +86,29 @@ export default function StudentHoverPopup({
               <X size={14} className="text-gray-400 dark:text-gray-400" />
             </button>
           </div>
+
+          {explanation && (
+            <div data-testid="placement-preview" className="mb-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 p-2.5 text-xs">
+              <h4 className="font-bold mb-1">{t('placementPreview.title')}</h4>
+              <p className="text-gray-600 dark:text-gray-300 mb-2">{t('placementPreview.context')}</p>
+              <ul className="space-y-1">
+                {reasons.map((reason, index) => (
+                  <li key={index} className={reason.tone === 'negative' ? 'text-rose-700 dark:text-rose-300' : ''}>
+                    {t(reason.key, reason.vars)}
+                  </li>
+                ))}
+              </ul>
+              <button className="mt-2 font-semibold text-primary-700 dark:text-primary-300 underline" onClick={() => { setDetailsTarget(student.id); onClose(); }}>
+                {t('placementPreview.details')}
+              </button>
+              <details className="mt-2">
+                <summary className="cursor-pointer font-semibold">{t('placementPreview.research')}</summary>
+                <p className="mt-1">{t('placementPreview.evidence')}</p>
+                <a className="block underline mt-1" href="https://doi.org/10.1111/j.1467-9604.2008.00375.x" target="_blank" rel="noreferrer">Wannarka &amp; Ruhl (2008)</a>
+                <a className="block underline mt-1" href="https://doi.org/10.1371/journal.pone.0255097" target="_blank" rel="noreferrer">Rohrer et al. (2021)</a>
+              </details>
+            </div>
+          )}
 
           {/* Scores — both in the same sage family, distinguished by
               icon and label rather than by two competing hues. */}

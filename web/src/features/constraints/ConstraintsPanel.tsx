@@ -77,7 +77,7 @@ function StudentSearch({
       <div className="relative">
         <Search
           size={12}
-          className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 pointer-events-none"
+          className="absolute start-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 pointer-events-none"
           aria-hidden="true"
         />
         <input
@@ -98,7 +98,7 @@ function StudentSearch({
           }}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          className="w-full text-xs pl-7 pr-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full text-xs ps-7 pe-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
       {open && filtered.length > 0 && (
@@ -116,7 +116,7 @@ function StudentSearch({
                   setOpen(false);
                   setQuery('');
                 }}
-                className="w-full text-left px-2 py-1.5 hover:bg-primary-50 focus:bg-primary-50 focus:outline-none"
+                className="w-full text-start px-2 py-1.5 hover:bg-primary-50 focus:bg-primary-50 focus:outline-none"
               >
                 {s.name}
               </button>
@@ -131,6 +131,7 @@ function StudentSearch({
 // ── Required (hard / soft) toggle ─────────────────────────────────────────────
 
 interface RequiredToggleProps {
+  label: string;
   isHard: boolean;
   onToggle: () => void;
   t: (key: string) => string;
@@ -139,12 +140,13 @@ interface RequiredToggleProps {
 /** Small switch that flips a rule category between "preferred" (soft) and
  *  "required" (hard). Required rules are enforced strongly and any that can't
  *  be met are reported after optimizing. */
-function RequiredToggle({ isHard, onToggle, t }: RequiredToggleProps) {
+function RequiredToggle({ label, isHard, onToggle, t }: RequiredToggleProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={isHard}
+      aria-label={`${label}: ${t('constraints.required')}`}
       onClick={onToggle}
       title={t(isHard ? 'constraints.required_on_hint' : 'constraints.required_off_hint')}
       className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
@@ -226,7 +228,7 @@ function PairPicker({
           <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">{description}</p>
         </div>
         {onToggleHard && (
-          <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
+          <RequiredToggle label={label} isHard={!!isHard} onToggle={onToggleHard} t={t} />
         )}
         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {pairs.length}
@@ -350,7 +352,7 @@ function RowPicker({
           <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">{description}</p>
         </div>
         {onToggleHard && (
-          <RequiredToggle isHard={!!isHard} onToggle={onToggleHard} t={t} />
+          <RequiredToggle label={label} isHard={!!isHard} onToggle={onToggleHard} t={t} />
         )}
         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {selectedIds.length}

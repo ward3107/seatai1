@@ -1,3 +1,4 @@
+import RoomPlan from '../layout/RoomPlan';
 import {
   DndContext,
   DragOverlay,
@@ -11,6 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import SeatCard from './SeatCard';
@@ -184,7 +186,6 @@ export default function ClassroomGrid() {
   );
   const handleSeatMouseLeave = useCallback(() => {
     setHoveredSeatKey(null);
-    setHoveredStudent(null);
   }, []);
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
@@ -457,14 +458,23 @@ export default function ClassroomGrid() {
         </div>
       )}
 
+      <RoomPlan />
+
       {/* DnD Context wraps the active layout renderer + drag overlay */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={(args) => {
+          if (!args.pointerCoordinates) return closestCenter(args);
+          const { x, y } = args.pointerCoordinates;
+          const key = document.elementFromPoint(x, y)?.closest('[data-seat-key]')?.getAttribute('data-seat-key');
+          const target = args.droppableContainers.find((container) => container.id === key && !container.disabled);
+          return target ? [{ id: target.id }] : [];
+        }}
         accessibility={{ announcements: dndAnnouncements }}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={() => { setActiveDragSeatKey(null); setOverSeatKey(null); }}
       >
         {isAbsoluteLayout ? (
           /* ── Free-positioning renderer for clusters / u-shape / circle ── */
@@ -500,20 +510,23 @@ export default function ClassroomGrid() {
           />
         )}
 
-        {/* Drag ghost */}
-        <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
+        {/* Fixed viewport coordinates must escape the backdrop-filter panel,
+            which otherwise becomes the overlay's containing block. */}
+        {createPortal(<DragOverlay style={{ pointerEvents: 'none' }} dropAnimation={null}>
           {activeDragStudent ? (
-            <DragGhost
+            <div data-testid="drag-ghost"><DragGhost
               student={activeDragStudent}
               variant={isAbsoluteLayout ? 'absolute' : 'rows'}
-            />
+            /></div>
           ) : null}
-        </DragOverlay>
+        </DragOverlay>, document.body)}
       </DndContext>
 
-      {/* The context menu, hover popup, and legends only render for the
+      {/* The context menu and legends only render for the
           row-based layouts — matching the pre-refactor behavior, where
           they lived inside the row branch. */}
+      {createPortal(<StudentHoverPopup student={activeDragSeatKey ? null : hoveredStudent} onClose={() => setHoveredStudent(null)} />, document.body)}
+
       {!isAbsoluteLayout && (
         <>
           {/* ── Context Menu ── */}
@@ -525,8 +538,6 @@ export default function ClassroomGrid() {
             onClose={() => setContextMenu(null)}
           />
 
-          {/* ── Student Hover Popup ── */}
-          <StudentHoverPopup student={hoveredStudent} onClose={() => setHoveredStudent(null)} />
 
           {/* Heat map legend */}
           <HeatMapLegend mode={heatMapMode} t={t} />

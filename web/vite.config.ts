@@ -41,7 +41,7 @@ export default defineConfig({
         display: 'standalone',
         scope: '/',
         start_url: '/',
-        orientation: 'landscape',
+        orientation: 'any',
         icons: [
           {
             src: 'seatai-logo.svg',

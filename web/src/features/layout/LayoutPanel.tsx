@@ -14,6 +14,7 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { slotCount, type LayoutDef, type CellKind } from '../../core/layouts';
 import LayoutThumbnail from '../../components/LayoutThumbnail';
+import RoomPlan from './RoomPlan';
 import LessonStyleCard from './LessonStyleCard';
 
 type LayoutType = LayoutDef['type'];
@@ -305,6 +306,12 @@ export default function LayoutPanel({ defaultOpen = false }: { defaultOpen?: boo
             </div>
           )}
 
+          {layoutDef.type === 'rows' && (
+            <p className="rounded-lg bg-sky-50 p-3 text-sm leading-relaxed text-sky-900 dark:bg-sky-900/30 dark:text-sky-100">
+              {t('settings.columns_hint')}
+            </p>
+          )}
+
           {/* Desk & obstacles — rows layout only (regular grid). */}
           {layoutDef.type === 'rows' && (
             <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-3">
@@ -470,6 +477,8 @@ export default function LayoutPanel({ defaultOpen = false }: { defaultOpen?: boo
               </ul>
             </div>
           )}
+
+          <RoomPlan editable />
 
           {!enough && (
             <p

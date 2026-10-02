@@ -20,20 +20,18 @@ export default {
         xs: '400px',
       },
       colors: {
-        // Sage — the calm, considered green of a well-kept classroom.
-        // Chosen over the previous saturated blue: teachers respond to
-        // warmth, not to tech-brand primaries.
+        // Teal actions; darker midtones keep white labels readable.
         primary: {
-          50: '#f0f7f3',
-          100: '#dbeae2',
-          200: '#b6d5c4',
-          300: '#87b6a1',
-          400: '#5b9581',
-          500: '#2f6f5e',
-          600: '#265a4c',
-          700: '#204a3f',
-          800: '#1c3d34',
-          900: '#17332c',
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#0f766e',
+          600: '#0d6b63',
+          700: '#115e59',
+          800: '#134e4a',
+          900: '#123f3b',
         },
         // Warm ochre — the color of graded-paper ink. Used sparingly,
         // for status highlights and callouts, never as a co-primary.

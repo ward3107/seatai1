@@ -11,6 +11,8 @@ const state = vi.hoisted(() => ({
 vi.mock('../../core/store', () => ({ useStore: (selector: (s: typeof state) => unknown) => selector(state) }));
 vi.mock('../../hooks/useLanguage', () => ({ useLanguage: () => ({ t: (key: string) => key, isRTL: state.rtl }) }));
 vi.mock('../students/StudentForm', () => ({ default: () => null }));
+vi.mock('./PasteRoster', () => ({ default: () => null }));
+vi.mock('../questionnaire/QuestionnairePanel', () => ({ default: () => null }));
 vi.mock('../students/StudentList', () => ({ default: () => null }));
 vi.mock('../import/CsvImport', () => ({ default: () => null }));
 vi.mock('../import/GoogleClassroomImport', () => ({ default: () => null }));
@@ -34,7 +36,7 @@ describe('WizardStudents', () => {
     fireEvent.keyDown(csv, { key: 'End' });
     expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'wizard.tab_sample' }));
     fireEvent.keyDown(screen.getByRole('tab', { name: 'wizard.tab_sample' }), { key: 'Home' });
-    expect(document.activeElement).toBe(manual);
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'pasteRoster.tab' }));
   });
 
   it.each([false, true])('honors sample replacement confirmation: %s', (confirmed) => {

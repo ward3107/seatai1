@@ -22,7 +22,7 @@ import type {
   LayoutType,
 } from '../types';
 import { generateSlots, type LayoutDef, type Slot } from './layouts';
-import { isAisleSlot, isWindowSlot } from './seatGeometry';
+import { isAisleSlot, isRoomWindowSlot, roomFeatureDistance, isNearTeacherSlot } from './seatGeometry';
 
 type Chromosome = string[]; // student IDs (or '' for empty) at each slot index
 
@@ -340,7 +340,7 @@ export class ClassroomOptimizer {
     return isAisleSlot(slot.x, this.xMin, this.xMax);
   }
   private isWindowSlot(slot: Slot): boolean {
-    return isWindowSlot(slot.x, this.xMin, this.xMax);
+    return isRoomWindowSlot(slot, this.xMin, this.xMax, this.layoutDef.roomFeatures);
   }
 
   setWeights(w: ObjectiveWeights) {
@@ -1038,6 +1038,20 @@ export class ClassroomOptimizer {
       }
     }
 
+    // Explicit room geometry adds bounded soft preferences, never overrides required rules.
+    for (const [id, index] of this.layoutDef.roomFeatures?.length ? posOf : []) {
+      const student = studentMap.get(id);
+      if (!student || index < 0) continue;
+      const slot = this.slots[index];
+      const doorDistance = roomFeatureDistance(slot, 'door', this.layoutDef.roomFeatures);
+      if (student.requires_quiet_area && doorDistance !== null) score += 0.25 * Math.min(1, doorDistance);
+      if (student.surveyReviewed && student.surveyAnswers?.teacherAttention !== null &&
+          student.surveyAnswers?.teacherAttention !== undefined && student.surveyAnswers.teacherAttention <= 2 &&
+          roomFeatureDistance(slot, 'teacher', this.layoutDef.roomFeatures) !== null) {
+        score += isNearTeacherSlot(slot, this.layoutDef.roomFeatures) ? 0.5 : 0;
+      }
+    }
+
     // Pair-based constraints
     for (const [a, b] of this.constraints.separate_pairs) {
       const sa = posOf.get(a) ?? -1;
@@ -1088,7 +1102,7 @@ export class ClassroomOptimizer {
       if (pos === -1) continue;
       const slot = this.slots[pos];
       if (this.isWindowSlot(slot)) score += 1;
-      else score -= 0.4 * (slot.x - this.xMin);
+      else score -= 0.4 * (roomFeatureDistance(slot, 'window', this.layoutDef.roomFeatures) ?? (slot.x - this.xMin));
     }
 
     // Peer mentor → mentee adjacency. Both must be adjacent; if they are,
@@ -1295,7 +1309,7 @@ export class ClassroomOptimizer {
       row: slot.row,
       col: slot.col,
       is_front_row: slot.isFront,
-      is_near_teacher: slot.isFront,
+      is_near_teacher: isNearTeacherSlot(slot, this.layoutDef.roomFeatures),
       x: slot.x,
       y: slot.y,
     };

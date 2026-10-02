@@ -1,3 +1,4 @@
+import { validSurveyAnswers } from '../questionnaire/validateAnswers';
 /** Runtime checks for portable, untrusted backup data. Unknown fields are
  * tolerated for forward compatibility; known fields must have safe shapes. */
 type Check = (value: unknown) => boolean;
@@ -23,6 +24,7 @@ const scores = object({ academic_balance: num, behavioral_balance: num, diversit
 const layoutType = oneOf('rows', 'clusters', 'u-shape', 'circle', 'custom-rows');
 const layout = object({
   ...dimensions, type: layoutType, customRowSizes: optional(array(integer)), clusterSize: optional(positive),
+  roomFeatures: optional(array(object({ id: str, kind: oneOf('door', 'window', 'teacher'), x: ratio, y: ratio }))),
   blockedCells: optional(array(object({ row: integer, col: integer, kind: oneOf('desk', 'obstacle') }))),
 });
 const student = object({
@@ -32,6 +34,7 @@ const student = object({
   friends_ids: strings, incompatible_ids: strings,
   special_needs: array(object({ type: str, description: optional(str), requires_front_seat: bool, requires_support_buddy: bool })),
   requires_front_row: bool, requires_quiet_area: bool, has_mobility_issues: bool, is_bilingual: bool,
+  surveyAnswers: optional(validSurveyAnswers), surveyReviewed: optional(bool), surveyIncludesPeers: optional(bool),
   age: optional(num), primary_language: optional(str), photo_url: optional(str), notes: optional(str),
 });
 const uniqueArray = (check: Check): Check => v => array(check)(v) &&

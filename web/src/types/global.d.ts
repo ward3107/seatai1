@@ -42,6 +42,9 @@ export interface Student {
    *  energy", "needs help with reading comprehension"). Persists with
    *  the student record. */
   notes?: string;
+  surveyAnswers?: import('../features/questionnaire/surveyMapping').SurveyAnswers;
+  surveyReviewed?: boolean;
+  surveyIncludesPeers?: boolean;
 }
 
 // Seating types
@@ -105,6 +108,7 @@ export interface OptimizationProvenance {
     customRowSizes?: number[];
     clusterSize?: number;
     blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
+    roomFeatures?: import('../core/layouts').RoomFeature[];
   };
   weights: ObjectiveWeights;
   config: GeneticConfig;
@@ -225,6 +229,7 @@ export interface ClassProject {
     customRowSizes?: number[];
     clusterSize?: number;
     blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
+    roomFeatures?: import('../core/layouts').RoomFeature[];
   };
   weights: ObjectiveWeights;
   config: GeneticConfig;
@@ -258,6 +263,7 @@ export interface ClassProject {
       customRowSizes?: number[];
       clusterSize?: number;
       blockedCells?: { row: number; col: number; kind: 'desk' | 'obstacle' }[];
+    roomFeatures?: import('../core/layouts').RoomFeature[];
     };
   }>;
   /** Whether the freshen-seating penalty was enabled for this class. */

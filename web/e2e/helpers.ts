@@ -10,6 +10,8 @@ declare global {
 export async function openApp(page: Page) {
   await page.goto('/');
   await page.waitForFunction(() => window.__ZUSTAND_STORE__?.persist.hasHydrated());
+  await expect(page.locator('header')).toBeVisible();
+  await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
   await page.evaluate(() => {
     const store = window.__ZUSTAND_STORE__;
     store.setState({ welcomeTipsDismissed: true, sidebarOpen: true, homeView: false });
@@ -35,6 +37,9 @@ export async function createSampleClass(page: Page, count = 8) {
 }
 
 export async function runOptimization(page: Page) {
+  if (await page.locator('aside').getAttribute('aria-hidden') === 'true') {
+    await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
+  }
   const button = page.getByTestId('optimize-button');
   await expect(button).toBeEnabled({ timeout: 15000 });
   await button.click();
@@ -57,6 +62,7 @@ export async function openProjects(page: Page) {
 }
 
 export async function getStudentNames(page: Page) {
+  await page.waitForFunction(() => window.__ZUSTAND_STORE__?.persist.hasHydrated());
   return page.evaluate(() => window.__ZUSTAND_STORE__.getState().students.map((s) => s.name));
 }
 

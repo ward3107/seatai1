@@ -20,6 +20,7 @@ interface Props {
 }
 
 const STEP_ICONS = [Users, LayoutGrid, ListChecks, Sparkles];
+const STEP_TONES = ['bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-100', 'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100', 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-100', 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100'];
 
 /**
  * Guided setup flow shown for a new/empty class (or on demand). Walks the
@@ -43,8 +44,10 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
   // screen-reader users are taken to (and hear) the new step, instead of
   // staying on the Next/Back button.
   const bodyRef = useRef<HTMLDivElement>(null);
+  const wizardRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    bodyRef.current?.focus();
+    wizardRef.current?.scrollIntoView({ block: 'start' });
+    bodyRef.current?.focus({ preventScroll: true });
   }, [step]);
 
   const stepLabels = [
@@ -66,7 +69,11 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div ref={wizardRef} className="mx-auto w-full max-w-3xl scroll-mt-4">
+      <div className="mb-5 flex items-center gap-3">
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold ${STEP_TONES[step]}`}>{step + 1}</span>
+        <div><p className="text-sm text-gray-500 dark:text-gray-400">{t('teacherDesign.progress', { step: step + 1, total: 4 })}</p><h1 className="text-xl font-bold text-gray-900 dark:text-white">{stepLabels[step]}</h1></div>
+      </div>
       {/* Stepper */}
       <nav aria-label={t('wizard.title')} className="mb-6">
         <ol className="flex items-center">
@@ -86,9 +93,9 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
                   aria-current={current ? 'step' : undefined}
                   aria-label={label}
                   className={clsx(
-                    'flex items-center gap-2 rounded-lg px-2 py-1 transition-colors',
+                    'flex min-h-11 items-center gap-2 rounded-lg px-2 py-1 transition-colors',
                     reachable ? 'cursor-pointer' : 'cursor-not-allowed',
-                    current && 'text-primary-600 dark:text-primary-300',
+                    current && STEP_TONES[i],
                     !current && done && 'text-gray-700 dark:text-gray-300',
                     !current && !done && 'text-gray-400 dark:text-gray-500',
                   )}
@@ -165,7 +172,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
       </div>
 
       {/* Footer nav */}
-      <div className="mt-4 flex items-center justify-between">
+      <div className="sticky bottom-0 mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
         <button
           type="button"
           onClick={step === 0 ? closeWizard : goBack}
@@ -192,7 +199,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
               disabled={!canAdvance}
               className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {step === 0 && !enoughStudents ? t('wizard.need_two_students') : t('wizard.next')}
+              {step === 0 && !enoughStudents ? t('wizard.need_two_students') : t('teacherDesign.next', { next: stepLabels[step + 1] })}
               <ChevronRight size={16} className="rtl:rotate-180" />
             </button>
           </div>

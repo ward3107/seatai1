@@ -129,7 +129,7 @@ export function DragGhost({
     return (
       <div
         className={clsx(
-          'w-[88px] min-h-[88px] rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl scale-105',
+          'w-[88px] min-h-[88px] rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl',
           student.gender === 'male'
             ? 'bg-blue-400'
             : student.gender === 'female'
@@ -151,7 +151,7 @@ export function DragGhost({
     <div
       className={clsx(
         'w-[88px] h-[88px] rounded-lg border-2 border-indigo-400 bg-white dark:bg-gray-800 shadow-2xl',
-        'flex flex-col items-center justify-center opacity-95 rotate-2 scale-110'
+        'flex flex-col items-center justify-center opacity-95'
       )}
     >
       <div

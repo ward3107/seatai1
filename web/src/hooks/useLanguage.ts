@@ -13,8 +13,8 @@ export const LANG_LABELS: Record<UILanguage, string> = {
 
 export const LANG_FONTS: Record<UILanguage, string> = {
   en: 'Inter, system-ui, sans-serif',
-  he: '"Heebo", "Arial Hebrew", "David", system-ui, sans-serif',
-  ar: '"Cairo", "Arabic Typesetting", "Simplified Arabic", system-ui, sans-serif',
+  he: '"Heebo", Arial, system-ui, sans-serif',
+  ar: '"Cairo", Arial, system-ui, sans-serif',
   ru: 'Inter, system-ui, sans-serif',
 };
 

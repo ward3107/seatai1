@@ -30,7 +30,7 @@ import type {
   SeatingStrategy,
 } from '../types';
 import { generateSlots, type LayoutDef } from '../core/layouts';
-import { slotXExtent, edgeMargin, isWindowSlot } from '../core/seatGeometry';
+import { slotXExtent, edgeMargin, isWindowSlot, isRoomWindowSlot, roomFeatureDistance, isNearTeacherSlot } from '../core/seatGeometry';
 
 export interface ExplanationLine {
   /** Translation key for the reason. */
@@ -90,7 +90,7 @@ export function explainPlacement(
   seatingStrategy: SeatingStrategy = 'mixed',
 ): PlacementExplanation {
   const slots = generateSlots(layoutDef);
-  const pos = result.student_positions[student.id];
+  const pos = result.layout.seats.find((seat) => seat.student_id === student.id)?.position;
 
   if (!pos) {
     // Student wasn't placed (too many students for the layout).
@@ -173,6 +173,16 @@ export function explainPlacement(
 
   // ── Direct placement reasons ────────────────────────────────────────────
   const reasons: ExplanationLine[] = [];
+  if (student.surveyReviewed && student.surveyAnswers?.teacherAttention !== null &&
+      student.surveyAnswers?.teacherAttention !== undefined && student.surveyAnswers.teacherAttention <= 2 &&
+      roomFeatureDistance(mySlot, 'teacher', layoutDef.roomFeatures) !== null) {
+    reasons.push({ key: isNearTeacherSlot(mySlot, layoutDef.roomFeatures) ? 'roomPlan.teacherMatched' : 'roomPlan.teacherUnmet', tone: isNearTeacherSlot(mySlot, layoutDef.roomFeatures) ? 'positive' : 'caution' });
+  }
+  const doorDistance = roomFeatureDistance(mySlot, 'door', layoutDef.roomFeatures);
+  if (student.requires_quiet_area && doorDistance !== null) {
+    reasons.push({ key: doorDistance <= 0.25 ? 'roomPlan.doorNoise' : 'roomPlan.doorQuiet', tone: doorDistance <= 0.25 ? 'caution' : 'neutral' });
+  }
+
 
   // Hard requirements driven by the student's profile.
   if (
@@ -210,7 +220,7 @@ export function explainPlacement(
   ) {
     reasons.push({ key: 'explain.aisle_by_rule', tone: 'positive' });
   }
-  if ((constraints.near_window_ids ?? []).includes(student.id) && isLeftEdge) {
+  if ((constraints.near_window_ids ?? []).includes(student.id) && isRoomWindowSlot(mySlot, xMin, xMax, layoutDef.roomFeatures)) {
     reasons.push({ key: 'explain.window_by_rule', tone: 'positive' });
   }
 
@@ -339,7 +349,7 @@ export function explainPlacement(
   }
   if (
     (constraints.near_window_ids ?? []).includes(student.id) &&
-    !isLeftEdge
+    !isRoomWindowSlot(mySlot, xMin, xMax, layoutDef.roomFeatures)
   ) {
     weaknesses.push({ key: 'explain.window_unmet', tone: 'negative' });
   }

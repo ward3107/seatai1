@@ -18,7 +18,7 @@ test.describe('Language switching', () => {
 
 test.describe('Onboarding', () => {
   test('starts the guided setup for a new class', async ({ page }) => {
-    await page.getByRole('button', { name: /get started/i }).click();
+    await page.getByRole('button', { name: /create a new class/i }).click();
     await expect(page.getByRole('navigation', { name: /set ?up your class/i })).toBeVisible();
   });
   test('restores a returning teacher roster', async ({ page }) => {
@@ -35,6 +35,7 @@ async function openStudentWizard(page: Page) {
   await expect(page.getByRole('navigation', { name: /set ?up your class/i })).toBeVisible();
 }
 async function addStudent(page: Page, name: string) {
+  await page.getByRole('tab', { name: 'Type them in', exact: true }).click();
   await page.getByRole('button', { name: 'Add Student', exact: true }).click();
   await page.getByPlaceholder('Student name', { exact: true }).fill(name);
   await page.getByRole('button', { name: 'Add Student', exact: true }).click();
@@ -106,6 +107,8 @@ test.describe('Projects', () => {
       store.getState().setStudents([]);
       store.setState({ currentProjectId: null });
     });
+    await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
+    await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
     await page.getByRole('button', { name: 'Load', exact: true }).click();
     await expect.poll(() => getStudentNames(page)).toHaveLength(8);
   });

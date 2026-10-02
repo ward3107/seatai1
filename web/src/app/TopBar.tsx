@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+const PrivacyHub = lazy(() => import('../features/privacy/PrivacyHub'));
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
 import { getDisplayScorePct, getScoreRating } from '../utils/seatingUtils';
@@ -39,8 +40,10 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
 
   const canUndo = history.length > 0;
   const canRedo = historyFuture.length > 0;
+  const workspace = students.length > 0 && !homeView && !wizardActive;
 
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const prefsRef = useRef<HTMLDivElement>(null);
 
   // Dismiss the prefs menu on outside click or Escape. Only attached while
@@ -89,7 +92,8 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         </button>
       )}
 
-      <div className="flex items-center gap-1" aria-label={t('app.history_controls')} role="group">
+      {!workspace && <span className="font-bold text-lg text-primary-800 dark:text-primary-200">SeatAI</span>}
+      {workspace && <div className="flex items-center gap-1" aria-label={t('app.history_controls')} role="group">
         <button
           onClick={undo}
           disabled={!canUndo}
@@ -108,25 +112,25 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         >
           <Redo2 size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
         </button>
-      </div>
+      </div>}
 
       {/* Spacer only grows once everything fits on one row (sm+). On
           phones it collapses so the controls sit right after undo/redo
           and wrap naturally. */}
-      <div className="hidden sm:block sm:flex-1" />
+      <div className={workspace ? 'hidden sm:block sm:flex-1' : 'flex-1'} />
 
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         {/* Student count is also shown in the sidebar header (visible on md+
             when the sidebar is docked), so surface the chip only on small
             screens where the sidebar is a hidden drawer. */}
-        <div className="hidden xs:flex md:hidden items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg">
+        {workspace && <div className="hidden xs:flex md:hidden items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <Users size={16} className="text-gray-500 dark:text-gray-400" />
           <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {students.length} {t('app.students')}
           </span>
-        </div>
+        </div>}
 
-        {result && (
+        {workspace && result && (
           <div
             className="flex items-center gap-2 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-lg"
             role="status"
@@ -141,7 +145,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           </div>
         )}
 
-        {result && (
+        {workspace && result && (
           <button
             onClick={onShowCompare}
             className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors"
@@ -152,7 +156,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           </button>
         )}
 
-        {result && (
+        {workspace && result && (
           <button
             onClick={onShowPrint}
             data-testid="print-button"
@@ -164,8 +168,10 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
           </button>
         )}
 
-        <ExportButton />
+        {workspace ? <ExportButton /> : <LanguageSelector />}
 
+        <button onClick={() => setPrivacyOpen(true)} className="min-h-11 rounded-lg px-2 text-xs text-gray-600 underline dark:text-gray-300">{t('privacyHub.title')}</button>
+        {privacyOpen && <Suspense fallback={null}><PrivacyHub onClose={() => setPrivacyOpen(false)} /></Suspense>}
         {/* Display preferences — collapsed into a single overflow menu so
             theme / text size / language / help stop competing with the
             primary actions for visual weight. */}
@@ -197,7 +203,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
               <div className="flex items-center justify-between px-1 py-1 gap-2 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2">
                 <ThemeToggle />
                 <TextSizeToggle />
-                <LanguageSelector />
+                {workspace && <LanguageSelector />}
               </div>
             </div>
           )}

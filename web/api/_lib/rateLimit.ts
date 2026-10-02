@@ -39,10 +39,11 @@ function clientIp(req: ApiRequest): string {
 export async function rateLimit(
   req: ApiRequest,
   res: ApiResponse,
+  options: { prefix?: string; maximum?: number } = {},
 ): Promise<boolean> {
-  const key = `lti:rl:${clientIp(req)}`;
+  const key = `${options.prefix ?? 'lti'}:rl:${clientIp(req)}`;
   const count = await incrWithTtl(key, WINDOW_MS);
-  if (count > MAX_PER_WINDOW) {
+  if (count > (options.maximum ?? MAX_PER_WINDOW)) {
     res.setHeader('Retry-After', String(Math.ceil(WINDOW_MS / 1000)));
     res.status(429).send('Too many requests');
     return false;

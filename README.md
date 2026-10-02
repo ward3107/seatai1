@@ -13,6 +13,12 @@ diversity, and special needs. The core app runs entirely in the browser — no
 sign-in and no internet required after first load. Optional LTI and AI features
 have clearly documented network data flows.
 
+## School pilot readiness
+
+Hebrew is the default language. The guided teacher workflow covers roster entry, room geometry, seating rules and review. Phone questionnaires are optional and disabled until the school notice and durable storage are configured.
+
+Read [the Israel school privacy review](docs/ISRAEL_SCHOOL_PRIVACY_REVIEW.md) before using real pupil data. This is not a legal certification or a validated diagnostic instrument. Named teacher authentication and tenant isolation are still needed for a shared multi-school service. The [survey API contract](docs/SURVEY_API.md) describes required server configuration; no cloud configuration is included in this code change.
+
 ## Features
 
 - **Multi-layout** — rows, clusters, U-shape, circle, and custom variable-row layouts

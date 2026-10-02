@@ -50,6 +50,15 @@ export interface LayoutDef {
    *  grid layouts ('rows', 'custom-rows'); ignored by the non-grid layouts
    *  where a (row, col) cell isn't meaningful. */
   blockedCells?: BlockedCell[];
+  /** Physical room coordinates, left to right / front to back, independent of UI direction. */
+  roomFeatures?: RoomFeature[];
+}
+
+export interface RoomFeature {
+  id: string;
+  kind: 'door' | 'window' | 'teacher';
+  x: number;
+  y: number;
 }
 
 export interface Slot {

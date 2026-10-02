@@ -8,7 +8,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
   emptyAnswers,
   answersFromStudent,
-  surveyToStudentPatch,
+  reviewedSurveyPatch,
   applyMentorPreference,
   MAX_SEATMATES,
   type SurveyAnswers,
@@ -39,7 +39,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
   const setConstraints = useStore((s) => s.setConstraints);
   const markStudentSurveyed = useStore((s) => s.markStudentSurveyed);
 
-  const peersOn = (peerSurveyEnabled ?? true) && !skipPeers;
+  const peerQuestionsEnabled = (peerSurveyEnabled ?? false) && !skipPeers;
   const sm = !!simpleMode;
 
   const [idx, setIdx] = useState(0);
@@ -55,13 +55,15 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
     if (studentMode) {
       setPicking(true);
     } else {
-      const first = students.findIndex((s) => !surveyedIds.includes(s.id));
+      const pending = students.findIndex((s) => s.surveyAnswers && !s.surveyReviewed);
+      const first = pending === -1 ? students.findIndex((s) => !surveyedIds.includes(s.id)) : pending;
       setIdx(first === -1 ? 0 : first);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const current = students[idx];
+  const peersOn = peerQuestionsEnabled && (studentMode || current?.surveyIncludesPeers !== false);
 
   // Pre-fill from the student's profile (teacher mode); student mode starts blank.
   useEffect(() => {
@@ -95,14 +97,16 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
 
   const save = () => {
     if (!current) return;
-    const patch = surveyToStudentPatch(current.id, answers);
-    // When peer questions are off, don't let the survey overwrite any
-    // teacher-set friendships with an empty list.
-    if (!peersOn) delete patch.friends_ids;
-    updateStudent(current.id, patch);
-
-    const next = applyMentorPreference(constraints, current.id, peersOn ? answers.helper : null);
-    if (next !== constraints) setConstraints(next);
+    // Student reports remain separate from teacher-confirmed needs.
+    updateStudent(current.id, { surveyAnswers: structuredClone(answers), surveyReviewed: !studentMode, surveyIncludesPeers: peersOn });
+    if (!studentMode) {
+      const patch = reviewedSurveyPatch(current, answers, peersOn);
+      updateStudent(current.id, patch);
+      if (peersOn) {
+        const next = applyMentorPreference(constraints, current.id, answers.helper);
+        if (next !== constraints) setConstraints(next);
+      }
+    }
 
     markStudentSurveyed(current.id);
 
@@ -491,7 +495,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                   )}
                   <button onClick={save} className="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 flex items-center gap-1.5">
                     {studentMode ? <Check size={16} /> : isLast ? <Check size={16} /> : <ChevronRight size={16} />}
-                    {studentMode ? t('questionnaire.submit') : isLast ? t('questionnaire.finish') : t('questionnaire.save_next')}
+                    {studentMode ? t('questionnaire.submit') : t('surveyReview.approve')}
                   </button>
                 </div>
               </div>

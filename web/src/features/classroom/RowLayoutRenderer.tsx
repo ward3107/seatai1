@@ -1,3 +1,4 @@
+import { useStore } from '../../core/store';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import clsx from 'clsx';
@@ -48,6 +49,7 @@ export default function RowLayoutRenderer({
   students,
 }: Props) {
   const { t } = useLanguage();
+  const hasRoomPlan = useStore(s => s.layoutDef.roomFeatures !== undefined);
 
   // ── Build row groups ──────────────────────────────────────────────────────
   // Memoized on `seats`: the parent re-renders on every seat hover, and this
@@ -70,7 +72,7 @@ export default function RowLayoutRenderer({
   return (
     <>
       {/* Teacher Desk */}
-      <div className="flex justify-center mb-6">
+      <div hidden={hasRoomPlan} className={hasRoomPlan ? 'hidden' : 'flex justify-center mb-6'}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,7 +96,7 @@ export default function RowLayoutRenderer({
           multiplies on top, so the whole class is visible by default
           (especially on phones) instead of clipping the last column. */}
       <FitZoom zoom={zoomLevel}>
-        <div ref={gridContainerRef} id="seating-grid-export" className="relative">
+        <div ref={gridContainerRef} dir={hasRoomPlan ? 'ltr' : undefined} id="seating-grid-export" className="relative">
           <div className="flex flex-col gap-3">
             {sortedRows.map(([rowIndex, sortedSeats]) => {
               // `sortedSeats` is already column-sorted by the memo above.

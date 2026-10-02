@@ -46,6 +46,14 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('dexieStorage (Dexie path)', () => {
+  it('removes a stale fallback copy so deleted data cannot reappear', async () => {
+    stubKvWithMap({ 'seatai-storage': 'new' });
+    localStorage.setItem('seatai-storage', 'old pupil data');
+    await dexieStorage.removeItem('seatai-storage');
+    expect(await dexieStorage.getItem('seatai-storage')).toBeNull();
+    expect(localStorage.getItem('seatai-storage')).toBeNull();
+  });
+
   it('round-trips set → get → remove', async () => {
     const store = stubKvWithMap();
     expect(await dexieStorage.getItem('seatai')).toBeNull();

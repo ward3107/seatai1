@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useStore } from '../../core/store';
+import { externalAiAllowed } from '../../lib/schoolPolicy';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
@@ -268,7 +269,7 @@ export default function StudentDetailPanel() {
               generated, a loading indicator while in flight, then the
               generated paragraph. Errors surface inline without
               breaking the rest of the drawer. */}
-          {aiSettings.enabled && aiSettings.apiKey && explanation && (
+          {externalAiAllowed() && aiSettings.enabled && aiSettings.apiKey && explanation && (
             <section className="bg-primary-50 dark:bg-slate-700 rounded-xl p-3 border border-primary-200 dark:border-slate-600">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide">

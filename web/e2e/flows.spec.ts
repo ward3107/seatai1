@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openApp } from './helpers';
 
 /**
  * End-to-end smoke of the three highest-value flows that had no reliable
@@ -73,7 +74,7 @@ function getState<T>(page: Page, read: (s: Record<string, unknown>) => T): Promi
 
 test.describe('Setup wizard', () => {
   test('loads advanced tools on demand and retains them when collapsed', async ({ page }) => {
-    await page.goto('/');
+    await openApp(page);
     await dismissTips(page);
     await seedClass(page, 8);
     const panels = page.getByTestId('advanced-panels');
@@ -91,7 +92,7 @@ test.describe('Setup wizard', () => {
   });
 
   test('advances through the steps and closes back to the workspace', async ({ page }) => {
-    await page.goto('/');
+    await openApp(page);
     await dismissTips(page);
     await seedClass(page, 8);
 
@@ -101,7 +102,7 @@ test.describe('Setup wizard', () => {
     expect(await getState(page, (s) => (s as { wizardActive: boolean }).wizardActive)).toBe(true);
 
     // Step forward (students are seeded, so the first step can advance).
-    await page.getByRole('button', { name: /^next$/i }).first().click();
+    await page.getByRole('button', { name: /^Next: Classroom$/i }).click();
     await expect.poll(() => getState(page, (s) => (s as { wizardStep: number }).wizardStep)).toBeGreaterThan(0);
 
     // Close returns to the normal workspace.
@@ -112,7 +113,7 @@ test.describe('Setup wizard', () => {
 
 test.describe('Optimize → render → print', () => {
   test('produces a result, renders the grid, and opens the print dialog', async ({ page }) => {
-    await page.goto('/');
+    await openApp(page);
     await dismissTips(page);
     await seedClass(page, 8);
 
@@ -137,7 +138,7 @@ test.describe('Optimize → render → print', () => {
   });
 
   test('locks and unlocks a seat from the keyboard (L)', async ({ page }) => {
-    await page.goto('/');
+    await openApp(page);
     await dismissTips(page);
     await seedClass(page, 8);
     const optimize = page.getByTestId('optimize-button');
@@ -162,7 +163,7 @@ test.describe('Optimize → render → print', () => {
 
 test.describe('CSV import', () => {
   test('imports a roster from a CSV file into the store', async ({ page }) => {
-    await page.goto('/');
+    await openApp(page);
 
     // The "Add students" section is open on an empty class; switch to the CSV
     // tab so the file input mounts, then upload through it (Playwright drives

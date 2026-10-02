@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, Suspense, lazy, useState, useRef } from 'react';
 import { useStore } from '../core/store';
 import { useOptimizer } from '../hooks/useOptimizer';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -27,6 +27,7 @@ const StudentDetailPanel = lazy(() => import('../features/students/StudentDetail
 const WelcomeTipsModal = lazy(() => import('../components/WelcomeTipsModal'));
 import ErrorBoundary from '../components/ErrorBoundary';
 import BackupReminderBanner from '../components/BackupReminderBanner';
+import ClassroomReview from '../features/optimization/ClassroomReview';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { useLtiImport } from '../hooks/useLtiImport';
@@ -67,6 +68,14 @@ function App() {
 
   const { wasmReady, isOptimizing, error, optimize, progress, cancel } = useOptimizer();
   const { t } = useLanguage();
+  const landing = homeView || students.length === 0;
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [landing, wizardActive]);
+  useEffect(() => {
+    if (landing) useStore.getState().setSidebarOpen(false);
+  }, [landing]);
   useTheme();
   // Import a roster handed over by the LTI launch (URL fragment), if any.
   useLtiImport();
@@ -102,9 +111,9 @@ function App() {
     const roomy = typeof window === 'undefined' || window.innerWidth >= 768;
     // Don't interrupt the guided setup wizard with the tips modal — it pops
     // once the teacher lands in the actual workspace.
-    if (roomy && !welcomeTipsDismissed && students.length > 0 && !wizardActive)
+    if (roomy && !welcomeTipsDismissed && students.length > 0 && !wizardActive && !homeView)
       setShowTips(true);
-  }, [welcomeTipsDismissed, students.length, wizardActive]);
+  }, [welcomeTipsDismissed, students.length, wizardActive, homeView]);
 
   // On small viewports, default the sidebar to closed so the user sees
   // the seating area first. Run once on mount only — afterwards the
@@ -181,7 +190,7 @@ function App() {
         <BackupReminderBanner />
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-3 sm:p-6">
+        <div ref={contentRef} className="flex-1 overflow-auto p-3 sm:p-6">
           {wizardActive ? (
             /* ── Guided setup wizard ── */
             <Suspense fallback={null}>
@@ -218,6 +227,7 @@ function App() {
             </>
           ) : (
             <>
+              <ClassroomReview />
               {/* Results disclosure: metrics + per-student explanations
                   collapse into a single bar by default so the seating map
                   dominates the viewport. Score stays visible in the header

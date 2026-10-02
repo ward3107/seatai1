@@ -1,3 +1,4 @@
+import { useStore } from '../../core/store';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import type { ReactElement, RefObject } from 'react';
@@ -44,10 +45,11 @@ export default function AbsoluteLayoutRenderer({
   students,
 }: Props) {
   const { t } = useLanguage();
+  const hasRoomPlan = useStore(s => s.layoutDef.roomFeatures !== undefined);
 
   return (
     <>
-      <div className="flex justify-center mb-4">
+      <div hidden={hasRoomPlan} className={hasRoomPlan ? 'hidden' : 'flex justify-center mb-4'}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

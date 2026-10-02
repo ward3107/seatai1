@@ -84,71 +84,14 @@ export default function ExportButton() {
     setLoading('csv');
     setOpen(false);
     try {
-      let rows: string[];
-      if (result) {
-        const studentMap = new Map(students.map((s) => [s.id, s]));
-        // One row per seat. Empty seats included so the export reflects the
-        // full classroom shape (especially for circle / cluster layouts).
-        rows = [
-          [
-            'row', 'col', 'name', 'gender', 'age', 'academic_level',
-            'academic_score', 'behavior_level', 'behavior_score',
-            'requires_front_row', 'requires_quiet_area', 'has_mobility_issues',
-            'special_needs', 'primary_language', 'is_bilingual',
-          ].map(csvCell).join(','),
-        ];
-        for (const seat of result.layout.seats) {
-          const s = seat.student_id ? studentMap.get(seat.student_id) : undefined;
-          rows.push(
-            [
-              seat.position.row + 1,
-              seat.position.col + 1,
-              s?.name,
-              s?.gender,
-              s?.age,
-              s?.academic_level,
-              s?.academic_score,
-              s?.behavior_level,
-              s?.behavior_score,
-              s?.requires_front_row ? 'yes' : '',
-              s?.requires_quiet_area ? 'yes' : '',
-              s?.has_mobility_issues ? 'yes' : '',
-              s?.special_needs.map((n) => n.type).join('; '),
-              s?.primary_language,
-              s?.is_bilingual ? 'yes' : '',
-            ].map(csvCell).join(','),
-          );
-        }
-      } else {
-        // Roster-only export — no seat positions yet. One row per student.
-        rows = [
-          [
-            'name', 'gender', 'age', 'academic_level', 'academic_score',
-            'behavior_level', 'behavior_score', 'requires_front_row',
-            'requires_quiet_area', 'has_mobility_issues', 'special_needs',
-            'primary_language', 'is_bilingual',
-          ].map(csvCell).join(','),
-        ];
-        for (const s of students) {
-          rows.push(
-            [
-              s.name,
-              s.gender,
-              s.age,
-              s.academic_level,
-              s.academic_score,
-              s.behavior_level,
-              s.behavior_score,
-              s.requires_front_row ? 'yes' : '',
-              s.requires_quiet_area ? 'yes' : '',
-              s.has_mobility_issues ? 'yes' : '',
-              s.special_needs.map((n) => n.type).join('; '),
-              s.primary_language,
-              s.is_bilingual ? 'yes' : '',
-            ].map(csvCell).join(','),
-          );
-        }
-      }
+      const studentMap = new Map(students.map(student => [student.id, student]));
+      // Share seating positions without exporting pupil profiles or health needs.
+      const rows = result
+        ? ['row,col,name', ...result.layout.seats.map(seat => [
+            seat.position.row + 1, seat.position.col + 1,
+            seat.student_id ? studentMap.get(seat.student_id)?.name : '',
+          ].map(csvCell).join(','))]
+        : ['name', ...students.map(student => csvCell(student.name))];
       const prefix = result ? 'seating-chart' : 'roster';
       downloadBlob(
         `${prefix}-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -294,6 +237,7 @@ export default function ExportButton() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
           <div role="menu" aria-label={t('export.title')} className="absolute end-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+            <p className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300 border-b">{t('privacyHub.export_hint')}</p>
             {/* PNG / PDF render the seating grid, so they only appear once an
                 optimization result exists. CSV / JSON always work. */}
             {result && (

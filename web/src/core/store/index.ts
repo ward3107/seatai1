@@ -405,6 +405,10 @@ export const useStore = create<AppState>()(
           for (const student of state.students) {
             student.friends_ids = student.friends_ids.filter((otherId) => otherId !== id);
             student.incompatible_ids = student.incompatible_ids.filter((otherId) => otherId !== id);
+            if (student.surveyAnswers) {
+              student.surveyAnswers.seatmates = student.surveyAnswers.seatmates.filter(otherId => otherId !== id);
+              if (student.surveyAnswers.helper === id) student.surveyAnswers.helper = null;
+            }
           }
           state.constraints.separate_pairs = state.constraints.separate_pairs.filter(
             ([a, b]) => a !== id && b !== id,
@@ -514,7 +518,8 @@ export const useStore = create<AppState>()(
             JSON.stringify(prev.customRowSizes ?? []) !==
               JSON.stringify(def.customRowSizes ?? []) ||
             JSON.stringify(prev.blockedCells ?? []) !==
-              JSON.stringify(def.blockedCells ?? []);
+              JSON.stringify(def.blockedCells ?? []) ||
+            JSON.stringify(prev.roomFeatures) !== JSON.stringify(def.roomFeatures);
           state.layoutDef = def;
           state.rows = def.rows;
           state.cols = def.cols;
@@ -661,7 +666,7 @@ export const useStore = create<AppState>()(
             state.activeRotationPeriodId = null;
           }
         }),
-      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false, peerSurveyEnabled: true, simpleMode: false, lessonStyle: null },
+      questionnaire: { consentAck: false, surveyedIds: [], skipPeers: false, peerSurveyEnabled: false, simpleMode: false, lessonStyle: null },
       questionnaireOpen: false,
       questionnaireStudentMode: false,
       setQuestionnaireOpen: (v, studentMode = false) =>
@@ -945,7 +950,7 @@ export const useStore = create<AppState>()(
         }),
 
       // UI Language
-      // Default to the visitor's browser language when it's one we support
+      // Fresh visitors start in Hebrew; saved user selections take precedence
       // (en / he / ar / ru), otherwise English. A returning user's saved
       // choice is restored on hydration (see onRehydrateStorage below).
       uiLanguage: detectDefaultLocale(),
@@ -1068,7 +1073,7 @@ export const useStore = create<AppState>()(
             consentAck: false,
             surveyedIds: [],
             skipPeers: false,
-            peerSurveyEnabled: true,
+            peerSurveyEnabled: false,
             simpleMode: false,
           };
           state.resultHistory = p.resultHistory ?? [];

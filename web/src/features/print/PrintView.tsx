@@ -29,6 +29,8 @@ export default function PrintView({ onClose }: Props) {
   // Privacy-friendly mode for sharing the chart with substitutes,
   // volunteers, or parents — replaces every name with a first-initial.
   const [anonymize, setAnonymize] = useState(false);
+  const [includeSensitive, setIncludeSensitive] = useState(false);
+  const showSensitive = includeSensitive && !anonymize;
   const displayName = (name: string) => (anonymize ? toInitials(name) : name);
 
   // Close on Escape
@@ -137,7 +139,7 @@ export default function PrintView({ onClose }: Props) {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col focus:outline-none"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-gray-200 print:hidden">
           <div>
             <h2 id="print-title" className="text-lg font-bold text-gray-800">{t('print.title')}</h2>
             <p className="text-sm text-gray-500">
@@ -145,7 +147,8 @@ export default function PrintView({ onClose }: Props) {
               {new Date().toLocaleDateString()}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={includeSensitive} disabled={anonymize} onChange={e => setIncludeSensitive(e.target.checked)} />{t('privacyHub.printSensitive')}</label>
             <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">
               <input
                 type="checkbox"
@@ -164,6 +167,7 @@ export default function PrintView({ onClose }: Props) {
             </button>
             <button
               onClick={onClose}
+              aria-label={t('common.close')}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X size={20} className="text-gray-500" />
@@ -207,7 +211,7 @@ export default function PrintView({ onClose }: Props) {
                   const py = typeof seat.position.y === 'number'
                     ? seat.position.y
                     : rows > 1 ? seat.position.row / (rows - 1) : 0.5;
-                  const hasNeeds = student && (
+                  const hasNeeds = showSensitive && student && (
                     student.has_mobility_issues ||
                     student.requires_front_row ||
                     student.special_needs.length > 0
@@ -236,7 +240,7 @@ export default function PrintView({ onClose }: Props) {
                           <span className="text-[11px] font-semibold text-gray-800 leading-tight">
                             {displayName(student.name)}
                           </span>
-                          {!anonymize && (
+                          {showSensitive && (
                             <span className="text-[9px] text-gray-400">
                               {student.academic_level === 'advanced' ? '▲' : student.academic_level === 'below_basic' ? '▼' : ''}
                               {student.has_mobility_issues ? ' ♿' : ''}
@@ -293,7 +297,7 @@ export default function PrintView({ onClose }: Props) {
                         // if the student was removed.
                         const student = sid ? studentMap.get(sid) ?? null : null;
                         const name = student ? student.name : sid;
-                        const hasNeeds = student && (
+                        const hasNeeds = showSensitive && student && (
                           student.has_mobility_issues ||
                           student.requires_front_row ||
                           student.special_needs.length > 0
@@ -317,7 +321,7 @@ export default function PrintView({ onClose }: Props) {
                                   <span className="text-xs font-semibold text-gray-800 leading-tight text-center">
                                     {displayName(name)}
                                   </span>
-                                  {student && !anonymize && (
+                                  {student && showSensitive && (
                                     <span className="text-[10px] text-gray-400">
                                       {student.academic_level === 'advanced' ? '▲'
                                         : student.academic_level === 'below_basic' ? '▼'
@@ -342,8 +346,8 @@ export default function PrintView({ onClose }: Props) {
             )}
 
             {/* Legend */}
-            <div className="mt-6 flex flex-wrap gap-4 justify-center text-xs text-gray-500">
-              {!anonymize && (
+            {showSensitive && <div className="mt-6 flex flex-wrap gap-4 justify-center text-xs text-gray-500">
+              {showSensitive && (
                 <>
                   <span>▲ {t('print.legend_advanced')}</span>
                   <span>▼ {t('print.legend_below_basic')}</span>
@@ -358,10 +362,10 @@ export default function PrintView({ onClose }: Props) {
                 />
                 {t('print.legend_special_needs')}
               </span>
-            </div>
+            </div>}
 
             {/* Warnings */}
-            {result.warnings.length > 0 && (
+            {showSensitive && result.warnings.length > 0 && (
               <div className="mt-4 p-3 border border-yellow-300 bg-yellow-50 rounded-lg">
                 <p className="text-xs font-semibold text-yellow-800 mb-1">{t('print.warnings')}</p>
                 {result.warnings.map((w, i) => (

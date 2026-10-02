@@ -2,6 +2,7 @@ import { Sparkles, Users, LayoutGrid, ListChecks, RefreshCw } from 'lucide-react
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { slotCount } from '../../core/layouts';
+import ConstraintWarnings from '../constraints/ConstraintWarnings';
 import type { OptimizerProgress } from '../../hooks/useOptimizer';
 
 interface Props {
@@ -74,6 +75,7 @@ export default function WizardGenerate({ wasmReady, isOptimizing, optimize, prog
         ))}
       </div>
 
+      <div className="w-full text-start"><ConstraintWarnings /></div>
       <button
         type="button"
         onClick={handleGenerate}

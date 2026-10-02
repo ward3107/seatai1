@@ -9,10 +9,13 @@ import StudentList from '../students/StudentList';
 import CsvImport from '../import/CsvImport';
 import GoogleClassroomImport from '../import/GoogleClassroomImport';
 import OneRosterImport from '../import/OneRosterImport';
+import QuestionnairePanel from '../questionnaire/QuestionnairePanel';
+import PasteRoster from './PasteRoster';
 
-type Tab = 'manual' | 'csv' | 'classroom' | 'oneroster' | 'sample';
+type Tab = 'paste' | 'manual' | 'csv' | 'classroom' | 'oneroster' | 'sample';
 
 const TABS: { key: Tab; icon: typeof PenLine; labelKey: string }[] = [
+  { key: 'paste', icon: Users, labelKey: 'pasteRoster.tab' },
   { key: 'manual', icon: PenLine, labelKey: 'wizard.tab_manual' },
   { key: 'csv', icon: Upload, labelKey: 'wizard.tab_csv' },
   { key: 'classroom', icon: GraduationCap, labelKey: 'wizard.tab_classroom' },
@@ -27,7 +30,7 @@ export default function WizardStudents() {
   const students = useStore((s) => s.students);
   const setStudents = useStore((s) => s.setStudents);
   const setLayoutDef = useStore((s) => s.setLayoutDef);
-  const [tab, setTab] = useState<Tab>('manual');
+  const [tab, setTab] = useState<Tab>('paste');
 
   function loadSampleClass(id: (typeof SAMPLE_CLASSES)[number]['id']) {
     const sample = SAMPLE_CLASSES.find((c) => c.id === id);
@@ -70,7 +73,7 @@ export default function WizardStudents() {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={clsx(
-              'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
+              'flex min-h-11 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
               tab === key
                 ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
@@ -84,6 +87,7 @@ export default function WizardStudents() {
 
       {/* Active method */}
       <div role="tabpanel" id={`${tabsId}-panel`} aria-labelledby={`${tabsId}-${tab}`} tabIndex={0} className="min-h-[8rem]">
+        {tab === 'paste' && <PasteRoster />}
         {tab === 'manual' && <StudentForm />}
         {tab === 'csv' && <CsvImport />}
         {tab === 'classroom' && <GoogleClassroomImport />}
@@ -105,6 +109,8 @@ export default function WizardStudents() {
           </div>
         )}
       </div>
+
+      {students.length > 0 && <QuestionnairePanel />}
 
       {/* Running roster — always visible so progress is clear regardless of method */}
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">

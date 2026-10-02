@@ -7,6 +7,7 @@
  * SSE streaming so callers can render text as it's generated.
  */
 
+import { externalAiAllowed } from '../lib/schoolPolicy';
 const ANTHROPIC_API_BASE = 'https://api.anthropic.com/v1/messages';
 
 export interface AnthropicRequest {
@@ -53,6 +54,8 @@ async function throwApiError(response: Response): Promise<never> {
  * way; with `onChunk` the text also arrives incrementally.
  */
 export async function anthropicMessage(req: AnthropicRequest): Promise<string> {
+  // Enforce here as well as in the UI: restored settings cannot bypass policy.
+  if (!externalAiAllowed()) throw new Error('External AI is disabled for this school deployment.');
   const apiKey = req.apiKey.trim();
   if (!apiKey) throw new Error('Missing API key.');
 

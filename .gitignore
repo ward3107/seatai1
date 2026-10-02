@@ -47,6 +47,7 @@ temp/
 
 # Playwright e2e artifacts
 web/playwright-report/
+web/playwright-report-pwa/
 web/test-results/
 playwright-report/
 test-results/

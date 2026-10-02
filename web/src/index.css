@@ -1,5 +1,4 @@
-/* Hebrew & Arabic web fonts — loaded only when used */
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap');
+/* Use device fonts: opening a pupil questionnaire makes no font-provider request. */
 
 /* Z-Index Scale */
 @import './styles/z-index.css';
@@ -22,10 +21,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  /* Light, airy brand gradient (indigo-50 → violet-50). The old saturated
-     purple washed out dark panel text and any content sitting directly on
-     the background (e.g. the onboarding heading). */
-  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  /* Quiet page canvas; task colors live on actions and step markers. */
+  background: #f5f9fc;
   background-attachment: fixed;
 }
 
