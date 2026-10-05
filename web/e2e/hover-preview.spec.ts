@@ -21,15 +21,17 @@ test('leaving a student dismisses its preview and moving between students keeps 
   await page.keyboard.press('Escape'); await expect(popup).toHaveCount(0);
 });
 
-test('preview controls remain reachable, fit the viewport and close when the pointer leaves', async ({page}) => {
+test('preview controls remain reachable, avoid seats, fit the viewport and close when the pointer leaves', async ({page}) => {
   const seat = page.locator('[data-seat-key]').filter({hasText:/Student/}).first();
   const popup = page.getByTestId('student-hover-popup');
   await seat.hover(); await expect(popup).toBeVisible();
   await popup.getByRole('button',{name:'Open full analysis',exact:true}).hover();
   await page.waitForTimeout(350);
   await expect(popup).toBeVisible();
+  await popup.getByText('What informs these considerations?',{exact:true}).click();
   await expect.poll(()=>popup.evaluate(node=>{
-    const r=node.getBoundingClientRect();return r.left>=0 && r.top>=0 && r.right<=innerWidth && r.bottom<=innerHeight;
+    const r=node.getBoundingClientRect();return r.left>=0 && r.top>=0 && r.right<=innerWidth && r.bottom<=innerHeight &&
+      Array.from(document.querySelectorAll('[data-seat-key]')).every(seat=>{const s=seat.getBoundingClientRect();return r.right<=s.left || r.left>=s.right || r.bottom<=s.top || r.top>=s.bottom;});
   })).toBe(true);
   await page.screenshot({path:test.info().outputPath('student-preview.png')});
   await page.mouse.move(1,1); await expect(popup).toHaveCount(0);
@@ -46,4 +48,19 @@ test('dragging, canceling and scrolling cannot leave an old preview behind', asy
   await page.keyboard.press('Escape');await page.mouse.up();await expect(popup).toHaveCount(0);
   await page.mouse.move(1,1);await seat.hover();await expect(popup).toBeVisible();
   await page.mouse.wheel(0,100);await expect(popup).toHaveCount(0);
+});
+
+test('a narrow room keeps an expanded preview outside the seats without clipping',async({page})=>{
+  await page.setViewportSize({width:700,height:900});
+  await page.evaluate(()=>{const s=window.__ZUSTAND_STORE__.getState();s.setLayoutDef({...s.layoutDef,roomFeatures:[{id:'window',kind:'window',x:0,y:0.5}]});});
+  const seat=page.locator('[data-seat-key]').filter({hasText:/Student/}).first();
+  await seat.hover();
+  const popup=page.getByTestId('student-hover-popup');await expect(popup).toBeVisible();
+  await popup.getByText('What informs these considerations?',{exact:true}).click();
+  await expect.poll(()=>popup.evaluate(node=>{
+    const p=node.getBoundingClientRect();const chart=document.getElementById('seating-grid-export')!.getBoundingClientRect();
+    return p.left>=0 && p.right<=innerWidth && p.top>=0 && p.bottom<=innerHeight &&
+      (p.bottom<=Math.max(chart.top,document.querySelector('header')!.getBoundingClientRect().bottom) || p.top>=chart.bottom);
+  })).toBe(true);
+  await page.mouse.move(1,899);await expect(popup).toHaveCount(0);
 });

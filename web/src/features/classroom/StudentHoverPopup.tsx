@@ -8,7 +8,7 @@ import { explainPlacement } from '../../utils/explainPlacement';
 import type { Student } from '../../types';
 
 /**
- * Mouse preview next to its seat, bounded by the viewport. The pointer can
+ * Mouse preview outside the seating hit area, bounded by the viewport. The pointer can
  * enter its controls; leaving both the seat and preview dismisses it.
  */
 export default function StudentHoverPopup({
@@ -25,12 +25,33 @@ export default function StudentHoverPopup({
   onPointerLeave: () => void;
 }) {
   const popupRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ left: 8, top: 8 });
+  const [position, setPosition] = useState({ left: 8, top: 8, maxHeight: 'calc(100vh - 16px)' });
   useLayoutEffect(() => {
     if (!student || !anchor || !popupRef.current) return;
-    const { width, height } = popupRef.current.getBoundingClientRect();
-    const left = anchor.right + 8 + width <= innerWidth - 8 ? anchor.right + 8 : anchor.left - width - 8;
-    setPosition({left: Math.max(8, Math.min(left, innerWidth - width - 8)), top: Math.max(8, Math.min(anchor.top, innerHeight - height - 8))});
+    const popup = popupRef.current;
+    const place = () => {
+      const width = popup.getBoundingClientRect().width;
+      const headerBottom = document.querySelector('header')?.getBoundingClientRect().bottom ?? 56;
+      // The fixed header clips scrolled seats. On narrow screens use the
+      // space above/below the chart, with scrollable content, rather than
+      // covering neighboring students with a full-height overlay.
+      const visibleTop = Math.max(anchor.top, headerBottom);
+      const right = anchor.right + 8 + width <= innerWidth - 8;
+      const left = anchor.left - width - 8 >= 8;
+      if (right || left) {
+        const height = Math.min(popup.scrollHeight, innerHeight - 16);
+        setPosition({left: right ? anchor.right + 8 : anchor.left - width - 8, top:Math.max(8,Math.min(visibleTop,innerHeight-height-8)), maxHeight:`${innerHeight-16}px`});
+      } else {
+        const above = Math.max(40,visibleTop-16);
+        const below = Math.max(0,innerHeight-anchor.bottom-16);
+        const useAbove = above >= below;
+        setPosition({left:Math.max(8,Math.min(anchor.left,innerWidth-width-8)),top:useAbove?8:anchor.bottom+8,maxHeight:`${useAbove?above:below}px`});
+      }
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(popup);
+    return () => observer.disconnect();
   }, [student, anchor]);
   const { t } = useLanguage();
   const result = useStore((s) => s.result);

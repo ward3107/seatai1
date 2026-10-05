@@ -231,7 +231,7 @@ export default function ClassroomGrid() {
       keepHoverOpen();
       setHoveredSeatKey(sk);
       setHoveredStudent(studentBySeatKey.get(sk) ?? null);
-      setHoverAnchor(gridContainerRef.current?.querySelector(`[data-seat-key="${sk}"]`)?.getBoundingClientRect() ?? null);
+      setHoverAnchor(gridContainerRef.current?.getBoundingClientRect() ?? null);
     },
     [studentBySeatKey, activeDragSeatKey, keepHoverOpen],
   );
