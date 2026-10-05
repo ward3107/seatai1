@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import type { LayoutDef, RoomFeature } from '../../core/layouts';
+import { roomFeatureDistance } from '../../core/seatGeometry';
 import { featurePosition, featureWall, nextFeaturePosition, onWall, roomGeometry, teacherFits, wallPositionAvailable, SEAT_WIDTH, SEAT_HEIGHT } from './roomGeometry';
 
 describe('physical room geometry', () => {
+  it('renders legacy wall items at the same coordinates used by scoring and overlap checks', () => {
+    const geometry = roomGeometry({type:'rows',rows:4,cols:8});
+    for (const kind of ['window','door'] as const) {
+      for (const point of [{x:0.5,y:0.5},{x:0.8,y:0.5},{x:0,y:0},{x:0.5,y:0.9}]) {
+        const feature = {id:'legacy',kind,...point};
+        const rendered = featurePosition(kind,point.x,point.y,geometry);
+        expect(roomFeatureDistance(rendered,kind,[feature])).toBe(0);
+        expect(wallPositionAvailable([feature],rendered)).toBe(false);
+      }
+    }
+  });
   for (const type of ['rows', 'custom-rows', 'circle', 'u-shape', 'clusters'] as const) {
     it(`${type}: keeps seats inside the room and apart in a large class`, () => {
       const geometry = roomGeometry({ type, rows: 5, cols: 8, customRowSizes: [3, 8, 6, 8, 4] });

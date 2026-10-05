@@ -1,6 +1,7 @@
 import { generateSlots, type LayoutDef, type RoomFeature, type Slot } from '../../core/layouts';
+import { featureWall, onWall, wallFeaturePosition, type Wall } from '../../core/seatGeometry';
 
-export type Wall = 'left' | 'right' | 'front' | 'back';
+export { featureWall, onWall, type Wall } from '../../core/seatGeometry';
 export const SEAT_WIDTH = 84;
 export const SEAT_HEIGHT = 124;
 export interface RoomGeometry {
@@ -40,31 +41,24 @@ export function roomGeometry(layout: LayoutDef): RoomGeometry {
   };
 }
 
-export function featureWall(feature: Pick<RoomFeature, 'x' | 'y'>): Wall {
-  const distances = [feature.x, 1 - feature.x, feature.y, 1 - feature.y];
-  return (['left', 'right', 'front', 'back'] as const)[distances.indexOf(Math.min(...distances))];
-}
-export function onWall(wall: Wall, position: number) {
-  const p = clamp(position, 0.08, 0.92);
-  return wall === 'left' ? { x: 0, y: p } : wall === 'right' ? { x: 1, y: p }
-    : wall === 'front' ? { x: p, y: 0 } : { x: p, y: 1 };
-}
 export function featurePosition(kind: RoomFeature['kind'], x: number, y: number, geometry: RoomGeometry) {
   if (kind === 'teacher') return {
     x: clamp(x, 60 / geometry.width, 1 - 60 / geometry.width),
     y: clamp(y, 24 / geometry.height, 1 - 24 / geometry.height),
   };
-  const wall = featureWall({ x: clamp(x), y: clamp(y) });
-  return onWall(wall, wall === 'left' || wall === 'right' ? y : x);
+  return wallFeaturePosition({ x, y });
 }
 export function teacherFits(position: { x: number; y: number }, geometry: RoomGeometry) {
   return [...geometry.seats, ...geometry.decorations].every(seat => Math.abs(seat.left - position.x * geometry.width) >= 124 ||
     Math.abs(seat.top - position.y * geometry.height) >= 96);
 }
 export function wallPositionAvailable(features: RoomFeature[], position: { x: number; y: number }, excludeId?: string) {
-  return features.every(feature => feature.id === excludeId || feature.kind === 'teacher' ||
-    featureWall(feature) !== featureWall(position) ||
-    Math.hypot(feature.x - position.x, feature.y - position.y) >= 0.14);
+  return features.every(feature => {
+    const point = wallFeaturePosition(feature);
+    return feature.id === excludeId || feature.kind === 'teacher' ||
+      featureWall(point) !== featureWall(position) ||
+      Math.hypot(point.x - position.x, point.y - position.y) >= 0.14;
+  });
 }
 export function nextFeaturePosition(kind: RoomFeature['kind'], features: RoomFeature[], geometry: RoomGeometry) {
   if (kind === 'teacher') return { x: 0.5, y: 64 / geometry.height };

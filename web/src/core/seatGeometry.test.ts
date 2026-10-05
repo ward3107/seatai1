@@ -3,6 +3,18 @@ import { slotXExtent, edgeMargin, isWindowSlot, isAisleSlot, isRoomWindowSlot, i
 import { generateSlots } from './layouts';
 
 describe('seatGeometry', () => {
+  it('scores legacy interior windows and doors at their displayed wall positions', () => {
+    const features = [
+      { id: 'old-window', kind: 'window' as const, x: 0.5, y: 0.5 },
+      { id: 'old-door', kind: 'door' as const, x: 0.8, y: 0.5 },
+      { id: 'corner-window', kind: 'window' as const, x: 0, y: 0 },
+    ];
+    expect(isRoomWindowSlot({x:0,y:0.5},0,1,features)).toBe(true);
+    expect(isRoomWindowSlot({x:0.5,y:0.5},0,1,features)).toBe(false);
+    expect(roomFeatureDistance({x:1,y:0.5},'door',features)).toBe(0);
+    expect(roomFeatureDistance({x:0,y:0.08},'window',features)).toBe(0);
+    expect(features[0]).toEqual({id:'old-window',kind:'window',x:0.5,y:0.5});
+  });
   it('uses actual window locations, including right and rear walls, and explicit absence', () => {
     const features = [{ id: 'right', kind: 'window' as const, x: 1, y: 0.5 }];
     expect(isRoomWindowSlot({ x: 0.9, y: 0.5 }, 0, 1, features)).toBe(true);
