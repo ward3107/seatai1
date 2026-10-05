@@ -12,6 +12,15 @@ for (const phone of [false, true]) {
     const seats = page.locator('[data-seat-key]');
     await expect(seats.filter({ hasText: 'Alice' })).toHaveCount(1);
     await expect(page.getByTestId('optimize-button')).toBeEnabled();
+    await page.getByRole('button', { name: 'פתח סרגל צד', exact: true }).click();
+    await page.getByRole('tab', { name: 'החדר', exact: true }).click();
+    await page.locator('button[aria-controls="layout-panel-body"]').click();
+    const editor = page.getByTestId('room-plan-editor');
+    await editor.getByRole('button', { name: '+ דלת', exact: true }).click();
+    await editor.getByRole('button', { name: '+ חלון', exact: true }).click();
+    await page.locator('aside').getByRole('button', { name: 'סגור סרגל צד', exact: true }).click();
+    await expect(seats.filter({ hasText: 'Alice' })).toHaveCount(1);
+    await expect(page.locator('#seating-grid-export [data-room-feature]')).toHaveCount(2);
     const disclosure = page.getByRole('button', { name: /תוצאות מיטוב/ });
     if (await disclosure.getAttribute('aria-expanded') === 'false') await disclosure.click();
     await expect(page.locator('#results-disclosure-body')).toContainText('התנהגות');
@@ -30,6 +39,7 @@ for (const phone of [false, true]) {
     await page.waitForTimeout(650); // wait beyond the 400ms IndexedDB debounce
     await page.reload();
     await expect(page.locator('[data-seat-key]').nth(0)).toHaveAttribute('aria-label', newLabel!);
+    await expect(page.locator('#seating-grid-export [data-room-feature]')).toHaveCount(2);
     expect(errors).toEqual([]);
   });
 }

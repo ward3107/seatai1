@@ -54,14 +54,16 @@ test('room plan persists through reload and changing its geometry clears stale r
     store.setLayoutDef({...store.layoutDef, roomFeatures:[{ id:'w',kind:'window',x:1,y:0.5 },{id:'d',kind:'door',x:0,y:0.8},{id:'t',kind:'teacher',x:0.8,y:0.1}]});
     store.setSidebarOpen(false);
   });
-  expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result)).toBeNull();
+  expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result)).not.toBeNull();
   await expect(page.getByTestId('room-plan').last()).toBeVisible();
-  await expect(page.getByTestId('room-plan').last().getByRole('button',{name:'Window',exact:true})).toBeVisible();
+  await expect(page.getByTestId('room-plan').last().getByRole('img',{name:'Window',exact:true})).toBeVisible();
   await expect(page.locator('#seating-grid-export')).toHaveAttribute('dir','ltr');
   await flushStorage(page);
   await page.reload();
   await page.waitForFunction(() => window.__ZUSTAND_STORE__?.persist.hasHydrated());
   expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().layoutDef.roomFeatures?.length)).toBe(3);
+  await page.evaluate(() => { const s = window.__ZUSTAND_STORE__.getState(); s.setLayoutDef({...s.layoutDef,rows:5}); });
+  expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result)).toBeNull();
 });
 
 test('hover analysis follows a manual move and opens the complete analysis', async ({page}) => {

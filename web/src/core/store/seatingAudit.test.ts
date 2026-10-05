@@ -27,6 +27,19 @@ beforeEach(() => {
 });
 
 describe('result lifecycle after input changes', () => {
+  it('keeps the chart and valid locks when room features move and refreshes its score', () => {
+    const before = useStore.getState().result!;
+    useStore.setState({ lockedSeats: ['0-0'] });
+    useStore.getState().setLayoutDef({ ...layoutDef, roomFeatures: [{id:'w',kind:'window',x:1,y:0.8}] });
+    const state = useStore.getState();
+    expect(state.result?.student_positions).toEqual(before.student_positions);
+    expect(state.lockedSeats).toEqual(['0-0']);
+    expect(state.result?.provenance?.operation).toBe('rescored');
+    expect(state.result?.provenance?.inputHash).not.toBe(before.provenance?.inputHash);
+    state.setLayoutDef({ ...state.layoutDef, cols: 2 });
+    expect(useStore.getState().result).toBeNull();
+    expect(useStore.getState().lockedSeats).toEqual([]);
+  });
   it('clears a structurally incomplete chart when a student is added', () => {
     useStore.setState({ lockedSeats: ['0-0'], history: [structuredClone(useStore.getState().result!)] });
 

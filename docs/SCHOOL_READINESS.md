@@ -5,6 +5,12 @@ of Education approval. Do not describe a proposed capability as implemented.
 
 ## Implemented baseline
 
+- Doors, windows, the teacher desk and reserved cells share the live, exportable seating map.
+- The room editor uses the same geometry, supports pointer/touch dragging and wall/position controls,
+  and avoids adding overlapping wall items or placing a new teacher desk over a seat.
+- Room-feature edits preserve the active seating and locks and refresh its score; changes to
+  assignable seat geometry still invalidate the chart.
+
 - The active seating chart and manual moves persist across reloads; locks restore with it.
 - Stable drag feedback and rendered-bounds measurement keep the card under the cursor at reduced zoom.
 - Separate mouse/touch sensors, visible lock/details actions, and native keyboard selection/movement.
