@@ -37,8 +37,8 @@ export async function createSampleClass(page: Page, count = 8) {
 }
 
 export async function runOptimization(page: Page) {
-  if (await page.locator('aside').getAttribute('aria-hidden') === 'true') {
-    await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
+  if ((page.viewportSize()?.width ?? 1280) < 1024 && await page.locator('aside').getAttribute('aria-hidden') === 'false') {
+    await page.locator('aside').getByRole('button', { name: 'Close sidebar', exact: true }).click();
   }
   const button = page.getByTestId('optimize-button');
   await expect(button).toBeEnabled({ timeout: 15000 });

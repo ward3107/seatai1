@@ -13,7 +13,8 @@ for (const mode of ['rows', 'pairs'] as const) {
         s.setSidebarOpen(false);
         s.setUiLanguage('he'); s.setViewMode(mode); s.setZoomLevel(zoom);
       }, { mode, zoom });
-      await expect(page.locator('aside')).toHaveCSS('width', '0px');
+      await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
+      await expect(page.locator('aside')).toHaveAttribute('inert', '');
       const keys = await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result!.layout.seats.filter((s) => s.student_id).slice(0, 2).map((s) => `${s.position.row}-${s.position.col}`));
       const source = page.locator(`[data-seat-key="${keys[0]}"]`);
       const target = page.locator(`[data-seat-key="${keys[1]}"]`);

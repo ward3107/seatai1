@@ -7,230 +7,200 @@ import { useLanguage } from './useLanguage';
 import type { OptimizationResult } from '../types';
 import { buildPinned } from '../utils/pinnedSeats';
 
-
+export type OptimizerProgress = { generation: number; totalGenerations: number; bestFitness: number };
+type Input = {
+  students: ReturnType<typeof useStore.getState>['students'];
+  layoutDef: ReturnType<typeof useStore.getState>['layoutDef'];
+  weights: ReturnType<typeof useStore.getState>['weights'];
+  config: ReturnType<typeof useStore.getState>['config'];
+  constraints: ReturnType<typeof useStore.getState>['constraints'];
+  recentPairPenalties: Record<string, number>;
+  avoidRecentStrength: number;
+  pinned: [number, string][];
+};
 type WorkerOut =
   | { type: 'ready' }
-  | { type: 'progress'; reqId: number; generation: number; totalGenerations: number; bestFitness: number }
-  | { type: 'result'; reqId: number; result: OptimizationResult; cancelled?: boolean }
+  | { type: 'progress'; reqId: number } & OptimizerProgress
+  | { type: 'result'; reqId: number; result: OptimizationResult }
   | { type: 'error'; reqId: number; error: string };
-
-type PendingPromise = {
+type Pending = {
   reqId: number;
-  resolve: (r: OptimizationResult | null) => void;
+  input: Input;
+  currentResult: OptimizationResult | null;
+  lockedSeats: string[];
+  resolve: (result: OptimizationResult | null) => void;
+  cancelled: boolean;
+  fallback: boolean;
+  timer?: ReturnType<typeof setTimeout>;
 };
 
-/** Live progress of the in-flight optimization; null when idle. */
-export type OptimizerProgress = {
-  generation: number;
-  totalGenerations: number;
-  bestFitness: number;
-};
-
+/** A failed worker falls back to a yielding local run of the same engine.
+ * Every completion is scoped to its request, including timeout/cancel/unmount. */
 export function useOptimizer() {
-  const [wasmReady, setWasmReady] = useState(false);
+  const [wasmReady, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<OptimizerProgress | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const pendingRef = useRef<PendingPromise | null>(null);
-  const loadedRef = useRef(false);
-  // Monotonic request id assigned to every worker `optimize` message; the
-  // worker echoes it on every reply. Replies whose id != pendingRef's id are
-  // from a superseded run and must be dropped — otherwise a slow first run's
-  // late `result` overwrites the fresh state of a second, in-flight run.
+  const pendingRef = useRef<Pending | null>(null);
   const reqIdRef = useRef(0);
-
-  const students = useStore((s) => s.students);
-  const rows = useStore((s) => s.rows);
-  const cols = useStore((s) => s.cols);
-  const layoutDef = useStore((s) => s.layoutDef);
-  const weights = useStore((s) => s.weights);
-  const config = useStore((s) => s.config);
-  const constraints = useStore((s) => s.constraints);
-  const avoidRecentNeighbors = useStore((s) => s.avoidRecentNeighbors);
-  const resultHistory = useStore((s) => s.resultHistory);
-  const result = useStore((s) => s.result);
-  const lockedSeats = useStore((s) => s.lockedSeats);
-  const isOptimizing = useStore((s) => s.isOptimizing);
-  const setOptimizing = useStore((s) => s.setOptimizing);
-  const setResult = useStore((s) => s.setResult);
+  const mountedRef = useRef(false);
+  const isOptimizing = useStore(s => s.isOptimizing);
   const { t } = useLanguage();
+  const tRef = useRef(t);
+  tRef.current = t;
 
-  // ── Initialize (just mark ready - worker will run optimizations) ─────────────
-  // `isCancelled` lets the mount effect signal that the component unmounted
-  // while the dynamic worker import was still in flight — otherwise the import
-  // resolves after cleanup ran, creates a Worker, and stores it with nothing
-  // left to terminate it (a leaked worker on fast mount/unmount).
-  const initWasm = useCallback(async (isCancelled: () => boolean = () => false) => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-
-    // The optimizer is ready (TypeScript implementation always works via worker)
-    setWasmReady(true);
-    if (import.meta.env.DEV) console.log('✅ Optimizer ready');
-
-    // Try to set up the worker for better performance
-    try {
-      const { default: WorkerCtor } = await import('../workers/optimizer.worker?worker');
-      if (isCancelled()) return; // unmounted mid-import — don't create a worker
-      const worker: Worker = new WorkerCtor();
-
-      worker.onmessage = (e: MessageEvent<WorkerOut>) => {
-        const msg = e.data;
-
-        if (msg.type === 'ready') {
-          if (import.meta.env.DEV) console.log('✅ Worker ready');
-          return;
-        }
-
-        // Discard replies from superseded runs: their pending promise was
-        // already resolved(null) by the newer optimize() call, and applying
-        // their result/progress/error to the store would clobber the fresh run.
-        const current = pendingRef.current;
-        if (!current || msg.reqId !== current.reqId) return;
-
-        if (msg.type === 'progress') {
-          setProgress({
-            generation: msg.generation,
-            totalGenerations: msg.totalGenerations,
-            bestFitness: msg.bestFitness,
-          });
-
-        } else if (msg.type === 'result') {
-          // A cancelled run still delivers the best-so-far plan.
-          setResult(msg.result);
-          setOptimizing(false);
-          setProgress(null);
-          current.resolve(msg.result);
-          pendingRef.current = null;
-
-        } else if (msg.type === 'error') {
-          setError(msg.error);
-          setOptimizing(false);
-          setProgress(null);
-          current.resolve(null);
-          pendingRef.current = null;
-        }
-      };
-
-      worker.onerror = (ev) => {
-        console.warn('Worker error:', ev.message);
-        // A worker crash must not strand the UI: resolve any in-flight
-        // optimisation and clear the spinner, otherwise `isOptimizing`
-        // stays true forever and the Optimize button never re-enables.
-        setError(ev.message || 'Optimization worker crashed');
-        setOptimizing(false);
-        setProgress(null);
-        pendingRef.current?.resolve(null);
-        pendingRef.current = null;
-        workerRef.current = null;
-      };
-
-      workerRef.current = worker;
-    } catch (workerErr) {
-      console.warn('Worker not available:', workerErr);
+  const finish = useCallback((pending: Pending, result: OptimizationResult | null, failed = false) => {
+    clearTimeout(pending.timer);
+    if (pendingRef.current !== pending) return;
+    pendingRef.current = null;
+    if (mountedRef.current) {
+      const state = useStore.getState();
+      // Edits made while a run is in flight invalidate that run's snapshot.
+      if (state.students !== pending.input.students || state.layoutDef !== pending.input.layoutDef ||
+          state.config !== pending.input.config || state.weights !== pending.input.weights ||
+          state.constraints !== pending.input.constraints || state.result !== pending.currentResult ||
+          state.lockedSeats !== pending.lockedSeats) result = null;
+      try { if (result) state.setResult(result); }
+      catch { result = null; failed = true; }
+      useStore.getState().setOptimizing(false);
+      setProgress(null);
+      if (failed) setError(tRef.current('workspace.engine_error'));
     }
-  }, [setResult, setOptimizing, setError]);
-
-  // Create worker on mount; tear down on unmount
-  useEffect(() => {
-    let cancelled = false;
-    initWasm(() => cancelled);
-    return () => {
-      cancelled = true;
-      workerRef.current?.terminate();
-      workerRef.current = null;
-      // Allow a genuine remount (e.g. StrictMode's mount→unmount→mount) to
-      // re-create the worker, since this init was torn down.
-      loadedRef.current = false;
-    };
-  }, [initWasm]);
-
-  // ── Run optimisation ─────────────────────────────────────────────────────
-  const optimize = useCallback(async (): Promise<OptimizationResult | null> => {
-    if (students.length < 2) {
-      setError(t('app.add_two_students'));
-      return null;
-    }
-    const seats = slotCount(layoutDef);
-    if (students.length > seats) {
-      setError(t('app.too_many_students', { students: students.length, seats }));
-      return null;
-    }
-
-    setOptimizing(true);
-    setError(null);
-    setProgress(null);
-
-    // Rotation avoidance is opt-in and only meaningful once we have past
-    // runs to compare against. Compute the pair-penalty table here so both
-    // the worker and the main-thread fallback share it.
-    const recentPairPenalties =
-      avoidRecentNeighbors && resultHistory.length > 0
-        ? getRecentPairPenalties(layoutDef, resultHistory)
-        : {};
-    const avoidRecentStrength = avoidRecentNeighbors ? ROTATION_STRENGTH : 0;
-
-    // Locked seats are kept in place; the GA only rearranges the rest.
-    const pinned = buildPinned(lockedSeats, result, layoutDef);
-
-    // Use worker if available
-    if (workerRef.current) {
-      // Supersede any in-flight run: resolve its promise with null so its
-      // `await optimize()` doesn't hang, and post a `cancel` so the worker
-      // stops burning CPU instead of running the old GA to completion. The
-      // reqId bump below causes any late replies to be dropped in onmessage.
-      if (pendingRef.current) {
-        pendingRef.current.resolve(null);
-        workerRef.current.postMessage({ type: 'cancel' });
-      }
-      const reqId = ++reqIdRef.current;
-      return new Promise<OptimizationResult | null>((resolve) => {
-        pendingRef.current = { reqId, resolve };
-        workerRef.current!.postMessage({
-          type: 'optimize',
-          reqId,
-          students,
-          rows,
-          cols,
-          layoutDef,
-          weights,
-          config,
-          constraints,
-          recentPairPenalties,
-          avoidRecentStrength,
-          pinned,
-        });
-      });
-    }
-
-    // Fallback: worker didn't load (older browser, blocked by sandbox, etc.).
-    // Run on the main thread so the user still gets a result — UI will block briefly.
-    try {
-      const optimizer = new ClassroomOptimizer(students, layoutDef);
-      optimizer.setWeights(weights);
-      optimizer.setConfig(config);
-      optimizer.setConstraints(constraints);
-      optimizer.setRotationAvoidance(recentPairPenalties, avoidRecentStrength);
-      if (pinned.length > 0) optimizer.setPinned(new Map(pinned));
-      const out = await Promise.resolve().then(() => optimizer.optimize());
-      setResult(out);
-      setOptimizing(false);
-      return out;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Optimization failed');
-      setOptimizing(false);
-      return null;
-    }
-  }, [students, rows, cols, layoutDef, weights, config, constraints, avoidRecentNeighbors, resultHistory, result, lockedSeats, setOptimizing, setResult, t]);
-
-  // ── Cancel an in-flight run ───────────────────────────────────────────────
-  // Asks the worker to stop early; it replies with a normal 'result'
-  // message carrying the best plan found so far. No-op when nothing is
-  // running (or on the main-thread fallback path, which can't be cancelled).
-  const cancel = useCallback(() => {
-    if (!pendingRef.current || !workerRef.current) return;
-    workerRef.current.postMessage({ type: 'cancel' });
+    pending.resolve(result);
   }, []);
 
-  return { wasmReady, isOptimizing, error, initWasm, optimize, progress, cancel };
+  const runFallback = useCallback(async (pending: Pending) => {
+    if (pendingRef.current !== pending || pending.fallback) return;
+    pending.fallback = true;
+    clearTimeout(pending.timer);
+    const input = pending.input;
+    const started = performance.now();
+    try {
+      const engine = new ClassroomOptimizer(input.students, input.layoutDef);
+      engine.setWeights(input.weights);
+      engine.setConfig(input.config);
+      engine.setConstraints(input.constraints);
+      engine.setRotationAvoidance(input.recentPairPenalties, input.avoidRecentStrength);
+      if (input.pinned.length) engine.setPinned(new Map(input.pinned));
+      const result = await engine.optimizeAsync({
+        shouldStop: () => pending.cancelled || pendingRef.current !== pending || performance.now() - started > 30_000,
+        onProgress: value => {
+          if (mountedRef.current && pendingRef.current === pending) setProgress(value);
+        },
+      });
+      finish(pending, result);
+    } catch {
+      finish(pending, null, true);
+    }
+  }, [finish]);
+
+  const discardWorker = useCallback(() => {
+    const worker = workerRef.current;
+    workerRef.current = null;
+    if (worker) {
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.onmessageerror = null;
+      worker.terminate();
+    }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    setReady(true); // the same TypeScript engine works without Worker support
+    let disposed = false;
+    void import('../workers/optimizer.worker?worker').then(({ default: WorkerCtor }) => {
+      if (disposed) return;
+      const worker: Worker = new WorkerCtor();
+      workerRef.current = worker;
+      worker.onmessage = (event: MessageEvent<WorkerOut>) => {
+        const msg = event.data;
+        if (msg.type === 'ready') return;
+        const pending = pendingRef.current;
+        if (!pending || msg.reqId !== pending.reqId || pending.fallback) return;
+        if (msg.type === 'progress') setProgress(msg);
+        else if (msg.type === 'result') finish(pending, msg.result);
+        else if (msg.type === 'error') {
+          discardWorker();
+          void runFallback(pending);
+        }
+      };
+      const failedWorker = (event: Event) => {
+        event.preventDefault();
+        discardWorker();
+        const pending = pendingRef.current;
+        if (pending) void runFallback(pending);
+      };
+      worker.onerror = failedWorker;
+      worker.onmessageerror = failedWorker;
+    }).catch(() => { /* worker import blocked; use the local engine on demand */ });
+    return () => {
+      disposed = true;
+      mountedRef.current = false;
+      discardWorker();
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      if (pending) {
+        pending.cancelled = true;
+        clearTimeout(pending.timer);
+        pending.resolve(null);
+        useStore.getState().setOptimizing(false);
+      }
+    };
+  }, [finish, runFallback, discardWorker]);
+
+  const optimize = useCallback(async (): Promise<OptimizationResult | null> => {
+    const state = useStore.getState();
+    if (state.students.length < 2) { setError(tRef.current('app.add_two_students')); return null; }
+    const capacity = slotCount(state.layoutDef);
+    if (state.students.length > capacity) {
+      setError(tRef.current('app.too_many_students', { students: state.students.length, seats: capacity }));
+      return null;
+    }
+    const previous = pendingRef.current;
+    if (previous) {
+      previous.cancelled = true;
+      clearTimeout(previous.timer);
+      previous.resolve(null);
+      // Start a fresh worker lifecycle after superseding a worker run. This
+      // avoids sharing cancellation state with two concurrent async searches.
+      if (!previous.fallback) discardWorker();
+    }
+    state.setOptimizing(true);
+    setError(null);
+    setProgress(null);
+    return new Promise(resolve => {
+      const pending: Pending = {
+        reqId: ++reqIdRef.current, resolve, cancelled: false, fallback: false,
+        currentResult: state.result, lockedSeats: state.lockedSeats,
+        input: {
+          students: state.students, layoutDef: state.layoutDef, weights: state.weights,
+          config: state.config, constraints: state.constraints,
+          recentPairPenalties: state.avoidRecentNeighbors ? getRecentPairPenalties(state.layoutDef, state.resultHistory) : {},
+          avoidRecentStrength: state.avoidRecentNeighbors ? ROTATION_STRENGTH : 0,
+          pinned: buildPinned(state.lockedSeats, state.result, state.layoutDef),
+        },
+      };
+      pendingRef.current = pending;
+      const worker = workerRef.current;
+      if (!worker) { void runFallback(pending); return; }
+      // Also recover a worker that loads but never returns a result.
+      pending.timer = setTimeout(() => {
+        if (pendingRef.current !== pending) return;
+        discardWorker();
+        void runFallback(pending);
+      }, 30_000);
+      try { worker.postMessage({ type: 'optimize', reqId: pending.reqId, ...pending.input }); }
+      catch { discardWorker(); void runFallback(pending); }
+    });
+  }, [discardWorker, runFallback]);
+
+  const cancel = useCallback(() => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    pending.cancelled = true;
+    if (!pending.fallback) workerRef.current?.postMessage({ type: 'cancel' });
+  }, []);
+
+  return { wasmReady, isOptimizing, error, optimize, progress, cancel };
 }

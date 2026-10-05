@@ -101,6 +101,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Browser reports must not trigger HMR/reloads in an in-flight test.
+    watch: { ignored: ['**/test-results/**', '**/playwright-report*/**'] },
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
-import { Lock, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { GripVertical, Lock, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import type { Seat, Student } from '../../types';
 import type { HeatMapMode } from '../../core/store';
 import { getHeatMapColor } from '../../utils/seatingUtils';
@@ -96,6 +96,7 @@ export default memo(function SeatCard({
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: seatKey,
     data: { seatKey },
+    disabled: isLocked,
   });
 
   // Merge drag + drop refs
@@ -127,6 +128,7 @@ export default memo(function SeatCard({
       type="button"
       ref={setRef}
       data-seat-key={seatKey}
+      style={{ touchAction: canDrag ? 'none' : 'auto' }}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}
       onMouseEnter={() => onMouseEnter(seatKey)}
@@ -142,8 +144,8 @@ export default memo(function SeatCard({
       aria-pressed={isSelected}
       aria-keyshortcuts="L"
       className={clsx(
-        'relative flex-1 rounded-lg p-2 flex flex-col items-center justify-center min-h-[60px]',
-        'border-2 transition-all duration-150 select-none text-left',
+        'relative w-[84px] min-h-[100px] shrink-0 rounded-xl p-2 flex flex-col items-center justify-center',
+        'border transition-[box-shadow,background-color,border-color] duration-150 select-none text-start',
         // Tailwind reset for native button (no inherited bg/colors)
         'bg-transparent appearance-none',
         // Keyboard focus ring — visible only on keyboard nav
@@ -156,11 +158,11 @@ export default memo(function SeatCard({
         !seat.is_empty && [
           isDragMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
           heatColor || 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700',
-          'hover:shadow-md hover:scale-[1.02]',
+          'hover:shadow-md hover:border-primary-400',
         ],
 
         // Selected (click mode)
-        isSelected && 'ring-2 ring-primary-500 ring-offset-1 border-primary-400 scale-105',
+        isSelected && 'ring-2 ring-primary-500 ring-offset-1 border-primary-400 ',
 
         // Drop target highlight — red/green when we have a live constraint
         // preview, neutral green otherwise.
@@ -170,7 +172,7 @@ export default memo(function SeatCard({
           'ring-2 ring-green-400 ring-offset-1 bg-green-50 dark:bg-green-900/30 border-green-400',
 
         // Currently being dragged
-        isDragging && 'opacity-20 scale-95',
+        isDragging && 'opacity-25',
 
         // Violation glow
         isViolated && !isDragging && heatMapMode === 'none' && 'border-red-400 bg-red-50 dark:bg-red-900/30',
@@ -184,6 +186,7 @@ export default memo(function SeatCard({
         isLocked && 'opacity-60',
       )}
     >
+      {canDrag && <GripVertical size={12} className="absolute top-1 end-1 text-gray-400" aria-label={t('workspace.drag_handle')} />}
       {/* Drop-target validity — a ✓ / ✕ glyph in addition to the green/red
           ring, so the valid/invalid state isn't conveyed by color alone. */}
       {isOver && !isDragging && (
@@ -259,8 +262,8 @@ export default memo(function SeatCard({
           )}
 
           {/* First name */}
-          <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300 text-center truncate w-full leading-tight px-1">
-            {student.name.split(' ')[0]}
+          <p className="mt-1 text-xs font-semibold text-gray-700 dark:text-gray-300 text-center w-full leading-tight break-words line-clamp-2">
+            {student.name}
           </p>
 
           {/* Special needs icons */}

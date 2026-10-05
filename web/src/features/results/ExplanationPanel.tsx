@@ -41,14 +41,14 @@ function buildReasons(
       citation: 'Easy aisle access'
     });
   }
-  if (constraints.front_row_ids.includes(student.id) && row === 0) {
+  if ((constraints.front_row_ids ?? []).includes(student.id) && row === 0) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_front_row_teacher'),
       citation: 'Teacher placement request'
     });
   }
-  if (constraints.back_row_ids.includes(student.id) && row >= rows - 2) {
+  if ((constraints.back_row_ids ?? []).includes(student.id) && row >= rows - 2) {
     reasons.push({
       type: 'good',
       text: t('explanation.reason_back_row_teacher'),
@@ -57,7 +57,7 @@ function buildReasons(
   }
 
   // ── Special needs notes ──
-  for (const need of student.special_needs) {
+  for (const need of student.special_needs ?? []) {
     if (need.requires_front_seat && row === 0) {
       reasons.push({
         type: 'good',
@@ -93,8 +93,8 @@ function buildReasons(
     const adj = allStudents.get(adjId);
     if (!adj) continue;
 
-    const isIncompFwd = student.incompatible_ids.includes(adjId);
-    const isIncompRev = adj.incompatible_ids.includes(student.id);
+    const isIncompFwd = (student.incompatible_ids ?? []).includes(adjId);
+    const isIncompRev = (adj.incompatible_ids ?? []).includes(student.id);
     if (isIncompFwd || isIncompRev) {
       reasons.push({
         type: 'warn',
@@ -105,7 +105,7 @@ function buildReasons(
     }
 
     // Constraint pairs
-    const isSep = constraints.separate_pairs.some(
+    const isSep = (constraints.separate_pairs ?? []).some(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isSep) {
@@ -117,7 +117,7 @@ function buildReasons(
       continue;
     }
 
-    const isTog = constraints.keep_together_pairs.some(
+    const isTog = (constraints.keep_together_pairs ?? []).some(
       ([a, b]) => (a === student.id && b === adjId) || (b === student.id && a === adjId)
     );
     if (isTog) {
@@ -129,7 +129,7 @@ function buildReasons(
       continue;
     }
 
-    if (student.friends_ids.includes(adjId) || adj.friends_ids.includes(student.id)) {
+    if ((student.friends_ids ?? []).includes(adjId) || (adj.friends_ids ?? []).includes(student.id)) {
       reasons.push({
         type: 'good',
         text: t('explanation.reason_seated_near_friend', { name: adj.name }),
@@ -139,7 +139,7 @@ function buildReasons(
   }
 
   // ── Separation rules fulfilled ──
-  for (const [a, b] of constraints.separate_pairs) {
+  for (const [a, b] of constraints.separate_pairs ?? []) {
     const otherId = a === student.id ? b : b === student.id ? a : null;
     if (!otherId) continue;
     if (!adjacentIds.includes(otherId)) {
@@ -201,13 +201,13 @@ function calculatePairCompatibility(
   const reasons: PairReason[] = [];
   let score = 0;
 
-  const isFriends = studentA.friends_ids.includes(studentB.id) || studentB.friends_ids.includes(studentA.id);
+  const isFriends = (studentA.friends_ids ?? []).includes(studentB.id) || (studentB.friends_ids ?? []).includes(studentA.id);
   if (isFriends) {
     score += 25;
     reasons.push({ type: 'good', text: t('explanation.pair_reason_friends') });
   }
 
-  const hasConflict = studentA.incompatible_ids.includes(studentB.id) || studentB.incompatible_ids.includes(studentA.id);
+  const hasConflict = (studentA.incompatible_ids ?? []).includes(studentB.id) || (studentB.incompatible_ids ?? []).includes(studentA.id);
   if (!hasConflict) {
     score += 25;
     reasons.push({ type: 'good', text: t('explanation.pair_reason_no_conflicts') });
@@ -352,13 +352,13 @@ export default function ExplanationPanel() {
       <>
         {/* Search */}
         <div className="mb-4 relative">
-          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
+          <Users size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full ps-8 pe-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
           />
         </div>
 
@@ -497,13 +497,13 @@ export default function ExplanationPanel() {
       <>
         {/* Search */}
         <div className="mb-4 relative">
-          <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
+          <Users size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder={t('explanation.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full ps-8 pe-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
           />
         </div>
 
@@ -602,7 +602,7 @@ export default function ExplanationPanel() {
               <Info size={14} className="text-primary-700 dark:text-primary-300" />
             )}
           </div>
-          <div className="text-left">
+          <div className="text-start">
             <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
               {isPairsMode ? t('explanation.why_these_pairs') : t('explanation.why_this_seating')}
             </p>

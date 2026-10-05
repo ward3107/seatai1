@@ -7,6 +7,8 @@ interface Props {
   name?: string;
   /** Replace the whole panel with a minimal inline message instead */
   inline?: boolean;
+  fallbackMessage?: string;
+  retryLabel?: string;
 }
 
 interface State {
@@ -40,12 +42,12 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 text-sm">
           <AlertTriangle size={14} />
-          <span>{name ?? 'Component'} failed to render.</span>
+          <span>{this.props.fallbackMessage ?? `${name ?? 'Component'} failed to render.`}</span>
           <button
             onClick={this.reset}
             className="ml-auto underline hover:no-underline text-red-500 dark:text-red-400"
           >
-            Retry
+            {this.props.retryLabel ?? 'Retry'}
           </button>
         </div>
       );

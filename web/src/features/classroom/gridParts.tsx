@@ -14,14 +14,14 @@ export function LazyFallback() {
 }
 
 /**
- * Scales its children so the seating grid always fits the available width,
+ * Scales the seating grid toward the available width, with a readability floor,
  * then lets the user's manual zoom multiply on top. Crucially it also sizes
  * its own box to the *scaled* dimensions, so a shrunk grid no longer reserves
  * its full natural width — that's what stops the last column clipping / the
  * page scrolling sideways on phones.
  *
- * `zoom` is the user's manual zoom (1 = fit-to-width). Values > 1 intentionally
- * overflow into a scroll; values ≤ 1 shrink further.
+ * `zoom` multiplies the fit. The 0.72 fit floor leaves phone seats tappable;
+ * wider maps scroll inside this container without widening the page.
  */
 export function FitZoom({ zoom, children }: { zoom: number; children: React.ReactNode }) {
   const outerRef = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
       // 1.15×. The old 1.6× ballooned a small or half-empty class into giant
       // seats that felt clumsy on a desktop monitor.
       const maxUp = availW >= 700 ? 1.15 : 1;
-      const fit = Math.min(maxUp, availW / natW);
+      const fit = Math.max(0.72, Math.min(maxUp, availW / natW));
       const s = fit * zoom;
       setScale(s);
       setBox({ w: natW * s, h: natH * s });
@@ -64,12 +64,12 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
   }, [zoom]);
 
   return (
-    <div ref={outerRef} className="w-full flex justify-center overflow-x-auto">
+    <div ref={outerRef} className="w-full overflow-x-auto overscroll-x-contain pb-3">
       {/* The box reserves only the *scaled* footprint and clips the inner's
           (unscaled) layout overflow, so a shrunk grid neither scrolls nor
           clips real content. When the user zooms in past fit, box.w exceeds
           the container and the outer scrolls instead. */}
-      <div style={{ width: box.w, height: box.h, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ width: box.w, height: box.h, overflow: 'hidden', position: 'relative', marginInline: 'auto', flexShrink: 0 }}>
         <div
           ref={innerRef}
           style={{
@@ -129,7 +129,7 @@ export function DragGhost({
     return (
       <div
         className={clsx(
-          'w-[88px] min-h-[88px] rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl',
+          'w-full h-full rounded-lg p-2 flex flex-col items-center justify-center text-white font-bold shadow-2xl',
           student.gender === 'male'
             ? 'bg-blue-400'
             : student.gender === 'female'
@@ -150,7 +150,7 @@ export function DragGhost({
   return (
     <div
       className={clsx(
-        'w-[88px] h-[88px] rounded-lg border-2 border-indigo-400 bg-white dark:bg-gray-800 shadow-2xl',
+        'w-full h-full rounded-lg border-2 border-primary-400 bg-white dark:bg-gray-800 shadow-2xl',
         'flex flex-col items-center justify-center opacity-95'
       )}
     >
