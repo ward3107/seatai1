@@ -67,6 +67,8 @@ export default function ClassroomGrid() {
   const [hoveredStudent, setHoveredStudent] = useState<Student | null>(null);
   const [hoverAnchor, setHoverAnchor] = useState<DOMRect | null>(null);
   const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverSuppressedUntil = useRef(0);
+  const hoverPointerPosition = useRef({x:0,y:0});
   const keepHoverOpen = useCallback(() => {
     if (hoverCloseTimer.current) clearTimeout(hoverCloseTimer.current);
     hoverCloseTimer.current = null;
@@ -86,12 +88,18 @@ export default function ClassroomGrid() {
     if (!hoveredStudent) return;
     const dismissOnScroll = (event: Event) => {
       if (event.target instanceof Element && event.target.closest('[data-testid="student-hover-popup"]')) return;
+      // Some engines synthesize pointer entry as content moves under a
+      // stationary mouse. Do not immediately reopen the dismissed preview.
+      hoverSuppressedUntil.current = Date.now() + 250;
+      if (event instanceof MouseEvent) hoverPointerPosition.current = {x:event.clientX,y:event.clientY};
       closeHover();
     };
     window.addEventListener('scroll', dismissOnScroll, true);
+    window.addEventListener('wheel', dismissOnScroll, {capture:true,passive:true});
     window.addEventListener('resize', closeHover);
     return () => {
       window.removeEventListener('scroll', dismissOnScroll, true);
+      window.removeEventListener('wheel', dismissOnScroll, true);
       window.removeEventListener('resize', closeHover);
     };
   }, [hoveredStudent, closeHover]);
@@ -216,8 +224,10 @@ export default function ClassroomGrid() {
   }, [seats, studentMap]);
 
   const handleSeatMouseEnter = useCallback(
-    (sk: string) => {
-      if (activeDragSeatKey) return;
+    (sk: string, x: number, y: number) => {
+      const stationary = Math.hypot(x-hoverPointerPosition.current.x,y-hoverPointerPosition.current.y)<2;
+      if (activeDragSeatKey || (stationary && Date.now() < hoverSuppressedUntil.current)) return;
+      hoverPointerPosition.current = {x,y};
       keepHoverOpen();
       setHoveredSeatKey(sk);
       setHoveredStudent(studentBySeatKey.get(sk) ?? null);
@@ -588,7 +598,7 @@ export default function ClassroomGrid() {
       {/* The context menu and legends only render for the
           row-based layouts — matching the pre-refactor behavior, where
           they lived inside the row branch. */}
-      {createPortal(<StudentHoverPopup student={activeDragSeatKey ? null : hoveredStudent} anchor={hoverAnchor}
+      {createPortal(activeDragSeatKey ? null : <StudentHoverPopup student={hoveredStudent} anchor={hoverAnchor}
         onClose={closeHover} onPointerEnter={keepHoverOpen} onPointerLeave={leaveHover} />, document.body)}
 
       {!isAbsoluteLayout && (

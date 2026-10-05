@@ -71,7 +71,7 @@ export default function StudentHoverPopup({
           key="popup"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
+          exit={{ opacity: 0, y: 10, pointerEvents: 'none' }}
           transition={{ duration: 0.15 }}
           className="fixed w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 z-50"
         >
