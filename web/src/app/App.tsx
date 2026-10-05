@@ -28,6 +28,7 @@ const StudentDetailPanel = lazy(() => import('../features/students/StudentDetail
 const WelcomeTipsModal = lazy(() => import('../components/WelcomeTipsModal'));
 import ErrorBoundary from '../components/ErrorBoundary';
 import BackupReminderBanner from '../components/BackupReminderBanner';
+import AppUpdateBanner from '../components/AppUpdateBanner';
 import ClassroomReview from '../features/optimization/ClassroomReview';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
@@ -166,6 +167,7 @@ function App() {
           content width so the seating grid's horizontal scroll stays
           inside the content area instead of widening the whole page. */}
       <main id="main-content" className="flex-1 flex flex-col min-w-0">
+        <AppUpdateBanner />
         {/* Reachable page heading for assistive tech. The visible brand H1
             lives in the sidebar, which is hidden/inert when collapsed (the
             mobile default), so expose a stable one here too. */}

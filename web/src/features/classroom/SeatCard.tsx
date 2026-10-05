@@ -54,7 +54,7 @@ interface Props {
   // Receives the seat key so the parent can supply a single stable handler
   // (keeps SeatCard's memo effective — otherwise a fresh closure per render
   // re-renders every seat on any hover).
-  onMouseEnter: (seatKey: string) => void;
+  onMouseEnter: (seatKey: string, x: number, y: number) => void;
   onMouseLeave: () => void;
 }
 
@@ -131,8 +131,8 @@ export default memo(function SeatCard({
       style={{ touchAction: canDrag ? 'none' : 'auto' }}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}
-      onMouseEnter={() => onMouseEnter(seatKey)}
-      onMouseLeave={onMouseLeave}
+      onPointerEnter={event => { if (event.pointerType === 'mouse') onMouseEnter(seatKey,event.clientX,event.clientY); }}
+      onPointerLeave={event => { if (event.pointerType === 'mouse') onMouseLeave(); }}
       {...(canDrag ? { ...attributes, ...listeners } : {})}
       // Override dnd-kit's aria-pressed (which reflects drag state)
       // with our selection state — more useful to screen-reader users.

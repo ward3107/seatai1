@@ -29,7 +29,7 @@ export default defineConfig({
     // warning. Large on-demand export chunks are intentionally exempt.
     entryChunkBudget(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['seatai-logo.svg'],
       manifest: {
         name: 'SeatAI — Classroom Seating Optimizer',
@@ -61,8 +61,8 @@ export default defineConfig({
         // navigations must reach the functions, not be served index.html.
         navigateFallbackDenylist: [/^\/api\//],
       },
-      // Auto-skip waiting so the user picks up the latest version
-      // without having to manually refresh after a deploy.
+      // The app shows a refresh action and flushes classroom changes before
+      // activating a new version. A deployment must not reload ongoing work.
       injectRegister: 'auto',
     }),
   ],

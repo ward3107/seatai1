@@ -1142,5 +1142,11 @@
     "students": "Students",
     "room": "Room",
     "rules": "Rules"
+  },
+  "appUpdate": {
+    "available": "A new version is ready. Refresh to use the latest classroom map.",
+    "refresh": "Save and refresh",
+    "updating": "Saving and refreshing…",
+    "failed": "The update could not finish. Try again."
   }
 }

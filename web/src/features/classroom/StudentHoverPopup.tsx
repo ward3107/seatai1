@@ -1,24 +1,58 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Users, Accessibility, Heart, AlertTriangle, Globe } from 'lucide-react';
 import clsx from 'clsx';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useStore } from '../../core/store';
 import { explainPlacement } from '../../utils/explainPlacement';
 import type { Student } from '../../types';
 
 /**
- * Floating card summarising a hovered/tapped student: scores, special needs
- * and social ties. Pinned bottom-right and width-capped so it never clips on
- * phones. Renders nothing when no student is active.
+ * Mouse preview outside the seating hit area, bounded by the viewport. The pointer can
+ * enter its controls; leaving both the seat and preview dismisses it.
  */
 export default function StudentHoverPopup({
   student,
   onClose,
+  anchor,
+  onPointerEnter,
+  onPointerLeave,
 }: {
   student: Student | null;
   onClose: () => void;
+  anchor: DOMRect | null;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
 }) {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 8, top: 8, maxHeight: 'calc(100vh - 16px)' });
+  useLayoutEffect(() => {
+    if (!student || !anchor || !popupRef.current) return;
+    const popup = popupRef.current;
+    const place = () => {
+      const width = popup.getBoundingClientRect().width;
+      const headerBottom = document.querySelector('header')?.getBoundingClientRect().bottom ?? 56;
+      // The fixed header clips scrolled seats. On narrow screens use the
+      // space above/below the chart, with scrollable content, rather than
+      // covering neighboring students with a full-height overlay.
+      const visibleTop = Math.max(anchor.top, headerBottom);
+      const right = anchor.right + 8 + width <= innerWidth - 8;
+      const left = anchor.left - width - 8 >= 8;
+      if (right || left) {
+        const height = Math.min(popup.scrollHeight, innerHeight - 16);
+        setPosition({left: right ? anchor.right + 8 : anchor.left - width - 8, top:Math.max(8,Math.min(visibleTop,innerHeight-height-8)), maxHeight:`${innerHeight-16}px`});
+      } else {
+        const above = Math.max(40,visibleTop-16);
+        const below = Math.max(0,innerHeight-anchor.bottom-16);
+        const useAbove = above >= below;
+        setPosition({left:Math.max(8,Math.min(anchor.left,innerWidth-width-8)),top:useAbove?8:anchor.bottom+8,maxHeight:`${useAbove?above:below}px`});
+      }
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(popup);
+    return () => observer.disconnect();
+  }, [student, anchor]);
   const { t } = useLanguage();
   const result = useStore((s) => s.result);
   const layoutDef = useStore((s) => s.layoutDef);
@@ -48,12 +82,19 @@ export default function StudentHoverPopup({
     <AnimatePresence>
       {student && (
         <motion.div
+          ref={popupRef}
+          data-testid="student-hover-popup"
+          style={position}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+          onFocusCapture={onPointerEnter}
+          onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onPointerLeave(); }}
           key="popup"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
+          exit={{ opacity: 0, y: 10, pointerEvents: 'none' }}
           transition={{ duration: 0.15 }}
-          className="fixed bottom-4 right-4 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 z-50"
+          className="fixed w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 z-50"
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-2.5">

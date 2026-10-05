@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/react" />
 
 // Vite ?worker query — turns any module into a Web Worker constructor
 declare module '*?worker' {
