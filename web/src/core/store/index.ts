@@ -1169,6 +1169,7 @@ export const useStore = create<AppState>()(
           'config',
           'weights',
           'aiSettings',
+          'constraints',
         ] as const;
         for (const key of deepKeys) {
           const base = current[key];
@@ -1208,6 +1209,7 @@ export const useStore = create<AppState>()(
       },
       partialize: (state) => ({
         students: state.students,
+        result: state.result,
         rows: state.rows,
         cols: state.cols,
         layoutDef: state.layoutDef,

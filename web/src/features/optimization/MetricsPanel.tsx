@@ -40,7 +40,7 @@ export default function MetricsPanel() {
             front_row: constraints.front_row_ids.length,
             back_row: constraints.back_row_ids.length,
           },
-          warnings: result.warnings,
+          warnings: result.warnings ?? [],
           generations: result.generations,
           stopReason: result.stop_reason ?? 'generations',
         },
@@ -142,7 +142,7 @@ export default function MetricsPanel() {
         </p>
       </div>
 
-      {result.provenance && (
+      {result.provenance && Number.isFinite(Date.parse(result.provenance.generatedAt)) && (
         <details className="mb-4 text-[11px] text-gray-500 dark:text-gray-400">
           <summary className="cursor-pointer text-center hover:text-gray-700 dark:hover:text-gray-200">
             {t('optimization.run_details')}
@@ -219,11 +219,11 @@ export default function MetricsPanel() {
       ) : null}
 
       {/* Warnings */}
-      {result.warnings.length > 0 && (
+      {(result.warnings?.length ?? 0) > 0 && (
         <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">{t('optimization.notes')}:</p>
           <ul className="mt-1 text-sm text-yellow-700 dark:text-yellow-300 list-disc list-inside">
-            {result.warnings.map((warning, i) => (
+            {(result.warnings ?? []).map((warning, i) => (
               <li key={i}>{warning}</li>
             ))}
           </ul>

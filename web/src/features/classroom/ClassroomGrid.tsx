@@ -1,17 +1,18 @@
 import RoomPlan from '../layout/RoomPlan';
+import { Info, Lock, Unlock, X } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
+  getClientRect,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -30,6 +31,10 @@ import type { Seat, Student, OptimizationResult } from '../../types';
 
 // The timeline is heavy and conditional — only loaded when the user opts in.
 const OptimizationTimeline = lazy(() => import('./OptimizationTimeline'));
+
+// Measure the rendered bounds, including FitZoom's parent transform. The
+// default transform-agnostic measurement offset the ghost at reduced zoom.
+const GRID_MEASURING = { draggable: { measure: getClientRect }, droppable: { measure: getClientRect } };
 
 // ─── main component ─────────────────────────────────────────────────────────
 
@@ -57,7 +62,7 @@ export default function ClassroomGrid() {
   const toggleLockSeat = useStore((s) => s.toggleLockSeat);
   const { t } = useLanguage();
 
-  const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>('drag');
+  const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>(() => window.matchMedia('(pointer: coarse)').matches ? 'click' : 'drag');
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
   const [hoveredStudent, setHoveredStudent] = useState<Student | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -68,6 +73,9 @@ export default function ClassroomGrid() {
   const [activeDragSeatKey, setActiveDragSeatKey] = useState<string | null>(null);
 
   const gridContainerRef = useRef<HTMLDivElement>(null);
+  const justDraggedRef = useRef(false);
+  const [dragSize, setDragSize] = useState({ width: 84, height: 100 });
+  useEffect(() => { setSelectedSeat(null); }, [interactionMode, layoutDef, setSelectedSeat]);
 
   const seats = useMemo(() => {
     if (result?.layout.seats) return result.layout.seats;
@@ -189,14 +197,11 @@ export default function ClassroomGrid() {
   }, []);
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
-  // KeyboardSensor gives keyboard-only users a way to swap students:
-  // Tab to a seat, Space to pick up, Arrow keys to move, Space to drop
-  // (Escape cancels). dnd-kit announces each step via its built-in
-  // live region.
+  // Separate mouse/touch sensors avoid competing pointer activation. Keyboard
+  // users select and move with native Space/Enter, with arrows for focus.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
   );
 
   // Build a screen-reader-friendly label for each seat. Parent owns it
@@ -212,6 +217,9 @@ export default function ClassroomGrid() {
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    justDraggedRef.current = true;
+    const rect = event.active.rect.current.initial;
+    if (rect) setDragSize({ width: rect.width, height: rect.height });
     setActiveDragSeatKey(event.active.id as string);
     setOverSeatKey(null);
     setSelectedSeat(null);
@@ -228,13 +236,18 @@ export default function ClassroomGrid() {
       const { active, over } = event;
       setActiveDragSeatKey(null);
       setOverSeatKey(null);
-      if (!over || active.id === over.id) return;
+      // Some browsers emit a click immediately after mouse/touch release.
+      // Clear after that event turn so dropping cannot open a drawer/select a seat.
+      window.setTimeout(() => { justDraggedRef.current = false; }, 0);
+      if (!over || active.id === over.id) { announce(t('classroom.drag_cancelled')); return; }
       const src = active.id as string;
       const tgt = over.id as string;
       if (lockedSeats.includes(src) || lockedSeats.includes(tgt)) return;
       swapStudents(src, tgt);
+      const student = studentBySeatKey.get(src);
+      if (student) announce(t('workspace.moved', { name: student.name }));
     },
-    [lockedSeats, swapStudents]
+    [lockedSeats, swapStudents, studentBySeatKey, announce, t]
   );
 
   // Would swapping the dragged student into `tgtKey` keep every rule for the
@@ -275,7 +288,7 @@ export default function ClassroomGrid() {
     return evaluateSwap(activeDragSeatKey, overSeatKey);
   }, [evaluateSwap, activeDragSeatKey, overSeatKey]);
 
-  // Spoken announcements for keyboard-driven drag (dnd-kit KeyboardSensor).
+  // Spoken announcements accompany pointer drag feedback.
   // Critically, the over-target message states whether the swap is allowed or
   // would break a rule — the same verdict the sighted user sees as a green/red
   // ring — so keyboard/SR users aren't relying on color they can't perceive.
@@ -314,12 +327,11 @@ export default function ClassroomGrid() {
   const setDetailsTarget = useStore((s) => s.setDetailsTarget);
 
   // ── Click handlers ────────────────────────────────────────────────────────
-  // - In CLICK mode: select-then-swap (existing behavior).
-  // - In DRAG mode: opening the detail drawer is the natural click
-  //   action (no drag in flight = the user wants to inspect).
+  // Select-then-move works in both modes; details have a separate button.
   const handleSeatClick = useCallback(
     (seatKey: string) => {
       setContextMenu(null);
+      setLiveMessage('');
 
       // Resolve the seat regardless of mode — used by both branches below.
       const [row, col] = seatKey.split('-').map(Number);
@@ -327,12 +339,8 @@ export default function ClassroomGrid() {
         (s) => s.position.row === row && s.position.col === col
       );
 
-      if (interactionMode === 'drag') {
-        // In drag mode, a plain click on an occupied seat = "tell me
-        // about this student". Empty seats do nothing.
-        if (seat?.student_id) setDetailsTarget(seat.student_id);
-        return;
-      }
+      if (justDraggedRef.current) return;
+      if (lockedSeats.includes(seatKey)) { if (!selectedSeatKey) setSelectedSeat(seatKey); announce(t('workspace.locked')); return; }
 
       // Click-to-swap mode (existing behavior).
       if (selectedSeatKey === seatKey) {
@@ -343,13 +351,16 @@ export default function ClassroomGrid() {
       if (selectedSeatKey) {
         if (!lockedSeats.includes(selectedSeatKey) && !lockedSeats.includes(seatKey)) {
           swapStudents(selectedSeatKey, seatKey);
+          const moved = studentBySeatKey.get(selectedSeatKey);
+          if (moved) announce(t('workspace.moved', { name: moved.name }));
         }
+        else announce(t('workspace.locked'));
         setSelectedSeat(null);
       } else {
         if (seat?.student_id) setSelectedSeat(seatKey);
       }
     },
-    [interactionMode, selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, setDetailsTarget]
+    [selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, studentBySeatKey, announce, t]
   );
 
   // ── Context menu ──────────────────────────────────────────────────────────
@@ -381,6 +392,7 @@ export default function ClassroomGrid() {
     lockedSeats,
     toggleLockSeat,
     announceLockChange,
+    isDragging: !!activeDragSeatKey,
   });
 
   // ── Active drag ghost ─────────────────────────────────────────────────────
@@ -433,7 +445,9 @@ export default function ClassroomGrid() {
 
   return (
     <div
-      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 sm:p-6"
+      className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-5"
+      onPointerDownCapture={() => { justDraggedRef.current = false; }}
+      onKeyDownCapture={() => { justDraggedRef.current = false; }}
       onClick={() => setContextMenu(null)}
     >
       {/* Off-screen live region for keyboard seat lock/unlock announcements. */}
@@ -449,6 +463,15 @@ export default function ClassroomGrid() {
         setShowRelations={setShowRelations}
       />
 
+      <div className="mb-3 flex h-20 sm:h-16 items-center justify-between gap-2 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/30" data-testid="movement-feedback">
+        <p role="status" className="min-w-0 flex-1 line-clamp-3 text-xs sm:text-sm font-medium text-primary-800 dark:text-primary-200">{activeDragStudent ? t('workspace.moving', { name: activeDragStudent.name }) : liveMessage || (selectedSeatKey && studentBySeatKey.get(selectedSeatKey) ? t('workspace.selected', { name: studentBySeatKey.get(selectedSeatKey)!.name }) : t(interactionMode === 'drag' ? 'classroom.drag_hint' : 'classroom.click_hint'))}</p>
+        <div className="w-[132px] shrink-0">{selectedSeatKey && <div className="flex items-center gap-1">
+          <button type="button" onClick={() => { const student = studentBySeatKey.get(selectedSeatKey); if (student) setDetailsTarget(student.id); }} aria-label={t('workspace.details')} title={t('workspace.details')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200"><Info size={18} /></button>
+          <button type="button" onClick={() => { const locked = lockedSeats.includes(selectedSeatKey); toggleLockSeat(selectedSeatKey); announceLockChange(selectedSeatKey, !locked); setSelectedSeat(null); }} aria-label={t(lockedSeats.includes(selectedSeatKey) ? 'workspace.unlock' : 'workspace.lock')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200">{lockedSeats.includes(selectedSeatKey) ? <Unlock size={18} /> : <Lock size={18} />}</button>
+          <button type="button" onClick={() => setSelectedSeat(null)} aria-label={t('workspace.cancel_move')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200"><X size={18} /></button>
+        </div>}</div>
+      </div>
+
       {/* Timeline Panel */}
       {showTimeline && (
         <div className="mb-4">
@@ -462,6 +485,7 @@ export default function ClassroomGrid() {
 
       {/* DnD Context wraps the active layout renderer + drag overlay */}
       <DndContext
+        measuring={GRID_MEASURING}
         sensors={sensors}
         collisionDetection={(args) => {
           if (!args.pointerCoordinates) return closestCenter(args);
@@ -474,7 +498,7 @@ export default function ClassroomGrid() {
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        onDragCancel={() => { setActiveDragSeatKey(null); setOverSeatKey(null); }}
+        onDragCancel={() => { setActiveDragSeatKey(null); setOverSeatKey(null); window.setTimeout(() => { justDraggedRef.current = false; }, 0); announce(t('classroom.drag_cancelled')); }}
       >
         {isAbsoluteLayout ? (
           /* ── Free-positioning renderer for clusters / u-shape / circle ── */
@@ -512,9 +536,9 @@ export default function ClassroomGrid() {
 
         {/* Fixed viewport coordinates must escape the backdrop-filter panel,
             which otherwise becomes the overlay's containing block. */}
-        {createPortal(<DragOverlay style={{ pointerEvents: 'none' }} dropAnimation={null}>
+        {createPortal(<DragOverlay style={{ pointerEvents: 'none', zIndex: 100 }} adjustScale={false} dropAnimation={null}>
           {activeDragStudent ? (
-            <div data-testid="drag-ghost"><DragGhost
+            <div data-testid="drag-ghost" style={dragSize}><DragGhost
               student={activeDragStudent}
               variant={isAbsoluteLayout ? 'absolute' : 'rows'}
             /></div>

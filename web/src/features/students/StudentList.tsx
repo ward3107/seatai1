@@ -130,7 +130,7 @@ export default function StudentList() {
       )}
 
       {/* List */}
-      <div className="space-y-1.5 max-h-64 overflow-auto">
+      <div className="space-y-1.5">
         <AnimatePresence initial={false}>
           {filtered.map((student) => (
             <motion.div

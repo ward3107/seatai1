@@ -5,6 +5,14 @@ of Education approval. Do not describe a proposed capability as implemented.
 
 ## Implemented baseline
 
+- The active seating chart and manual moves persist across reloads; locks restore with it.
+- Stable drag feedback and rendered-bounds measurement keep the card under the cursor at reduced zoom.
+- Separate mouse/touch sensors, visible lock/details actions, and native keyboard selection/movement.
+- On phones, click-to-move is the default; the map scrolls internally to preserve tappable seats.
+- The primary optimize action remains available with the settings drawer closed.
+- A crashed, blocked or stalled worker recovers through the same yielding local engine;
+  superseded or stale-input results are discarded and pending requests settle on unmount.
+- Legacy saved constraints retain newly added defaults, and result panels accept missing warning lists.
 - Browser-local storage by default; external Google, AI and LTI flows remain optional.
 - AI API keys are not persisted by the application.
 - CSV replacement is atomic, requires confirmation and rejects partially invalid files.
@@ -17,7 +25,9 @@ of Education approval. Do not describe a proposed capability as implemented.
   are configured to fail CI on failures. Their results must still be checked
   for each commit.
 - A production-build smoke test installs the generated service worker, disables
-  network access and verifies that the cached application shell reloads.
+  network access and verifies that the cached application shell reloads. Production
+  desktop/phone tests also optimize a class, open both result panels, move students
+  and reload the saved arrangement.
 - The initial production JavaScript entry is limited to 500 kB; interaction-
   gated classroom, analysis, survey and export views are loaded on demand.
 

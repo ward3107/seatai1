@@ -151,9 +151,9 @@ test.describe('Optimize → render → print', () => {
 
     await expect(page.locator('#seating-grid-export')).toBeVisible();
 
-    // Arrow selects an occupied seat; L toggles its lock (previously only
-    // reachable by mouse right-click / touch long-press).
-    await page.keyboard.press('ArrowRight');
+    // Classroom shortcuts act only when focus is inside the map.
+    const key = await page.evaluate(() => { const seat = window.__ZUSTAND_STORE__.getState().result!.layout.seats.find(s => s.student_id)!; return `${seat.position.row}-${seat.position.col}`; });
+    await page.locator(`[data-seat-key="${key}"]`).focus();
     await page.keyboard.press('l');
     await expect.poll(() => getState(page, (s) => (s as { lockedSeats: string[] }).lockedSeats.length)).toBe(1);
     await page.keyboard.press('l');

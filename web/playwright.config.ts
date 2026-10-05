@@ -51,7 +51,7 @@ export default defineConfig({
     {
       name: 'mobile-chrome',
       testMatch: /mobile\.spec\.ts/,
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices['Pixel 5'], ...(process.env.PW_CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_PATH } } : {}) },
     },
   ],
 

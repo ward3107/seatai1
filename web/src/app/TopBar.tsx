@@ -67,7 +67,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   }, [prefsOpen]);
 
   return (
-    <header className="relative z-20 min-h-14 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
+    <header className="relative z-20 shrink-0 min-h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
       {!sidebarOpen && !wizardActive && (
         <button
           onClick={() => setSidebarOpen(true)}
@@ -92,7 +92,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         </button>
       )}
 
-      {!workspace && <span className="font-bold text-lg text-primary-800 dark:text-primary-200">SeatAI</span>}
+      {<span className="font-bold text-lg text-primary-800 dark:text-primary-200">SeatAI</span>}
       {workspace && <div className="flex items-center gap-1" aria-label={t('app.history_controls')} role="group">
         <button
           onClick={undo}
@@ -136,7 +136,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
             role="status"
             aria-label={`${t(`score.${getScoreRating(result)}`)} · ${getDisplayScorePct(result)}%`}
           >
-            <span className="text-sm font-medium text-primary-800 dark:text-primary-200">
+            <span className="hidden xl:inline text-sm font-medium text-primary-800 dark:text-primary-200">
               {t(`score.${getScoreRating(result)}`)}
             </span>
             <span className="text-xs text-primary-700/70 dark:text-primary-300/70 tabular-nums">
@@ -170,7 +170,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
 
         {workspace ? <ExportButton /> : <LanguageSelector />}
 
-        <button onClick={() => setPrivacyOpen(true)} className="min-h-11 rounded-lg px-2 text-xs text-gray-600 underline dark:text-gray-300">{t('privacyHub.title')}</button>
+
         {privacyOpen && <Suspense fallback={null}><PrivacyHub onClose={() => setPrivacyOpen(false)} /></Suspense>}
         {/* Display preferences — collapsed into a single overflow menu so
             theme / text size / language / help stop competing with the
@@ -200,6 +200,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
                 <HelpCircle size={16} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
                 {t('guide.title')}
               </button>
+              <button role="menuitem" onClick={() => { setPrefsOpen(false); setPrivacyOpen(true); }} className="min-h-11 rounded-lg px-3 text-start text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{t('privacyHub.title')}</button>
               <div className="flex items-center justify-between px-1 py-1 gap-2 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2">
                 <ThemeToggle />
                 <TextSizeToggle />

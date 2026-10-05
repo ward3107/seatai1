@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useReducedMotion } from 'framer-motion';
 import StudentList from '../features/students/StudentList';
 import AddStudentsPanel from '../features/import/AddStudentsPanel';
@@ -9,30 +10,14 @@ import LayoutPanel from '../features/layout/LayoutPanel';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useLanguage } from '../hooks/useLanguage';
 import { useStore } from '../core/store';
-import { slotCount } from '../core/layouts';
-import type { OptimizerProgress } from '../hooks/useOptimizer';
 import clsx from 'clsx';
-import { X, Play, RefreshCw, ShieldCheck, ChevronDown } from 'lucide-react';
+import { X, ShieldCheck, ChevronDown, Users, LayoutGrid, ListChecks } from 'lucide-react';
 
 const AdvancedPanels = lazy(() => import('./AdvancedPanels'));
 
-interface SidebarProps {
-  wasmReady: boolean;
-  isOptimizing: boolean;
-  error: string | null;
-  optimize: () => void;
-  progress: OptimizerProgress | null;
-  cancel: () => void;
-}
-
-/**
- * App sidebar: project / import / roster / rules panels plus the Optimize
- * button. Overlay drawer on small viewports, push-style from md+ —
- * see the className comments on <aside>.
- */
-export default function Sidebar({ wasmReady, isOptimizing, error, optimize, progress, cancel }: SidebarProps) {
-  const students = useStore((s) => s.students);
-  const layoutDef = useStore((s) => s.layoutDef);
+/** Classroom settings dock on desktop and open as a drawer on smaller screens. */
+export default function Sidebar() {
+  const hasStudents = useStore(s => s.students.length > 0);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
   const setHomeView = useStore((s) => s.setHomeView);
@@ -41,16 +26,24 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
   // Load once on demand, then retain mounted panels to preserve edits when
   // the teacher collapses and reopens the group.
   const [advancedLoaded, setAdvancedLoaded] = useState(false);
+  const [tab, setTab] = useState<'students' | 'room' | 'rules'>('students');
 
   // When the sidebar is collapsed it's still in the DOM (translated off-screen
   // on mobile, width:0 on desktop), so `aria-hidden` alone leaves all its
   // controls in the Tab order — keyboard users tab into invisible buttons.
   // `inert` removes the whole subtree from focus and the a11y tree. Applied
   // imperatively so it works regardless of the React version's prop typings.
-  const asideRef = useRef<HTMLElement>(null);
+  const [drawer, setDrawer] = useState(() => window.matchMedia('(max-width: 1023px)').matches);
   useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)');
+    const change = () => setDrawer(query.matches);
+    query.addEventListener('change', change);
+    return () => query.removeEventListener('change', change);
+  }, []);
+  const asideRef = useFocusTrap<HTMLElement>(sidebarOpen && drawer);
+  useLayoutEffect(() => {
     asideRef.current?.toggleAttribute('inert', !sidebarOpen);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, asideRef]);
 
   return (
     <>
@@ -60,42 +53,46 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
           type="button"
           aria-label={t('app.close_sidebar')}
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] lg:hidden"
         />
       )}
 
-      {/* Sidebar — overlay drawer on small viewports, push-style from md+.
+      {/* Sidebar — overlay drawer on small viewports, push-style from lg+.
           Animation strategy:
             - Small: position fixed, slide via translate-x. Width fixed at
-              400px (capped to 85vw). Main content is full-width
+              340px (capped to 92vw). Main content is full-width
               underneath; backdrop dismisses.
-            - md+:   position relative inside flex layout. Width
-              transitions 0 ↔ 400 so main content reflows. */}
+            - lg+:   position relative inside flex layout. Width
+              transitions 0 ↔ 340 so main content reflows. */}
       <aside
         ref={asideRef}
         className={clsx(
-          'bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-xl overflow-hidden flex flex-col',
-          'fixed inset-y-0 left-0 z-40 max-w-[85vw] w-[400px]',
+          'workspace-sidebar bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col shrink-0',
+          sidebarOpen && 'border-e',
+          'fixed inset-y-0 start-0 z-40 max-w-[92vw] w-[340px]',
           'transition-transform duration-200',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          // md+: switch to flow-layout push-style. Translate becomes a
+          sidebarOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full',
+          // lg+: switch to flow-layout push-style. Translate becomes a
           // no-op (we're always in-flow), and width animates instead.
-          'md:relative md:z-0 md:translate-x-0 md:max-w-none',
-          'md:transition-[width] md:duration-200',
-          sidebarOpen ? 'md:w-[400px]' : 'md:w-0',
-          shouldReduceMotion && 'transition-none md:transition-none',
+          'lg:relative lg:z-0 lg:translate-x-0 lg:max-w-none',
+          'lg:transition-[width] lg:duration-200',
+          sidebarOpen ? 'lg:w-[340px]' : 'lg:w-0',
+          shouldReduceMotion && 'transition-none lg:transition-none',
         )}
+        role={drawer && sidebarOpen ? 'dialog' : undefined}
+        aria-modal={drawer && sidebarOpen ? true : undefined}
+        onKeyDown={event => { if (event.key === 'Escape') setSidebarOpen(false); }}
         aria-label={t('app.title')}
         aria-hidden={!sidebarOpen}
       >
-        <div className="w-[400px] max-w-[85vw] h-full flex flex-col">
+        <div className="w-[340px] max-w-[92vw] h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <button
               type="button"
               onClick={() => {
                 setHomeView(true);
-                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                if (typeof window !== 'undefined' && window.innerWidth < 1024) {
                   setSidebarOpen(false);
                 }
               }}
@@ -119,52 +116,33 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
             </button>
           </div>
 
-          {/* Content — three teacher-facing groups instead of the previous
-              flat stack of nine cards. "My class" and "Rules" carry every
-              action a teacher needs on a first run; "Advanced" is collapsed
-              by default via native <details> so rotation/arrangements/
-              projects/settings don't crowd the initial view. */}
-          <div className="flex-1 overflow-auto p-4 space-y-5">
-            {/* 1 · My class — students, room, and the optional survey. */}
-            <section aria-labelledby="sidebar-group-class">
-              <h2
-                id="sidebar-group-class"
-                className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400"
-              >
-                {t('app.group_class')}
-              </h2>
-              <div className="space-y-3">
-                <ErrorBoundary name="Add Students" inline>
-                  <AddStudentsPanel />
-                </ErrorBoundary>
-
-                <ErrorBoundary name="Student List" inline>
-                  <StudentList />
-                </ErrorBoundary>
-
-                <ErrorBoundary name="Questionnaire" inline>
-                  <QuestionnairePanel />
-                </ErrorBoundary>
-
-                <ErrorBoundary name="Layout" inline>
-                  <LayoutPanel />
-                </ErrorBoundary>
-              </div>
+          <div role="tablist" aria-label={t('app.group_class')} className="grid grid-cols-3 gap-1 border-b border-gray-200 p-2 dark:border-gray-700">
+            {(['students', 'room', 'rules'] as const).map(key => {
+              const Icon = key === 'students' ? Users : key === 'room' ? LayoutGrid : ListChecks;
+              return <button key={key} type="button" role="tab" id={`setup-tab-${key}`} tabIndex={tab === key ? 0 : -1} aria-selected={tab === key} aria-controls={`setup-panel-${key}`} onClick={() => setTab(key)} onKeyDown={event => {
+                const keys = ['students', 'room', 'rules'] as const;
+                const index = keys.indexOf(key);
+                const rtl = document.documentElement.dir === 'rtl';
+                const step = event.key === 'ArrowRight' ? (rtl ? -1 : 1) : event.key === 'ArrowLeft' ? (rtl ? 1 : -1) : 0;
+                if (!step && event.key !== 'Home' && event.key !== 'End') return;
+                event.preventDefault();
+                const next = keys[event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (index + step + 3) % 3];
+                setTab(next); document.getElementById(`setup-tab-${next}`)?.focus();
+              }} className={clsx('flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors', tab === key ? 'bg-primary-50 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200' : 'text-gray-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700')}><Icon size={15} aria-hidden="true" />{t(`workspace.${key}`)}</button>;
+            })}
+          </div>
+          <div className="flex-1 min-h-0 overflow-auto overscroll-contain p-3 space-y-4">
+            <section role="tabpanel" id="setup-panel-students" aria-labelledby="setup-tab-students" hidden={tab !== 'students'} className="space-y-3">
+              <ErrorBoundary name="Add Students" inline><AddStudentsPanel key={hasStudents ? 'loaded' : 'empty'} /></ErrorBoundary>
+              <ErrorBoundary name="Student List" inline><StudentList /></ErrorBoundary>
+              <ErrorBoundary name="Questionnaire" inline><QuestionnairePanel /></ErrorBoundary>
             </section>
-
-            {/* 2 · Rules & requests. */}
-            <section aria-labelledby="sidebar-group-rules">
-              <h2
-                id="sidebar-group-rules"
-                className="px-1 pb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400"
-              >
-                {t('app.group_rules')}
-              </h2>
-              <div className="space-y-3">
-                <ErrorBoundary name="Seating Rules" inline>
-                  <ConstraintsPanel />
-                </ErrorBoundary>
-              </div>
+            <section role="tabpanel" id="setup-panel-room" aria-labelledby="setup-tab-room" hidden={tab !== 'room'}>
+              <ErrorBoundary name="Layout" inline><LayoutPanel /></ErrorBoundary>
+            </section>
+            <section role="tabpanel" id="setup-panel-rules" aria-labelledby="setup-tab-rules" hidden={tab !== 'rules'} className="space-y-3">
+              <ErrorBoundary name="Seating Rules" inline><ConstraintsPanel /></ErrorBoundary>
+              <ErrorBoundary name="Constraint Warnings" inline><ConstraintWarnings /></ErrorBoundary>
             </section>
 
             {/* 3 · Advanced — native <details> collapses the whole group
@@ -198,86 +176,8 @@ export default function Sidebar({ wasmReady, isOptimizing, error, optimize, prog
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-            {/* Surface impossible / contradictory rules before optimizing. */}
-            <ErrorBoundary name="Constraint Warnings" inline>
-              <ConstraintWarnings />
-            </ErrorBoundary>
-
-            <button
-              onClick={optimize}
-              data-testid="optimize-button"
-              disabled={!wasmReady || isOptimizing || students.length < 2 || students.length > slotCount(layoutDef)}
-              aria-busy={isOptimizing}
-              className="w-full py-3 px-4 bg-primary-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-700 transition-colors"
-            >
-              {isOptimizing ? (
-                <>
-                  <RefreshCw size={20} className="animate-spin" aria-hidden="true" />
-                  {t('app.optimizing')}
-                </>
-              ) : (
-                <>
-                  <Play size={20} aria-hidden="true" />
-                  {t('app.optimize_seating')}
-                </>
-              )}
-            </button>
-
-            {/* Live progress + cancel — streamed from the worker. The bar
-                tracks generations across all GA restarts; cancel returns the
-                best plan found so far rather than discarding the run. */}
-            {isOptimizing && progress && (
-              <div className="space-y-1.5">
-                <div
-                  className="h-1.5 bg-gray-200 rounded-full overflow-hidden"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={progress.totalGenerations}
-                  aria-valuenow={progress.generation}
-                  aria-label={t('optimization.progress', {
-                    generation: progress.generation,
-                    total: progress.totalGenerations,
-                  })}
-                >
-                  <div
-                    className="h-full bg-primary-600 rounded-full transition-[width] duration-300"
-                    style={{
-                      width: `${Math.min(100, Math.round((progress.generation / Math.max(progress.totalGenerations, 1)) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>
-                    {t('optimization.progress', {
-                      generation: progress.generation,
-                      total: progress.totalGenerations,
-                    })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={cancel}
-                    className="px-2 py-0.5 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 transition-colors font-medium"
-                  >
-                    {t('optimization.cancel')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div role="alert" className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 text-sm">
-                {error}
-              </div>
-            )}
-
-            {!wasmReady && !error && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-600 dark:text-blue-300 text-sm flex items-center gap-2">
-                <RefreshCw size={16} className="animate-spin" />
-                {t('app.loading_optimizer')}
-              </div>
-            )}
-
+          <div className="p-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
+            <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden w-full min-h-11 rounded-xl bg-primary-600 px-3 text-sm font-semibold text-white">{t('app.back_to_chart')}</button>
             {/* Quiet privacy reassurance — always visible so IT and
                 teachers know what they're trusting at a glance. */}
             <div

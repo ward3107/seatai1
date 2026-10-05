@@ -24,10 +24,10 @@ describe('occupied seat keyboard navigation', () => {
     expect(setSelectedSeat).toHaveBeenCalledWith('0-0');
     unmount();
   });
-  it('skips empty seats between students', () => {
+  it('allows navigating to an empty destination seat', () => {
     const { setSelectedSeat, unmount } = setup('0-0');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(setSelectedSeat).toHaveBeenCalledWith('0-2');
+    expect(setSelectedSeat).toHaveBeenCalledWith('0-1');
     unmount();
   });
   it('does not select an empty classroom', () => {

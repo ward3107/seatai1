@@ -39,7 +39,6 @@ export default function RowLayoutRenderer({
   cols,
   viewMode,
   zoomLevel,
-  interactionMode,
   decorationsByRow,
   gridContainerRef,
   renderSeatCard,
@@ -72,26 +71,20 @@ export default function RowLayoutRenderer({
   return (
     <>
       {/* Teacher Desk */}
-      <div hidden={hasRoomPlan} className={hasRoomPlan ? 'hidden' : 'flex justify-center mb-6'}>
+      <div hidden={hasRoomPlan} className={hasRoomPlan ? 'hidden' : 'flex justify-center mb-3'}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-12 py-3 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg shadow-lg"
+          className="px-8 py-2 bg-primary-50 dark:bg-primary-900/40 border border-primary-200 dark:border-primary-800 rounded-xl"
         >
-          <span className="font-semibold text-white flex items-center gap-2">
+          <span className="text-sm font-semibold text-primary-800 dark:text-primary-200 flex items-center gap-2">
             <User size={18} />
             {t('classroom.teacher_desk')}
           </span>
         </motion.div>
       </div>
 
-      {/* Instruction hint */}
-      <p className="text-center text-xs text-gray-400 dark:text-gray-400 mb-5">
-        {interactionMode === 'drag'
-          ? t('classroom.drag_hint')
-          : t('classroom.click_hint')}
-      </p>
-
+      <p className="mb-3 text-center text-xs text-gray-500 dark:text-gray-400 sm:hidden">{t('workspace.pan_hint')}</p>
       {/* Zoomable grid wrapper — auto-fits to width, then the user's zoom
           multiplies on top, so the whole class is visible by default
           (especially on phones) instead of clipping the last column. */}
@@ -112,7 +105,7 @@ export default function RowLayoutRenderer({
                   key={rowIndex}
                   className={clsx(
                     'flex justify-center items-start',
-                    isPairs && !hasDecos ? 'gap-6' : 'gap-2'
+                    isPairs && !hasDecos ? 'gap-4' : 'gap-2'
                   )}
                 >
                   {/* Row number label */}
@@ -171,8 +164,8 @@ export default function RowLayoutRenderer({
                           className={clsx(
                             'flex gap-2 p-2 rounded-xl border-2',
                             rowIndex === 0
-                              ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30'
-                              : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30'
+                              ? 'border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30'
                           )}
                         >
                           {deskSeats.map((seat) => (

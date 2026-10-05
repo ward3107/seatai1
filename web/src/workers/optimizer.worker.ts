@@ -41,7 +41,7 @@ type OutMessage =
 
 // Set when a 'cancel' message arrives mid-run; polled by the optimizer via
 // shouldStop between generation chunks. Reset at the start of each run.
-let cancelRequested = false;
+let activeRun: { cancelled: boolean } | null = null;
 
 // Signal ready immediately (no WASM to load)
 self.postMessage({ type: 'ready' } satisfies OutMessage);
@@ -50,7 +50,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
   const msg = e.data;
 
   if (msg.type === 'cancel') {
-    cancelRequested = true;
+    if (activeRun) activeRun.cancelled = true;
     return;
   }
   if (msg.type !== 'optimize') return;
@@ -60,7 +60,9 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
     students, rows, cols, layoutDef, weights, config, constraints,
     recentPairPenalties, avoidRecentStrength, pinned,
   } = msg;
-  cancelRequested = false;
+  if (activeRun) activeRun.cancelled = true;
+  const run = { cancelled: false };
+  activeRun = run;
 
   try {
     const optimizer = layoutDef
@@ -85,7 +87,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
           type: 'progress', reqId, generation, totalGenerations, bestFitness,
         } satisfies OutMessage);
       },
-      shouldStop: () => cancelRequested,
+      shouldStop: () => run.cancelled,
     });
 
     self.postMessage({
@@ -93,7 +95,7 @@ self.onmessage = async (e: MessageEvent<InMessage>) => {
       reqId,
       result,
       // Back-compat: only present (true) when the run was cut short.
-      cancelled: cancelRequested || undefined,
+      cancelled: run.cancelled || undefined,
     } satisfies OutMessage);
   } catch (err) {
     self.postMessage({

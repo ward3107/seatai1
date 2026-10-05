@@ -4,6 +4,7 @@ import { useOptimizer } from '../hooks/useOptimizer';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import WorkspaceHeader from './WorkspaceHeader';
 
 // PrintView pulls in html2canvas indirectly (the user only sees it after
 // clicking Print), so defer its load.
@@ -119,7 +120,7 @@ function App() {
   // the seating area first. Run once on mount only — afterwards the
   // user's toggle wins.
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       useStore.setState({ sidebarOpen: false });
     }
   }, []);
@@ -138,7 +139,7 @@ function App() {
   });
 
   return (
-    <div className={clsx('h-screen overflow-hidden flex relative', SCALE_CLASS[uiScale])}>
+    <div className={clsx('workspace-shell overflow-hidden flex relative', SCALE_CLASS[uiScale])}>
       {/* Skip link — first focusable element, so keyboard users can jump past
           the header/sidebar straight to the seating area. Visually hidden
           until focused. */}
@@ -158,14 +159,7 @@ function App() {
           (which is where students would otherwise be added) is hidden to
           avoid two competing entry points. */}
       {!wizardActive && (
-        <Sidebar
-          wasmReady={wasmReady}
-          isOptimizing={isOptimizing}
-          error={error}
-          optimize={optimize}
-          progress={progress}
-          cancel={cancel}
-        />
+        <Sidebar />
       )}
 
       {/* Main Content — min-w-0 lets this flex child shrink below its
@@ -190,7 +184,7 @@ function App() {
         <BackupReminderBanner />
 
         {/* Content Area */}
-        <div ref={contentRef} className="flex-1 overflow-auto p-3 sm:p-6">
+        <div ref={contentRef} className="workspace-content flex-1 min-h-0 overflow-auto overscroll-contain p-3 sm:p-5">
           {wizardActive ? (
             /* ── Guided setup wizard ── */
             <Suspense fallback={null}>
@@ -227,13 +221,17 @@ function App() {
             </>
           ) : (
             <>
+              <WorkspaceHeader ready={wasmReady} busy={isOptimizing} error={error} progress={progress} optimize={optimize} cancel={cancel} />
               <ClassroomReview />
+              <Suspense fallback={<p role="status">{t('common.loading')}</p>}>
+                <ErrorBoundary name="Seating Grid"><ClassroomGrid /></ErrorBoundary>
+              </Suspense>
               {/* Results disclosure: metrics + per-student explanations
                   collapse into a single bar by default so the seating map
                   dominates the viewport. Score stays visible in the header
                   for at-a-glance feedback. */}
               {result && (
-                <div className="mb-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-sm">
+                <div className="mt-4 mb-4 border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-sm">
                   <button
                     type="button"
                     onClick={() => setResultsCollapsed(!resultsCollapsed)}
@@ -241,7 +239,7 @@ function App() {
                     aria-controls="results-disclosure-body"
                     className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
                   >
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div className="flex flex-wrap items-center gap-2 text-start text-sm text-gray-700 dark:text-gray-300">
                       <span className="font-semibold">{t('optimization.results_title')}</span>
                       <span className="text-gray-400 dark:text-gray-400">·</span>
                       <span>
@@ -277,10 +275,10 @@ function App() {
                         </label>
                       )}
                       <Suspense fallback={null}>
-                        <ErrorBoundary name="Metrics Panel" inline>
+                        <ErrorBoundary name="Metrics Panel" inline fallbackMessage={t('workspace.analysis_error')} retryLabel={t('workspace.retry')}>
                           <MetricsPanel />
                         </ErrorBoundary>
-                        <ErrorBoundary name="Explanation Panel" inline>
+                        <ErrorBoundary name="Explanation Panel" inline fallbackMessage={t('workspace.analysis_error')} retryLabel={t('workspace.retry')}>
                           <ExplanationPanel />
                         </ErrorBoundary>
                       </Suspense>
@@ -289,12 +287,6 @@ function App() {
                 </div>
               )}
 
-              {/* Classroom Grid — main attraction */}
-              <Suspense fallback={null}>
-                <ErrorBoundary name="Seating Grid">
-                  <ClassroomGrid />
-                </ErrorBoundary>
-              </Suspense>
             </>
           )}
         </div>
