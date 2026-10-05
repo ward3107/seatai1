@@ -1,24 +1,37 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Users, Accessibility, Heart, AlertTriangle, Globe } from 'lucide-react';
 import clsx from 'clsx';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useStore } from '../../core/store';
 import { explainPlacement } from '../../utils/explainPlacement';
 import type { Student } from '../../types';
 
 /**
- * Floating card summarising a hovered/tapped student: scores, special needs
- * and social ties. Pinned bottom-right and width-capped so it never clips on
- * phones. Renders nothing when no student is active.
+ * Mouse preview next to its seat, bounded by the viewport. The pointer can
+ * enter its controls; leaving both the seat and preview dismisses it.
  */
 export default function StudentHoverPopup({
   student,
   onClose,
+  anchor,
+  onPointerEnter,
+  onPointerLeave,
 }: {
   student: Student | null;
   onClose: () => void;
+  anchor: DOMRect | null;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
 }) {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 8, top: 8 });
+  useLayoutEffect(() => {
+    if (!student || !anchor || !popupRef.current) return;
+    const { width, height } = popupRef.current.getBoundingClientRect();
+    const left = anchor.right + 8 + width <= innerWidth - 8 ? anchor.right + 8 : anchor.left - width - 8;
+    setPosition({left: Math.max(8, Math.min(left, innerWidth - width - 8)), top: Math.max(8, Math.min(anchor.top, innerHeight - height - 8))});
+  }, [student, anchor]);
   const { t } = useLanguage();
   const result = useStore((s) => s.result);
   const layoutDef = useStore((s) => s.layoutDef);
@@ -48,12 +61,19 @@ export default function StudentHoverPopup({
     <AnimatePresence>
       {student && (
         <motion.div
+          ref={popupRef}
+          data-testid="student-hover-popup"
+          style={position}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+          onFocusCapture={onPointerEnter}
+          onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onPointerLeave(); }}
           key="popup"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           transition={{ duration: 0.15 }}
-          className="fixed bottom-4 right-4 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 z-50"
+          className="fixed w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 z-50"
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-2.5">

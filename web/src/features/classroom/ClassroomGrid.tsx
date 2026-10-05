@@ -65,6 +65,36 @@ export default function ClassroomGrid() {
   const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>(() => window.matchMedia('(pointer: coarse)').matches ? 'click' : 'drag');
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
   const [hoveredStudent, setHoveredStudent] = useState<Student | null>(null);
+  const [hoverAnchor, setHoverAnchor] = useState<DOMRect | null>(null);
+  const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepHoverOpen = useCallback(() => {
+    if (hoverCloseTimer.current) clearTimeout(hoverCloseTimer.current);
+    hoverCloseTimer.current = null;
+  }, []);
+  const closeHover = useCallback(() => {
+    keepHoverOpen();
+    setHoveredStudent(null);
+    setHoverAnchor(null);
+  }, [keepHoverOpen]);
+  const leaveHover = useCallback(() => {
+    keepHoverOpen();
+    // A short bridge lets the pointer reach the adjacent preview controls.
+    hoverCloseTimer.current = setTimeout(closeHover, 200);
+  }, [keepHoverOpen, closeHover]);
+  useEffect(() => keepHoverOpen, [keepHoverOpen]);
+  useEffect(() => {
+    if (!hoveredStudent) return;
+    const dismissOnScroll = (event: Event) => {
+      if (event.target instanceof Element && event.target.closest('[data-testid="student-hover-popup"]')) return;
+      closeHover();
+    };
+    window.addEventListener('scroll', dismissOnScroll, true);
+    window.addEventListener('resize', closeHover);
+    return () => {
+      window.removeEventListener('scroll', dismissOnScroll, true);
+      window.removeEventListener('resize', closeHover);
+    };
+  }, [hoveredStudent, closeHover]);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -187,14 +217,18 @@ export default function ClassroomGrid() {
 
   const handleSeatMouseEnter = useCallback(
     (sk: string) => {
+      if (activeDragSeatKey) return;
+      keepHoverOpen();
       setHoveredSeatKey(sk);
       setHoveredStudent(studentBySeatKey.get(sk) ?? null);
+      setHoverAnchor(gridContainerRef.current?.querySelector(`[data-seat-key="${sk}"]`)?.getBoundingClientRect() ?? null);
     },
-    [studentBySeatKey],
+    [studentBySeatKey, activeDragSeatKey, keepHoverOpen],
   );
   const handleSeatMouseLeave = useCallback(() => {
     setHoveredSeatKey(null);
-  }, []);
+    leaveHover();
+  }, [leaveHover]);
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
   // Separate mouse/touch sensors avoid competing pointer activation. Keyboard
@@ -217,6 +251,7 @@ export default function ClassroomGrid() {
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    closeHover();
     justDraggedRef.current = true;
     const rect = event.active.rect.current.initial;
     if (rect) setDragSize({ width: rect.width, height: rect.height });
@@ -224,7 +259,7 @@ export default function ClassroomGrid() {
     setOverSeatKey(null);
     setSelectedSeat(null);
     setContextMenu(null);
-  }, [setSelectedSeat]);
+  }, [setSelectedSeat, closeHover]);
 
   // Track the hovered drop target so we can preview constraint validity.
   const handleDragOver = useCallback((event: { over: { id: string | number } | null }) => {
@@ -330,6 +365,7 @@ export default function ClassroomGrid() {
   // Select-then-move works in both modes; details have a separate button.
   const handleSeatClick = useCallback(
     (seatKey: string) => {
+      closeHover();
       setContextMenu(null);
       setLiveMessage('');
 
@@ -360,7 +396,7 @@ export default function ClassroomGrid() {
         if (seat?.student_id) setSelectedSeat(seatKey);
       }
     },
-    [selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, studentBySeatKey, announce, t]
+    [selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, studentBySeatKey, announce, t, closeHover]
   );
 
   // ── Context menu ──────────────────────────────────────────────────────────
@@ -552,7 +588,8 @@ export default function ClassroomGrid() {
       {/* The context menu and legends only render for the
           row-based layouts — matching the pre-refactor behavior, where
           they lived inside the row branch. */}
-      {createPortal(<StudentHoverPopup student={activeDragSeatKey ? null : hoveredStudent} onClose={() => setHoveredStudent(null)} />, document.body)}
+      {createPortal(<StudentHoverPopup student={activeDragSeatKey ? null : hoveredStudent} anchor={hoverAnchor}
+        onClose={closeHover} onPointerEnter={keepHoverOpen} onPointerLeave={leaveHover} />, document.body)}
 
       {!isAbsoluteLayout && (
         <>

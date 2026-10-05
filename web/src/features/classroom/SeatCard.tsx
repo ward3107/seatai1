@@ -131,8 +131,8 @@ export default memo(function SeatCard({
       style={{ touchAction: canDrag ? 'none' : 'auto' }}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}
-      onMouseEnter={() => onMouseEnter(seatKey)}
-      onMouseLeave={onMouseLeave}
+      onPointerEnter={event => { if (event.pointerType === 'mouse') onMouseEnter(seatKey); }}
+      onPointerLeave={event => { if (event.pointerType === 'mouse') onMouseLeave(); }}
       {...(canDrag ? { ...attributes, ...listeners } : {})}
       // Override dnd-kit's aria-pressed (which reflects drag state)
       // with our selection state — more useful to screen-reader users.
