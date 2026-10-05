@@ -1,4 +1,4 @@
-import RoomPlan from '../layout/RoomPlan';
+import RoomLayoutRenderer from './RoomLayoutRenderer';
 import { Info, Lock, Unlock, X } from 'lucide-react';
 import {
   DndContext,
@@ -481,10 +481,9 @@ export default function ClassroomGrid() {
         </div>
       )}
 
-      <RoomPlan />
-
       {/* DnD Context wraps the active layout renderer + drag overlay */}
       <DndContext
+        autoScroll={{ threshold: { x: 0.12, y: 0.06 } }}
         measuring={GRID_MEASURING}
         sensors={sensors}
         collisionDetection={(args) => {
@@ -500,7 +499,11 @@ export default function ClassroomGrid() {
         onDragEnd={handleDragEnd}
         onDragCancel={() => { setActiveDragSeatKey(null); setOverSeatKey(null); window.setTimeout(() => { justDraggedRef.current = false; }, 0); announce(t('classroom.drag_cancelled')); }}
       >
-        {isAbsoluteLayout ? (
+        {layoutDef.roomFeatures !== undefined ? (
+          <RoomLayoutRenderer seats={seats} zoomLevel={zoomLevel} gridContainerRef={gridContainerRef}
+            renderSeatCard={renderSeatCard} showRelations={showRelations} activeSeatKey={selectedSeatKey ?? hoveredSeatKey}
+            result={result} students={students} />
+        ) : isAbsoluteLayout ? (
           /* ── Free-positioning renderer for clusters / u-shape / circle ── */
           <AbsoluteLayoutRenderer
             seats={seats}

@@ -71,3 +71,22 @@ test('touch selection and long-press drag move students without opening a drawer
   await expect.poll(() => page.evaluate(key => window.__ZUSTAND_STORE__.getState().result!.layout.seats.find(s => `${s.position.row}-${s.position.col}` === key)!.student_id, keys[1])).toBe(id);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('room features can be dragged by touch and the integrated map stays inside the phone viewport',async({page,context})=>{
+  await createSampleClass(page);
+  await page.getByRole('tab',{name:'Room',exact:true}).tap();
+  await page.locator('button[aria-controls="layout-panel-body"]').tap();
+  const editor=page.getByTestId('room-plan-editor');
+  await editor.getByRole('button',{name:'+ Door',exact:true}).tap();
+  const door=editor.getByRole('button',{name:'Door',exact:true});await door.scrollIntoViewIfNeeded();
+  const rect=(await door.boundingBox())!,canvas=(await editor.getByTestId('room-plan-canvas').boundingBox())!;
+  const touch=await context.newCDPSession(page);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:rect.x+rect.width/2,y:rect.y+rect.height/2}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:canvas.x+2,y:canvas.y+canvas.height*0.8}]});
+  await expect(editor.locator('[data-feature-kind="door"]')).toHaveAttribute('data-wall','left');
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await expect.poll(()=>page.evaluate(()=>window.__ZUSTAND_STORE__.getState().layoutDef.roomFeatures![0].x)).toBe(0);
+  await runOptimization(page);await noOverflow(page);
+  await expect(page.getByTestId('room-plan')).toHaveCount(1);
+  await page.screenshot({path:test.info().outputPath('room-plan-phone.png'),fullPage:true});
+});

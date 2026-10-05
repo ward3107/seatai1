@@ -101,7 +101,7 @@ export function DecoTile({ kind, label }: { kind: 'desk' | 'obstacle'; label: st
       aria-label={label}
       title={label}
       className={clsx(
-        'rounded-lg min-h-[88px] w-[72px] flex flex-col items-center justify-center gap-1 border-2 select-none shrink-0',
+        'rounded-xl min-h-[100px] w-[84px] flex flex-col items-center justify-center gap-1 border-2 select-none shrink-0',
         kind === 'desk'
           ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
           : 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400',

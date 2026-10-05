@@ -26,9 +26,11 @@ function getSeatCenter(
   if (!el) return null;
   const containerRect = container.getBoundingClientRect();
   const rect = el.getBoundingClientRect();
+  const scaleX = containerRect.width / container.offsetWidth || 1;
+  const scaleY = containerRect.height / container.offsetHeight || 1;
   return {
-    x: rect.left - containerRect.left + rect.width / 2,
-    y: rect.top - containerRect.top + rect.height / 2,
+    x: (rect.left - containerRect.left + rect.width / 2) / scaleX,
+    y: (rect.top - containerRect.top + rect.height / 2) / scaleY,
   };
 }
 

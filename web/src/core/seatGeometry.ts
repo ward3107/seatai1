@@ -11,6 +11,32 @@
  * and a red ⚠ for the same seat.
  */
 
+import type { RoomFeature } from './layouts';
+
+export type Wall = 'left' | 'right' | 'front' | 'back';
+const clamp = (n: number, min = 0, max = 1) => Math.max(min, Math.min(max, n));
+
+export function featureWall(feature: Pick<RoomFeature, 'x' | 'y'>): Wall {
+  const distances = [feature.x, 1 - feature.x, feature.y, 1 - feature.y];
+  return (['left', 'right', 'front', 'back'] as const)[distances.indexOf(Math.min(...distances))];
+}
+export function onWall(wall: Wall, position: number) {
+  const p = clamp(position, 0.08, 0.92);
+  return wall === 'left' ? { x: 0, y: p } : wall === 'right' ? { x: 1, y: p }
+    : wall === 'front' ? { x: p, y: 0 } : { x: p, y: 1 };
+}
+
+/** Older backups may contain wall items inside the room. Use the same
+ * canonical wall position for rendering, optimization and explanations. */
+export function wallFeaturePosition(feature: Pick<RoomFeature, 'x' | 'y'>) {
+  const wall = featureWall({ x: clamp(feature.x), y: clamp(feature.y) });
+  return onWall(wall, wall === 'left' || wall === 'right' ? feature.y : feature.x);
+}
+
+function scoringFeaturePosition(feature: RoomFeature) {
+  return feature.kind === 'teacher' ? feature : wallFeaturePosition(feature);
+}
+
 /** Min/max normalized x across a slot set. Falls back to the full 0..1 range
  *  for an empty set. */
 export function slotXExtent(slots: { x: number }[]): { xMin: number; xMax: number } {
@@ -45,13 +71,16 @@ export function isAisleSlot(x: number, xMin: number, xMax: number): boolean {
 export function isRoomWindowSlot(slot: { x: number; y: number }, xMin: number, xMax: number,
   features?: import('./layouts').RoomFeature[]): boolean {
   if (features === undefined) return isWindowSlot(slot.x, xMin, xMax);
-  return features.some((feature) => feature.kind === 'window' &&
-    Math.hypot(slot.x - feature.x, slot.y - feature.y) <= 0.25);
+  const distance = roomFeatureDistance(slot, 'window', features);
+  return distance !== null && distance <= 0.25;
 }
 
 export function roomFeatureDistance(slot: { x: number; y: number }, kind: import('./layouts').RoomFeature['kind'], features?: import('./layouts').RoomFeature[]): number | null {
   const matching = features?.filter(f => f.kind === kind) ?? [];
-  return matching.length ? Math.min(...matching.map(f => Math.hypot(slot.x - f.x, slot.y - f.y))) : null;
+  return matching.length ? Math.min(...matching.map(f => {
+    const point = scoringFeaturePosition(f);
+    return Math.hypot(slot.x - point.x, slot.y - point.y);
+  })) : null;
 }
 export function isNearTeacherSlot(slot: { x: number; y: number; isFront: boolean }, features?: import('./layouts').RoomFeature[]): boolean {
   if (features === undefined) return slot.isFront;

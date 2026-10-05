@@ -518,8 +518,8 @@ export const useStore = create<AppState>()(
             JSON.stringify(prev.customRowSizes ?? []) !==
               JSON.stringify(def.customRowSizes ?? []) ||
             JSON.stringify(prev.blockedCells ?? []) !==
-              JSON.stringify(def.blockedCells ?? []) ||
-            JSON.stringify(prev.roomFeatures) !== JSON.stringify(def.roomFeatures);
+              JSON.stringify(def.blockedCells ?? []);
+          const featuresChanged = JSON.stringify(prev.roomFeatures) !== JSON.stringify(def.roomFeatures);
           state.layoutDef = def;
           state.rows = def.rows;
           state.cols = def.cols;
@@ -537,6 +537,10 @@ export const useStore = create<AppState>()(
             // Likewise saved arrangements snapshot specific seat positions.
             state.savedArrangements = [];
             state.activeArrangementId = null;
+          } else if (featuresChanged) {
+            // Moving a window or door does not remove physical seats. Keep
+            // the teacher's chart and locks, and refresh its room-based score.
+            rescoreCurrentResult(state);
           }
         }),
 

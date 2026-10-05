@@ -1012,7 +1012,7 @@
   },
   "roomPlan": {
     "title": "Actual room plan",
-    "instructions": "Add an item using the buttons. To move it, select it and click its new position on the map. Doors and windows snap to a wall. Changing the map requires a new seating plan.",
+    "instructions": "Add an item and drag it, or select it and click its destination. Doors and windows stay on the walls. Your seating stays in place and its score updates; optimize again to use the updated room.",
     "door": "Door",
     "window": "Window",
     "teacher": "Teacher desk",
@@ -1025,7 +1025,16 @@
     "teacherMatched": "Near the teacher desk, matching the reviewed report about access to teacher attention.",
     "teacherUnmet": "Teacher-desk proximity preference is not met at this seat.",
     "doorNoise": "Near the door; check actual distractions in the room.",
-    "doorQuiet": "Farther from the door: a heuristic consideration for a quiet-area need."
+    "doorQuiet": "Farther from the door: a heuristic consideration for a quiet-area need.",
+    "wall": "Wall",
+    "wall_left": "Left wall",
+    "wall_right": "Right wall",
+    "wall_front": "Front wall / board",
+    "wall_back": "Back wall",
+    "occupied": "There is a seat or obstacle here. Choose a free space for the desk.",
+    "overlap": "Another door or window is here. Choose a free part of the wall.",
+    "no_space": "The walls are full. Move or remove an item first.",
+    "scope_title": "How room features affect seating"
   },
   "homeRefresh": {
     "title": "Every student has a place. Let’s find it.",
