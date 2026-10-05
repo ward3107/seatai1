@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, BookOpen, Users, Accessibility, Heart, AlertTriangle, Globe } from 'lucide-react';
 import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -79,8 +79,7 @@ export default function StudentHoverPopup({
   }, [student, onClose]);
 
   return (
-    <AnimatePresence>
-      {student && (
+    student && (
         <motion.div
           ref={popupRef}
           data-testid="student-hover-popup"
@@ -256,7 +255,6 @@ export default function StudentHoverPopup({
             )}
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+    )
   );
 }
