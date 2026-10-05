@@ -66,6 +66,10 @@ export default function ClassroomGrid() {
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
   const [hoveredStudent, setHoveredStudent] = useState<Student | null>(null);
   const [hoverAnchor, setHoverAnchor] = useState<DOMRect | null>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const hoverOpenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverSeat = useRef<string | null>(null);
+  const dismissedHoverArea = useRef<DOMRect | null>(null);
   const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverSuppressedUntil = useRef(0);
   const hoverPointerPosition = useRef({x:0,y:0});
@@ -73,17 +77,61 @@ export default function ClassroomGrid() {
     if (hoverCloseTimer.current) clearTimeout(hoverCloseTimer.current);
     hoverCloseTimer.current = null;
   }, []);
+  const cancelHoverOpen = useCallback(() => {
+    if (hoverOpenTimer.current) clearTimeout(hoverOpenTimer.current);
+    hoverOpenTimer.current = null;
+  }, []);
   const closeHover = useCallback(() => {
+    cancelHoverOpen();
     keepHoverOpen();
+    hoverSeat.current = null;
+    setHoveredSeatKey(null);
     setHoveredStudent(null);
     setHoverAnchor(null);
-  }, [keepHoverOpen]);
+  }, [keepHoverOpen, cancelHoverOpen]);
   const leaveHover = useCallback(() => {
-    keepHoverOpen();
-    // A short bridge lets the pointer reach the adjacent preview controls.
-    hoverCloseTimer.current = setTimeout(closeHover, 200);
-  }, [keepHoverOpen, closeHover]);
-  useEffect(() => keepHoverOpen, [keepHoverOpen]);
+    cancelHoverOpen();
+    // Do not restart the deadline on every pointer movement outside a seat.
+    if (!hoverCloseTimer.current) hoverCloseTimer.current = setTimeout(closeHover, 200);
+  }, [cancelHoverOpen, closeHover]);
+  const dismissHover = useCallback(() => {
+    // X/Escape end this hover session. Returning through the map must not
+    // immediately reopen a preview; leave both the map and old preview first.
+    dismissedHoverArea.current = document.querySelector('[data-testid="student-hover-popup"]')?.getBoundingClientRect() ?? null;
+    closeHover();
+  }, [closeHover]);
+  useEffect(() => () => { keepHoverOpen(); cancelHoverOpen(); }, [keepHoverOpen, cancelHoverOpen]);
+  useEffect(() => {
+    const trackPointer = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return;
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const inMap = !!target && !!gridContainerRef.current?.contains(target);
+      const dismissed = dismissedHoverArea.current;
+      if (dismissed) {
+        const inOldPreview = event.clientX >= dismissed.left && event.clientX <= dismissed.right &&
+          event.clientY >= dismissed.top && event.clientY <= dismissed.bottom;
+        if (!inMap && !inOldPreview) dismissedHoverArea.current = null;
+        return;
+      }
+      if (!hoveredStudent) return;
+      const inSeat = inMap && target?.closest('[data-seat-key]')?.getAttribute('data-seat-key') === hoverSeat.current;
+      const inPreview = target?.closest('[data-testid="student-hover-popup"]');
+      if (inSeat || inPreview) keepHoverOpen();
+      else { hoverSeat.current = null; leaveHover(); }
+    };
+    const leaveWindow = () => closeHover();
+    const visibilityChanged = () => { if (document.hidden) closeHover(); };
+    document.addEventListener('pointermove', trackPointer, {passive:true});
+    document.addEventListener('pointerleave', leaveWindow);
+    window.addEventListener('blur', leaveWindow);
+    document.addEventListener('visibilitychange', visibilityChanged);
+    return () => {
+      document.removeEventListener('pointermove', trackPointer);
+      document.removeEventListener('pointerleave', leaveWindow);
+      window.removeEventListener('blur', leaveWindow);
+      document.removeEventListener('visibilitychange', visibilityChanged);
+    };
+  }, [hoveredStudent, keepHoverOpen, leaveHover, closeHover]);
   useEffect(() => {
     if (!hoveredStudent) return;
     const dismissOnScroll = (event: Event) => {
@@ -110,7 +158,6 @@ export default function ClassroomGrid() {
   } | null>(null);
   const [activeDragSeatKey, setActiveDragSeatKey] = useState<string | null>(null);
 
-  const gridContainerRef = useRef<HTMLDivElement>(null);
   const justDraggedRef = useRef(false);
   const [dragSize, setDragSize] = useState({ width: 84, height: 100 });
   useEffect(() => { setSelectedSeat(null); }, [interactionMode, layoutDef, setSelectedSeat]);
@@ -226,16 +273,25 @@ export default function ClassroomGrid() {
   const handleSeatMouseEnter = useCallback(
     (sk: string, x: number, y: number) => {
       const stationary = Math.hypot(x-hoverPointerPosition.current.x,y-hoverPointerPosition.current.y)<2;
-      if (activeDragSeatKey || (stationary && Date.now() < hoverSuppressedUntil.current)) return;
+      if (activeDragSeatKey || dismissedHoverArea.current || (stationary && Date.now() < hoverSuppressedUntil.current)) return;
       hoverPointerPosition.current = {x,y};
-      keepHoverOpen();
+      closeHover();
+      hoverSeat.current = sk;
       setHoveredSeatKey(sk);
-      setHoveredStudent(studentBySeatKey.get(sk) ?? null);
-      setHoverAnchor(gridContainerRef.current?.getBoundingClientRect() ?? null);
+      const student = studentBySeatKey.get(sk);
+      if (!student) return;
+      // Passing across names should not flash a large preview.
+      hoverOpenTimer.current = setTimeout(() => {
+        hoverOpenTimer.current = null;
+        if (hoverSeat.current !== sk || dismissedHoverArea.current) return;
+        setHoveredStudent(student);
+        setHoverAnchor(gridContainerRef.current?.getBoundingClientRect() ?? null);
+      }, 300);
     },
-    [studentBySeatKey, activeDragSeatKey, keepHoverOpen],
+    [studentBySeatKey, activeDragSeatKey, closeHover],
   );
   const handleSeatMouseLeave = useCallback(() => {
+    hoverSeat.current = null;
     setHoveredSeatKey(null);
     leaveHover();
   }, [leaveHover]);
@@ -599,7 +655,7 @@ export default function ClassroomGrid() {
           row-based layouts — matching the pre-refactor behavior, where
           they lived inside the row branch. */}
       {createPortal(activeDragSeatKey ? null : <StudentHoverPopup student={hoveredStudent} anchor={hoverAnchor}
-        onClose={closeHover} onPointerEnter={keepHoverOpen} onPointerLeave={leaveHover} />, document.body)}
+        onClose={dismissHover} onPointerEnter={keepHoverOpen} onPointerLeave={leaveHover} />, document.body)}
 
       {!isAbsoluteLayout && (
         <>

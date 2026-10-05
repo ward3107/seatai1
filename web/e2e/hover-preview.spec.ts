@@ -64,3 +64,40 @@ test('a narrow room keeps an expanded preview outside the seats without clipping
   })).toBe(true);
   await page.mouse.move(1,899);await expect(popup).toHaveCount(0);
 });
+
+test('X keeps previews closed while returning through the seats; leaving the map rearms hover', async ({page}) => {
+  const seats = page.locator('[data-seat-key]').filter({hasText:/Student/});
+  const popup = page.getByTestId('student-hover-popup');
+  await seats.nth(0).hover(); await expect(popup).toBeVisible();
+  await popup.getByRole('button',{name:'Close',exact:true}).click();
+  await seats.nth(1).hover(); await page.waitForTimeout(500);
+  await expect(popup).toHaveCount(0);
+  await seats.nth(0).hover(); await page.waitForTimeout(500);
+  await expect(popup).toHaveCount(0);
+  await page.mouse.move(1,1);
+  await seats.nth(0).hover(); await expect(popup).toBeVisible();
+});
+
+test('passing across names does not open a preview until the mouse rests on a student', async ({page}) => {
+  const seats = page.locator('[data-seat-key]').filter({hasText:/Student/});
+  const popup = page.getByTestId('student-hover-popup');
+  for (let i=0;i<3;i++) {
+    const r=(await seats.nth(i).boundingBox())!;
+    await page.mouse.move(r.x+r.width/2,r.y+r.height/2);
+    await expect(popup).toHaveCount(0);
+  }
+  await page.mouse.move(1,1); await page.waitForTimeout(400);
+  await expect(popup).toHaveCount(0);
+  await seats.nth(0).hover(); await expect(popup).toBeVisible();
+});
+
+test('a preview closes on window blur and when leaving a focused preview control', async ({page}) => {
+  const seat = page.locator('[data-seat-key]').filter({hasText:/Student/}).first();
+  const popup = page.getByTestId('student-hover-popup');
+  await seat.hover(); await expect(popup).toBeVisible();
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+  await expect(popup).toHaveCount(0);
+  await page.mouse.move(1,1); await seat.hover(); await expect(popup).toBeVisible();
+  await popup.getByText('What informs these considerations?',{exact:true}).click();
+  await page.mouse.move(1,1); await expect(popup).toHaveCount(0);
+});
