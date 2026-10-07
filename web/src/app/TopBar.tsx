@@ -25,6 +25,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
   const homeView = useStore(s => s.homeView);
   const setHomeView = useStore(s => s.setHomeView);
   const wizardActive = useStore(s => s.wizardActive);
+  const hasSavedProjects = useStore(s => s.projects.length > 0);
   const canUndo = useStore(s => s.history.length > 0);
   const canRedo = useStore(s => s.historyFuture.length > 0);
   const undo = useStore(s => s.undo);
@@ -57,7 +58,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
 
   return <header className="app-topbar relative z-20 shrink-0 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
     <div className="topbar-navigation flex min-h-16 items-center gap-1 px-3 sm:gap-2 sm:px-5">
-      {workspace && !sidebarOpen && <button type="button" onClick={() => setSidebarOpen(true)} className="topbar-icon" aria-label={t('app.open_sidebar')} title={t('quickGuide.settings')}><Menu size={21} aria-hidden="true" /></button>}
+      {!wizardActive && (workspace || hasSavedProjects) && !sidebarOpen && <button type="button" onClick={() => setSidebarOpen(true)} className="topbar-icon" aria-label={t('app.open_sidebar')} title={workspace ? t('quickGuide.settings') : t('projects.title')}><Menu size={21} aria-hidden="true" /></button>}
       {workspace && <button type="button" onClick={() => setHomeView(true)} className="topbar-icon" aria-label={t('app.home')} title={t('app.home')}><Home size={19} aria-hidden="true" /></button>}
       <span className="flex min-w-0 items-center gap-2 font-bold tracking-tight text-gray-900 dark:text-gray-100">
         <img src="/seatai-logo.svg" width={28} height={28} className="topbar-logo h-7 w-7 rounded-lg" alt="" aria-hidden="true" />SeatAI
