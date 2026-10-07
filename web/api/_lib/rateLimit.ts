@@ -13,7 +13,7 @@
  * window per value.
  */
 import type { ApiRequest, ApiResponse } from './httpTypes';
-import { incrWithTtl } from './kvStore';
+import { incrWithTtl } from './kvStore.js';
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
