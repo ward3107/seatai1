@@ -16,6 +16,10 @@ test('role entrances explain access and reach the shared sign-in without a dashb
     await expect(page).toHaveURL(new RegExp(`#school-${role}$`));
     await expect(page.locator('.entry-role-tabs a[aria-current="page"]')).toHaveAttribute('href', `#school-${role}`);
     await expect(page.getByLabel('Email address', { exact: true })).toBeVisible();
+    const skip = page.getByRole('link', { name: 'Skip to content', exact: true });
+    await skip.focus(); await skip.press('Enter');
+    await expect(page.locator('#school-main')).toBeFocused();
+    await expect(page).toHaveURL(new RegExp(`#school-${role}$`));
     await expect(page.locator('.school-class-bridge')).toHaveCount(0);
     await expect(page.locator('.school-sidebar')).toHaveCount(0);
     await page.getByRole('link', { name: 'Back to classroom seating', exact: true }).click();
