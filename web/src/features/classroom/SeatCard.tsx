@@ -262,7 +262,7 @@ export default memo(function SeatCard({
           )}
 
           {/* First name */}
-          <p className="mt-1 text-xs font-semibold text-gray-700 dark:text-gray-300 text-center w-full leading-tight break-words line-clamp-2">
+          <p className="mt-1 text-sm font-semibold text-gray-700 dark:text-gray-300 text-center w-full leading-tight break-words line-clamp-2">
             {student.name}
           </p>
 

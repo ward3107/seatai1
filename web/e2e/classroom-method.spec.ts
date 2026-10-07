@@ -20,7 +20,11 @@ test('teacher can complete the Hebrew setup on a phone and return to a clean hom
   await page.getByRole('button', { name: 'המשך: יצירה', exact: true }).click();
   await page.getByRole('button', { name: 'יצירת מפת ישיבה', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__ZUSTAND_STORE__.getState().result !== null)).toBe(true);
-  await expect(page.getByTestId('print-button')).toBeVisible();
+  // Printing stays reachable in the phone action menu.
+  const preferences = page.locator('header button[aria-controls="display-preferences"]');
+  await preferences.click();
+  await expect(page.getByTestId('mobile-print-button')).toBeVisible();
+  await preferences.click();
   await page.getByRole('button', { name: 'דף הבית', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'לכל תלמיד יש מקום. בואו נמצא אותו.' })).toBeVisible();
   await expect(page.getByTestId('print-button')).toHaveCount(0);

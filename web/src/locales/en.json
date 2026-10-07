@@ -1148,5 +1148,25 @@
     "refresh": "Save and refresh",
     "updating": "Saving and refreshing…",
     "failed": "The update could not finish. Try again."
+  },
+  "quickGuide": {
+    "title": "Teacher guide · 4 simple steps",
+    "short_label": "Teacher guide",
+    "students_title": "Add your students",
+    "students_body": "Create a new class and paste one name per line. You can add details or a questionnaire later.",
+    "room_title": "Set the room and rules",
+    "room_body": "Choose the layout and enough seats. Add doors, windows and any students who need to sit near the front or apart.",
+    "arrange_title": "Generate, then adjust",
+    "arrange_body": "Select Generate seating. To move a student, select their seat, then another seat. Use Undo if needed.",
+    "save_title": "Export and keep a backup",
+    "save_body": "Use Export for a PDF or image after generating. Your class stays in this browser; export JSON for a backup on another device.",
+    "device_tip": "Phone or tablet: tap seats and swipe across the map. Computer: click or drag. Use + / − to change the map size.",
+    "full": "Open the full guide",
+    "more": "More help, when you need it",
+    "sample_hint": "Try a ready-made class, then generate a seating suggestion. Sample names can be edited.",
+    "settings": "Students, room & rules",
+    "reset_zoom": "Reset map size",
+    "next_generate": "Next: generate a seating suggestion, then review and adjust it.",
+    "next_review": "Next: check the seats and export the chart when you are satisfied."
   }
 }

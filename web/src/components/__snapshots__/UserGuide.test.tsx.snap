@@ -4,11 +4,11 @@ exports[`UserGuide > matches snapshot when open 1`] = `
 <div
   aria-labelledby="user-guide-title"
   aria-modal="true"
-  class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+  class="dialog-backdrop fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
   role="dialog"
 >
   <div
-    class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden focus:outline-none"
+    class="teacher-guide-dialog bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden focus:outline-none"
     tabindex="-1"
   >
     <div
@@ -48,7 +48,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       </div>
       <button
         aria-label="[detail.close]"
-        class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+        class="min-h-11 min-w-11 flex items-center justify-center p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
       >
         <svg
           class="lucide lucide-x text-gray-500 dark:text-slate-400"
@@ -79,12 +79,273 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         [guide.intro]
       </p>
+      <section
+        aria-label="[quickGuide.title]"
+        class="quick-guide w-full text-start"
+        data-testid="teacher-quick-guide"
+      >
+        <h2
+          class="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-gray-100"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-book-open-check text-primary-700 dark:text-primary-300"
+            fill="none"
+            height="20"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3H2v15h7c1.7 0 3 1.3 3 3V7c0-2.2-1.8-4-4-4Z"
+            />
+            <path
+              d="m16 12 2 2 4-4"
+            />
+            <path
+              d="M22 6V3h-6c-2.2 0-4 1.8-4 4v14c0-1.7 1.3-3 3-3h7v-2.3"
+            />
+          </svg>
+          [quickGuide.title]
+        </h2>
+        <ol
+          class="quick-guide-steps"
+        >
+          <li>
+            <span
+              aria-hidden="true"
+              class="quick-guide-number"
+            >
+              1
+            </span>
+            <div
+              class="min-w-0"
+            >
+              <h3
+                class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-users"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                  />
+                  <circle
+                    cx="9"
+                    cy="7"
+                    r="4"
+                  />
+                  <path
+                    d="M22 21v-2a4 4 0 0 0-3-3.87"
+                  />
+                  <path
+                    d="M16 3.13a4 4 0 0 1 0 7.75"
+                  />
+                </svg>
+                [quickGuide.students_title]
+              </h3>
+              <p
+                class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+              >
+                [quickGuide.students_body]
+              </p>
+            </div>
+          </li>
+          <li>
+            <span
+              aria-hidden="true"
+              class="quick-guide-number"
+            >
+              2
+            </span>
+            <div
+              class="min-w-0"
+            >
+              <h3
+                class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-layout-grid"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    height="7"
+                    rx="1"
+                    width="7"
+                    x="3"
+                    y="3"
+                  />
+                  <rect
+                    height="7"
+                    rx="1"
+                    width="7"
+                    x="14"
+                    y="3"
+                  />
+                  <rect
+                    height="7"
+                    rx="1"
+                    width="7"
+                    x="14"
+                    y="14"
+                  />
+                  <rect
+                    height="7"
+                    rx="1"
+                    width="7"
+                    x="3"
+                    y="14"
+                  />
+                </svg>
+                [quickGuide.room_title]
+              </h3>
+              <p
+                class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+              >
+                [quickGuide.room_body]
+              </p>
+            </div>
+          </li>
+          <li>
+            <span
+              aria-hidden="true"
+              class="quick-guide-number"
+            >
+              3
+            </span>
+            <div
+              class="min-w-0"
+            >
+              <h3
+                class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-sparkles"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                  />
+                  <path
+                    d="M20 3v4"
+                  />
+                  <path
+                    d="M22 5h-4"
+                  />
+                  <path
+                    d="M4 17v2"
+                  />
+                  <path
+                    d="M5 18H3"
+                  />
+                </svg>
+                [quickGuide.arrange_title]
+              </h3>
+              <p
+                class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+              >
+                [quickGuide.arrange_body]
+              </p>
+            </div>
+          </li>
+          <li>
+            <span
+              aria-hidden="true"
+              class="quick-guide-number"
+            >
+              4
+            </span>
+            <div
+              class="min-w-0"
+            >
+              <h3
+                class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-download"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                  <polyline
+                    points="7 10 12 15 17 10"
+                  />
+                  <line
+                    x1="12"
+                    x2="12"
+                    y1="15"
+                    y2="3"
+                  />
+                </svg>
+                [quickGuide.save_title]
+              </h3>
+              <p
+                class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+              >
+                [quickGuide.save_body]
+              </p>
+            </div>
+          </li>
+        </ol>
+        <p
+          class="quick-guide-note"
+        >
+          [quickGuide.device_tip]
+        </p>
+      </section>
+      <h3
+        class="pt-4 pb-2 px-1 text-sm font-semibold text-gray-800 dark:text-gray-100"
+      >
+        [quickGuide.more]
+      </h3>
       <div
         class="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden"
       >
         <button
-          aria-expanded="true"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          aria-expanded="false"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -130,7 +391,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
             [guide.section_getting_started_title]
           </span>
           <svg
-            class="lucide lucide-chevron-up text-gray-400"
+            class="lucide lucide-chevron-down text-gray-400"
             fill="none"
             height="16"
             stroke="currentColor"
@@ -142,26 +403,17 @@ exports[`UserGuide > matches snapshot when open 1`] = `
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="m18 15-6-6-6 6"
+              d="m6 9 6 6 6-6"
             />
           </svg>
         </button>
-        <div
-          class="px-4 pb-4 text-sm text-gray-700 dark:text-slate-300 leading-relaxed space-y-2"
-        >
-          <p
-            class=""
-          >
-            [guide.section_getting_started_body]
-          </p>
-        </div>
       </div>
       <div
         class="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden"
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -237,7 +489,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -300,7 +552,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -363,7 +615,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -414,7 +666,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -474,7 +726,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -534,7 +786,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -598,7 +850,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -670,7 +922,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -721,7 +973,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       >
         <button
           aria-expanded="false"
-          class="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          class="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
           type="button"
         >
           <div
@@ -798,7 +1050,7 @@ exports[`UserGuide > matches snapshot when open 1`] = `
       class="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end flex-shrink-0"
     >
       <button
-        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
+        class="min-h-12 px-5 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
       >
         [guide.close]
       </button>

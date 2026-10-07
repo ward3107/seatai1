@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import type { ReactElement, RefObject } from 'react';
 import RelationshipOverlay from './RelationshipOverlay';
+import { FitZoom } from './gridParts';
 import { useLanguage } from '../../hooks/useLanguage';
 import type { Seat, Student, OptimizationResult } from '../../types';
 
@@ -68,17 +69,7 @@ export default function AbsoluteLayoutRenderer({
           : t('classroom.click_hint')}
       </p>
 
-      {/* Horizontal scroll wrapper: on narrow screens the room keeps a
-          usable minimum width and scrolls, instead of collapsing so the
-          seats stack on top of each other (clusters / U-shape / circle). */}
-      <div className="overflow-x-auto pb-2">
-      <div
-        style={{
-          transform: `scale(${zoomLevel})`,
-          transformOrigin: 'top center',
-          transition: 'transform 0.2s ease',
-        }}
-      >
+      <FitZoom zoom={zoomLevel}>
         <div
           ref={gridContainerRef}
           id="seating-grid-export"
@@ -86,7 +77,7 @@ export default function AbsoluteLayoutRenderer({
           style={{
             // Aspect ratio close to a classroom — wider than tall.
             // Floored so seats keep breathing room on phones (scrolls).
-            width: 'clamp(700px, 100%, 820px)',
+            width: 820,
             aspectRatio: '5 / 4',
           }}
         >
@@ -138,8 +129,7 @@ export default function AbsoluteLayoutRenderer({
             />
           )}
         </div>
-      </div>
-      </div>
+      </FitZoom>
     </>
   );
 }

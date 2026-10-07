@@ -85,7 +85,7 @@ export default function Sidebar() {
         aria-label={t('app.title')}
         aria-hidden={!sidebarOpen}
       >
-        <div className="w-[340px] max-w-[92vw] h-full flex flex-col">
+        <div className="workspace-sidebar-inner w-[340px] max-w-[92vw] h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <button
@@ -109,7 +109,7 @@ export default function Sidebar() {
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="min-h-11 min-w-11 flex items-center justify-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               aria-label={t('app.close_sidebar')}
             >
               <X size={20} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
@@ -131,7 +131,7 @@ export default function Sidebar() {
               }} className={clsx('flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors', tab === key ? 'bg-primary-50 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200' : 'text-gray-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700')}><Icon size={15} aria-hidden="true" />{t(`workspace.${key}`)}</button>;
             })}
           </div>
-          <div className="flex-1 min-h-0 overflow-auto overscroll-contain p-3 space-y-4">
+          <div className="sidebar-content flex-1 min-h-0 overflow-auto overscroll-contain p-3 space-y-4">
             <section role="tabpanel" id="setup-panel-students" aria-labelledby="setup-tab-students" hidden={tab !== 'students'} className="space-y-3">
               <ErrorBoundary name="Add Students" inline><AddStudentsPanel key={hasStudents ? 'loaded' : 'empty'} /></ErrorBoundary>
               <ErrorBoundary name="Student List" inline><StudentList /></ErrorBoundary>

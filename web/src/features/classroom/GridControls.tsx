@@ -26,21 +26,21 @@ export default function GridControls({ interactionMode, setInteractionMode, show
   const { t } = useLanguage();
   const segment = (selected: boolean) => clsx('flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors', selected ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700');
   return (
-    <div className="mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
+    <div className="grid-controls mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          <div className="flex rounded-xl bg-gray-100 p-1 dark:bg-gray-900" role="group" aria-label={t('workspace.drag_handle')}>
+        <div className="grid-segments flex flex-wrap gap-2">
+          <div className="grid-segment flex rounded-xl bg-gray-100 p-1 dark:bg-gray-900" role="group" aria-label={t('workspace.drag_handle')}>
             <button type="button" onClick={() => setInteractionMode('drag')} aria-pressed={interactionMode === 'drag'} className={segment(interactionMode === 'drag')}><GripVertical size={15} />{t('gridControls.drag')}</button>
             <button type="button" onClick={() => setInteractionMode('click')} aria-pressed={interactionMode === 'click'} className={segment(interactionMode === 'click')}><MousePointer2 size={15} />{t('gridControls.click')}</button>
           </div>
-          <div className="flex rounded-xl bg-gray-100 p-1 dark:bg-gray-900">
+          <div className="grid-segment flex rounded-xl bg-gray-100 p-1 dark:bg-gray-900">
             <button type="button" onClick={() => setViewMode('rows')} aria-pressed={viewMode === 'rows'} className={segment(viewMode === 'rows')}><AlignJustify size={15} />{t('gridControls.rows')}</button>
             <button type="button" onClick={() => setViewMode('pairs')} aria-pressed={viewMode === 'pairs'} className={segment(viewMode === 'pairs')}><Columns2 size={15} />{t('gridControls.pairs')}</button>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="grid-zoom flex items-center gap-1">
           <button type="button" onClick={() => setZoomLevel(zoomLevel - 0.1)} disabled={zoomLevel <= 0.6} aria-label={t('gridControls.zoom_out')} className="min-h-11 min-w-11 rounded-lg p-2 text-gray-600 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-300"><ZoomOut size={18} /></button>
-          <span className="w-10 text-center text-xs font-medium tabular-nums text-gray-600 dark:text-gray-300">{Math.round(zoomLevel * 100)}%</span>
+          <button type="button" onClick={() => setZoomLevel(1)} aria-label={t('quickGuide.reset_zoom')} className="min-h-11 w-14 text-center text-xs font-medium tabular-nums text-gray-600 dark:text-gray-300">{Math.round(zoomLevel * 100)}%</button>
           <button type="button" onClick={() => setZoomLevel(zoomLevel + 0.1)} disabled={zoomLevel >= 1.5} aria-label={t('gridControls.zoom_in')} className="min-h-11 min-w-11 rounded-lg p-2 text-gray-600 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-300"><ZoomIn size={18} /></button>
         </div>
       </div>

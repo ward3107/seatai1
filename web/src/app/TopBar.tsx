@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-const PrivacyHub = lazy(() => import('../features/privacy/PrivacyHub'));
+import { Menu, Home, Printer, Undo2, Redo2, BookOpenCheck, GitCompare, MoreVertical } from 'lucide-react';
 import { useStore } from '../core/store';
 import { useLanguage } from '../hooks/useLanguage';
 import { getDisplayScorePct, getScoreRating } from '../utils/seatingUtils';
@@ -7,7 +7,8 @@ import ExportButton from '../features/export/ExportButton';
 import LanguageSelector from '../components/LanguageSelector';
 import TextSizeToggle from '../components/TextSizeToggle';
 import ThemeToggle from '../components/ThemeToggle';
-import { Menu, Home, Users, Printer, Undo2, Redo2, HelpCircle, GitCompare, MoreVertical } from 'lucide-react';
+
+const PrivacyHub = lazy(() => import('../features/privacy/PrivacyHub'));
 
 interface TopBarProps {
   onShowCompare: () => void;
@@ -15,201 +16,82 @@ interface TopBarProps {
   onShowGuide: () => void;
 }
 
-/**
- * App header. Structure — from the primary actions to the ambient ones:
- *   [Menu · Home] · [Undo · Redo] · Score · [Compare · Print · Export] · [⋮ display prefs]
- *
- * The four display prefs (theme / text size / language / help) live inside
- * one overflow menu so the bar has a single visual weight. They shipped
- * previously as separate top-level buttons and drowned out the primary
- * actions on small viewports.
- */
+/** Separate navigation from chart actions so neither crowds a phone header. */
 export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopBarProps) {
-  const students = useStore((s) => s.students);
-  const result = useStore((s) => s.result);
-  const sidebarOpen = useStore((s) => s.sidebarOpen);
-  const setSidebarOpen = useStore((s) => s.setSidebarOpen);
-  const homeView = useStore((s) => s.homeView);
-  const setHomeView = useStore((s) => s.setHomeView);
-  const wizardActive = useStore((s) => s.wizardActive);
-  const history = useStore((s) => s.history);
-  const historyFuture = useStore((s) => s.historyFuture);
-  const undo = useStore((s) => s.undo);
-  const redo = useStore((s) => s.redo);
+  const students = useStore(s => s.students);
+  const result = useStore(s => s.result);
+  const sidebarOpen = useStore(s => s.sidebarOpen);
+  const setSidebarOpen = useStore(s => s.setSidebarOpen);
+  const homeView = useStore(s => s.homeView);
+  const setHomeView = useStore(s => s.setHomeView);
+  const wizardActive = useStore(s => s.wizardActive);
+  const canUndo = useStore(s => s.history.length > 0);
+  const canRedo = useStore(s => s.historyFuture.length > 0);
+  const undo = useStore(s => s.undo);
+  const redo = useStore(s => s.redo);
   const { t } = useLanguage();
-
-  const canUndo = history.length > 0;
-  const canRedo = historyFuture.length > 0;
   const workspace = students.length > 0 && !homeView && !wizardActive;
-
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const prefsRef = useRef<HTMLDivElement>(null);
+  const prefsTriggerRef = useRef<HTMLButtonElement>(null);
 
-  // Dismiss the prefs menu on outside click or Escape. Only attached while
-  // open so the listeners aren't always paying attention.
   useEffect(() => {
     if (!prefsOpen) return;
-    const onPointer = (e: MouseEvent) => {
-      if (prefsRef.current && !prefsRef.current.contains(e.target as Node)) {
+    const onPointer = (event: PointerEvent) => {
+      if (!prefsRef.current?.contains(event.target as Node)) setPrefsOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setPrefsOpen(false);
+        prefsTriggerRef.current?.focus();
       }
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPrefsOpen(false);
-    };
-    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('pointerdown', onPointer);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('pointerdown', onPointer);
       document.removeEventListener('keydown', onKey);
     };
   }, [prefsOpen]);
 
-  return (
-    <header className="relative z-20 shrink-0 min-h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center px-2 sm:px-4 gap-x-2 sm:gap-x-4 gap-y-1 py-1.5 sm:py-0">
-      {!sidebarOpen && !wizardActive && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          aria-label={t('app.open_sidebar')}
-        >
-          <Menu size={20} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
-        </button>
-      )}
-
-      {/* Home — return to the welcome/landing screen without clearing the
-          class. Only meaningful once a class is loaded, we're not already
-          on it, and not mid-setup. */}
-      {students.length > 0 && !homeView && !wizardActive && (
-        <button
-          onClick={() => setHomeView(true)}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          aria-label={t('app.home')}
-          title={t('app.home')}
-        >
-          <Home size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
-        </button>
-      )}
-
-      {<span className="font-bold text-lg text-primary-800 dark:text-primary-200">SeatAI</span>}
-      {workspace && <div className="flex items-center gap-1" aria-label={t('app.history_controls')} role="group">
-        <button
-          onClick={undo}
-          disabled={!canUndo}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          aria-label={t('app.undo')}
-          title={t('app.undo')}
-        >
-          <Undo2 size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
-        </button>
-        <button
-          onClick={redo}
-          disabled={!canRedo}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          aria-label={t('app.redo')}
-          title={t('app.redo')}
-        >
-          <Redo2 size={18} className="text-gray-600 dark:text-gray-300" aria-hidden="true" />
-        </button>
-      </div>}
-
-      {/* Spacer only grows once everything fits on one row (sm+). On
-          phones it collapses so the controls sit right after undo/redo
-          and wrap naturally. */}
-      <div className={workspace ? 'hidden sm:block sm:flex-1' : 'flex-1'} />
-
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        {/* Student count is also shown in the sidebar header (visible on md+
-            when the sidebar is docked), so surface the chip only on small
-            screens where the sidebar is a hidden drawer. */}
-        {workspace && <div className="hidden xs:flex md:hidden items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg">
-          <Users size={16} className="text-gray-500 dark:text-gray-400" />
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {students.length} {t('app.students')}
-          </span>
+  return <header className="app-topbar relative z-20 shrink-0 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+    <div className="topbar-navigation flex min-h-16 items-center gap-1 px-3 sm:gap-2 sm:px-5">
+      {workspace && !sidebarOpen && <button type="button" onClick={() => setSidebarOpen(true)} className="topbar-icon" aria-label={t('app.open_sidebar')} title={t('quickGuide.settings')}><Menu size={21} aria-hidden="true" /></button>}
+      {workspace && <button type="button" onClick={() => setHomeView(true)} className="topbar-icon" aria-label={t('app.home')} title={t('app.home')}><Home size={19} aria-hidden="true" /></button>}
+      <span className="flex min-w-0 items-center gap-2 font-bold tracking-tight text-gray-900 dark:text-gray-100">
+        <img src="/seatai-logo.svg" width={28} height={28} className="topbar-logo h-7 w-7 rounded-lg" alt="" aria-hidden="true" />SeatAI
+      </span>
+      <div className="flex-1" />
+      {!workspace && <LanguageSelector />}
+      <button type="button" onClick={onShowGuide} className="topbar-guide flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-semibold text-primary-700 dark:text-primary-300" aria-label={t('guide.title')} title={t('guide.title')}><BookOpenCheck size={20} aria-hidden="true" /><span className="hidden sm:inline">{t('quickGuide.short_label')}</span></button>
+      <div ref={prefsRef} className="relative">
+        <button type="button" ref={prefsTriggerRef} onClick={() => setPrefsOpen(value => !value)} className="topbar-icon" aria-label={t('app.preferences')} aria-expanded={prefsOpen} aria-controls="display-preferences" title={t('app.preferences')}><MoreVertical size={20} aria-hidden="true" /></button>
+        {prefsOpen && <div id="display-preferences" className="preferences-popover absolute end-0 top-full z-40 mt-2 flex w-64 flex-col gap-1 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <button type="button" onClick={() => { setPrefsOpen(false); onShowGuide(); }} className="min-h-11 rounded-xl px-3 text-start text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{t('guide.title')}</button>
+          {workspace && result && <>
+            <button type="button" onClick={() => { setPrefsOpen(false); onShowCompare(); }} className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-start text-sm text-gray-700 dark:text-gray-200 sm:hidden"><GitCompare size={17} aria-hidden="true" />{t('compare.button')}</button>
+            <button type="button" onClick={() => { setPrefsOpen(false); onShowPrint(); }} data-testid="mobile-print-button" className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-start text-sm text-gray-700 dark:text-gray-200 sm:hidden"><Printer size={17} aria-hidden="true" />{t('app.print')}</button>
+          </>}
+          <button type="button" onClick={() => { setPrefsOpen(false); setPrivacyOpen(true); }} className="min-h-11 rounded-xl px-3 text-start text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{t('privacyHub.title')}</button>
+          <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 dark:border-gray-700"><ThemeToggle /><TextSizeToggle /></div>
+          {workspace && <LanguageSelector />}
         </div>}
-
-        {workspace && result && (
-          <div
-            className="flex items-center gap-2 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-lg"
-            role="status"
-            aria-label={`${t(`score.${getScoreRating(result)}`)} · ${getDisplayScorePct(result)}%`}
-          >
-            <span className="hidden xl:inline text-sm font-medium text-primary-800 dark:text-primary-200">
-              {t(`score.${getScoreRating(result)}`)}
-            </span>
-            <span className="text-xs text-primary-700/70 dark:text-primary-300/70 tabular-nums">
-              {getDisplayScorePct(result)}%
-            </span>
-          </div>
-        )}
-
-        {workspace && result && (
-          <button
-            onClick={onShowCompare}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors"
-            title={t('compare.title')}
-          >
-            <GitCompare size={15} className="text-gray-500 dark:text-gray-400" />
-            <span className="hidden sm:inline">{t('compare.button')}</span>
-          </button>
-        )}
-
-        {workspace && result && (
-          <button
-            onClick={onShowPrint}
-            data-testid="print-button"
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors"
-            title={t('app.print_title')}
-          >
-            <Printer size={15} className="text-gray-500 dark:text-gray-400" />
-            <span className="hidden sm:inline">{t('app.print')}</span>
-          </button>
-        )}
-
-        {workspace ? <ExportButton /> : <LanguageSelector />}
-
-
-        {privacyOpen && <Suspense fallback={null}><PrivacyHub onClose={() => setPrivacyOpen(false)} /></Suspense>}
-        {/* Display preferences — collapsed into a single overflow menu so
-            theme / text size / language / help stop competing with the
-            primary actions for visual weight. */}
-        <div ref={prefsRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setPrefsOpen((v) => !v)}
-            aria-label={t('app.preferences')}
-            aria-expanded={prefsOpen}
-            aria-haspopup="menu"
-            title={t('app.preferences')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <MoreVertical size={18} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
-          </button>
-          {prefsOpen && (
-            <div
-              role="menu"
-              className="absolute top-full end-0 mt-1 min-w-[13rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-1.5 z-40 flex flex-col gap-0.5"
-            >
-              <button
-                onClick={() => { setPrefsOpen(false); onShowGuide(); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors text-start"
-                role="menuitem"
-              >
-                <HelpCircle size={16} className="text-gray-500 dark:text-gray-400" aria-hidden="true" />
-                {t('guide.title')}
-              </button>
-              <button role="menuitem" onClick={() => { setPrefsOpen(false); setPrivacyOpen(true); }} className="min-h-11 rounded-lg px-3 text-start text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{t('privacyHub.title')}</button>
-              <div className="flex items-center justify-between px-1 py-1 gap-2 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2">
-                <ThemeToggle />
-                <TextSizeToggle />
-                {workspace && <LanguageSelector />}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
-    </header>
-  );
+    </div>
+    {workspace && <div className="topbar-chart-actions flex min-h-14 items-center gap-2 border-t border-gray-100 px-3 sm:px-5 dark:border-gray-700">
+      <div className="flex items-center" role="group" aria-label={t('app.history_controls')}>
+        <button type="button" onClick={undo} disabled={!canUndo} className="topbar-icon disabled:cursor-not-allowed disabled:opacity-40" aria-label={t('app.undo')} title={t('app.undo')}><Undo2 size={19} aria-hidden="true" /></button>
+        <button type="button" onClick={redo} disabled={!canRedo} className="topbar-icon disabled:cursor-not-allowed disabled:opacity-40" aria-label={t('app.redo')} title={t('app.redo')}><Redo2 size={19} aria-hidden="true" /></button>
+      </div>
+      {result && <span className="hidden rounded-lg bg-primary-50 px-3 py-1.5 text-xs text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 md:inline" role="status">{t(`score.${getScoreRating(result)}`)} · {getDisplayScorePct(result)}%</span>}
+      <div className="flex-1" />
+      {result && <>
+        <button type="button" onClick={onShowCompare} className="hidden min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-gray-700 dark:text-gray-200 sm:flex" title={t('compare.title')}><GitCompare size={16} aria-hidden="true" />{t('compare.button')}</button>
+        <button type="button" onClick={onShowPrint} data-testid="print-button" className="hidden min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-gray-700 dark:text-gray-200 sm:flex" title={t('app.print_title')}><Printer size={16} aria-hidden="true" />{t('app.print')}</button>
+      </>}
+      <ExportButton />
+    </div>}
+    {privacyOpen && <Suspense fallback={null}><PrivacyHub onClose={() => setPrivacyOpen(false)} /></Suspense>}
+  </header>;
 }
