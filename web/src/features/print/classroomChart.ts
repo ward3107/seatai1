@@ -130,6 +130,14 @@ export function createClassroomChart(options: ChartOptions): ClassroomChart {
   }
   const chartSeats: ChartSeat[] = [];
   const chartLabels: ChartSeat[] = [];
+  const circlePoint = (point: typeof geometry.seats[number]) => ({ x: PAGE_WIDTH / 2 + (point.left / geometry.width - 0.5) * 520, y: ROOM.y + ROOM.height / 2 + (point.top / geometry.height - 0.5) * 460 });
+  let circleMarkerSize = 23;
+  if (circle) {
+    const positions = geometry.seats.map(circlePoint);
+    for (let i = 0; i < positions.length; i++) for (const other of positions.slice(i + 1)) {
+      circleMarkerSize = Math.min(circleMarkerSize, Math.max(Math.abs(positions[i].x - other.x), Math.abs(positions[i].y - other.y)) - 3);
+    }
+  }
   // A dense circle needs callouts, otherwise names shrink into unreadable
   // slivers around its sides. Numbered physical seats stay on the ring; each
   // full name connects to its own seat with an ordered, non-crossing line.
@@ -143,13 +151,13 @@ export function createClassroomChart(options: ChartOptions): ClassroomChart {
     }
   }
   for (const point of geometry.seats) {
-    const { x, y } = circle ? { x: PAGE_WIDTH / 2 + (point.left / geometry.width - 0.5) * 520, y: ROOM.y + ROOM.height / 2 + (point.top / geometry.height - 0.5) * 460 } : project(point.left, point.top);
+    const { x, y } = circle ? circlePoint(point) : project(point.left, point.top);
     const id = assignments.get(`${point.row}:${point.col}`);
     const student = id ? students.get(id) : undefined;
     const rawName = student?.name.trim() ?? '';
     const name = options.anonymize && rawName ? `${Array.from(rawName)[0].toUpperCase()}.` : rawName;
     const number = point.index + 1;
-    const markerSize = circle ? Math.min(23, 920 / geometry.seats.length) : width;
+    const markerSize = circle ? circleMarkerSize : width;
     chartSeats.push({ row: point.row, col: point.col, number, name, x, y, width: markerSize, height: circle ? markerSize : height });
     const markers = sensitive && student ? [student.academic_level === 'advanced' ? '▲' : student.academic_level === 'below_basic' ? '▼' : '', student.has_mobility_issues ? '♿' : '', student.requires_front_row ? '⭐' : ''].filter(Boolean).join(' ') : '';
     drawing += `<g data-chart-seat="${number}" data-row="${point.row}" data-col="${point.col}"><title>${escapeXml(`${t('print.seat_number', { number })}: ${name || t('print.empty_seat')}`)}</title>`;
