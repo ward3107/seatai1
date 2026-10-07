@@ -2,6 +2,28 @@ import { test, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+test('a direct school visit detects and accepts a deployment without leaving the portal', async ({ page }) => {
+  const swPath = resolve('dist/sw.js');
+  const original = await readFile(swPath, 'utf8');
+  try {
+    await page.goto('/#school');
+    await expect(page.getByTestId('school-portal')).toBeVisible();
+    await page.evaluate(async () => navigator.serviceWorker.ready);
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await writeFile(swPath, original + `\n// School deployment ${Date.now()}\n`);
+    await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); await registration!.update(); });
+    const banner = page.getByTestId('app-update-banner');
+    await expect(banner).toBeVisible();
+    await Promise.all([page.waitForEvent('load'), banner.getByRole('button', { name: 'שמירה ורענון', exact: true }).click()]);
+    await expect(banner).toHaveCount(0);
+    await expect(page.getByTestId('school-portal')).toBeVisible();
+    expect(new URL(page.url()).hash).toBe('#school');
+  } finally {
+    await writeFile(swPath, original);
+  }
+});
+
 test('a deployment offers refresh, keeps the classroom open and preserves the unified room after acceptance',async({page})=>{
   const swPath=resolve('dist/sw.js');
   const original=await readFile(swPath,'utf8');
