@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Four-step teacher guide in Hebrew, Arabic, English and Russian, available from the home screen, classroom and header.
+- Responsive iOS-inspired classroom navigation, mobile settings sheet, safe-area spacing and readable seating maps.
+- End-to-end checks for narrow phones, landscape phones, tablets and desktop, including RTL, guide access and backup export.
 - Layout types: U-shape, clusters, circle, and custom rows
 - Student questionnaire with answer mapping and printable handout
 - Arrangement comparison (side-by-side) and saved-arrangement management

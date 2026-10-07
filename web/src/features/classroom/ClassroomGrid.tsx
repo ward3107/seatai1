@@ -547,7 +547,7 @@ export default function ClassroomGrid() {
 
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-5"
+      className="classroom-panel bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-5"
       onPointerDownCapture={() => { justDraggedRef.current = false; }}
       onKeyDownCapture={() => { justDraggedRef.current = false; }}
       onClick={() => setContextMenu(null)}
@@ -565,13 +565,13 @@ export default function ClassroomGrid() {
         setShowRelations={setShowRelations}
       />
 
-      <div className="mb-3 flex h-20 sm:h-16 items-center justify-between gap-2 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/30" data-testid="movement-feedback">
-        <p role="status" className="min-w-0 flex-1 line-clamp-3 text-xs sm:text-sm font-medium text-primary-800 dark:text-primary-200">{activeDragStudent ? t('workspace.moving', { name: activeDragStudent.name }) : liveMessage || (selectedSeatKey && studentBySeatKey.get(selectedSeatKey) ? t('workspace.selected', { name: studentBySeatKey.get(selectedSeatKey)!.name }) : t(interactionMode === 'drag' ? 'classroom.drag_hint' : 'classroom.click_hint'))}</p>
-        <div className="w-[132px] shrink-0">{selectedSeatKey && <div className="flex items-center gap-1">
+      <div className="movement-feedback mb-3 flex min-h-16 flex-wrap items-center justify-between gap-2 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/30" data-testid="movement-feedback">
+        <p role="status" className="min-w-0 flex-1 text-sm font-medium text-primary-800 dark:text-primary-200">{activeDragStudent ? t('workspace.moving', { name: activeDragStudent.name }) : liveMessage || (selectedSeatKey && studentBySeatKey.get(selectedSeatKey) ? t('workspace.selected', { name: studentBySeatKey.get(selectedSeatKey)!.name }) : t(interactionMode === 'drag' ? 'classroom.drag_hint' : 'classroom.click_hint'))}</p>
+        {selectedSeatKey && <div className="movement-actions flex shrink-0 items-center gap-1">
           <button type="button" onClick={() => { const student = studentBySeatKey.get(selectedSeatKey); if (student) setDetailsTarget(student.id); }} aria-label={t('workspace.details')} title={t('workspace.details')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200"><Info size={18} /></button>
           <button type="button" onClick={() => { const locked = lockedSeats.includes(selectedSeatKey); toggleLockSeat(selectedSeatKey); announceLockChange(selectedSeatKey, !locked); setSelectedSeat(null); }} aria-label={t(lockedSeats.includes(selectedSeatKey) ? 'workspace.unlock' : 'workspace.lock')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200">{lockedSeats.includes(selectedSeatKey) ? <Unlock size={18} /> : <Lock size={18} />}</button>
           <button type="button" onClick={() => setSelectedSeat(null)} aria-label={t('workspace.cancel_move')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200"><X size={18} /></button>
-        </div>}</div>
+        </div>}
       </div>
 
       {/* Timeline Panel */}

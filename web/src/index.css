@@ -221,3 +221,111 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25
     scroll-behavior: auto !important;
   }
 }
+
+/* A quiet, iOS-inspired shell, with device fonts and explicit safe areas. */
+:root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+.workspace-shell { background: #f2f3f7; }
+.workspace-content {
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  scrollbar-gutter: stable;
+}
+.app-topbar { padding-top: env(safe-area-inset-top); }
+.topbar-navigation, .topbar-chart-actions {
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+.topbar-icon {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; flex-shrink: 0;
+  border-radius: 12px; color: #475569; transition: background-color .15s ease;
+}
+.topbar-icon:hover, .topbar-guide:hover { background: #f1f5f9; }
+html.dark .topbar-icon { color: #cbd5e1; }
+html.dark .topbar-icon:hover, html.dark .topbar-guide:hover { background: #334155; }
+.app-topbar button, .app-topbar [role='menuitemradio'] { min-height: 44px; }
+.preferences-popover { max-width: calc(100vw - 24px); }
+.quick-guide {
+  border: 1px solid #e4e7ec; border-radius: 24px; background: #fff;
+  padding: 20px; margin-bottom: 20px;
+}
+.quick-guide-compact { padding: 2px 16px; border-radius: 18px; }
+.quick-guide-compact[open] { padding-bottom: 16px; }
+.quick-guide-chevron { transition: transform .15s ease; }
+.quick-guide[open] .quick-guide-chevron { transform: rotate(180deg); }
+.quick-guide-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.quick-guide-steps li { display: flex; align-items: flex-start; gap: 12px; }
+.quick-guide-number {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 9px; background: #f0fdfa;
+  color: #115e59; font-size: 13px; font-weight: 700;
+}
+.quick-guide-note { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e4e7ec; color: #475569; font-size: 13px; line-height: 1.6; }
+html.dark .quick-guide { background: #1e293b; border-color: #334155; }
+html.dark .quick-guide-number { background: #123f3b; color: #ccfbf1; }
+html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
+.teacher-guide-dialog { max-height: min(90vh, 900px); max-height: min(90dvh, 900px); }
+.teacher-guide-dialog > :last-child { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.workspace-heading { padding: 4px 2px 18px; }
+.workspace-heading > div > div { min-width: 0; }
+.sidebar-content { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+.movement-feedback { align-content: center; }
+.grid-segment button { justify-content: center; }
+.sample-class-button { transition: border-color .15s ease, box-shadow .15s ease; }
+.sample-class-button:hover { box-shadow: 0 3px 12px rgb(15 23 42 / 5%); }
+
+@media (min-width: 640px) {
+  .workspace-content { padding: 24px; padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+}
+@media (max-width: 639px) {
+  .workspace-content { scrollbar-gutter: auto; }
+  .topbar-navigation { min-height: 60px; }
+  .topbar-chart-actions { min-height: 54px; }
+  .topbar-logo { display: none; }
+  .workspace-heading h2 { font-size: 24px; }
+  .quick-guide { padding: 16px; border-radius: 20px; }
+  .quick-guide-compact { padding: 2px 12px; }
+  .quick-guide-compact[open] { padding-bottom: 16px; }
+  .quick-guide-steps { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .quick-guide-steps h3 { font-size: 15px; }
+  .workspace-sidebar {
+    inset-block-start: auto; inset-block-end: 0;
+    width: 100%; max-width: none; height: 92vh; height: 92dvh;
+    border-radius: 28px 28px 0 0; border-inline-end: none;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .workspace-sidebar-inner { width: 100%; max-width: none; }
+  .workspace-sidebar [role='tablist'] { margin: 8px 12px 0; padding: 4px; border: 0; border-radius: 14px; background: #f2f3f7; }
+  .workspace-sidebar [role='tab'] { font-size: 13px; border-radius: 11px; }
+  .workspace-sidebar [role='tab'][aria-selected='true'] { background: #fff; box-shadow: 0 1px 4px rgb(15 23 42 / 8%); }
+  html.dark .workspace-sidebar [role='tablist'] { background: #0f172a; }
+  html.dark .workspace-sidebar [role='tab'][aria-selected='true'] { background: #334155; }
+  .grid-controls > div:first-child { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .grid-segments { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .grid-segment { min-width: 0; }
+  .grid-segment button { flex: 1; min-width: 0; padding-inline: 6px; gap: 4px; }
+  .grid-zoom { justify-content: center; }
+  .movement-feedback { gap: 8px; padding-block: 12px; }
+  .movement-feedback > p { flex-basis: 100%; }
+  .movement-actions { margin-inline-start: auto; border-top: 1px solid #99f6e4; padding-top: 4px; }
+  .wizard-step { flex-direction: column; gap: 4px; padding-inline: 4px; min-width: 48px; }
+  .wizard-step-label { font-size: 11px; line-height: 1.3; text-align: center; }
+  .wizard-footer { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .wizard-next-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+  .wizard-next { flex: 1; font-size: 13px; }
+  .teacher-guide-dialog { max-height: 94vh; max-height: 94dvh; }
+  /* 16px fields avoid automatic page zoom when the iOS keyboard opens. */
+  input:not([type='range']):not([type='checkbox']):not([type='radio']), select, textarea { font-size: 16px; }
+}
+@media (max-width: 359px) {
+  .topbar-navigation { gap: 0; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  .grid-segment button { flex-direction: column; gap: 2px; padding-block: 5px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .topbar-navigation { min-height: 48px; }
+  .topbar-chart-actions { min-height: 48px; }
+  .teacher-guide-dialog { max-height: 96vh; max-height: 96dvh; }
+  .workspace-sidebar { height: 100vh; height: 100dvh; }
+}

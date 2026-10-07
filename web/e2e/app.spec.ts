@@ -100,18 +100,21 @@ test.describe('Projects', () => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
   }
-  test('saves and loads the actual roster', async ({ page }) => {
-    await save(page, 'Test Class');
-    await page.evaluate(() => {
-      const store = window.__ZUSTAND_STORE__;
-      store.getState().setStudents([]);
-      store.setState({ currentProjectId: null });
+  for (const width of [320, 1280]) {
+    test(`${width}: saves and loads the actual roster from the empty home`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await save(page, 'Test Class');
+      await page.evaluate(() => {
+        const store = window.__ZUSTAND_STORE__;
+        store.getState().setStudents([]);
+        store.setState({ currentProjectId: null });
+      });
+      await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
+      await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
+      await page.getByRole('button', { name: 'Load', exact: true }).click();
+      await expect.poll(() => getStudentNames(page)).toHaveLength(8);
     });
-    await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
-    await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
-    await page.getByRole('button', { name: 'Load', exact: true }).click();
-    await expect.poll(() => getStudentNames(page)).toHaveLength(8);
-  });
+  }
   test('requires confirmation to delete a saved project', async ({ page }) => {
     await save(page, 'To Delete');
     await page.getByTitle('Delete', { exact: true }).click();

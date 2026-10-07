@@ -20,7 +20,7 @@ export function LazyFallback() {
  * its full natural width — that's what stops the last column clipping / the
  * page scrolling sideways on phones.
  *
- * `zoom` multiplies the fit. The 0.72 fit floor leaves phone seats tappable;
+ * `zoom` multiplies the fit. The 0.9 fit floor leaves phone seats tappable;
  * wider maps scroll inside this container without widening the page.
  */
 export function FitZoom({ zoom, children }: { zoom: number; children: React.ReactNode }) {
@@ -45,7 +45,7 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
       // 1.15×. The old 1.6× ballooned a small or half-empty class into giant
       // seats that felt clumsy on a desktop monitor.
       const maxUp = availW >= 700 ? 1.15 : 1;
-      const fit = Math.max(0.72, Math.min(maxUp, availW / natW));
+      const fit = Math.max(0.9, Math.min(maxUp, availW / natW));
       const s = fit * zoom;
       setScale(s);
       setBox({ w: natW * s, h: natH * s });

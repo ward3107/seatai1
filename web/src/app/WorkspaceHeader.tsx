@@ -16,6 +16,7 @@ interface Props {
 /** Primary classroom action stays reachable even when the setup drawer is closed. */
 export default function WorkspaceHeader({ ready, busy, error, progress, optimize, cancel }: Props) {
   const students = useStore(s => s.students);
+  const hasResult = useStore(s => s.result !== null);
   const layout = useStore(s => s.layoutDef);
   const { t } = useLanguage();
   const capacity = slotCount(layout);
@@ -26,13 +27,14 @@ export default function WorkspaceHeader({ ready, busy, error, progress, optimize
         <div>
           <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-primary-700 dark:text-primary-300"><ShieldCheck size={14} aria-hidden="true" />{t('app.privacy_badge')}</p>
           <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{t('workspace.title')}</h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('workspace.subtitle')}</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t(hasResult ? 'quickGuide.next_review' : 'quickGuide.next_generate')}</p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-300">
             <span className="flex items-center gap-1.5"><Users size={14} />{students.length} {t('app.students')}</span>
             <span className="flex items-center gap-1.5"><LayoutGrid size={14} />{t('workspace.capacity', { count: capacity })}</span>
           </div>
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <button type="button" onClick={() => useStore.getState().setSidebarOpen(true)} className="min-h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">{t('quickGuide.settings')}</button>
           <button type="button" data-testid="optimize-button" disabled={!ready || busy || students.length < 2 || students.length > capacity} aria-busy={busy} onClick={optimize}
             className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50">
             {busy ? <RefreshCw size={18} className="animate-spin" aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}

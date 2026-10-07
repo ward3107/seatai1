@@ -5,6 +5,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import WorkspaceHeader from './WorkspaceHeader';
+import TeacherQuickGuide from '../components/TeacherQuickGuide';
 
 // PrintView pulls in html2canvas indirectly (the user only sees it after
 // clicking Print), so defer its load.
@@ -224,6 +225,7 @@ function App() {
           ) : (
             <>
               <WorkspaceHeader ready={wasmReady} busy={isOptimizing} error={error} progress={progress} optimize={optimize} cancel={cancel} />
+              <TeacherQuickGuide compact onFullGuide={() => setShowGuide(true)} />
               <ClassroomReview />
               <Suspense fallback={<p role="status">{t('common.loading')}</p>}>
                 <ErrorBoundary name="Seating Grid"><ClassroomGrid /></ErrorBoundary>

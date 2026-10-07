@@ -34,6 +34,7 @@ import {
 import clsx from 'clsx';
 import { useLanguage } from '../hooks/useLanguage';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import TeacherQuickGuide from './TeacherQuickGuide';
 
 interface Props {
   open: boolean;
@@ -61,9 +62,8 @@ const SECTIONS: Section[] = [
 
 export default function UserGuide({ open, onClose }: Props) {
   const { t } = useLanguage();
-  // Track which sections are expanded. Default: first one open so the
-  // user immediately sees the structure.
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['getting_started']));
+  // Keep the quick guide visible; detailed sections open only on request.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function UserGuide({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="dialog-backdrop fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -97,7 +97,7 @@ export default function UserGuide({ open, onClose }: Props) {
       <div
         ref={trapRef}
         tabIndex={-1}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden focus:outline-none"
+        className="teacher-guide-dialog bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -110,7 +110,7 @@ export default function UserGuide({ open, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+            className="min-h-11 min-w-11 flex items-center justify-center p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
             aria-label={t('detail.close')}
           >
             <X size={18} className="text-gray-500 dark:text-slate-400" />
@@ -122,6 +122,8 @@ export default function UserGuide({ open, onClose }: Props) {
           <p className="text-sm text-gray-600 dark:text-slate-400 mb-3 px-1">
             {t('guide.intro')}
           </p>
+          <TeacherQuickGuide />
+          <h3 className="pt-4 pb-2 px-1 text-sm font-semibold text-gray-800 dark:text-gray-100">{t('quickGuide.more')}</h3>
           {SECTIONS.map(({ id, Icon }) => {
             const isOpen = expanded.has(id);
             return (
@@ -133,7 +135,7 @@ export default function UserGuide({ open, onClose }: Props) {
                   type="button"
                   onClick={() => toggle(id)}
                   aria-expanded={isOpen}
-                  className="w-full p-3 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="w-full p-3 flex items-center gap-3 text-start hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 flex items-center justify-center flex-shrink-0">
                     <Icon size={14} />
@@ -169,7 +171,7 @@ export default function UserGuide({ open, onClose }: Props) {
         <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
+            className="min-h-12 px-5 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
           >
             {t('guide.close')}
           </button>

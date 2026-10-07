@@ -69,7 +69,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
   };
 
   return (
-    <div ref={wizardRef} className="mx-auto w-full max-w-3xl scroll-mt-4">
+    <div ref={wizardRef} className="setup-wizard mx-auto w-full max-w-3xl scroll-mt-4">
       <div className="mb-5 flex items-center gap-3">
         <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold ${STEP_TONES[step]}`}>{step + 1}</span>
         <div><p className="text-sm text-gray-500 dark:text-gray-400">{t('teacherDesign.progress', { step: step + 1, total: 4 })}</p><h1 className="text-xl font-bold text-gray-900 dark:text-white">{stepLabels[step]}</h1></div>
@@ -93,7 +93,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
                   aria-current={current ? 'step' : undefined}
                   aria-label={label}
                   className={clsx(
-                    'flex min-h-11 items-center gap-2 rounded-lg px-2 py-1 transition-colors',
+                    'wizard-step flex min-h-11 items-center gap-2 rounded-xl px-2 py-1 transition-colors',
                     reachable ? 'cursor-pointer' : 'cursor-not-allowed',
                     current && STEP_TONES[i],
                     !current && done && 'text-gray-700 dark:text-gray-300',
@@ -110,7 +110,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
                   >
                     {done ? <Check size={16} /> : <Icon size={16} />}
                   </span>
-                  <span className="hidden text-sm font-medium sm:inline">{label}</span>
+                  <span className="wizard-step-label text-sm font-medium">{label}</span>
                 </button>
                 {i < 3 && (
                   <span
@@ -172,23 +172,23 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
       </div>
 
       {/* Footer nav */}
-      <div className="sticky bottom-0 mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
+      <div className="wizard-footer sticky bottom-0 mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
         <button
           type="button"
           onClick={step === 0 ? closeWizard : goBack}
-          className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
           <ChevronLeft size={16} className="rtl:rotate-180" />
           {step === 0 ? t('wizard.exit') : t('wizard.back')}
         </button>
 
         {step < 3 && (
-          <div className="flex items-center gap-2">
+          <div className="wizard-next-actions flex min-w-0 items-center gap-2">
             {step === 2 && (
               <button
                 type="button"
                 onClick={goNext}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="min-h-11 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 {t('wizard.skip')}
               </button>
@@ -197,7 +197,7 @@ export default function SetupWizard({ wasmReady, isOptimizing, optimize, progres
               type="button"
               onClick={goNext}
               disabled={!canAdvance}
-              className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="wizard-next flex min-h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {step === 0 && !enoughStudents ? t('wizard.need_two_students') : t('teacherDesign.next', { next: stepLabels[step + 1] })}
               <ChevronRight size={16} className="rtl:rotate-180" />
