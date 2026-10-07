@@ -30,6 +30,8 @@ jobs:
         run: npx tsc -p web/tsconfig.e2e.json --noEmit
       - name: Typecheck server functions
         run: npx tsc -p web/tsconfig.api.json --noEmit
+      - name: Check school server in native Node
+        run: node scripts/check-school-runtime.mjs
 
   test:
     name: Test

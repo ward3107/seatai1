@@ -1,5 +1,5 @@
 import type { ApiRequest, ApiResponse } from './_lib/httpTypes';
-import { rateLimit } from './_lib/rateLimit';
+import { rateLimit } from './_lib/rateLimit.js';
 
 const ACCESS_COOKIE = '__Host-seatai-school-access';
 const REFRESH_COOKIE = '__Host-seatai-school-refresh';
