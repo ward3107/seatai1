@@ -1386,5 +1386,12 @@
     "titleEnd": "ورؤية واضحة للفريق.",
     "resume": "متابعة الصف المحفوظ",
     "resumeHint": "تم حفظ صفك ونتائجه على هذا الجهاز."
+  },
+  "creator": {
+    "website": "زيارة موقع vasia dev.",
+    "email": "إرسال بريد إلكتروني إلى vasia dev.",
+    "whatsapp": "التواصل مع vasia dev. عبر WhatsApp",
+    "github": "زيارة ملف Waseem على GitHub",
+    "linkedin": "زيارة ملف Waseem على LinkedIn"
   }
 }

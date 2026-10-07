@@ -1386,5 +1386,12 @@
     "titleEnd": "Команде — ясная картина.",
     "resume": "Продолжить с сохранённым классом",
     "resumeHint": "Ваш класс и результаты сохранены на этом устройстве."
+  },
+  "creator": {
+    "website": "Открыть сайт vasia dev.",
+    "email": "Написать vasia dev. по электронной почте",
+    "whatsapp": "Связаться с vasia dev. в WhatsApp",
+    "github": "Открыть профиль Waseem на GitHub",
+    "linkedin": "Открыть профиль Waseem на LinkedIn"
   }
 }
