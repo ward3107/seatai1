@@ -199,10 +199,10 @@ export const SAMPLE_CLASSES: SampleClass[] = [
   },
   {
     id: 'demo-large',
-    rows: 6,
-    cols: 7,
+    rows: 9,
+    cols: 5,
     students: generateSampleClass(
-      { size: 40, friendDensity: 0.35, conflictDensity: 0.15, specialNeedsDensity: 0.15 },
+      { size: 45, friendDensity: 0.35, conflictDensity: 0.15, specialNeedsDensity: 0.15 },
       7,
     ),
   },

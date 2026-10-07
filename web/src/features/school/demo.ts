@@ -7,7 +7,7 @@ const now = () => new Date().toISOString();
 const id = () => crypto.randomUUID();
 
 /** Isolated, disposable sample data. This gateway never reads a local roster or contacts a server. */
-export function createDemoGateway(t: Translator): SchoolGateway {
+export function createDemoGateway(t: Translator, publication?: Extract<SchoolCommand, { action: 'publish_class' }>['payload']): SchoolGateway {
   const seededAt = now();
   const workspace: SchoolWorkspace = {
     school: { id: SCHOOL, name: t('school.demoSchool'), notice: t('school.demoNotice') },
@@ -26,6 +26,11 @@ export function createDemoGateway(t: Translator): SchoolGateway {
       { id: 'demo-principal', displayName: t('school.principal'), role: 'principal', active: true, expiresAt: null, classIds: [] },
     ], audit: [], summary: { classes: 2, students: 5, newCases: 0, activeCases: 1, resolvedCases: 0, followUps: 1 },
   };
+  if (publication) {
+    workspace.classes = [{ id: 'demo-class-1', ...structuredClone(publication), studentCount: publication.students.length,
+      students: publication.students.map((s, i) => ({ ...s, id: `demo-student-${i + 1}` })), updatedAt: seededAt }];
+    workspace.referrals = []; workspace.recommendations = []; workspace.privateNotes = [];
+  }
   const memberships: Membership[] = ['teacher', 'counselor', 'principal'].map(role => ({ schoolId: SCHOOL, schoolName: workspace.school.name, role: role as Membership['role'], displayName: t(`school.${role}`) }));
   function allowedClass(context: SchoolContext, classId: string) {
     return workspace.members.some(m => m.role === context.role && m.active && (!m.expiresAt || new Date(m.expiresAt).getTime() > Date.now()) && m.classIds.includes(classId));
@@ -40,7 +45,6 @@ export function createDemoGateway(t: Translator): SchoolGateway {
       const result = structuredClone(workspace);
       if (context.role !== 'principal') result.classes = result.classes.filter(c => allowedClass(context, c.id));
       if (context.role === 'principal') {
-        result.classes = result.classes.map(c => ({ ...c, students: [], snapshot: undefined }));
         result.referrals = []; result.recommendations = []; result.outcomes = []; result.privateNotes = [];
       } else {
         result.referrals = result.referrals.filter(r => allowedClass(context, r.classId));

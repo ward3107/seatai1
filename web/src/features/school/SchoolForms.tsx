@@ -3,6 +3,7 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Field } from './SchoolComponents';
 import type { Referral, SchoolCommand, SchoolWorkspace } from './types';
+import { makeClassPublication } from './optimizationReport';
 
 export type FormKind = 'create_referral' | 'recommend' | 'private_note' | 'outcome' | 'grant_member' | 'publish_class';
 export const FORM_LABELS: Record<FormKind, string> = { create_referral: 'newReferral', recommend: 'recommend', private_note: 'privateNote', outcome: 'outcome', grant_member: 'addMember', publish_class: 'shareClass' };
@@ -44,13 +45,15 @@ export function SchoolMutationForm({ workspace, kind, referral, busy, onSave, er
   </form>;
 }
 
-/** Mounted only after a teacher explicitly opens sharing in a connected school. */
+/** Mounted only after an authorized teacher or principal explicitly opens sharing. */
 export function ShareClassForm({ workspace, busy, onSave, error }: Omit<FormProps, 'kind' | 'referral'>) {
   const projects = useStore(s => s.projects);
   const currentStudents = useStore(s => s.students);
   const currentRows = useStore(s => s.rows);
   const currentCols = useStore(s => s.cols);
   const currentResult = useStore(s => s.result);
+  const currentLayout = useStore(s => s.layoutDef);
+  const currentConstraints = useStore(s => s.constraints);
   const { t } = useLanguage();
   const [source, setSource] = useState(currentStudents.length ? 'current' : projects[0]?.id ?? '');
   const [target, setTarget] = useState('');
@@ -61,11 +64,11 @@ export function ShareClassForm({ workspace, busy, onSave, error }: Omit<FormProp
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (busy) return;
     const data = new FormData(event.currentTarget);
-    const positions = result?.layout.seats.filter(s => s.student_id).map(s => ({ localRef: s.student_id!, row: s.position.row, col: s.position.col })) ?? [];
     await onSave({ action: 'publish_class', payload: {
-      name: String(data.get('name') ?? '').trim(), ...(target ? { classId: target } : {}),
-      students: students.map(s => ({ localRef: s.id, name: s.name })),
-      snapshot: { rows: Math.max(project?.rows ?? currentRows, ...positions.map(p => p.row + 1)), cols: Math.max(project?.cols ?? currentCols, ...positions.map(p => p.col + 1)), positions },
+      ...makeClassPublication(String(data.get('name') ?? '').trim(), students, result,
+        source === 'current' ? currentLayout : project?.layoutDef ?? { type: 'rows', rows: project?.rows ?? currentRows, cols: project?.cols ?? currentCols },
+        source === 'current' ? currentConstraints : project!.constraints),
+      ...(target ? { classId: target } : {}),
     } });
   }
   if (!students.length && !projects.length) return <p className="school-empty">{t('school.noLocalClass')}</p>;
