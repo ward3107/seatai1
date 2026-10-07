@@ -38,18 +38,18 @@ do $migration$
 declare definition text; previous text; begin
   definition:=replace(pg_get_functiondef('seatai_private.command(uuid,text,text,jsonb)'::regprocedure),chr(13),'');
   previous:=definition;
-  definition:=replace(definition, $old$insert into public.seatai_members(school_id,user_id,role,display_name) values(sid,u,'teacher',trim(p_payload->>'displayName'));$old$, '-- A creator receives workspace administration only, not every staff role.');
+  definition:=replace(definition, $old$insert into public.seatai_members(school_id,user_id,role,display_name) values(sid,u,'teacher',trim(p_payload->>'displayName'));$old$, 'null; /* A creator receives workspace administration only. */');
   if definition=previous then raise exception 'Unexpected create_school implementation'; end if;
   previous:=definition;
-  definition:=replace(definition, $old$if p_role<>'teacher' then raise exception 'forbidden' using errcode='42501'; end if;
-    roster:=$old$, $new$if p_role not in ('teacher','principal') then raise exception 'forbidden' using errcode='42501'; end if;
+  definition:=regexp_replace(definition, $old$if p_role<>'teacher' then raise exception 'forbidden' using errcode='42501'; end if;\s+roster:=$old$, $new$if p_role not in ('teacher','principal') then raise exception 'forbidden' using errcode='42501'; end if;
     roster:=$new$);
   if definition=previous then raise exception 'Unexpected publish_class implementation'; end if;
-  definition:=replace(definition, $old$select id into mid from public.seatai_members where school_id=p_school and user_id=u and role='teacher';
-      insert into public.seatai_assignments(school_id,class_id,member_id) values(p_school,cid,mid);$old$, $new$if p_role='teacher' then
+  previous:=definition;
+  definition:=regexp_replace(definition, $old$select id into mid from public[.]seatai_members where school_id=p_school and user_id=u and role='teacher';\s+insert into public[.]seatai_assignments\(school_id,class_id,member_id\) values\(p_school,cid,mid\);$old$, $new$if p_role='teacher' then
         select id into mid from public.seatai_members where school_id=p_school and user_id=u and role='teacher';
         insert into public.seatai_assignments(school_id,class_id,member_id) values(p_school,cid,mid);
       end if;$new$);
+  if definition=previous then raise exception 'Unexpected class assignment implementation'; end if;
   definition:=replace(definition, $old$or not seatai_private.can_class(cid,'teacher') then$old$, $new$or (p_role<>'principal' and not seatai_private.can_class(cid,'teacher')) then$new$);
   -- Coordinates are optional for old row-based snapshots; both are validated together.
   definition:=replace(definition, $old$-- Rebuild from a whitelist:$old$, $new$if exists(select 1 from jsonb_array_elements(snap->'positions') pos where
