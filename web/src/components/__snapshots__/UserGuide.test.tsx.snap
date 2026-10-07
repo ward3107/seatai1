@@ -115,7 +115,9 @@ exports[`UserGuide > matches snapshot when open 1`] = `
         <ol
           class="quick-guide-steps"
         >
-          <li>
+          <li
+            data-guide-step="students"
+          >
             <span
               aria-hidden="true"
               class="quick-guide-number"
@@ -165,7 +167,9 @@ exports[`UserGuide > matches snapshot when open 1`] = `
               </p>
             </div>
           </li>
-          <li>
+          <li
+            data-guide-step="room"
+          >
             <span
               aria-hidden="true"
               class="quick-guide-number"
@@ -229,7 +233,9 @@ exports[`UserGuide > matches snapshot when open 1`] = `
               </p>
             </div>
           </li>
-          <li>
+          <li
+            data-guide-step="arrange"
+          >
             <span
               aria-hidden="true"
               class="quick-guide-number"
@@ -280,7 +286,9 @@ exports[`UserGuide > matches snapshot when open 1`] = `
               </p>
             </div>
           </li>
-          <li>
+          <li
+            data-guide-step="save"
+          >
             <span
               aria-hidden="true"
               class="quick-guide-number"
