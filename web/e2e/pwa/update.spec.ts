@@ -24,7 +24,7 @@ test('a direct school visit detects and accepts a deployment without leaving the
   }
 });
 
-test('a deployment offers refresh, keeps the classroom open and preserves the unified room after acceptance',async({page})=>{
+test('a deployment offers refresh, opens home and preserves the saved classroom after acceptance',async({page})=>{
   const swPath=resolve('dist/sw.js');
   const original=await readFile(swPath,'utf8');
   try {
@@ -51,6 +51,8 @@ test('a deployment offers refresh, keeps the classroom open and preserves the un
     const movedLabel=await seats.nth(0).getAttribute('aria-label');
     await Promise.all([page.waitForEvent('load'),banner.getByRole('button',{name:'שמירה ורענון',exact:true}).click()]);
     await expect(banner).toHaveCount(0);
+    await expect(page.locator('#entry-title')).toBeVisible();
+    await page.getByRole('button',{name:'המשך בכיתה השמורה',exact:true}).click();
     await expect(seats.nth(0)).toHaveAttribute('aria-label',movedLabel!);
     await expect(page.getByTestId('room-plan')).toHaveCount(1);
     await expect(page.locator('#seating-grid-export [data-room-feature]')).toHaveCount(1);

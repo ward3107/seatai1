@@ -1383,6 +1383,8 @@
     "authAccess": "One account for all your roles. Your school’s assigned permissions determine your access.",
     "demoLoginHint": "Before signing in, explore the dashboards and try optimization with sample data.",
     "titleStart": "A place for every student.",
-    "titleEnd": "A clear view for your team."
+    "titleEnd": "A clear view for your team.",
+    "resume": "Resume saved class",
+    "resumeHint": "Your class and results are saved on this device."
   }
 }

@@ -12,6 +12,7 @@ export default function OnboardingView() {
   const setLayoutDef = useStore(s => s.setLayoutDef);
   const startWizard = useStore(s => s.startWizard);
   const setHomeView = useStore(s => s.setHomeView);
+  const hasSavedClass = useStore(s => s.students.length > 0);
   const { t, isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowUpLeft : ArrowUpRight;
   function loadSampleClass(id: typeof SAMPLE_CLASSES[number]['id']) {
@@ -28,8 +29,8 @@ export default function OnboardingView() {
         <p className="entry-product">{t('entry.product')}</p>
         <h1 id="entry-title"><span className="block">{t('entry.titleStart')}</span><span className="block">{t('entry.titleEnd')}</span></h1>
         <p className="entry-intro">{t('entry.intro')}</p>
-        <div className="entry-actions"><button type="button" onClick={() => startWizard()} className="entry-primary"><UserPlus size={19} aria-hidden="true" />{t('onboarding.get_started')}</button><a className="entry-secondary" href="#sample-classes">{t('teacherFlow.tryDemo')}</a></div>
-        <p className="entry-reassurance"><ShieldCheck size={16} aria-hidden="true" />{t('entry.localHint')}</p>
+        <div className="entry-actions">{hasSavedClass && <button type="button" className="entry-primary" onClick={() => setHomeView(false)}>{t('entry.resume')}</button>}<button type="button" onClick={() => startWizard()} className={hasSavedClass ? 'entry-secondary' : 'entry-primary'}><UserPlus size={19} aria-hidden="true" />{t('onboarding.get_started')}</button><a className="entry-secondary" href="#sample-classes">{t('teacherFlow.tryDemo')}</a></div>
+        <p className="entry-reassurance"><ShieldCheck size={16} aria-hidden="true" />{t(hasSavedClass ? 'entry.resumeHint' : 'entry.localHint')}</p>
         <a href="#school" className="entry-team-link"><Building2 size={18} aria-hidden="true" /><span>{t('entry.teamLink')}</span><Arrow size={17} aria-hidden="true" /></a>
       </div>
       <ClassroomPreview />
@@ -44,6 +45,6 @@ export default function OnboardingView() {
       <p className="entry-access-note"><ShieldCheck size={18} aria-hidden="true" />{t('entry.accessHint')}</p>
     </section>
     <div className="entry-how"><TeacherQuickGuide /></div>
-    <footer className="entry-footer"><div><strong>SeatAI</strong><p>{t('onboarding.privacy')}</p></div><img src="/brand/vasia-dev-signature.png" width={373} height={259} alt="vasia dev." loading="lazy" /></footer>
+    <footer className="entry-footer"><div><strong>SeatAI</strong><p>{t('onboarding.privacy')}</p></div><img src="/brand/vasia-dev-signature-light.png" width={1505} height={1045} alt="vasia dev." loading="lazy" /></footer>
   </div>;
 }

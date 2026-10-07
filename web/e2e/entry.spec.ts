@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { openApp, createSampleClass, getStudentNames } from './helpers';
+import { openApp, createSampleClass, getStudentNames, runOptimization, flushStorage } from './helpers';
 import type { Membership, SchoolWorkspace } from '../src/features/school/types';
 
 async function openEntry(page: Page) {
@@ -54,6 +54,19 @@ test('returning home preserves a class and cancelling a sample keeps it intact',
   await expect(page.locator('#entry-title')).toBeVisible();
 });
 
+test('a full reload opens home and resumes exactly the saved result', async ({ page }) => {
+  await openEntry(page); await createSampleClass(page); await runOptimization(page);
+  const original = await page.evaluate(() => JSON.stringify(window.__ZUSTAND_STORE__.getState().result));
+  await flushStorage(page);
+  await page.reload();
+  await expect(page.locator('#entry-title')).toBeVisible();
+  await expect(page.locator('#seating-grid-export')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Resume saved class', exact: true }).click();
+  await expect(page.locator('#seating-grid-export')).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify(window.__ZUSTAND_STORE__.getState().result))).toBe(original);
+  expect(await getStudentNames(page)).toHaveLength(8);
+});
+
 for (const width of [320, 390, 768, 1440]) {
   test(`${width}px: entry and sign-in fit all four languages`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -67,6 +80,7 @@ for (const width of [320, 390, 768, 1440]) {
       if (language === 'he' && (width === 390 || width === 1440)) {
         await page.screenshot({ animations: 'disabled', path: test.info().outputPath(`home-${width}.png`) });
         await page.locator('.entry-team').screenshot({ path: test.info().outputPath(`roles-${width}.png`) });
+        await page.locator('.entry-footer').screenshot({ path: test.info().outputPath(`footer-${width}.png`) });
         await page.evaluate(() => window.__ZUSTAND_STORE__.getState().setTheme('dark'));
         await page.locator('#entry-title').scrollIntoViewIfNeeded();
         await page.screenshot({ animations: 'disabled', path: test.info().outputPath(`home-dark-${width}.png`) });

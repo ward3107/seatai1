@@ -798,7 +798,8 @@ export const useStore = create<AppState>()(
           state.sidebarOpen = open;
         }),
 
-      homeView: false,
+      // A reload starts at home; the saved class is resumed explicitly.
+      homeView: true,
       setHomeView: (open) =>
         set((state) => {
           state.homeView = open;

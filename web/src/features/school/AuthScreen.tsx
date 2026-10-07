@@ -35,7 +35,7 @@ export default function AuthScreen({ available, signedIn, onReady, onDemo, entry
   }
   return <div className="entry-auth">
     <div className="entry-auth-intro"><h1>{t('entry.authTitle')}</h1><p>{t('entry.authIntro')}</p><ClassroomPreview /></div>
-    <section className="entry-auth-form" aria-labelledby="school-auth-title">
+    <section className="entry-auth-form" data-role={entryRole} aria-labelledby="school-auth-title">
       <h2 id="school-auth-title">{t(signedIn ? 'school.createSchool' : register ? 'school.register' : 'school.login')}</h2>
       {!signedIn && <><nav className="entry-role-tabs" aria-label={t('entry.roleNavigation')}>{(['teacher', 'counselor', 'principal'] as const).map(role => <a href={`#school-${role}`} key={role} aria-current={role === entryRole ? 'page' : undefined}>{t(`school.${role}`)}</a>)}</nav><p className="entry-role-description">{t(`entry.${entryRole}Description`)}</p><p>{t('entry.authAccess')}</p></>}
       {!available ? <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-800"><LockKeyhole className="mb-3 text-slate-500" size={25} aria-hidden="true" /><p className="text-sm leading-7">{t('school.notReady')}</p></div> : signedIn && !create ? <div className="space-y-4"><p className="text-sm leading-7">{t('school.noMembership')}</p><Action onClick={() => setCreate(true)}>{t('school.createSchool')}</Action><Action secondary onClick={onReady}>{t('school.refresh')}</Action></div> : <form key={signedIn ? 'school' : register ? 'register' : 'login'} onSubmit={submit} className="space-y-4">
