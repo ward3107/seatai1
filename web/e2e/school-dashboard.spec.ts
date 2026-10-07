@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { openApp, createSampleClass, getStudentNames } from './helpers';
+import { openApp, createSampleClass, getStudentNames, runOptimization } from './helpers';
 import type { Membership, SchoolCommand, SchoolWorkspace } from '../src/features/school/types';
 
 async function openDemo(page: Page) {
@@ -56,12 +56,13 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 
       await role(page, 'principal');
       await expect(page.getByText('Confidential content for the assigned counselor.', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Follow-up from this viewport', { exact: true })).toHaveCount(0);
-      await expect(page.getByText('Sample student A', { exact: true })).toHaveCount(0);
+      await expect(page.getByTestId('school-private-notes')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     });
     test('keeps class and full case dialogs in the viewport with reachable controls and focus', async ({ page }) => {
       await openDemo(page);
-      await page.getByRole('button', { name: 'Open class', exact: true }).click();
+      const opener = page.getByRole('button', { name: 'Open class', exact: true });
+      await opener.focus(); await opener.press('Enter');
       const dialog = page.getByRole('dialog');
       await expect(dialog.getByRole('heading', { name: 'Seating snapshot', exact: true })).toBeVisible();
       const close = dialog.getByRole('button', { name: 'Close', exact: true });
@@ -69,7 +70,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 
       expect(bounds.width).toBeGreaterThanOrEqual(44); expect(bounds.height).toBeGreaterThanOrEqual(44);
       const modalBounds = (await dialog.boundingBox())!;
       expect(modalBounds.x).toBeGreaterThanOrEqual(0); expect(modalBounds.x + modalBounds.width).toBeLessThanOrEqual(viewport.width + 1);
-      await close.focus(); await page.keyboard.press('Shift+Tab'); await expect(close).toBeFocused();
+      await close.focus(); await page.keyboard.press('Shift+Tab'); await expect(dialog.getByRole('region', { name: 'Seating snapshot', exact: true })).toBeFocused();
       await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Open class', exact: true })).toBeFocused();
     });
@@ -132,7 +133,7 @@ test('connected UI requires MFA and explicitly shares only roster names and seat
   await page.getByLabel('Six-digit verification code', { exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Verify and continue', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'My classes', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Share a class from this device', exact: true }).click();
+  await page.getByRole('button', { name: 'Share a class from this device', exact: true }).first().click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Shared class name', { exact: true }).fill('Published test class');
   await dialog.getByRole('checkbox').check();
@@ -143,4 +144,46 @@ test('connected UI requires MFA and explicitly shares only roster names and seat
   expect(JSON.stringify(published)).not.toContain('CONFIDENTIAL');
   expect(JSON.stringify(published)).not.toContain('LOCALONLY');
   expect(JSON.stringify(published)).not.toContain('academic_score');
+});
+
+test('15, 30 and 45 pupil optimization results appear in every demo role without changing local data', async ({ page }) => {
+  test.setTimeout(90_000);
+  await openApp(page); await createSampleClass(page, 8);
+  const original = await getStudentNames(page);
+  await page.route('**/api/school', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ available: false, signedIn: false, memberships: [] }) }));
+  await page.evaluate(() => { location.hash = 'school'; });
+  await page.getByRole('button', { name: 'Try the dashboards', exact: true }).click();
+  for (const count of [15, 30, 45]) {
+    await page.getByRole('group', { name: 'Sample class size' }).getByRole('button', { name: `${count} Students`, exact: true }).click();
+    await page.getByRole('button', { name: 'Optimize and show dashboard', exact: true }).click();
+    const report = page.getByTestId('school-optimization-report');
+    await expect(report.locator('.school-map-seat')).toHaveCount(count, { timeout: 20000 });
+    await expect(report.getByRole('meter')).toHaveCount(4);
+    const score = await report.locator('.school-result-heading strong').innerText();
+    for (const memberRole of ['counselor', 'principal', 'teacher'] as const) {
+      await role(page, memberRole);
+      await expect(report.locator('.school-map-seat')).toHaveCount(count);
+      await expect(report.locator('.school-result-heading strong')).toHaveText(score);
+    }
+  }
+  expect(await getStudentNames(page)).toEqual(original);
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.getByTestId('school-optimization-report').screenshot({ path: `test-results/school-45-${test.info().project.name}.png` });
+});
+
+test('the actual optimized local class opens in the dashboards with the same metrics', async ({ page }) => {
+  await openApp(page); await createSampleClass(page, 15); await runOptimization(page);
+  const expected = await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result!.objective_scores);
+  await page.getByRole('link', { name: 'Preview this result in dashboards', exact: true }).click();
+  const report = page.getByTestId('school-optimization-report');
+  await expect(report.locator('.school-map-seat')).toHaveCount(15);
+  await expect(report.getByRole('meter').first()).toHaveAttribute('aria-valuenow', String(expected.academic_balance));
+  await role(page, 'principal');
+  await expect(report.getByText('Student 1', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.__ZUSTAND_STORE__.getState().setUiLanguage('he'));
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  await report.locator('.school-analysis-data').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/school-hebrew-mobile-optimization.png' });
 });

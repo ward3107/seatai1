@@ -50,6 +50,7 @@ export default function WorkspaceHeader({ ready, busy, error, progress, optimize
         <p role="status" className="mt-1 text-xs text-gray-500">{progress ? t('optimization.progress', { generation: progress.generation, total: progress.totalGenerations }) : t('app.loading_optimizer')}</p>
       </div>}
       {error && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">{error}</p>}
+      {hasResult && <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-primary-100 pt-4 dark:border-gray-700"><a href="#school-preview" className="inline-flex min-h-11 items-center rounded-xl bg-primary-50 px-4 text-sm font-semibold text-primary-800 dark:bg-primary-950 dark:text-primary-200">{t('school.previewCurrent')}</a><a href="#school" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary-700 dark:text-primary-300">{t('school.publishResult')}</a></div>}
       {students.length > capacity && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-300">{t('app.too_many_students', { students: students.length, seats: capacity })}</p>}
     </section>
   );

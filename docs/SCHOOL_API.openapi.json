@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "SeatAI school API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Optional same-origin school workspace. Server configuration is required. All school reads and writes require a verified Auth session and MFA, with live SQL school/class authorization. Full setup and command payloads: SCHOOL_WORKSPACES.md and src/features/school/types.ts."
   },
   "servers": [
@@ -27,7 +27,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success; bootstrap includes available, signedIn, memberships and optional mfaRequired."
+            "description": "Success. Bootstrap memberships include role and isOwner. Workspace classes include a whitelisted seating snapshot and nullable class-level optimization report; principal access includes published rosters but excludes counseling details."
           },
           "400": {
             "description": "Invalid request."
@@ -157,9 +157,101 @@
               },
               "payload": {
                 "type": "object",
-                "description": "Action-specific payloads are defined by SchoolCommand in types.ts. Database validates ownership, size, foreign-school references and operation permissions."
+                "description": "Action-specific payloads are defined by SchoolCommand in types.ts. publish_class accepts name, optional classId, students (localRef/name), snapshot (rows/cols/positions with localRef/row/col and optional paired normalized x/y), and nullable optimization. Teachers publish assigned classes or create a class; principals publish within their own school. SQL checks live membership, bounds and cross-school references and rebuilds reports from whitelisted fields. Individual profiles are excluded."
               }
             }
+          }
+        }
+      },
+      "OptimizationReport": {
+        "type": "object",
+        "description": "Optional publish_class report. Server derives score and seated/missing counts from validated objectives, roster and snapshot. A missing/null report clears any previous report. No individual assessment fields are accepted.",
+        "required": [
+          "version",
+          "generatedAt",
+          "objectives",
+          "needsAttention",
+          "requiredAttention",
+          "generations",
+          "durationMs",
+          "layoutType",
+          "strategy"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "objectives": {
+            "type": "object",
+            "required": [
+              "academic_balance",
+              "behavioral_balance",
+              "diversity",
+              "special_needs"
+            ],
+            "properties": {
+              "academic_balance": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "behavioral_balance": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "diversity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "special_needs": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          },
+          "needsAttention": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "requiredAttention": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "generations": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "layoutType": {
+            "enum": [
+              "rows",
+              "clusters",
+              "u-shape",
+              "circle",
+              "custom-rows"
+            ]
+          },
+          "strategy": {
+            "enum": [
+              "mixed",
+              "similar",
+              "peer_support",
+              "exam"
+            ]
           }
         }
       }
