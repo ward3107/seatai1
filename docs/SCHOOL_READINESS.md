@@ -51,12 +51,18 @@ of Education approval. Do not describe a proposed capability as implemented.
 - [ ] Establish support ownership and an incident-response contact.
 - [ ] Use synthetic student data for demonstrations and test automation.
 
-## Not implemented by this hardening work
+## Optional school workspace
 
-School-wide accounts, SSO, tenant isolation, role-based access, centrally enforced
-AI policies, managed backups, administrator audit logs and cross-teacher sharing
-need a separately designed school backend. A browser-only preference is not an
-enforceable school security policy. No hosting region or vendor approval is implied.
+The role dashboards, verified-account/MFA API, school/class authorization,
+referrals, recommendations, separate counselor notes and action audit have an
+initial implementation. They require the dedicated backend and live-provider
+verification described in [SCHOOL_WORKSPACES.md](SCHOOL_WORKSPACES.md).
+Without configuration, only the labeled sample-data demo is enabled.
+
+SSO, centrally enforced AI policy, managed backups, retention/deletion and
+conflict-aware cross-device seating synchronization remain future work.
+A browser preference is not an enforceable school security policy. No hosting
+region, supplier approval or legal certification is implied.
 
 ## Acceptance checks
 

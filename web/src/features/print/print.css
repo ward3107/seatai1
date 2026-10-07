@@ -1,0 +1,37 @@
+.seating-print-portal { position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; padding:16px; background:rgb(15 23 42 / .65); }
+.seating-print-dialog { width:100%; max-width:1160px; max-height:calc(100dvh - 32px); display:flex; flex-direction:column; min-height:0; background:#fff; color:#172b3a; border-radius:22px; overflow:hidden; box-shadow:0 24px 70px rgb(0 0 0 / .22); outline:none; }
+.seating-print-controls { flex:none; padding:18px 22px; border-bottom:1px solid #dce5e9; }
+.seating-print-heading { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+.seating-print-heading h2 { font-size:20px; font-weight:700; }
+.seating-print-heading p { font-size:13px; margin-top:4px; color:#526775; }
+.seating-print-close { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; border-radius:12px; background:#f2f6f7; }
+.seating-print-title-label { display:block; font-size:13px; font-weight:600; margin-top:12px; }
+.seating-print-title-label input { display:block; width:100%; max-width:480px; margin-top:5px; min-height:44px; border:1px solid #b4c6cd; border-radius:10px; padding:8px 12px; background:#fff; color:#172b3a; font-size:16px; }
+.seating-print-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+.seating-print-actions button { min-height:44px; display:flex; gap:8px; align-items:center; justify-content:center; border-radius:12px; padding:10px 18px; background:#137f74; color:#fff; font-size:14px; font-weight:600; }
+.seating-print-actions .seating-print-download { background:#e6f6f3; color:#155e55; border:1px solid #92c4bc; }
+.seating-print-controls button:disabled { opacity:.5; cursor:default; }
+.seating-print-controls :focus-visible { outline:3px solid #2b9a8d; outline-offset:3px; }
+.seating-print-options { margin-top:10px; font-size:12px; color:#526775; }
+.seating-print-options summary { cursor:pointer; min-height:44px; display:flex; align-items:center; font-weight:600; }
+.seating-print-options label { display:flex; align-items:center; min-height:44px; gap:9px; }
+.seating-print-options input { width:18px; height:18px; accent-color:#137f74; }
+.seating-print-controls [role=alert] { margin-top:10px; font-size:13px; color:#9b2525; }
+.seating-print-preview { padding:22px; background:#e9eff2; overflow:auto; min-height:0; }
+.seating-print-page { width:100%; max-width:max(250px,calc((100dvh - 370px) * 1.4142)); margin:0 auto; background:#fff; box-shadow:0 3px 18px rgb(28 52 67 / .12); }
+.seating-print-page svg { display:block; width:100%; height:auto; }
+@media (max-width:640px) {
+  .seating-print-portal { padding:8px; padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+  .seating-print-dialog { max-height:calc(100dvh - 16px); border-radius:18px; }
+  .seating-print-controls { padding:12px 14px 4px; }
+  .seating-print-preview { padding:12px 6px; }
+  .seating-print-actions button { flex:1; padding:10px; }
+}
+@media print {
+  html.seating-print-open, body.seating-print-open { width:297mm !important; height:auto !important; min-height:0 !important; margin:0 !important; padding:0 !important; background:#fff !important; overflow:visible !important; }
+  body.seating-print-open > :not(.seating-print-portal) { display:none !important; }
+  .seating-print-portal, .seating-print-dialog, .seating-print-preview { display:block !important; position:static !important; inset:auto !important; width:297mm !important; height:auto !important; max-width:none !important; max-height:none !important; min-height:0 !important; margin:0 !important; padding:0 !important; overflow:visible !important; background:#fff !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; }
+  .seating-print-controls { display:none !important; }
+  .seating-print-page { width:297mm !important; max-width:none !important; height:209.8mm !important; box-shadow:none !important; break-inside:avoid; break-after:avoid; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .seating-print-page svg { width:100% !important; height:100% !important; }
+}

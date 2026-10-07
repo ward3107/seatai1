@@ -47,6 +47,7 @@ test('classroom printout hides attainment, accommodations and warnings by defaul
   const chart = page.locator('#print-content');
   await expect(chart).not.toContainText('▲');
   await expect(chart).not.toContainText('♿');
+  await page.getByText('Additional teacher options', { exact: true }).click();
   await page.getByRole('checkbox',{name:'Teacher only: show needs and attainment markers'}).check();
   await expect(chart).toContainText('▲');
 });

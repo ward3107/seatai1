@@ -1,0 +1,63 @@
+.school-shell { --school-accent: #0369a1; --school-soft: #e0f2fe; --school-border: #bae6fd; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; color: #0f172a; background: #f6f8fc; }
+.school-role-teacher { --school-accent: #0e7490; --school-soft: #ecfeff; --school-border: #a5f3fc; }
+.school-role-counselor { --school-accent: #6d28d9; --school-soft: #f5f3ff; --school-border: #ddd6fe; }
+.school-role-principal { --school-accent: #1e40af; --school-soft: #eff6ff; --school-border: #bfdbfe; }
+.school-accent { color: var(--school-accent); }
+.school-header { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; min-height: 68px; padding: max(.5rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right)) .5rem max(.75rem, env(safe-area-inset-left)); border-bottom: 1px solid #e2e8f0; background: #fff; }
+.school-body { display: flex; flex: 1; min-height: 0; }
+.school-main { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem 1rem calc(6rem + env(safe-area-inset-bottom)); }
+.school-sidebar { display: none; }
+.school-panel, .school-stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 22px; padding: 1.25rem; box-shadow: 0 8px 28px -24px #0f172a66; }
+.school-stat { padding: 1rem; }
+.school-stat-icon, .school-role-badge { display: inline-flex; gap: .5rem; align-items: center; border-radius: 14px; padding: .65rem; color: var(--school-accent); background: var(--school-soft); }
+.school-stat:nth-child(2) .school-stat-icon { color: #0f766e; background: #f0fdfa; }
+.school-stat:nth-child(3) .school-stat-icon { color: #b45309; background: #fffbeb; }
+.school-next { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--school-border); background: var(--school-soft); border-radius: 22px; padding: 1.25rem; }
+.school-button, .school-button-secondary { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .5rem; border-radius: 13px; padding: .65rem 1rem; font-weight: 600; font-size: .875rem; line-height: 1.4; transition: background-color .15s; }
+.school-button { background: var(--school-accent); color: #fff; }
+.school-button:hover { filter: brightness(.94); }
+.school-button-secondary { background: #fff; color: var(--school-accent); border: 1px solid #cbd5e1; }
+.school-button-secondary:hover { background: var(--school-soft); }
+.school-button:disabled, .school-button-secondary:disabled, .school-close:disabled { opacity: .55; cursor: not-allowed; }
+.school-input { display: block; min-height: 46px; width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; padding: .65rem .8rem; font-size: 16px; font-weight: 400; color: #0f172a; }
+textarea.school-input { resize: vertical; }
+.school-shell button:focus-visible, .school-shell a:focus-visible, .school-input:focus-visible, .school-check input:focus-visible { outline: 3px solid var(--school-accent); outline-offset: 3px; }
+.school-check { display: flex; align-items: flex-start; gap: .65rem; padding: .65rem; min-height: 44px; font-size: .875rem; line-height: 1.6; }
+.school-check input { flex-shrink: 0; margin-top: .25rem; width: 20px; height: 20px; accent-color: var(--school-accent); }
+.school-case-card, .school-class-card { display: block; width: 100%; min-width: 0; border: 1px solid #e2e8f0; border-radius: 18px; background: #fff; padding: 1rem; overflow-wrap: anywhere; }
+button.school-case-card:hover { border-color: var(--school-accent); background: var(--school-soft); }
+.school-class-card { border-top: 3px solid var(--school-border); }
+.school-empty { padding: 1rem; color: #64748b; font-size: .875rem; line-height: 1.7; }
+.school-error { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; border-radius: 13px; padding: .9rem; font-size: .875rem; }
+.school-status { border-radius: 999px; padding: .3rem .7rem; font-weight: 600; font-size: .75rem; }
+.school-status-new { background: #fffbeb; color: #92400e; }
+.school-status-in_progress { background: #f5f3ff; color: #5b21b6; }
+.school-status-resolved { background: #f0fdfa; color: #115e59; }
+.school-bottom-nav { padding: .35rem .35rem max(.35rem, env(safe-area-inset-bottom)); border-top: 1px solid #e2e8f0; background: #fffffff2; }
+.school-nav { display: flex; justify-content: center; gap: .35rem; }
+.school-nav-button { flex: 1; min-width: 0; min-height: 54px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .3rem; padding: .5rem .2rem; color: #475569; font-size: .7rem; font-weight: 600; border-radius: 12px; }
+.school-nav-active { background: var(--school-soft); color: var(--school-accent); }
+.school-demo-banner { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-shrink: 0; padding: .75rem 1rem; background: #fffbeb; color: #92400e; border-bottom: 1px solid #fde68a; }
+.school-role-preview { border-radius: 16px; padding: 1rem; border: 1px solid; }
+.school-preview-teacher { background: #ecfeff; border-color: #a5f3fc; color: #155e75; }
+.school-preview-counselor { background: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
+.school-preview-principal { background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a; }
+.school-close { width: 44px; min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; }
+.school-dialog-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center; padding: .5rem; background: #0f172a66; backdrop-filter: blur(5px); }
+.school-dialog { width: 100%; max-width: 650px; max-height: calc(94dvh - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; border-radius: 24px; background: #fff; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 24px 80px #0f172a44; }
+.dark .school-shell { --school-accent: #7dd3fc; --school-soft: #0c4a6e; --school-border: #075985; background: #0b1220; color: #e2e8f0; }
+.dark .school-role-teacher { --school-accent: #67e8f9; --school-soft: #164e63; --school-border: #155e75; }
+.dark .school-role-counselor { --school-accent: #c4b5fd; --school-soft: #2e1065; --school-border: #5b21b6; }
+.dark .school-role-principal { --school-accent: #93c5fd; --school-soft: #172554; --school-border: #1e40af; }
+.dark .school-button { color: #0f172a; }
+.dark .school-header, .dark .school-panel, .dark .school-stat, .dark .school-case-card, .dark .school-class-card, .dark .school-dialog, .dark .school-button-secondary, .dark .school-input { background: #0f172a; border-color: #334155; }
+.dark .school-input { color: #e2e8f0; color-scheme: dark; }
+.dark .school-bottom-nav { background: #0f172af5; border-color: #334155; }
+.dark .school-nav-button { color: #cbd5e1; }
+.dark .school-nav-active { background: var(--school-soft); color: var(--school-accent); }
+.dark .school-next { background: var(--school-soft); }
+.dark .school-demo-banner { background: #422006; color: #fde68a; border-color: #713f12; }
+.dark .school-empty { color: #94a3b8; }
+@media (min-width: 640px) { .school-dialog-backdrop { align-items: center; padding: 1.5rem; } .school-main { padding: 1.75rem 1.5rem; } }
+@media (min-width: 1024px) { .school-sidebar { display: block; width: 220px; flex-shrink: 0; border-inline-end: 1px solid #e2e8f0; padding: 1.5rem 1rem; background: #fff; } .school-sidebar .school-role-badge { width: 100%; font-weight: 700; margin-bottom: 1.5rem; } .school-sidebar .school-nav { flex-direction: column; } .school-sidebar .school-nav-button { flex-direction: row; justify-content: flex-start; gap: .7rem; padding: .75rem; font-size: .875rem; } .school-bottom-nav { display: none; } .school-main { padding: 2rem; } .dark .school-sidebar { background: #0f172a; border-color: #334155; } }
+@media (prefers-reduced-motion: reduce) { .school-button, .school-button-secondary { transition: none; } }

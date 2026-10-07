@@ -28,6 +28,8 @@ jobs:
         run: npm run lint
       - name: Typecheck browser tests
         run: npx tsc -p web/tsconfig.e2e.json --noEmit
+      - name: Typecheck server functions
+        run: npx tsc -p web/tsconfig.api.json --noEmit
 
   test:
     name: Test
