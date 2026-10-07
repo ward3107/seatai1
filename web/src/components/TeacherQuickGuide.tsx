@@ -16,7 +16,7 @@ export default function TeacherQuickGuide({ compact = false, onFullGuide }: {
   const { t } = useLanguage();
   const content = <>
     <ol className="quick-guide-steps">
-      {STEPS.map(({ key, Icon }, index) => <li key={key}>
+      {STEPS.map(({ key, Icon }, index) => <li key={key} data-guide-step={key}>
         <span className="quick-guide-number" aria-hidden="true">{index + 1}</span>
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100"><Icon size={16} aria-hidden="true" />{t(`quickGuide.${key}_title`)}</h3>

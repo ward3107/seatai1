@@ -14,7 +14,7 @@ interface Props {
   /** Per-card scale so large classes keep their spacing in the fixed room. */
   seatScale: number;
   zoomLevel: number;
-  interactionMode: 'drag' | 'click';
+  interactionMode: 'details' | 'drag' | 'click';
   gridContainerRef: RefObject<HTMLDivElement>;
   /** Shared SeatCard renderer owned by the orchestrator (ClassroomGrid). */
   renderSeatCard: (seat: Seat) => ReactElement;
@@ -64,7 +64,9 @@ export default function AbsoluteLayoutRenderer({
       </div>
 
       <p className="text-center text-xs text-gray-400 dark:text-gray-400 mb-4">
-        {interactionMode === 'drag'
+        {interactionMode === 'details'
+          ? t('classroom.details_hint')
+          : interactionMode === 'drag'
           ? t('classroom.drag_hint')
           : t('classroom.click_hint')}
       </p>

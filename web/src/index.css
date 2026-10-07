@@ -329,3 +329,33 @@ html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
   .teacher-guide-dialog { max-height: 96vh; max-height: 96dvh; }
   .workspace-sidebar { height: 100vh; height: 100dvh; }
 }
+
+/* Color always accompanies a named section or action. */
+.classroom-panel { border-color: #a5e5ee; }
+.grid-controls { border-radius: 16px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 12px; }
+@media (max-width: 639px) {
+  .grid-controls .grid-segments { grid-template-columns: minmax(0, 1fr); }
+  .grid-controls .grid-segment { width: 100%; }
+}
+html.dark .classroom-panel { border-color: #155e75; }
+html.dark .grid-controls { background: #17233b; border-color: #1e40af; }
+.quick-guide [data-guide-step='students'] .quick-guide-number { background: #dbeafe; color: #1e40af; }
+.quick-guide [data-guide-step='room'] .quick-guide-number { background: #ede9fe; color: #6d28d9; }
+.quick-guide [data-guide-step='arrange'] .quick-guide-number { background: #ccfbf1; color: #115e59; }
+.quick-guide [data-guide-step='save'] .quick-guide-number { background: #fef3c7; color: #92400e; }
+.workspace-sidebar [data-section='students'][aria-selected='true'] { background: #dbeafe; color: #1e40af; }
+.workspace-sidebar [data-section='room'][aria-selected='true'] { background: #cffafe; color: #155e75; }
+.workspace-sidebar [data-section='rules'][aria-selected='true'] { background: #ede9fe; color: #6d28d9; }
+html.dark .workspace-sidebar [data-section='students'][aria-selected='true'] { background: #1e3a8a; color: #dbeafe; }
+html.dark .workspace-sidebar [data-section='room'][aria-selected='true'] { background: #164e63; color: #cffafe; }
+html.dark .workspace-sidebar [data-section='rules'][aria-selected='true'] { background: #4c1d95; color: #ede9fe; }
+.classroom-map-scroll { touch-action: pan-x pan-y pinch-zoom; -webkit-overflow-scrolling: touch; scrollbar-color: #0891b2 #ecfeff; }
+.classroom-map-scroll::-webkit-scrollbar { height: 10px; }
+.classroom-map-scroll::-webkit-scrollbar-track { background: #ecfeff; border-radius: 8px; }
+.classroom-map-scroll::-webkit-scrollbar-thumb { background: #0891b2; border-radius: 8px; }
+.map-scroll-controls { position: sticky; bottom: 0; z-index: 10; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); margin-top: 8px; border: 1px solid #a5e5ee; border-radius: 16px; background: #ecfeff; color: #155e75; }
+.map-pan-button { display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 1px solid #67e8f9; border-radius: 12px; background: #fff; color: #155e75; }
+.map-pan-button:disabled { opacity: .35; }
+.map-scroll-controls input[type='range'] { height: 44px; cursor: pointer; }
+html.dark .map-scroll-controls { background: #083344; border-color: #155e75; color: #cffafe; }
+html.dark .map-pan-button { background: #164e63; border-color: #0e7490; color: #cffafe; }

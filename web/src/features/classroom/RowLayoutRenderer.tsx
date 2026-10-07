@@ -15,7 +15,7 @@ interface Props {
   cols: number;
   viewMode: ViewMode;
   zoomLevel: number;
-  interactionMode: 'drag' | 'click';
+  interactionMode: 'details' | 'drag' | 'click';
   /** Desk / obstacle tiles to draw inline, grouped by row. */
   decorationsByRow: Map<number, { col: number; kind: 'desk' | 'obstacle' }[]>;
   gridContainerRef: RefObject<HTMLDivElement>;
@@ -84,7 +84,6 @@ export default function RowLayoutRenderer({
         </motion.div>
       </div>
 
-      <p className="mb-3 text-center text-xs text-gray-500 dark:text-gray-400 sm:hidden">{t('workspace.pan_hint')}</p>
       {/* Zoomable grid wrapper — auto-fits to width, then the user's zoom
           multiplies on top, so the whole class is visible by default
           (especially on phones) instead of clipping the last column. */}

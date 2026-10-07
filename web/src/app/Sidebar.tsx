@@ -119,7 +119,7 @@ export default function Sidebar() {
           <div role="tablist" aria-label={t('app.group_class')} className="grid grid-cols-3 gap-1 border-b border-gray-200 p-2 dark:border-gray-700">
             {(['students', 'room', 'rules'] as const).map(key => {
               const Icon = key === 'students' ? Users : key === 'room' ? LayoutGrid : ListChecks;
-              return <button key={key} type="button" role="tab" id={`setup-tab-${key}`} tabIndex={tab === key ? 0 : -1} aria-selected={tab === key} aria-controls={`setup-panel-${key}`} onClick={() => setTab(key)} onKeyDown={event => {
+              return <button key={key} type="button" role="tab" data-section={key} id={`setup-tab-${key}`} tabIndex={tab === key ? 0 : -1} aria-selected={tab === key} aria-controls={`setup-panel-${key}`} onClick={() => setTab(key)} onKeyDown={event => {
                 const keys = ['students', 'room', 'rules'] as const;
                 const index = keys.indexOf(key);
                 const rtl = document.documentElement.dir === 'rtl';

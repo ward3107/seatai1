@@ -518,7 +518,8 @@
     "drag_over_invalid": "Row {{row}}, column {{col}} — would break a rule",
     "drag_over_plain": "Row {{row}}, column {{col}}",
     "drag_dropped": "Dropped on row {{row}}, column {{col}}",
-    "drag_cancelled": "Drag cancelled"
+    "drag_cancelled": "Drag cancelled",
+    "details_hint": "Tap a student to see their full profile. Choose Click to move students or Drag to rearrange them."
   },
   "optimization": {
     "title": "Optimization",
@@ -1135,13 +1136,17 @@
     "unlock": "Unlock seat",
     "cancel_move": "Cancel selection",
     "drag_handle": "Drag to move",
-    "pan_hint": "Swipe across the map to see more seats. Use zoom for an overview.",
+    "pan_hint": "Swipe the map or use the arrows and slider.",
     "engine_error": "Unable to finish the arrangement. Please try again.",
     "analysis_error": "This panel could not open. Please try again.",
     "retry": "Try again",
     "students": "Students",
     "room": "Room",
-    "rules": "Rules"
+    "rules": "Rules",
+    "map_navigation": "Move around the seating map",
+    "scroll_left": "Scroll the map left",
+    "scroll_right": "Scroll the map right",
+    "map_position": "Horizontal map position"
   },
   "appUpdate": {
     "available": "A new version is ready. Refresh to use the latest classroom map.",
@@ -1157,10 +1162,10 @@
     "room_title": "Set the room and rules",
     "room_body": "Choose the layout and enough seats. Add doors, windows and any students who need to sit near the front or apart.",
     "arrange_title": "Generate, then adjust",
-    "arrange_body": "Select Generate seating. To move a student, select their seat, then another seat. Use Undo if needed.",
+    "arrange_body": "Select Generate seating. Choose Click, select a student’s seat, then another seat to move them. Use Undo if needed.",
     "save_title": "Export and keep a backup",
     "save_body": "Use Export for a PDF or image after generating. Your class stays in this browser; export JSON for a backup on another device.",
-    "device_tip": "Phone or tablet: tap seats and swipe across the map. Computer: click or drag. Use + / − to change the map size.",
+    "device_tip": "Phone or tablet: tap a student to open their profile. Select Click to move students, or Drag and hold a seat. Swipe the map or use the arrows. Computer: click or drag.",
     "full": "Open the full guide",
     "more": "More help, when you need it",
     "sample_hint": "Try a ready-made class, then generate a seating suggestion. Sample names can be edited.",

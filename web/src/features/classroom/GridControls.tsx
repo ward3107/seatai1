@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { GripVertical, MousePointer2, ZoomIn, ZoomOut, AlignJustify, Columns2, SlidersHorizontal } from 'lucide-react';
+import { Info, GripVertical, MousePointer2, ZoomIn, ZoomOut, AlignJustify, Columns2, SlidersHorizontal } from 'lucide-react';
 import { useStore, type HeatMapMode } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 
 interface Props {
-  interactionMode: 'drag' | 'click';
-  setInteractionMode: (mode: 'drag' | 'click') => void;
+  interactionMode: 'details' | 'drag' | 'click';
+  setInteractionMode: (mode: 'details' | 'drag' | 'click') => void;
   showRelations: boolean;
   setShowRelations: (show: boolean) => void;
 }
@@ -30,6 +30,7 @@ export default function GridControls({ interactionMode, setInteractionMode, show
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="grid-segments flex flex-wrap gap-2">
           <div className="grid-segment flex rounded-xl bg-gray-100 p-1 dark:bg-gray-900" role="group" aria-label={t('workspace.drag_handle')}>
+            <button type="button" onClick={() => setInteractionMode('details')} aria-pressed={interactionMode === 'details'} className={segment(interactionMode === 'details')}><Info size={15} aria-hidden="true" />{t('workspace.details')}</button>
             <button type="button" onClick={() => setInteractionMode('drag')} aria-pressed={interactionMode === 'drag'} className={segment(interactionMode === 'drag')}><GripVertical size={15} />{t('gridControls.drag')}</button>
             <button type="button" onClick={() => setInteractionMode('click')} aria-pressed={interactionMode === 'click'} className={segment(interactionMode === 'click')}><MousePointer2 size={15} />{t('gridControls.click')}</button>
           </div>
