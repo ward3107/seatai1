@@ -1,7 +1,8 @@
-import { useRef, useState, useLayoutEffect } from 'react';
-import { RefreshCw, User, Ban } from 'lucide-react';
+import { useRef, useState, useLayoutEffect, useEffect, useCallback } from 'react';
+import { RefreshCw, User, Ban, ArrowLeft, ArrowRight, MoveHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import type { Student } from '../../types';
+import { useLanguage } from '../../hooks/useLanguage';
 
 /** Spinner shown while a lazily-loaded view (3D / timeline) fetches. */
 export function LazyFallback() {
@@ -24,10 +25,34 @@ export function LazyFallback() {
  * wider maps scroll inside this container without widening the page.
  */
 export function FitZoom({ zoom, children }: { zoom: number; children: React.ReactNode }) {
+  const { t, uiLanguage } = useLanguage();
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [box, setBox] = useState<{ w?: number; h?: number }>({});
+  const [pan, setPan] = useState({ max: 0, position: 0 });
+  const readPan = useCallback(() => {
+    const outer = outerRef.current;
+    if (!outer) return;
+    const max = Math.max(0, outer.scrollWidth - outer.clientWidth);
+    // RTL browsers use a negative scrollLeft with zero at the right edge.
+    // Keep the controls in physical left-to-right order in every language.
+    const rtl = getComputedStyle(outer).direction === 'rtl';
+    const position = Math.max(0, Math.min(max, rtl ? max + outer.scrollLeft : outer.scrollLeft));
+    setPan(previous => previous.max === max && previous.position === position ? previous : { max, position });
+  }, []);
+  useLayoutEffect(() => { readPan(); }, [box, readPan]);
+  // useLanguage applies the new document direction in a passive effect.
+  useEffect(() => { readPan(); }, [uiLanguage, readPan]);
+
+  function panTo(position: number, smooth = false) {
+    const outer = outerRef.current;
+    if (!outer) return;
+    const max = Math.max(0, outer.scrollWidth - outer.clientWidth);
+    const target = Math.max(0, Math.min(max, position));
+    const rtl = getComputedStyle(outer).direction === 'rtl';
+    outer.scrollTo({ left: rtl ? target - max : target, behavior: smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+  }
 
   useLayoutEffect(() => {
     const outer = outerRef.current;
@@ -64,7 +89,8 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
   }, [zoom]);
 
   return (
-    <div ref={outerRef} className="w-full overflow-x-auto overscroll-x-contain pb-3">
+    <div className="map-navigation-frame">
+    <div ref={outerRef} onScroll={readPan} data-testid="classroom-map-scroll" className="classroom-map-scroll w-full overflow-x-auto overscroll-x-contain pb-3">
       {/* The box reserves only the *scaled* footprint and clips the inner's
           (unscaled) layout overflow, so a shrunk grid neither scrolls nor
           clips real content. When the user zooms in past fit, box.w exceeds
@@ -88,6 +114,15 @@ export function FitZoom({ zoom, children }: { zoom: number; children: React.Reac
           {children}
         </div>
       </div>
+    </div>
+    {pan.max > 1 && <div className="map-scroll-controls" role="group" aria-label={t('workspace.map_navigation')}>
+      <p className="flex items-center justify-center gap-2 text-xs font-medium"><MoveHorizontal size={16} aria-hidden="true" />{t('workspace.pan_hint')}</p>
+      <div dir="ltr" className="mt-2 flex items-center gap-3">
+        <button type="button" onClick={() => panTo(pan.position - (outerRef.current?.clientWidth ?? 300) * 0.7, true)} disabled={pan.position <= 1} aria-label={t('workspace.scroll_left')} className="map-pan-button"><ArrowLeft size={20} aria-hidden="true" /></button>
+        <input type="range" min={0} max={Math.ceil(pan.max)} value={Math.round(pan.position)} onChange={event => panTo(Number(event.target.value))} aria-label={t('workspace.map_position')} className="min-w-0 flex-1 accent-cyan-700" />
+        <button type="button" onClick={() => panTo(pan.position + (outerRef.current?.clientWidth ?? 300) * 0.7, true)} disabled={pan.position >= pan.max - 1} aria-label={t('workspace.scroll_right')} className="map-pan-button"><ArrowRight size={20} aria-hidden="true" /></button>
+      </div>
+    </div>}
     </div>
   );
 }

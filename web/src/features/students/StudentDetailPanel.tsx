@@ -62,20 +62,22 @@ const CONFIDENCE_BADGE: Record<'high' | 'medium' | 'low', string> = {
   low: 'bg-red-100 text-red-800',
 };
 
-function ScoreBar({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
+function ScoreBar({ label, value, level, tone, max = 100 }: { label: string; value: number; level: string; tone: 'academic' | 'behavior'; max?: number }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  const academic = tone === 'academic';
   return (
-    <div>
-      <div className="flex justify-between text-xs text-gray-600 mb-1">
-        <span>{label}</span>
+    <div className={clsx('rounded-xl border p-3', academic ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100' : 'border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100')}>
+      <div className="flex items-center justify-between gap-2 text-sm mb-2">
+        <span className="inline-flex items-center gap-1.5 font-semibold">{academic ? <BookOpen size={16} aria-hidden="true" /> : <Activity size={16} aria-hidden="true" />}{label}</span>
         <span className="tabular-nums font-medium">{value}</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={value} className="h-2 bg-white/80 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary-500"
+          className={clsx('h-full', academic ? 'bg-blue-500' : 'bg-violet-500')}
           style={{ width: `${pct}%` }}
         />
       </div>
+      <p className="mt-2 text-xs">{level}</p>
     </div>
   );
 }
@@ -107,24 +109,22 @@ export default function StudentDetailPanel() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string>('');
 
-  // md+ docks the panel in-flow beside the map (non-modal, no backdrop) so
-  // the highlighted student stays visible and the map keeps scrolling. Small
-  // screens keep the modal bottom sheet. Track the breakpoint so focus-trap /
-  // backdrop / aria-modal only apply in the modal (mobile) case.
+  // Only wide desktops have space to dock the complete profile beside the
+  // map. Phones and tablets keep a modal sheet with its own body scroll.
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' &&
-      window.matchMedia('(min-width: 768px)').matches,
+      window.matchMedia('(min-width: 1280px)').matches,
   );
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(min-width: 768px)');
+    const mq = window.matchMedia('(min-width: 1280px)');
     const onChange = () => setIsDesktop(mq.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
   const open = !!detailsTargetStudentId;
-  // Trap focus only when the panel is a modal (mobile bottom sheet). When
+  // Trap focus only when the panel is a modal (phone/tablet bottom sheet). When
   // docked beside the map on desktop it's non-modal, so keyboard focus must
   // be free to reach the map and sidebar.
   const trapRef = useFocusTrap<HTMLElement>(open && !isDesktop);
@@ -150,6 +150,13 @@ export default function StudentDetailPanel() {
     return () => window.removeEventListener('keydown', handler);
   }, [open, setDetailsTarget]);
 
+  useEffect(() => {
+    if (!open || isDesktop) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [open, isDesktop]);
+
   if (!open || !student) return null;
 
   const explanation = result
@@ -172,7 +179,7 @@ export default function StudentDetailPanel() {
 
   return (
     <>
-      {/* Backdrop — modal (mobile) only. On desktop the panel docks in-flow
+      {/* Backdrop — modal (phone/tablet) only. On desktop the panel docks in-flow
           beside the map, so no backdrop: the map stays visible, interactive,
           and scrollable while the drawer is open. */}
       {!isDesktop && (
@@ -180,30 +187,27 @@ export default function StudentDetailPanel() {
           type="button"
           aria-label={t('detail.close')}
           onClick={() => setDetailsTarget(null)}
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
+          tabIndex={-1}
+          className="fixed inset-0 z-40 touch-none bg-black/30 backdrop-blur-[1px]"
         />
       )}
 
-      {/* Drawer — docked column beside the map on md+, bottom sheet on mobile */}
+      {/* Drawer — docked on wide desktops, complete modal sheet otherwise. */}
       <aside
         ref={trapRef}
         tabIndex={-1}
         className={clsx(
-          'bg-white shadow-2xl overflow-hidden flex flex-col focus:outline-none',
-          // Mobile (default): fixed modal bottom sheet.
-          'fixed z-50 inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl',
-          // md+: leave the fixed overlay and dock as an in-flow flex column at
-          // the end of the app row — full height, its own internal scroll, a
-          // divider instead of a shadow/backdrop. Wider on large screens so the
-          // reasoning/history content has room to breathe.
-          'md:static md:z-0 md:h-full md:max-h-none md:w-[540px] lg:w-[640px] md:max-w-[92vw] md:shrink-0 md:rounded-none md:shadow-none md:border-s md:border-gray-200 dark:md:border-gray-700',
+          'student-detail-panel bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-col focus:outline-none',
+          'fixed z-50 inset-x-0 bottom-0 h-[min(760px,92dvh)] max-h-[92dvh] rounded-t-3xl sm:mx-auto sm:max-w-2xl',
+          'xl:static xl:z-0 xl:mx-0 xl:h-full xl:max-h-none xl:w-[540px] 2xl:w-[640px] xl:max-w-none xl:shrink-0 xl:rounded-none xl:shadow-none xl:border-s xl:border-gray-200 dark:xl:border-gray-700',
         )}
+        data-testid="student-detail-panel"
         aria-labelledby="student-detail-title"
         aria-modal={!isDesktop}
         role="dialog"
       >
         {/* Header */}
-        <div className="shrink-0 p-4 border-b border-gray-200 flex items-start justify-between gap-3">
+        <div className="shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between gap-3" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
           <div className="flex items-center gap-3 min-w-0">
             {student.photo_url ? (
               <img
@@ -228,7 +232,7 @@ export default function StudentDetailPanel() {
             <div className="min-w-0">
               <h2
                 id="student-detail-title"
-                className="font-bold text-gray-900 truncate"
+                className="font-bold text-gray-900 dark:text-gray-100 break-words"
               >
                 {student.name}
               </h2>
@@ -254,8 +258,9 @@ export default function StudentDetailPanel() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setDetailsTarget(null)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl flex-shrink-0"
             aria-label={t('detail.close')}
           >
             <X size={18} className="text-gray-500" />
@@ -264,7 +269,7 @@ export default function StudentDetailPanel() {
 
         {/* Body — min-h-0 lets this flex child actually scroll instead of
             overflowing the (overflow-hidden) drawer. */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-5">
+        <div data-testid="student-detail-body" className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
           {/* AI summary — opt-in. Shows a button when not yet
               generated, a loading indicator while in flight, then the
               generated paragraph. Errors surface inline without
@@ -325,41 +330,33 @@ export default function StudentDetailPanel() {
 
           {/* Profile */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-              <Activity size={12} /> {t('detail.profile')}
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-1.5">
+              <Activity size={16} aria-hidden="true" /> {t('detail.profile')}
             </h3>
-            <div className="space-y-2.5 bg-gray-50 rounded-xl p-3">
+            <div className="grid gap-2.5 sm:grid-cols-2">
               <ScoreBar
                 label={t('detail.academic')}
                 value={student.academic_score}
+                level={t(`students.level_${student.academic_level}`)}
+                tone="academic"
               />
               <ScoreBar
                 label={t('detail.behavior')}
                 value={student.behavior_score}
+                level={t(`students.behavior_${student.behavior_level}`)}
+                tone="behavior"
               />
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="text-[10px] px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-700">
-                  {t(`students.level_${student.academic_level}`)}
-                </span>
-                <span className="text-[10px] px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-700">
-                  {t(`students.behavior_${student.behavior_level}`)}
-                </span>
-                {student.is_bilingual && (
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-700 inline-flex items-center gap-1">
-                    <Languages size={9} /> {t('detail.bilingual')}
-                  </span>
-                )}
-              </div>
             </div>
+            {student.is_bilingual && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-xs text-teal-800 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100"><Languages size={14} aria-hidden="true" />{t('detail.bilingual')}</p>}
           </section>
 
           {/* Teacher notes */}
           {student.notes && student.notes.trim().length > 0 && (
-            <section>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                {t('detail.notes')}
+            <section className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/40">
+              <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-1.5">
+                <ClipboardList size={16} aria-hidden="true" />{t('detail.notes')}
               </h3>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
                 {student.notes}
               </p>
             </section>
@@ -370,25 +367,25 @@ export default function StudentDetailPanel() {
             student.has_mobility_issues ||
             student.requires_front_row ||
             student.requires_quiet_area) && (
-            <section>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <Heart size={12} /> {t('detail.special_needs')}
+            <section className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/40">
+              <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-1.5">
+                <Heart size={16} aria-hidden="true" /> {t('detail.special_needs')}
               </h3>
               <ul className="space-y-1.5">
                 {student.has_mobility_issues && (
-                  <li className="flex items-center gap-2 text-sm text-gray-700">
+                  <li className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                     <Accessibility size={14} className="text-blue-500" />
                     {t('detail.mobility')}
                   </li>
                 )}
                 {student.requires_front_row && (
-                  <li className="flex items-center gap-2 text-sm text-gray-700">
+                  <li className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                     <ArrowUpRight size={14} className="text-amber-500" />
                     {t('detail.front_required')}
                   </li>
                 )}
                 {student.requires_quiet_area && (
-                  <li className="flex items-center gap-2 text-sm text-gray-700">
+                  <li className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                     <Eye size={14} className="text-accent-600" />
                     {t('detail.quiet_area')}
                   </li>
@@ -396,7 +393,7 @@ export default function StudentDetailPanel() {
                 {student.special_needs.map((need, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-sm text-gray-700"
+                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200"
                   >
                     <AlertCircle
                       size={14}
@@ -405,7 +402,7 @@ export default function StudentDetailPanel() {
                     <div>
                       <span className="font-medium">{need.type}</span>
                       {need.description && (
-                        <span className="text-gray-500"> — {need.description}</span>
+                        <span className="text-gray-500 dark:text-gray-300"> — {need.description}</span>
                       )}
                     </div>
                   </li>
@@ -466,9 +463,9 @@ export default function StudentDetailPanel() {
 
               {/* Neighbors */}
               {explanation.neighbors.length > 0 && (
-                <section>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <Users size={12} /> {t('detail.neighbors')}
+                <section className="rounded-xl border border-teal-200 bg-teal-50 p-3 dark:border-teal-800 dark:bg-teal-950/40">
+                  <h3 className="text-sm font-semibold text-teal-900 dark:text-teal-100 mb-2 flex items-center gap-1.5">
+                    <Users size={16} aria-hidden="true" /> {t('detail.neighbors')}
                   </h3>
                   <ul className="space-y-2">
                     {explanation.neighbors.map((n) => {
@@ -476,7 +473,7 @@ export default function StudentDetailPanel() {
                       return (
                         <li
                           key={n.student.id}
-                          className="flex items-start gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100"
+                          className="flex items-start gap-2 p-2 rounded-lg bg-white/80 border border-teal-100 dark:bg-gray-900 dark:border-teal-900"
                         >
                           {n.student.photo_url ? (
                             <img
@@ -500,7 +497,7 @@ export default function StudentDetailPanel() {
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium text-gray-800 truncate">
+                              <span className="text-sm font-medium text-gray-800 dark:text-gray-100 break-words">
                                 {n.student.name}
                               </span>
                               <span

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Mobile student-profile mode with full detail sheets on phones and tablets, alongside explicit seat-movement modes.
+- Touch-friendly map panning, physical left/right buttons and a position slider, with named color cues for teacher controls and pupil details.
 - Four-step teacher guide in Hebrew, Arabic, English and Russian, available from the home screen, classroom and header.
 - Responsive iOS-inspired classroom navigation, mobile settings sheet, safe-area spacing and readable seating maps.
 - End-to-end checks for narrow phones, landscape phones, tablets and desktop, including RTL, guide access and backup export.

@@ -62,7 +62,7 @@ export default function ClassroomGrid() {
   const toggleLockSeat = useStore((s) => s.toggleLockSeat);
   const { t } = useLanguage();
 
-  const [interactionMode, setInteractionMode] = useState<'drag' | 'click'>(() => window.matchMedia('(pointer: coarse)').matches ? 'click' : 'drag');
+  const [interactionMode, setInteractionMode] = useState<'details' | 'drag' | 'click'>(() => window.matchMedia('(pointer: coarse)').matches ? 'details' : 'drag');
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
   const [hoveredStudent, setHoveredStudent] = useState<Student | null>(null);
   const [hoverAnchor, setHoverAnchor] = useState<DOMRect | null>(null);
@@ -428,7 +428,8 @@ export default function ClassroomGrid() {
   const setDetailsTarget = useStore((s) => s.setDetailsTarget);
 
   // ── Click handlers ────────────────────────────────────────────────────────
-  // Select-then-move works in both modes; details have a separate button.
+  // Touch starts in Details so a simple tap opens the complete profile.
+  // Select-then-move remains available through its explicit toolbar mode.
   const handleSeatClick = useCallback(
     (seatKey: string) => {
       closeHover();
@@ -442,6 +443,11 @@ export default function ClassroomGrid() {
       );
 
       if (justDraggedRef.current) return;
+      if (interactionMode === 'details') {
+        setSelectedSeat(null);
+        if (seat?.student_id) setDetailsTarget(seat.student_id);
+        return;
+      }
       if (lockedSeats.includes(seatKey)) { if (!selectedSeatKey) setSelectedSeat(seatKey); announce(t('workspace.locked')); return; }
 
       // Click-to-swap mode (existing behavior).
@@ -462,7 +468,7 @@ export default function ClassroomGrid() {
         if (seat?.student_id) setSelectedSeat(seatKey);
       }
     },
-    [selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, studentBySeatKey, announce, t, closeHover]
+    [interactionMode, selectedSeatKey, lockedSeats, swapStudents, seats, setSelectedSeat, setDetailsTarget, studentBySeatKey, announce, t, closeHover]
   );
 
   // ── Context menu ──────────────────────────────────────────────────────────
@@ -566,7 +572,7 @@ export default function ClassroomGrid() {
       />
 
       <div className="movement-feedback mb-3 flex min-h-16 flex-wrap items-center justify-between gap-2 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/30" data-testid="movement-feedback">
-        <p role="status" className="min-w-0 flex-1 text-sm font-medium text-primary-800 dark:text-primary-200">{activeDragStudent ? t('workspace.moving', { name: activeDragStudent.name }) : liveMessage || (selectedSeatKey && studentBySeatKey.get(selectedSeatKey) ? t('workspace.selected', { name: studentBySeatKey.get(selectedSeatKey)!.name }) : t(interactionMode === 'drag' ? 'classroom.drag_hint' : 'classroom.click_hint'))}</p>
+        <p role="status" className="min-w-0 flex-1 text-sm font-medium text-primary-800 dark:text-primary-200">{activeDragStudent ? t('workspace.moving', { name: activeDragStudent.name }) : liveMessage || (selectedSeatKey && studentBySeatKey.get(selectedSeatKey) ? t('workspace.selected', { name: studentBySeatKey.get(selectedSeatKey)!.name }) : t(interactionMode === 'details' ? 'classroom.details_hint' : interactionMode === 'drag' ? 'classroom.drag_hint' : 'classroom.click_hint'))}</p>
         {selectedSeatKey && <div className="movement-actions flex shrink-0 items-center gap-1">
           <button type="button" onClick={() => { const student = studentBySeatKey.get(selectedSeatKey); if (student) setDetailsTarget(student.id); }} aria-label={t('workspace.details')} title={t('workspace.details')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200"><Info size={18} /></button>
           <button type="button" onClick={() => { const locked = lockedSeats.includes(selectedSeatKey); toggleLockSeat(selectedSeatKey); announceLockChange(selectedSeatKey, !locked); setSelectedSeat(null); }} aria-label={t(lockedSeats.includes(selectedSeatKey) ? 'workspace.unlock' : 'workspace.lock')} className="min-h-11 min-w-11 rounded-lg p-2 text-primary-800 dark:text-primary-200">{lockedSeats.includes(selectedSeatKey) ? <Unlock size={18} /> : <Lock size={18} />}</button>

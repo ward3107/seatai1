@@ -43,7 +43,7 @@ interface Props {
   /** Live drag feedback for this drop target: 'valid' (green) would keep
    *  rules satisfied, 'invalid' (red) would break a rule. */
   dropPreview?: 'valid' | 'invalid' | null;
-  interactionMode: 'drag' | 'click';
+  interactionMode: 'drag' | 'click' | 'details';
   /** Accessible label built by the parent so it can include the row/col
    *  number, student name (or "empty"), and lock state in the user's
    *  language. Screen readers announce this when the seat receives
@@ -128,7 +128,9 @@ export default memo(function SeatCard({
       type="button"
       ref={setRef}
       data-seat-key={seatKey}
-      style={{ touchAction: canDrag ? 'none' : 'auto' }}
+      // TouchSensor waits for a deliberate hold before preventing scrolling.
+      // A quick swipe must still pan the map, even when drag mode is chosen.
+      style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
       onClick={() => onSeatClick(seatKey)}
       onContextMenu={(e) => onContextMenu(e, seatKey)}
       onPointerEnter={event => { if (event.pointerType === 'mouse') onMouseEnter(seatKey,event.clientX,event.clientY); }}

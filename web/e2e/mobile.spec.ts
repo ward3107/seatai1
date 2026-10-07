@@ -51,6 +51,7 @@ test('touch selection and long-press drag move students without opening a drawer
   await createSampleClass(page);
   await runOptimization(page);
   await closeSidebar(page);
+  await page.getByRole('button', { name: 'Click', exact: true }).tap();
   await expect(page.getByRole('button', { name: 'Click', exact: true })).toHaveAttribute('aria-pressed', 'true');
   const keys = await page.evaluate(() => window.__ZUSTAND_STORE__.getState().result!.layout.seats.filter(s => s.student_id).slice(0, 2).map(s => `${s.position.row}-${s.position.col}`));
   const a = page.locator(`[data-seat-key="${keys[0]}"]`), b = page.locator(`[data-seat-key="${keys[1]}"]`);
@@ -70,6 +71,29 @@ test('touch selection and long-press drag move students without opening a drawer
   await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await expect.poll(() => page.evaluate(key => window.__ZUSTAND_STORE__.getState().result!.layout.seats.find(s => `${s.position.row}-${s.position.col}` === key)!.student_id, keys[1])).toBe(id);
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('a phone tap opens the complete student detail sheet by default, including locked seats', async ({ page }) => {
+  await createSampleClass(page);
+  await runOptimization(page);
+  await closeSidebar(page);
+  await expect(page.getByRole('button', { name: 'Student details', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  const key = await page.evaluate(() => {
+    const store = window.__ZUSTAND_STORE__.getState();
+    const seat = store.result!.layout.seats.find(s => s.student_id === 'student-0')!;
+    const key = `${seat.position.row}-${seat.position.col}`;
+    store.toggleLockSeat(key);
+    return key;
+  });
+  await page.locator(`[data-seat-key="${key}"]`).tap();
+  const panel = page.getByTestId('student-detail-panel');
+  await expect(panel).toHaveAttribute('aria-modal', 'true');
+  await expect(panel.getByRole('heading', { name: 'Student 1', exact: true })).toBeVisible();
+  await expect(panel.getByRole('meter', { name: 'Academic score', exact: true })).toHaveAttribute('aria-valuenow', '75');
+  await expect(panel.getByRole('meter', { name: 'Behavior score', exact: true })).toHaveAttribute('aria-valuenow', '80');
+  await expect.poll(() => page.evaluate(() => window.__ZUSTAND_STORE__.getState().selectedSeatKey)).toBeNull();
+  await panel.getByRole('button', { name: 'Close details', exact: true }).tap();
+  await expect(panel).toHaveCount(0);
 });
 
 test('room features can be dragged by touch and the integrated map stays inside the phone viewport',async({page,context})=>{
