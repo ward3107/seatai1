@@ -64,6 +64,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
         <img src="/seatai-logo.svg" width={28} height={28} className="topbar-logo h-7 w-7 rounded-lg" alt="" aria-hidden="true" />SeatAI
       </span>
       <div className="flex-1" />
+      {!workspace && !wizardActive && <a className="entry-nav-link" href="#school">{t('entry.teamLogin')}</a>}
       {!workspace && <LanguageSelector />}
       <button type="button" onClick={onShowGuide} className="topbar-guide flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-semibold text-primary-700 dark:text-primary-300" aria-label={t('guide.title')} title={t('guide.title')}><BookOpenCheck size={20} aria-hidden="true" /><span className="hidden sm:inline">{t('quickGuide.short_label')}</span></button>
       <div ref={prefsRef} className="relative">

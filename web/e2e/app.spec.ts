@@ -26,6 +26,9 @@ test.describe('Onboarding', () => {
     await flushStorage(page);
     await page.reload();
     await expect.poll(() => getStudentNames(page)).toHaveLength(8);
+    await expect(page.locator('#entry-title')).toBeVisible();
+    await expect(page.getByTestId('optimize-button')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Resume saved class', exact: true }).click();
     await expect(page.getByTestId('optimize-button')).toBeVisible();
   });
 });

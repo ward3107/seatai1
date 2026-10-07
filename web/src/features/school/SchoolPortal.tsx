@@ -28,7 +28,7 @@ function SchoolThemeControl() {
   const Icon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
   return <button type="button" className="school-close" onClick={() => setTheme(next)} aria-label={t(`theme.${next}`)} title={`${t('theme.label')}: ${t(`theme.${theme}`)}`}><Icon size={20} aria-hidden="true" /></button>;
 }
-export default function SchoolPortal({ previewLocal = false }: { previewLocal?: boolean }) {
+export default function SchoolPortal({ previewLocal = false, entryRole }: { previewLocal?: boolean; entryRole?: Membership['role'] }) {
   const { t } = useLanguage();
   useTheme();
   const [demoGateway, setDemoGateway] = useState<SchoolGateway | null>(null);
@@ -59,10 +59,11 @@ export default function SchoolPortal({ previewLocal = false }: { previewLocal?: 
       if (epoch !== bootstrapId.current) return;
       setAvailable(result.available); setSignedIn(result.signedIn); setMemberships(result.memberships);
       setMfaRequired(result.mfaRequired ?? false);
-      setContext(result.mfaRequired ? null : (demoGateway ? result.memberships[0] : result.memberships.find(m => m.role === 'principal') ?? result.memberships[0]) ?? null);
+      // A requested entrance selects only an existing server-authorized membership.
+      setContext(result.mfaRequired ? null : (result.memberships.find(m => m.role === entryRole) ?? (demoGateway ? result.memberships[0] : result.memberships.find(m => m.role === 'principal') ?? result.memberships[0])) ?? null);
     } catch { if (epoch === bootstrapId.current) { setAvailable(false); setSignedIn(false); setMemberships([]); setContext(null); } }
     finally { if (epoch === bootstrapId.current) setLoading(false); }
-  }, [gateway, demoGateway]);
+  }, [gateway, demoGateway, entryRole]);
   useEffect(() => {
     const bootstrapEpoch = bootstrapId; const requestEpoch = requestId;
     void bootstrap();
@@ -142,12 +143,12 @@ export default function SchoolPortal({ previewLocal = false }: { previewLocal?: 
   const nav = <nav aria-label={t('school.entry')} className="school-nav">{tabs.map(({ key, icon: Icon }) => <button key={key} type="button" className={view === key ? 'school-nav-button school-nav-active' : 'school-nav-button'} aria-current={view === key ? 'page' : undefined} onClick={() => { setView(key); setModal(null); }}><Icon size={20} aria-hidden="true" /><span>{t(`school.${key}`)}</span></button>)}</nav>;
   return <div className={`school-shell school-role-${role}`} data-testid="school-portal">
     <AppUpdateBanner />
-    <a href="#school-main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3">{t('app.skip_to_content')}</a>
-    <header className="school-header"><a href="#" className="school-close" aria-label={t('school.back')}><ArrowLeft size={21} className="rtl:rotate-180" aria-hidden="true" /></a><img src="/seatai-logo.svg" width={30} height={30} alt="" aria-hidden="true" className="rounded-lg" /><span className="min-w-0 flex-1 truncate text-sm font-bold sm:text-base">{context?.schoolName ?? 'SeatAI'}</span><LanguageSelector /><SchoolThemeControl />{signedIn && <button type="button" className="school-close" disabled={busy} aria-label={t('school.logout')} onClick={() => void exit()}><LogOut size={20} aria-hidden="true" /></button>}</header>
+    <a href="#school-main" onClick={event => { event.preventDefault(); document.getElementById('school-main')?.focus(); }} className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3">{t('app.skip_to_content')}</a>
+    <header className="school-header"><a href="#" className="school-close" aria-label={t('school.back')}><ArrowLeft size={21} className="rtl:rotate-180" aria-hidden="true" /></a><a href="#home" className="school-close" aria-label={t('app.home')}><img src="/seatai-logo.svg" width={30} height={30} alt="" aria-hidden="true" className="rounded-lg" /></a><span className="min-w-0 flex-1 truncate text-sm font-bold sm:text-base">{context?.schoolName ?? 'SeatAI'}</span><LanguageSelector /><SchoolThemeControl />{signedIn && <button type="button" className="school-close" disabled={busy} aria-label={t('school.logout')} onClick={() => void exit()}><LogOut size={20} aria-hidden="true" /></button>}</header>
     {demoGateway && <div className="school-demo-banner"><div><strong>{t('school.demo')}</strong><p className="mt-1 text-xs leading-relaxed sm:text-sm">{t('school.demoHint')}</p></div><button type="button" disabled={busy} onClick={() => startDemo()} className="school-button-secondary shrink-0">{t('school.resetDemo')}</button></div>}
     <div className="school-body">{context && <aside className="school-sidebar"><div className="school-role-badge"><GraduationCap size={24} aria-hidden="true" /><span>{t(`school.${role}`)}</span></div>{nav}</aside>}
-      <main id="school-main" className="school-main">
-        {demoGateway ? <DemoOptimizer onResult={publication => { requestId.current++; bootstrapId.current++; setWorkspace(null); setContext(null); setDemoGateway(createDemoGateway(t, publication)); }} /> : <section className="school-class-bridge">
+      <main id="school-main" tabIndex={-1} className="school-main">
+        {demoGateway ? <DemoOptimizer onResult={publication => { requestId.current++; bootstrapId.current++; setWorkspace(null); setContext(null); setDemoGateway(createDemoGateway(t, publication)); }} /> : context && <section className="school-class-bridge">
           <div><h2>{t(localResult ? 'school.resultReady' : 'school.connectClassTitle')}</h2><p>{t(localResult ? 'school.resultReadyHint' : 'school.connectClassHint')}</p></div>
           <div className="flex flex-wrap gap-2">{localResult && <Action secondary onClick={() => startDemo(true)}>{t('school.previewCurrent')}</Action>}
           {context && role !== 'counselor' && localStudents.length > 0 && <Action onClick={() => { setError(''); setModal({ kind: 'publish_class' }); }}>{t('school.publishResult')}</Action>}
@@ -158,7 +159,7 @@ export default function SchoolPortal({ previewLocal = false }: { previewLocal?: 
 
         {context && <><div className="mb-5 flex flex-wrap items-end justify-between gap-4"><div><p className="school-accent mb-2 flex items-center gap-2 text-sm font-semibold"><ShieldCheck size={16} aria-hidden="true" />{t(`school.${role}`)}</p><h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t(`school.${role}Title`)}</h1><p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{t(`school.${role}Intro`)}</p></div><label className="w-full text-sm font-semibold sm:w-72"><span className="mb-2 block">{t('school.context')}</span><select aria-label={t('school.context')} className="school-input" value={keyOf(context)} disabled={busy} onChange={e => changeContext(e.target.value)}>{memberships.map(m => <option key={keyOf(m)} value={keyOf(m)}>{m.schoolName} · {t(`school.${m.role}`)}</option>)}</select></label></div><div className="mb-5 flex flex-wrap gap-2"><Action secondary onClick={() => void refresh()} disabled={loading || busy}><RefreshCw size={17} aria-hidden="true" />{t('school.refresh')}</Action>{role !== 'counselor' && <Action secondary onClick={() => { setError(''); setModal({ kind: 'publish_class' }); }}>{t('school.shareClass')}</Action>}</div></>}
         {error && <p role="alert" className="school-error mb-4">{error}</p>}{message && <p role="status" className="mb-4 rounded-xl bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-950/40 dark:text-teal-200">{message}</p>}
-        {loading && !workspace ? <p role="status" className="school-panel">{t('school.loading')}</p> : signedIn && mfaRequired ? <MfaGate onReady={bootstrap} /> : !context ? <AuthScreen available={available} signedIn={signedIn} onReady={bootstrap} onDemo={() => startDemo()} /> : workspace ? <>
+        {loading && !workspace ? <p role="status" className="school-panel">{t('school.loading')}</p> : signedIn && mfaRequired ? <MfaGate onReady={bootstrap} /> : !context ? <AuthScreen available={available} signedIn={signedIn} onReady={bootstrap} onDemo={() => startDemo()} entryRole={entryRole} /> : workspace ? <>
           {view === 'home' && <DashboardOverview workspace={workspace} role={role} onClass={c => setModal({ kind: 'class', id: c.id })} onCase={r => setModal({ kind: 'case', id: r.id })} onPrimary={primary} />}
           {view === 'classes' && <ClassList workspace={workspace} role={role} onOpen={c => setModal({ kind: 'class', id: c.id })} onShare={() => { setError(''); setModal({ kind: 'publish_class' }); }} />}
           {view === 'cases' && role !== 'principal' && <><div className="mb-4">{role === 'teacher' && <Action onClick={primary}>{t('school.newReferral')}</Action>}</div><CaseList workspace={workspace} onOpen={r => setModal({ kind: 'case', id: r.id })} /></>}

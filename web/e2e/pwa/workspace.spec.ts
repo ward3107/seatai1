@@ -38,6 +38,8 @@ for (const phone of [false, true]) {
     const newLabel = await a.getAttribute('aria-label');
     await page.waitForTimeout(650); // wait beyond the 400ms IndexedDB debounce
     await page.reload();
+    await expect(page.locator('#entry-title')).toBeVisible();
+    await page.getByRole('button', { name: 'המשך בכיתה השמורה', exact: true }).click();
     await expect(page.locator('[data-seat-key]').nth(0)).toHaveAttribute('aria-label', newLabel!);
     await expect(page.locator('#seating-grid-export [data-room-feature]')).toHaveCount(2);
     expect(errors).toEqual([]);

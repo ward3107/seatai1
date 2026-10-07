@@ -1,4 +1,5 @@
 import App from './App';
+import { useEffect } from 'react';
 import { migrateFromLocalStorage } from '../core/db';
 import { useStore } from '../core/store';
 import { detectDefaultLocale } from '../lib/i18n';
@@ -32,4 +33,12 @@ if (import.meta.env.DEV) {
 migrateFromLocalStorage('seatai-storage');
 
 
-export default App;
+export default function TeacherApplication() {
+  useEffect(() => {
+    const showHome = () => { if (location.hash === '#home') useStore.getState().setHomeView(true); };
+    showHome();
+    window.addEventListener('hashchange', showHome);
+    return () => window.removeEventListener('hashchange', showHome);
+  }, []);
+  return <App />;
+}

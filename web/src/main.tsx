@@ -15,7 +15,8 @@ function ApplicationRoute() {
     return () => window.removeEventListener('hashchange', changed);
   }, []);
   // Loading the school portal never blocks the existing offline seating tool.
-  return hash.startsWith('#survey=') ? <StudentSurveyPage token={hash.slice(8)} /> : hash.startsWith('#school') ? <SchoolPortal previewLocal={hash === '#school-preview'} /> : <TeacherApplication />;
+  const entryRole = hash === '#school-teacher' ? 'teacher' : hash === '#school-counselor' ? 'counselor' : hash === '#school-principal' ? 'principal' : undefined;
+  return hash.startsWith('#survey=') ? <StudentSurveyPage token={hash.slice(8)} /> : hash.startsWith('#school') ? <SchoolPortal previewLocal={hash === '#school-preview'} entryRole={entryRole} /> : <TeacherApplication />;
 }
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
