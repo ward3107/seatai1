@@ -33,7 +33,7 @@ test('device erasure removes saved pupil data without clearing unrelated browser
   await page.getByRole('button', { name: 'Privacy & accessibility', exact: true }).click();
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button',{name:'Delete SeatAI data on this device',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'לכל תלמיד יש מקום. בואו נמצא אותו.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'לכל תלמיד מקום. לכל צוות תמונה ברורה.'})).toBeVisible();
   expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().students)).toEqual([]);
   expect(await page.evaluate(() => localStorage.getItem('seatai-storage'))).toBeNull();
   expect(await page.evaluate(() => localStorage.getItem('unrelated-setting'))).toBe('keep');

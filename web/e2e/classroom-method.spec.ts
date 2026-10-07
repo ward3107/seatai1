@@ -26,7 +26,7 @@ test('teacher can complete the Hebrew setup on a phone and return to a clean hom
   await expect(page.getByTestId('mobile-print-button')).toBeVisible();
   await preferences.click();
   await page.getByRole('button', { name: 'דף הבית', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'לכל תלמיד יש מקום. בואו נמצא אותו.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'לכל תלמיד מקום. לכל צוות תמונה ברורה.' })).toBeVisible();
   await expect(page.getByTestId('print-button')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
@@ -34,7 +34,7 @@ test('teacher can complete the Hebrew setup on a phone and return to a clean hom
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('aside')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('aside')).toHaveCSS('width', '0px');
-  await expect(page.getByRole('heading', { name: 'לכל תלמיד יש מקום. בואו נמצא אותו.' }).locator('..')).toHaveCSS('opacity', '1');
+  await expect(page.getByRole('heading', { name: 'לכל תלמיד מקום. לכל צוות תמונה ברורה.' }).locator('..')).toHaveCSS('opacity', '1');
   await page.screenshot({ path: test.info().outputPath('hebrew-home-desktop.png'), fullPage: true });
 });
 
@@ -46,7 +46,7 @@ test('fresh home starts in Hebrew, fits a phone and supports reduced motion', as
   await page.evaluate(() => window.__ZUSTAND_STORE__.setState({ welcomeTipsDismissed: true, homeView: true }));
   await expect(page.locator('html')).toHaveAttribute('lang', 'he');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.getByRole('heading', {name:'לכל תלמיד יש מקום. בואו נמצא אותו.'})).toBeVisible();
+  await expect(page.getByRole('heading', {name:'לכל תלמיד מקום. לכל צוות תמונה ברורה.'})).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: test.info().outputPath('hebrew-home.png'), fullPage: true });
 });
