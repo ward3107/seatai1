@@ -4,6 +4,7 @@ import { useStore } from '../../core/store';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useTheme } from '../../hooks/useTheme';
 import LanguageSelector from '../../components/LanguageSelector';
+import AppUpdateBanner from '../../components/AppUpdateBanner';
 import { cloudGateway, schoolRequest } from './api';
 import { createDemoGateway } from './demo';
 import AuthScreen, { schoolError } from './AuthScreen';
@@ -140,6 +141,7 @@ export default function SchoolPortal({ previewLocal = false }: { previewLocal?: 
   };
   const nav = <nav aria-label={t('school.entry')} className="school-nav">{tabs.map(({ key, icon: Icon }) => <button key={key} type="button" className={view === key ? 'school-nav-button school-nav-active' : 'school-nav-button'} aria-current={view === key ? 'page' : undefined} onClick={() => { setView(key); setModal(null); }}><Icon size={20} aria-hidden="true" /><span>{t(`school.${key}`)}</span></button>)}</nav>;
   return <div className={`school-shell school-role-${role}`} data-testid="school-portal">
+    <AppUpdateBanner />
     <a href="#school-main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3">{t('app.skip_to_content')}</a>
     <header className="school-header"><a href="#" className="school-close" aria-label={t('school.back')}><ArrowLeft size={21} className="rtl:rotate-180" aria-hidden="true" /></a><img src="/seatai-logo.svg" width={30} height={30} alt="" aria-hidden="true" className="rounded-lg" /><span className="min-w-0 flex-1 truncate text-sm font-bold sm:text-base">{context?.schoolName ?? 'SeatAI'}</span><LanguageSelector /><SchoolThemeControl />{signedIn && <button type="button" className="school-close" disabled={busy} aria-label={t('school.logout')} onClick={() => void exit()}><LogOut size={20} aria-hidden="true" /></button>}</header>
     {demoGateway && <div className="school-demo-banner"><div><strong>{t('school.demo')}</strong><p className="mt-1 text-xs leading-relaxed sm:text-sm">{t('school.demoHint')}</p></div><button type="button" disabled={busy} onClick={() => startDemo()} className="school-button-secondary shrink-0">{t('school.resetDemo')}</button></div>}
