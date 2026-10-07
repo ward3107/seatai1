@@ -1,0 +1,168 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SeatAI school API",
+    "version": "1.0.0",
+    "description": "Optional same-origin school workspace. Server configuration is required. All school reads and writes require a verified Auth session and MFA, with live SQL school/class authorization. Full setup and command payloads: SCHOOL_WORKSPACES.md and src/features/school/types.ts."
+  },
+  "servers": [
+    {
+      "url": "https://seatai1-web.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/school": {
+      "post": {
+        "summary": "Staff accounts and school workspace actions",
+        "description": "Requires matching HTTPS Origin and JSON content type. Secure HttpOnly host-only cookies authenticate staff. Login, register and signed-out bootstrap do not require a school session. No session tokens are returned in JSON; mfa_setup returns enrollment material only to its own authenticated user. Confidential notes are excluded from teacher/principal responses. Only the fixed command list is accepted.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success; bootstrap includes available, signedIn, memberships and optional mfaRequired."
+          },
+          "400": {
+            "description": "Invalid request."
+          },
+          "401": {
+            "description": "Sign-in required or invalid credentials."
+          },
+          "403": {
+            "description": "Origin or school/class/role authorization denied."
+          },
+          "405": {
+            "description": "POST only."
+          },
+          "413": {
+            "description": "Request too large."
+          },
+          "429": {
+            "description": "Rate limit."
+          },
+          "503": {
+            "description": "Unconfigured backend or service unavailable."
+          }
+        },
+        "security": [
+          {},
+          {
+            "StaffCookies": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "StaffCookies": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-seatai-school-access",
+        "description": "Managed through login/MFA/refresh; never copy tokens into frontend JavaScript."
+      }
+    },
+    "schemas": {
+      "Request": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "bootstrap",
+              "login",
+              "register",
+              "logout",
+              "mfa_setup",
+              "mfa_verify",
+              "create_school",
+              "workspace",
+              "command"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "factorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "writeOnly": true
+          },
+          "context": {
+            "type": "object",
+            "required": [
+              "schoolId",
+              "role"
+            ],
+            "properties": {
+              "schoolId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "teacher",
+                  "counselor",
+                  "principal"
+                ]
+              }
+            }
+          },
+          "payload": {
+            "type": "object",
+            "description": "create_school: name, displayName, notice, noticeAcknowledged=true."
+          },
+          "command": {
+            "type": "object",
+            "required": [
+              "action",
+              "payload"
+            ],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "publish_class",
+                  "create_referral",
+                  "recommend",
+                  "private_note",
+                  "outcome",
+                  "set_status",
+                  "grant_member",
+                  "revoke_member"
+                ]
+              },
+              "payload": {
+                "type": "object",
+                "description": "Action-specific payloads are defined by SchoolCommand in types.ts. Database validates ownership, size, foreign-school references and operation permissions."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

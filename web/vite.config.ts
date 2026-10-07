@@ -119,6 +119,9 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // The school authorization suite boots a real Postgres engine. Bound file
+    // parallelism so it doesn't starve timed optimizer/DOM tests on CI runners.
+    maxWorkers: 2,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     exclude: ['node_modules/**', 'dist/**', 'e2e/**', 'playwright-report/**', 'test-results/**'],

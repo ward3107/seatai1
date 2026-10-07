@@ -7,7 +7,7 @@ import TopBar from './TopBar';
 import WorkspaceHeader from './WorkspaceHeader';
 import TeacherQuickGuide from '../components/TeacherQuickGuide';
 
-// PrintView pulls in html2canvas indirectly (the user only sees it after
+// PrintView pulls in the page renderer and PDF export (only needed after
 // clicking Print), so defer its load.
 const PrintView = lazy(() => import('../features/print/PrintView'));
 // Interaction-gated views — none are on the first-paint path, so splitting them

@@ -70,6 +70,8 @@ export default function OnboardingView() {
 
       <TeacherQuickGuide />
 
+      <a href="#school" className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-start text-sky-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200"><Users size={23} className="shrink-0" aria-hidden="true" /><span className="min-w-0 flex-1"><strong className="block">{t('school.entry')}</strong><span className="mt-1 block text-sm">{t('school.entryHint')}</span></span><ChevronRight size={20} className="shrink-0 rtl:rotate-180" aria-hidden="true" /></a>
+
       {/* Primary CTA */}
       <motion.div
         className="w-full"

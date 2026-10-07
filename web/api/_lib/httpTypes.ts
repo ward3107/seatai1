@@ -14,7 +14,7 @@ export interface ApiRequest {
 }
 
 export interface ApiResponse {
-  setHeader(name: string, value: string): void;
+  setHeader(name: string, value: string | string[]): void;
   status(code: number): ApiResponse;
   send(body: string): void;
   json(body: unknown): void;

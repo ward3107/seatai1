@@ -31,27 +31,6 @@ export function csvCell(value: string | number | undefined): string {
   return s;
 }
 
-/**
- * Render `el` to a canvas with the app forced to light colours. The global
- * dark-mode CSS remaps white surfaces to slate, which would otherwise bake a
- * dark background and low-contrast cards into the exported PNG/PDF. Strip the
- * `dark` class for the duration of the capture, then restore it.
- */
-async function captureGridLight(
-  el: HTMLElement,
-  opts: Parameters<typeof import('html2canvas')['default']>[1],
-): Promise<HTMLCanvasElement> {
-  const html2canvas = (await import('html2canvas')).default;
-  const root = document.documentElement;
-  const wasDark = root.classList.contains('dark');
-  if (wasDark) root.classList.remove('dark');
-  try {
-    return await html2canvas(el, opts);
-  } finally {
-    if (wasDark) root.classList.add('dark');
-  }
-}
-
 export default function ExportButton() {
   const result = useStore((s) => s.result);
   const students = useStore((s) => s.students);
@@ -59,9 +38,12 @@ export default function ExportButton() {
   const constraints = useStore((s) => s.constraints);
   const weights = useStore((s) => s.weights);
   const config = useStore((s) => s.config);
-  const { t } = useLanguage();
+  const { t, uiLanguage } = useLanguage();
+  const projectName = useStore(s => s.projects.find(project => project.id === s.currentProjectId)?.name ?? '');
+  const viewMode = useStore(s => s.viewMode);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<Loading>(null);
+  const [error, setError] = useState('');
 
   // Escape closes the menu (matching LanguageSelector), so keyboard users
   // aren't stuck with only the click-backdrop to dismiss it.
@@ -78,7 +60,7 @@ export default function ExportButton() {
   // backing up or sharing a class list before optimizing.
   if (students.length === 0) return null;
 
-  const getGrid = () => document.getElementById('seating-grid-export');
+
 
   const exportCsv = () => {
     setLoading('csv');
@@ -141,82 +123,29 @@ export default function ExportButton() {
     }
   };
 
-  const exportPng = async () => {
+  const exportChart = async (format: 'png' | 'pdf') => {
     if (!result) return;
-    const el = getGrid();
-    if (!el) return;
-    setLoading('png');
-    setOpen(false);
+    setLoading(format); setOpen(false); setError('');
     try {
-      const canvas = await captureGridLight(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-      const url = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `seating-chart-${new Date().toISOString().slice(0, 10)}.png`;
-      a.click();
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const exportPdf = async () => {
-    if (!result) return;
-    const el = getGrid();
-    if (!el) return;
-    setLoading('pdf');
-    setOpen(false);
-    try {
-      const { jsPDF } = await import('jspdf');
-
-      const canvas = await captureGridLight(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
-
-      // A4 landscape
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-
-      // Title and metadata
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(16);
-      pdf.text('SeatAI — Classroom Seating Chart', pageW / 2, 12, { align: 'center' });
-
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.text(
-        `${students.length} students  |  Score: ${getDisplayScorePct(result)}%  |  Generated: ${new Date().toLocaleDateString()}`,
-        pageW / 2, 18, { align: 'center' }
-      );
-
-      // Fit image below header
-      const imgH = pageH - 28;
-      const imgW = (canvas.width / canvas.height) * imgH;
-      const imgX = (pageW - imgW) / 2;
-      pdf.addImage(imgData, 'PNG', imgX, 22, imgW, imgH);
-
-      // Warnings footer
-      if (result.warnings.length > 0) {
-        pdf.addPage();
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Warnings', 15, 20);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
-        result.warnings.forEach((w, i) => {
-          pdf.text(`• ${w}`, 15, 30 + i * 7);
-        });
+      const [{ createClassroomChart, browserTextMeasure }, exporters] = await Promise.all([
+        import('../print/classroomChart'), import('../print/chartExport'),
+      ]);
+      const chart = createClassroomChart({ seats: result.layout.seats, students,
+        layout: layoutDef, language: uiLanguage, title: projectName,
+        paired: viewMode === 'pairs', measure: browserTextMeasure() });
+      if (chart.unseatedCount > 0) {
+        setError(t('print.unseated', { count: chart.unseatedCount })); return;
       }
-
-      pdf.save(`seating-chart-${new Date().toISOString().slice(0, 10)}.pdf`);
-    } finally {
-      setLoading(null);
-    }
+      if (format === 'pdf') await exporters.downloadChartPdf(chart);
+      else await exporters.downloadChartPng(chart);
+    } catch { setError(t('print.export_error')); }
+    finally { setLoading(null); }
   };
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => { setError(''); setOpen(v => !v); }}
         disabled={!!loading}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -231,6 +160,8 @@ export default function ExportButton() {
         {t('export.button')}
       </button>
 
+      {error && <p role="alert" className="absolute end-0 top-full z-50 mt-2 w-64 rounded-xl border border-red-200 bg-white p-3 text-sm text-red-800 shadow-lg">{error}</p>}
+
       {open && (
         <>
           {/* Backdrop */}
@@ -238,12 +169,12 @@ export default function ExportButton() {
           {/* Dropdown */}
           <div role="menu" aria-label={t('export.title')} className="absolute end-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
             <p className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300 border-b">{t('privacyHub.export_hint')}</p>
-            {/* PNG / PDF render the seating grid, so they only appear once an
+            {/* PNG / PDF render a standalone chart, so they only appear once an
                 optimization result exists. CSV / JSON always work. */}
             {result && (
               <>
                 <button
-                  onClick={exportPng}
+                  onClick={() => exportChart('png')}
                   role="menuitem"
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
@@ -251,7 +182,7 @@ export default function ExportButton() {
                   {t('export.save_png')}
                 </button>
                 <button
-                  onClick={exportPdf}
+                  onClick={() => exportChart('pdf')}
                   role="menuitem"
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >

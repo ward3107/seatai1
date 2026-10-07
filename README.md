@@ -15,11 +15,17 @@ have clearly documented network data flows.
 
 ## School pilot readiness
 
+Classroom print/PDF/PNG output uses one clean A4 landscape page with full names
+and numbered seats, independent of phone/desktop zoom and scrolling. See the
+[printing guide](docs/CLASSROOM_PRINTING.md).
+
 Hebrew is the default language. The guided teacher workflow covers roster entry, room geometry, seating rules and review. Phone questionnaires are optional and disabled until the school notice and durable storage are configured.
 
-Read [the Israel school privacy review](docs/ISRAEL_SCHOOL_PRIVACY_REVIEW.md) before using real pupil data. This is not a legal certification or a validated diagnostic instrument. Named teacher authentication and tenant isolation are still needed for a shared multi-school service. The [survey API contract](docs/SURVEY_API.md) describes required server configuration; no cloud configuration is included in this code change.
+Read [the Israel school privacy review](docs/ISRAEL_SCHOOL_PRIVACY_REVIEW.md) before using real pupil data. This is not a legal certification or a validated diagnostic instrument. An optional school workspace now includes accounts, MFA, school/class authorization and three role dashboards. It remains disabled until a dedicated backend is configured; see [school workspace activation](docs/SCHOOL_WORKSPACES.md). The [survey API contract](docs/SURVEY_API.md) describes required server configuration; no cloud configuration is included in this code change.
 
 ## Features
+
+- **School dashboards** — teacher, counselor and principal views; referrals, shared recommendations, follow-up and separate confidential notes. A disposable demo is available at `/#school`; live sharing requires a dedicated configured backend.
 
 - **Multi-layout** — rows, clusters, U-shape, circle, and custom variable-row layouts
 - **Multi-start genetic optimizer** — runs in a Web Worker so the UI never freezes. Fast / Balanced / Best quality presets.
@@ -51,8 +57,7 @@ are isolated and can be left disabled by a school.
 
 - **Local by default.** Every roster, note, photo, and saved seating plan lives
   in the teacher's own browser via IndexedDB during normal manual/CSV use.
-- **No accounts.** No login, no email, no signup. Open the URL and you're
-  working.
+- **No account for local seating.** Open the URL and start working. The optional school workspace uses verified staff accounts and MFA.
 - **No tracking.** No analytics, no telemetry, no third-party scripts.
 - **Optional AI explanations** are off by default. If a teacher turns them
   on, the API key is held only for the current page session and the call

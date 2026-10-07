@@ -69,6 +69,7 @@ export default function TopBar({ onShowCompare, onShowPrint, onShowGuide }: TopB
       <div ref={prefsRef} className="relative">
         <button type="button" ref={prefsTriggerRef} onClick={() => setPrefsOpen(value => !value)} className="topbar-icon" aria-label={t('app.preferences')} aria-expanded={prefsOpen} aria-controls="display-preferences" title={t('app.preferences')}><MoreVertical size={20} aria-hidden="true" /></button>
         {prefsOpen && <div id="display-preferences" className="preferences-popover absolute end-0 top-full z-40 mt-2 flex w-64 flex-col gap-1 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <a href="#school" className="flex min-h-11 items-center rounded-xl px-3 text-start text-sm font-semibold text-primary-700 dark:text-primary-300">{t('school.entry')}</a>
           <button type="button" onClick={() => { setPrefsOpen(false); onShowGuide(); }} className="min-h-11 rounded-xl px-3 text-start text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{t('guide.title')}</button>
           {workspace && result && <>
             <button type="button" onClick={() => { setPrefsOpen(false); onShowCompare(); }} className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-start text-sm text-gray-700 dark:text-gray-200 sm:hidden"><GitCompare size={17} aria-hidden="true" />{t('compare.button')}</button>
