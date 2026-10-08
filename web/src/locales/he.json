@@ -1386,5 +1386,14 @@
     "titleEnd": "לכל צוות תמונה ברורה.",
     "resume": "המשך בכיתה השמורה",
     "resumeHint": "הכיתה והתוצאות נשמרו במכשיר הזה."
+  },
+  "creator": {
+    "website": "לאתר vasia dev.",
+    "facebook": "לעמוד Facebook של vasia dev.",
+    "instagram": "לפרופיל Instagram של vasia dev.",
+    "email": "שליחת דוא״ל ל־vasia dev.",
+    "whatsapp": "יצירת קשר עם vasia dev. ב־WhatsApp",
+    "github": "לפרופיל GitHub של Waseem",
+    "linkedin": "לפרופיל LinkedIn של Waseem"
   }
 }

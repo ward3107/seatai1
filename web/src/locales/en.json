@@ -1386,5 +1386,14 @@
     "titleEnd": "A clear view for your team.",
     "resume": "Resume saved class",
     "resumeHint": "Your class and results are saved on this device."
+  },
+  "creator": {
+    "website": "Visit the vasia dev. website",
+    "facebook": "Visit the vasia dev. Facebook page",
+    "instagram": "Visit the vasia dev. Instagram profile",
+    "email": "Email vasia dev.",
+    "whatsapp": "Contact vasia dev. on WhatsApp",
+    "github": "Visit Waseem’s GitHub profile",
+    "linkedin": "Visit Waseem’s LinkedIn profile"
   }
 }

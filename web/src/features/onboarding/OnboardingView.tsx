@@ -4,6 +4,7 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { SAMPLE_CLASSES } from '../../utils/sampleData';
 import TeacherQuickGuide from '../../components/TeacherQuickGuide';
 import ClassroomPreview from '../../components/ClassroomPreview';
+import CreatorSignature from '../../components/CreatorSignature';
 import '../../styles/entry.css';
 
 const roles = [{ role: 'teacher', Icon: BookOpen }, { role: 'counselor', Icon: HeartHandshake }, { role: 'principal', Icon: Building2 }] as const;
@@ -45,6 +46,6 @@ export default function OnboardingView() {
       <p className="entry-access-note"><ShieldCheck size={18} aria-hidden="true" />{t('entry.accessHint')}</p>
     </section>
     <div className="entry-how"><TeacherQuickGuide /></div>
-    <footer className="entry-footer"><div><strong>SeatAI</strong><p>{t('onboarding.privacy')}</p></div><img src="/brand/vasia-dev-signature-light.png" width={1505} height={1045} alt="vasia dev." loading="lazy" /></footer>
+    <footer className="entry-footer"><div><strong>SeatAI</strong><p>{t('onboarding.privacy')}</p></div><CreatorSignature /></footer>
   </div>;
 }
