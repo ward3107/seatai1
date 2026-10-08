@@ -1,9 +1,9 @@
 import { useLanguage } from '../hooks/useLanguage';
 
-// Canonical destinations from the supplied signature's existing implementation.
+// Contact destinations, including the WhatsApp number confirmed by the owner.
 const CONTACTS = [
   { key: 'email', href: 'mailto:vasyaward@gmail.com', position: 0 },
-  { key: 'whatsapp', href: 'https://wa.me/972544742520', position: 1 },
+  { key: 'whatsapp', href: 'https://wa.me/972534260632', position: 1 },
   { key: 'facebook', href: 'https://www.facebook.com/profile.php?id=61594997720112', position: 2 },
   { key: 'instagram', href: 'https://www.instagram.com/vasia.dev/', position: 3 },
   { key: 'github', href: 'https://github.com/ward3107', position: 4 },
