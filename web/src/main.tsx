@@ -1,12 +1,15 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import ErrorBoundary from './components/ErrorBoundary';
+import { consumeRecoveryCallback } from './features/school/recoveryRoute';
 import './index.css';
 
 // Pupil links never import or hydrate the teacher roster/database.
 const TeacherApplication = lazy(() => import('./app/TeacherApplication'));
 const StudentSurveyPage = lazy(() => import('./features/questionnaire/StudentSurveyPage'));
 const SchoolPortal = lazy(() => import('./features/school/SchoolPortal'));
+const PasswordRecoveryPage = lazy(() => import('./features/school/PasswordRecoveryPage'));
+const recoveryCallback = consumeRecoveryCallback();
 function ApplicationRoute() {
   const [hash, setHash] = useState(location.hash);
   useEffect(() => {
@@ -16,7 +19,7 @@ function ApplicationRoute() {
   }, []);
   // Loading the school portal never blocks the existing offline seating tool.
   const entryRole = hash === '#school-teacher' ? 'teacher' : hash === '#school-counselor' ? 'counselor' : hash === '#school-principal' ? 'principal' : undefined;
-  return hash.startsWith('#survey=') ? <StudentSurveyPage token={hash.slice(8)} /> : hash.startsWith('#school') ? <SchoolPortal previewLocal={hash === '#school-preview'} entryRole={entryRole} /> : <TeacherApplication />;
+  return hash === '#school-reset' ? <PasswordRecoveryPage callback={recoveryCallback} /> : hash.startsWith('#survey=') ? <StudentSurveyPage token={hash.slice(8)} /> : hash.startsWith('#school') ? <SchoolPortal previewLocal={hash === '#school-preview'} entryRole={entryRole} /> : <TeacherApplication />;
 }
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

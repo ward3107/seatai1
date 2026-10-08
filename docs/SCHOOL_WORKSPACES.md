@@ -39,6 +39,8 @@ MFA is enforced in database authorization, including live verified-factor lookup
 
 ## Data flows and recovery
 
+- Staff can show/hide passwords, request a recovery email and choose a new password. Configure the recovery redirect and validate delivery as described in [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md). Password recovery does not reset MFA or change school roles.
+
 - The school database contains approved minimal rosters, referrals, shared recommendations, outcomes and separate counselor notes.
 - An online workspace response lives only in React memory. It is not added to IndexedDB, browser backup exports or service-worker caches. API responses use `private, no-store`. Role/school changes, sign-out and detected offline transitions clear displayed records. Foreground refresh rechecks permissions; active tabs refresh every minute. Revoked access is denied on the next database/API request; already viewed information cannot be recalled from a person's memory or screenshots.
 - School views are online. The existing independent seating tool retains its offline behavior. No offline queue writes confidential data later.

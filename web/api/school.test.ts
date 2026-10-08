@@ -2,10 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from './school';
 import type { ApiRequest, ApiResponse } from './_lib/httpTypes';
+import { createHash } from 'node:crypto';
+import { rateLimit } from './_lib/rateLimit';
 vi.mock('./_lib/rateLimit', () => ({ rateLimit: vi.fn(async () => true) }));
 const calls: { url: string; init?: RequestInit }[] = [];
 beforeEach(() => {
   calls.length = 0;
+  vi.mocked(rateLimit).mockImplementation(async () => true);
   vi.stubEnv('SEATAI_SUPABASE_URL', 'https://abcdefghijklmnopqrst.supabase.co');
   vi.stubEnv('SEATAI_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_test_only');
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
@@ -15,6 +18,96 @@ beforeEach(() => {
     if (url.includes('seatai_bootstrap')) return new Response(JSON.stringify([]));
     return new Response(JSON.stringify({ ok: true }));
   }));
+});
+
+describe('Password recovery HTTP contract', () => {
+  const recoveryCookie = '__Host-seatai-school-recovery=recovery-access';
+  const code = '00000000-0000-4000-8000-000000000001';
+  it('sends a PKCE challenge and pins the redirect without disclosing account existence or the verifier', async () => {
+    const response = await call({ action: 'recover_password', email: ' teacher@school.test ', redirectTo: 'https://attacker.test' });
+    expect(response.status).toBe(200); expect(response.data).toEqual({ ok: true });
+    const url = new URL(calls[0].url);
+    expect(url.pathname).toBe('/auth/v1/recover');
+    expect(url.searchParams.get('redirect_to')).toBe('https://seatai.test/#school-reset');
+    const jar = response.headers['Set-Cookie'] as string[];
+    const verifier = jar[0].split(';')[0].split('=')[1];
+    expect(jar[0]).toContain('HttpOnly; Secure; SameSite=Strict; Max-Age=3600');
+    expect(verifier).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ email: 'teacher@school.test', code_challenge: createHash('sha256').update(verifier).digest('base64url'), code_challenge_method: 's256' });
+    expect(JSON.stringify(response.data)).not.toContain(verifier);
+    expect((await call({ action: 'recover_password', email: 'not-found@school.test' })).data).toEqual(response.data);
+  });
+  it('validates the address and applies the same origin and authentication rate limits', async () => {
+    expect((await call({ action: 'recover_password', email: 'invalid' })).status).toBe(400);
+    expect((await call({ action: 'recover_password', email: 'a@b.test' }, { origin: 'https://attacker.test' })).status).toBe(403);
+    expect(calls).toHaveLength(0);
+    vi.mocked(rateLimit).mockImplementation(async (_req, res) => { res.status(429).send('Too many requests'); return false; });
+    expect((await call({ action: 'recover_password', email: 'a@b.test' })).status).toBe(429);
+    expect(vi.mocked(rateLimit).mock.calls.at(-1)?.[2]).toEqual({ prefix: 'school-auth', maximum: 10 });
+    expect(calls).toHaveLength(0);
+  });
+  it('exchanges only with the browser verifier and creates no normal staff session', async () => {
+    expect((await call({ action: 'exchange_recovery', code })).status).toBe(401);
+    expect((await call({ action: 'exchange_recovery', code: 'invalid' })).status).toBe(400);
+    const verifier = 'a'.repeat(43);
+    const response = await call({ action: 'exchange_recovery', code }, { cookie: `__Host-seatai-school-recovery-verifier=${verifier}` });
+    expect(response.status).toBe(200); expect(response.data).toEqual({ ok: true, mfaRequired: false });
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ auth_code: code, code_verifier: verifier });
+    const jar = response.headers['Set-Cookie'] as string[];
+    expect(jar).toHaveLength(2);
+    expect(jar[0]).toContain('Max-Age=0');
+    expect(jar[1]).toContain('__Host-seatai-school-recovery=test-access;');
+    expect(jar[1]).toContain('HttpOnly; Secure; SameSite=Strict; Max-Age=900');
+    expect(jar.join()).not.toContain('__Host-seatai-school-access=');
+    expect(jar.join()).not.toContain('test-refresh');
+    expect((await call({ action: 'bootstrap' }, { cookie: recoveryCookie })).data).toMatchObject({ signedIn: false });
+  });
+  it('rejects expired or replayed codes and never returns provider details', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error_code: 'flow_state_not_found', message: 'PRIVATE detail' }), { status: 403 })));
+    const result = await call({ action: 'exchange_recovery', code }, { cookie: `__Host-seatai-school-recovery-verifier=${'a'.repeat(43)}` });
+    expect(result.status).toBe(401); expect(result.data).toEqual({ error: 'unauthorized' });
+    expect(result.headers['Set-Cookie']).toBeUndefined();
+  });
+  it('requires a verified recovery session and updates only its user before clearing cookies', async () => {
+    expect((await call({ action: 'reset_password', password: 'long-new-password' }, { cookie: '__Host-seatai-school-access=ordinary-session' })).status).toBe(401);
+    expect((await call({ action: 'recovery_status' }, { cookie: recoveryCookie })).status).toBe(200);
+    const result = await call({ action: 'reset_password', password: 'long-new-password', userId: 'someone-else' }, { cookie: recoveryCookie });
+    expect(result.status).toBe(200);
+    const put = calls.find(c => c.init?.method === 'PUT')!;
+    expect(put.url).toContain('/auth/v1/user');
+    expect(put.init?.headers).toMatchObject({ Authorization: 'Bearer recovery-access' });
+    expect(JSON.parse(String(put.init?.body))).toEqual({ password: 'long-new-password' });
+    expect((result.headers['Set-Cookie'] as string[])).toHaveLength(4);
+    expect((result.headers['Set-Cookie'] as string[]).every(c => c.includes('Max-Age=0'))).toBe(true);
+    expect(calls.some(c => c.url.includes('/rest/') || c.url.includes('/factors'))).toBe(false);
+  });
+  it('rejects invalid sessions, short passwords and provider-rejected passwords', async () => {
+    expect((await call({ action: 'reset_password', password: 'short' }, { cookie: recoveryCookie })).status).toBe(400);
+    expect(calls.some(c => c.init?.method === 'PUT')).toBe(false);
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => new Response(JSON.stringify(init?.method === 'PUT' ? { code: 'same_password', message: 'PRIVATE' } : { id: 'verified-user' }), { status: init?.method === 'PUT' ? 422 : 200 })));
+    expect((await call({ action: 'reset_password', password: 'long-new-password' }, { cookie: recoveryCookie })).data).toEqual({ error: 'password_rejected' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 401 })));
+    expect((await call({ action: 'reset_password', password: 'long-new-password' }, { cookie: recoveryCookie })).status).toBe(401);
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+  });
+  it('preserves existing MFA during recovery and never enrolls a factor or creates a staff session', async () => {
+    const verifiedToken = `header.${Buffer.from(JSON.stringify({ aal: 'aal2' })).toString('base64url')}.signature`;
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({ url, init });
+      const data = url.endsWith('/auth/v1/user') ? { factors: [{ id: 'existing-factor', factor_type: 'totp', status: 'verified' }] } : url.endsWith('/challenge') ? { id: 'challenge' } : { access_token: verifiedToken, refresh_token: 'not-for-the-browser' };
+      return new Response(JSON.stringify(data));
+    }));
+    expect((await call({ action: 'recovery_status' }, { cookie: recoveryCookie })).data).toEqual({ ok: true, mfaRequired: true });
+    expect((await call({ action: 'reset_password', password: 'long-new-password' }, { cookie: recoveryCookie })).data).toEqual({ error: 'mfa_required' });
+    expect(calls.some(c => c.init?.method === 'PUT')).toBe(false);
+    const result = await call({ action: 'recovery_verify', code: '123456', factorId: 'attacker-factor' }, { cookie: recoveryCookie });
+    expect(result.status).toBe(200);
+    expect(result.headers['Set-Cookie']).toBe(`__Host-seatai-school-recovery=${verifiedToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=900`);
+    expect(calls.at(-1)?.url).toContain('/factors/existing-factor/verify');
+    expect(JSON.parse(String(calls.at(-1)?.init?.body))).toEqual({ challenge_id: 'challenge', code: '123456' });
+    expect((await call({ action: 'reset_password', password: 'long-new-password' }, { cookie: `__Host-seatai-school-recovery=${verifiedToken}` })).status).toBe(200);
+    expect(calls.some(c => c.url.endsWith('/factors') || c.init?.method === 'DELETE')).toBe(false);
+  });
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 async function call(body: Record<string, unknown>, extras: Record<string, string> = {}, method = 'POST') {

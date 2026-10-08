@@ -10,6 +10,7 @@ export async function schoolRequest<T>(action: string, args: Record<string, unkn
     method: 'POST', credentials: 'same-origin', cache: 'no-store',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...args }),
   });
+  if (response.status === 429) throw new SchoolApiError('rate_limited');
   let data: unknown;
   try { data = await response.json(); } catch { throw new SchoolApiError('unavailable'); }
   if (!response.ok) throw new SchoolApiError((data as { error?: string }).error ?? 'unavailable');

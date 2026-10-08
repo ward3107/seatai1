@@ -1,8 +1,11 @@
 import type { ApiRequest, ApiResponse } from './_lib/httpTypes';
 import { rateLimit } from './_lib/rateLimit.js';
+import { createHash, randomBytes } from 'node:crypto';
 
 const ACCESS_COOKIE = '__Host-seatai-school-access';
 const REFRESH_COOKIE = '__Host-seatai-school-refresh';
+const RECOVERY_VERIFIER_COOKIE = '__Host-seatai-school-recovery-verifier';
+const RECOVERY_COOKIE = '__Host-seatai-school-recovery';
 const ROLES = ['teacher', 'counselor', 'principal'];
 const COMMANDS = ['publish_class', 'create_referral', 'recommend', 'private_note', 'outcome', 'set_status', 'grant_member', 'revoke_member'];
 class HttpError extends Error { constructor(public status: number, public code: string) { super(code); } }
@@ -22,8 +25,8 @@ function cookies(req: ApiRequest) {
   }
   return values;
 }
+const cookie = (name: string, value: string, age: number) => `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
 function setSession(res: ApiResponse, access: string, refresh: string) {
-  const cookie = (name: string, value: string, age: number) => `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
   res.setHeader('Set-Cookie', [cookie(ACCESS_COOKIE, access, access ? 900 : 0), cookie(REFRESH_COOKIE, refresh, refresh ? 1800 : 0)]);
 }
 async function upstream(path: string, body?: unknown, access?: string, method?: string) {
@@ -40,6 +43,7 @@ async function upstream(path: string, body?: unknown, access?: string, method?: 
     if (['P0001', '22023', '22P02', '23514', '23505', '23503', '23502'].includes(code)) throw new HttpError(400, 'invalid_request');
     if (['42501', 'PGRST301', 'PGRST302'].includes(code)) throw new HttpError(403, 'forbidden');
     if (reply.status === 429) throw new HttpError(429, 'rate_limited');
+    if (['weak_password', 'same_password'].includes(code)) throw new HttpError(400, 'password_rejected');
     if (reply.status >= 500 || code.startsWith('PGRST2')) throw new HttpError(503, 'unavailable');
     throw new HttpError(401, 'unauthorized');
   }
@@ -78,8 +82,58 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!configuration()) { res.status(action === 'bootstrap' ? 200 : 503).json(action === 'bootstrap' ? { available: false, memberships: [], signedIn: false } : { error: 'unavailable' }); return; }
   try {
     if (JSON.stringify(req.body ?? {}).length > 90_000) throw new HttpError(413, 'invalid_request');
-    const authAction = ['login', 'register', 'mfa_setup', 'mfa_verify'].includes(String(action));
+    const authAction = ['login', 'register', 'mfa_setup', 'mfa_verify', 'recover_password', 'exchange_recovery', 'recovery_status', 'recovery_verify', 'reset_password'].includes(String(action));
     if (!(await rateLimit(req, res, { prefix: authAction ? 'school-auth' : 'school', maximum: authAction ? 10 : 120 }))) return;
+    if (action === 'recover_password') {
+      const email = req.body?.email;
+      if (typeof email !== 'string' || email.length > 254 || !/^\S+@\S+\.\S+$/.test(email.trim())) throw new HttpError(400, 'invalid_request');
+      const verifier = randomBytes(32).toString('base64url');
+      const challenge = createHash('sha256').update(verifier).digest('base64url');
+      // Supabase returns the same success for unknown addresses. Never accept a caller-selected redirect.
+      await upstream(`/auth/v1/recover?redirect_to=${encodeURIComponent(`${origin}/#school-reset`)}`, { email: email.trim(), code_challenge: challenge, code_challenge_method: 's256' });
+      res.setHeader('Set-Cookie', [cookie(RECOVERY_VERIFIER_COOKIE, verifier, 3600), cookie(RECOVERY_COOKIE, '', 0)]);
+      res.status(200).json({ ok: true }); return;
+    }
+    if (action === 'exchange_recovery') {
+      const code = req.body?.code;
+      const verifier = cookies(req).get(RECOVERY_VERIFIER_COOKIE);
+      if (typeof code !== 'string' || !/^[a-f0-9-]{36}$/i.test(code)) throw new HttpError(400, 'invalid_request');
+      if (!verifier || !/^[A-Za-z0-9_-]{43}$/.test(verifier)) throw new HttpError(401, 'unauthorized');
+      const session = await upstream('/auth/v1/token?grant_type=pkce', { auth_code: code, code_verifier: verifier });
+      if (typeof session.access_token !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(session.access_token)) throw new HttpError(503, 'unavailable');
+      const user = await upstream('/auth/v1/user', undefined, session.access_token);
+      const factors = (user.factors ?? []) as { status: string }[];
+      res.setHeader('Set-Cookie', [cookie(RECOVERY_VERIFIER_COOKIE, '', 0), cookie(RECOVERY_COOKIE, session.access_token, 900)]);
+      res.status(200).json({ ok: true, mfaRequired: factors.some(f => f.status === 'verified') && !mfaVerified(session.access_token) }); return;
+    }
+    if (action === 'recovery_status' || action === 'recovery_verify' || action === 'reset_password') {
+      const recoveryAccess = cookies(req).get(RECOVERY_COOKIE);
+      if (!recoveryAccess) throw new HttpError(401, 'unauthorized');
+      const user = await upstream('/auth/v1/user', undefined, recoveryAccess);
+      const factors = (user.factors ?? []) as { id: string; status: string; factor_type: string }[];
+      const mfaRequired = factors.some(f => f.status === 'verified') && !mfaVerified(recoveryAccess);
+      if (action === 'recovery_status') { res.status(200).json({ ok: true, mfaRequired }); return; }
+      if (action === 'recovery_verify') {
+        const code = req.body?.code;
+        const factor = factors.find(f => f.status === 'verified' && f.factor_type === 'totp');
+        if (typeof code !== 'string' || !/^\d{6}$/.test(code) || !factor) throw new HttpError(400, 'invalid_request');
+        const challenge = await upstream(`/auth/v1/factors/${factor.id}/challenge`, {}, recoveryAccess);
+        const session = await upstream(`/auth/v1/factors/${factor.id}/verify`, { challenge_id: challenge.id, code }, recoveryAccess);
+        if (typeof session.access_token !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(session.access_token) || !mfaVerified(session.access_token)) throw new HttpError(401, 'unauthorized');
+        res.setHeader('Set-Cookie', cookie(RECOVERY_COOKIE, session.access_token, 900));
+        res.status(200).json({ ok: true }); return;
+      }
+      if (action === 'reset_password') {
+        if (mfaRequired) throw new HttpError(403, 'mfa_required');
+        const password = req.body?.password;
+        if (typeof password !== 'string' || password.length < 12 || password.length > 128) throw new HttpError(400, 'invalid_request');
+        await upstream('/auth/v1/user', { password }, recoveryAccess, 'PUT');
+        // A successful reset returns to regular sign-in, including the existing MFA gate.
+        try { await upstream('/auth/v1/logout?scope=local', {}, recoveryAccess); } catch { /* Password already changed; local recovery credentials still expire. */ }
+        res.setHeader('Set-Cookie', [cookie(RECOVERY_COOKIE, '', 0), cookie(RECOVERY_VERIFIER_COOKIE, '', 0), cookie(ACCESS_COOKIE, '', 0), cookie(REFRESH_COOKIE, '', 0)]);
+      }
+      res.status(200).json({ ok: true }); return;
+    }
     if (action === 'login' || action === 'register') {
       const { email, password } = req.body!;
       if (typeof email !== 'string' || email.length > 254 || !/^\S+@\S+\.\S+$/.test(email) || typeof password !== 'string' || password.length < 12 || password.length > 128) throw new HttpError(400, 'invalid_request');
