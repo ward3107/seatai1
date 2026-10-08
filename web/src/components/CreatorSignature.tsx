@@ -4,6 +4,8 @@ import { useLanguage } from '../hooks/useLanguage';
 const CONTACTS = [
   { key: 'email', href: 'mailto:vasyaward@gmail.com', position: 0 },
   { key: 'whatsapp', href: 'https://wa.me/972544742520', position: 1 },
+  { key: 'facebook', href: 'https://www.facebook.com/profile.php?id=61594997720112', position: 2 },
+  { key: 'instagram', href: 'https://www.instagram.com/vasia.dev/', position: 3 },
   { key: 'github', href: 'https://github.com/ward3107', position: 4 },
   { key: 'linkedin', href: 'https://www.linkedin.com/in/waseem-abu-akel-334486374/', position: 5 },
 ] as const;
