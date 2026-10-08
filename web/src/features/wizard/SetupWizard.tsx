@@ -20,7 +20,7 @@ interface Props {
 }
 
 const STEP_ICONS = [Users, LayoutGrid, ListChecks, Sparkles];
-const STEP_TONES = ['bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-100', 'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100', 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-100', 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100'];
+const STEP_TONES = Array(4).fill('bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-200');
 
 /**
  * Guided setup flow shown for a new/empty class (or on demand). Walks the

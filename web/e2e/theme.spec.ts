@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test('a dark device opens a white classroom app by default', async ({ page }) => {
+test('a dark device opens the light grouped interface by default', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.goto('/');
   await page.waitForFunction(() => window.__ZUSTAND_STORE__?.persist.hasHydrated());
   await expect(page.locator('header')).toBeVisible();
   await expect(page.locator('html')).not.toHaveClass(/dark/);
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(242, 242, 247)');
   expect(await page.evaluate(() => window.__ZUSTAND_STORE__.getState().theme)).toBe('light');
 });
 

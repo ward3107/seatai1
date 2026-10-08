@@ -32,16 +32,16 @@ export default function QuestionnairePanel() {
   const complete = total > 0 && done >= total;
 
   return (
-    <div className="bg-indigo-50/60 dark:bg-indigo-900/30 rounded-xl overflow-hidden border border-indigo-100 dark:border-indigo-800">
+    <div className="settings-group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full p-4 flex items-center justify-between hover:bg-indigo-100/50 dark:hover:bg-indigo-900/40 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-primary-100/50 dark:hover:bg-primary-900/40 transition-colors"
         aria-expanded={open}
       >
         <div className="flex flex-wrap items-center gap-2 text-start">
-          <ClipboardList size={18} className="text-indigo-500 dark:text-indigo-400" />
+          <ClipboardList size={18} className="text-primary-500 dark:text-primary-400" />
           <span className="font-medium text-gray-700 dark:text-gray-300">{t('questionnaire.title')}</span>
-          <span className="text-[10px] uppercase tracking-wide bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded-full font-semibold">
+          <span className="text-[10px] uppercase tracking-wide bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 px-1.5 py-0.5 rounded-full font-semibold">
             {t('questionnaire.step_badge')}
           </span>
         </div>
@@ -66,7 +66,7 @@ export default function QuestionnairePanel() {
                   type="checkbox"
                   checked={consentAck}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
+                  className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
                 />
                 <span>
                   <span className="font-medium">{t('questionnaire.consent_label')}</span>
@@ -78,7 +78,7 @@ export default function QuestionnairePanel() {
 
               <h3 className="pt-2 text-sm font-semibold text-gray-800 dark:text-gray-100">{t('teacherFlow.localSurvey')}</h3>
               {/* Device-only options must not imply that they change phone links. */}
-              <details className="rounded-lg border border-indigo-200 p-3 dark:border-indigo-800">
+              <details className="rounded-lg border border-primary-200 p-3 dark:border-primary-800">
                 <summary className="cursor-pointer text-xs font-medium">{t('teacherFlow.surveyOptions')}</summary>
               <div className="mt-3 space-y-3">
                 <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
@@ -86,7 +86,7 @@ export default function QuestionnairePanel() {
                     type="checkbox"
                     checked={peerEnabled}
                     onChange={(e) => setPeerEnabled(e.target.checked)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
+                    className="rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
                   />
                   {t('questionnaire.peer_enabled')}
                 </label>
@@ -96,7 +96,7 @@ export default function QuestionnairePanel() {
                       type="checkbox"
                       checked={skipPeers}
                       onChange={(e) => setSkipPeers(e.target.checked)}
-                      className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
+                      className="rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
                     />
                     {t('questionnaire.skip_peers')}
                   </label>
@@ -106,7 +106,7 @@ export default function QuestionnairePanel() {
                     type="checkbox"
                     checked={!!simpleMode}
                     onChange={(e) => setSimpleMode(e.target.checked)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-500 focus:ring-indigo-500"
+                    className="rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
                   />
                   {t('questionnaire.simple_mode')}
                 </label>
@@ -117,7 +117,7 @@ export default function QuestionnairePanel() {
               <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
                 <span>{t('questionnaire.progress', { done, total })}</span>
                 {done > 0 && (
-                  <button onClick={resetQuestionnaire} className="flex items-center gap-1 hover:text-indigo-600">
+                  <button onClick={resetQuestionnaire} className="flex items-center gap-1 hover:text-primary-600">
                     <RotateCcw size={11} />
                     {t('questionnaire.reset')}
                   </button>
@@ -125,7 +125,7 @@ export default function QuestionnairePanel() {
               </div>
               <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 transition-all"
+                  className="h-full bg-primary-500 transition-all"
                   style={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }}
                 />
               </div>
@@ -133,7 +133,7 @@ export default function QuestionnairePanel() {
               <button
                 onClick={() => setQuestionnaireOpen(true)}
                 disabled={!consentAck}
-                className="w-full py-2 px-3 bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 px-3 bg-primary-500 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Play size={15} />
                 {complete ? t('questionnaire.review') : done > 0 ? t('questionnaire.continue') : t('questionnaire.start')}
@@ -141,7 +141,7 @@ export default function QuestionnairePanel() {
               <button
                 onClick={() => setQuestionnaireOpen(true, true)}
                 disabled={!consentAck}
-                className="w-full py-2 px-3 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 px-3 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary-50 dark:hover:bg-primary-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Smartphone size={15} />
                 {t('questionnaire.student_mode')}
@@ -158,7 +158,7 @@ export default function QuestionnairePanel() {
                   })
                 }
                 disabled={total === 0}
-                className="w-full py-2 px-3 text-indigo-600 dark:text-indigo-300 text-sm font-medium flex items-center justify-center gap-2 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/40 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 px-3 text-primary-600 dark:text-primary-300 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary-100/50 dark:hover:bg-primary-900/40 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Printer size={15} />
                 {t('questionnaire.handout_button')}

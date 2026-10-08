@@ -54,7 +54,7 @@ export default function AbsoluteLayoutRenderer({
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-10 py-2.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg shadow-lg"
+          className="px-10 py-2.5 bg-amber-100 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl"
         >
           <span className="font-semibold text-white flex items-center gap-2 text-sm">
             <User size={16} />

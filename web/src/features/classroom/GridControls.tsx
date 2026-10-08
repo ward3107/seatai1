@@ -24,7 +24,7 @@ export default function GridControls({ interactionMode, setInteractionMode, show
   const showSeatTags = useStore(s => s.showSeatTags);
   const setShowSeatTags = useStore(s => s.setShowSeatTags);
   const { t } = useLanguage();
-  const segment = (selected: boolean) => clsx('flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors', selected ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700');
+  const segment = (selected: boolean) => clsx('flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors', selected ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700');
   return (
     <div className="grid-controls mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -56,7 +56,7 @@ export default function GridControls({ interactionMode, setInteractionMode, show
             { value: showConstraintBadges, set: setShowConstraintBadges, label: 'badges' },
             { value: showSeatTags, set: setShowSeatTags, label: 'tags' },
             { value: showTimeline, set: setShowTimeline, label: 'timeline' },
-          ].map(item => <label key={item.label} className="flex min-h-11 cursor-pointer items-center gap-2"><input type="checkbox" checked={item.value} onChange={e => item.set(e.target.checked)} className="h-4 w-4 accent-teal-700" />{t(`gridControls.${item.label}`)}</label>)}
+          ].map(item => <label key={item.label} className="flex min-h-11 cursor-pointer items-center gap-2"><input type="checkbox" checked={item.value} onChange={e => item.set(e.target.checked)} className="h-4 w-4 accent-primary-600" />{t(`gridControls.${item.label}`)}</label>)}
         </div>
       </details>
     </div>
