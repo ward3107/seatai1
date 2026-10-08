@@ -20,7 +20,7 @@ interface Props {
 export default function SidebarSection({ title, icon: Icon, defaultOpen = false, badge, children }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden">
+    <div className="settings-group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

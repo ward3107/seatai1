@@ -102,7 +102,7 @@ export default function MetricsPanel() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/90 dark:bg-gray-800 backdrop-blur-sm rounded-2xl p-4"
+      className="metrics-panel bg-white dark:bg-gray-800 rounded-2xl p-4"
     >
       {/* Header — the score already appears in the TopBar and the disclosure
           summary, so keep this row tight and let the metric tiles carry the
@@ -162,7 +162,7 @@ export default function MetricsPanel() {
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="metrics-grid grid grid-cols-2 sm:grid-cols-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           // objective_scores are already in [0, 100] — don't multiply again.

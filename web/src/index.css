@@ -2,13 +2,15 @@
 
 /* Z-Index Scale */
 @import './styles/z-index.css';
+@import './styles/tokens.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--ui-font);
+  font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
@@ -17,129 +19,34 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 html.dark { color-scheme: dark; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  /* Quiet page canvas; task colors live on actions and step markers. */
-  background: #ffffff;
-  background-attachment: fixed;
-}
-
-/* Keep the workspace at a stable scale; explicit text-size controls still work. */
-:root { font-size: 16px; }
-.workspace-shell { height: 100vh; height: 100dvh; background: #f4f7f9; }
-html.dark .workspace-shell { background: #0f172a; }
+body { margin: 0; min-height: 100vh; background: var(--ui-canvas); color: var(--ui-text); }
+.workspace-shell { height: 100vh; height: 100dvh; background: var(--ui-canvas); }
 .workspace-content > * { max-width: 1440px; margin-inline: auto; }
-.workspace-heading { padding: 4px 4px 20px; }
 .workspace-sidebar { box-shadow: none; }
 [hidden] { display: none !important; }
-button:focus-visible, summary:focus-visible, select:focus-visible {
-  outline: 2px solid #0f766e; outline-offset: 3px;
+:where(button, a, summary, select, input, textarea):focus-visible {
+  outline: 2px solid var(--ui-blue); outline-offset: 3px;
 }
-/*
- * Light-mode polish.
- *
- * 1. Crisp panels: the translucent white surfaces (white/80–95 + blur)
- *    looked muddy over the background — make them solid white so text is
- *    sharp and high-contrast.
- * 2. Darker grey ramp: shift the three most common text greys one step
- *    darker so hints, labels, and secondary text read clearly while
- *    keeping the visual hierarchy.
- */
-html:not(.dark) .bg-white\/80,
-html:not(.dark) .bg-white\/90,
-html:not(.dark) .bg-white\/95 {
-  background-color: #fff;
+:where(input[type='checkbox'], input[type='radio'], input[type='range']) { accent-color: var(--ui-blue); }
+/* Existing utility-based panels inherit the same materials, including dialogs. */
+:where(html) :is(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: var(--ui-surface); }
+html.dark :is(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: var(--ui-surface); color: var(--ui-text); }
+html.dark :is(.bg-gray-50, .bg-gray-100, .bg-slate-50, .bg-slate-100) { background-color: var(--ui-grouped); color: var(--ui-text); }
+html.dark :is(.text-gray-800, .text-gray-900, .text-slate-800, .text-slate-900) { color: var(--ui-text); }
+html.dark :is(.text-gray-700, .text-slate-700) { color: #dedee4; }
+html.dark :is(.text-gray-400, .text-gray-500, .text-gray-600, .text-slate-400, .text-slate-500, .text-slate-600) { color: var(--ui-secondary); }
+:where(html:not(.dark)) :is(.text-gray-400, .text-gray-500, .text-slate-400, .text-slate-500) { color: var(--ui-secondary); }
+html.dark :is(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-100, .border-slate-200, .border-slate-300) { border-color: var(--ui-line); }
+html.dark :is(.hover\:bg-gray-50, .hover\:bg-gray-100):hover { background-color: var(--ui-fill); }
+:where(input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='color']), select, textarea) {
+  border-radius: 12px; border-color: var(--ui-line); background-color: var(--ui-grouped); color: var(--ui-text);
 }
-
-/* :where() keeps these at single-class specificity so they override the base
-   utility (later in the cascade) but still yield to `hover:`/`focus:`
-   variants and the dark-mode remaps below. */
-:where(html:not(.dark)) .text-gray-400 { color: rgb(107 114 128); } /* gray-500 */
-:where(html:not(.dark)) .text-gray-500 { color: rgb(75 85 99); }    /* gray-600 */
-:where(html:not(.dark)) .text-gray-600 { color: rgb(55 65 81); }    /* gray-700 */
-
-/*
- * Dark mode — the root `dark` class is set by the useTheme() hook
- * based on the user's theme preference (light / dark / system).
- *
- * Strategy: shift the page background + the highest-traffic Tailwind
- * surface colors (white panels, gray scales) at the @layer level so
- * every component reads correctly without touching every file. Per-
- * component `dark:` variants can still override these for fine-tuning.
- */
-html.dark body {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  color: rgb(226 232 240); /* slate-200 */
-}
-
-html.dark .bg-white,
-html.dark .bg-white\/90,
-html.dark .bg-white\/95 {
-  background-color: rgb(30 41 59); /* slate-800 */
-  color: rgb(226 232 240);
-}
-
-html.dark .bg-gray-50,
-html.dark .bg-gray-100 {
-  background-color: rgb(15 23 42); /* slate-900 */
-  color: rgb(226 232 240);
-}
-
-html.dark .text-gray-800,
-html.dark .text-gray-900 {
-  color: rgb(241 245 249); /* slate-100 */
-}
-html.dark .text-gray-700 { color: rgb(226 232 240); }
-html.dark .text-gray-600 { color: rgb(203 213 225); }
-html.dark .text-gray-500 { color: rgb(148 163 184); }
-/* gray-400 was missing — without it the most muted labels rendered dark
-   slate-on-slate and effectively vanished. */
-html.dark .text-gray-400 { color: rgb(148 163 184); } /* slate-400 */
-
-html.dark .border-gray-200,
-html.dark .border-gray-300,
-html.dark .border-gray-100 {
-  border-color: rgb(51 65 85); /* slate-700 */
-}
-
-/* Hover fills: the base grays are remapped above, but the `hover:` variants
-   generate their own selectors, so a hover that fills gray-50/100 flashed
-   bright white in dark mode. Remap the two common ones. */
-html.dark .hover\:bg-gray-50:hover,
-html.dark .hover\:bg-gray-100:hover {
-  background-color: rgb(51 65 85); /* slate-700 */
-}
-
-/* Translucent white surfaces used for floating panels/toolbars. Only /90 and
-   /95 were remapped; /80 leaked the light gradient through in dark mode. */
-html.dark .bg-white\/80 {
-  background-color: rgb(30 41 59); /* slate-800 */
-  color: rgb(226 232 240);
-}
-
-/* Form controls: give inputs/selects/textareas a dark field so typed text
-   and placeholders stay legible even where a component didn't add its own
-   dark: variant. */
-html.dark input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-html.dark select,
-html.dark textarea {
-  background-color: rgb(15 23 42); /* slate-900 */
-  color: rgb(226 232 240);
-  border-color: rgb(51 65 85); /* slate-700 */
-}
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  color: rgb(100 116 139); /* slate-500 */
-}
-
-/* Darker, less harsh scrollbars in dark mode. */
-html.dark ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-html.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); }
-html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+html.dark input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='color']),
+html.dark select, html.dark textarea { background-color: var(--ui-grouped); color: var(--ui-text); border-color: var(--ui-line); }
+input::placeholder, textarea::placeholder { color: var(--ui-secondary); opacity: 1; }
+html.dark ::-webkit-scrollbar-track { background: rgb(255 255 255 / 3%); }
+html.dark ::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 20%); }
 
 #root {
   min-height: 100vh;
@@ -223,8 +130,7 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25
 }
 
 /* A quiet, iOS-inspired shell, with device fonts and explicit safe areas. */
-:root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
-.workspace-shell { background: #f2f3f7; }
+
 .workspace-content {
   padding-left: max(12px, env(safe-area-inset-left));
   padding-right: max(12px, env(safe-area-inset-right));
@@ -239,15 +145,15 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25
 .topbar-icon {
   display: flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 44px; flex-shrink: 0;
-  border-radius: 12px; color: #475569; transition: background-color .15s ease;
+  border-radius: 12px; color: var(--ui-secondary); transition: background-color .15s ease;
 }
-.topbar-icon:hover, .topbar-guide:hover { background: #f1f5f9; }
-html.dark .topbar-icon { color: #cbd5e1; }
-html.dark .topbar-icon:hover, html.dark .topbar-guide:hover { background: #334155; }
+.topbar-icon:hover, .topbar-guide:hover { background: var(--ui-fill); }
+html.dark .topbar-icon { color: var(--ui-secondary); }
+html.dark .topbar-icon:hover, html.dark .topbar-guide:hover { background: var(--ui-line); }
 .app-topbar button, .app-topbar [role='menuitemradio'] { min-height: 44px; }
 .preferences-popover { max-width: calc(100vw - 24px); }
 .quick-guide {
-  border: 1px solid #e4e7ec; border-radius: 24px; background: #fff;
+  border: 1px solid var(--ui-line); border-radius: 24px; background: var(--ui-surface);
   padding: 20px; margin-bottom: 20px;
 }
 .quick-guide-compact { padding: 2px 16px; border-radius: 18px; }
@@ -258,13 +164,13 @@ html.dark .topbar-icon:hover, html.dark .topbar-guide:hover { background: #33415
 .quick-guide-steps li { display: flex; align-items: flex-start; gap: 12px; }
 .quick-guide-number {
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 28px; height: 28px; border-radius: 9px; background: #f0fdfa;
-  color: #115e59; font-size: 13px; font-weight: 700;
+  width: 28px; height: 28px; border-radius: 9px; background: var(--ui-tint);
+  color: var(--ui-blue); font-size: 13px; font-weight: 700;
 }
-.quick-guide-note { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e4e7ec; color: #475569; font-size: 13px; line-height: 1.6; }
-html.dark .quick-guide { background: #1e293b; border-color: #334155; }
-html.dark .quick-guide-number { background: #123f3b; color: #ccfbf1; }
-html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
+.quick-guide-note { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ui-line); color: var(--ui-secondary); font-size: 13px; line-height: 1.6; }
+html.dark .quick-guide { background: var(--ui-surface); border-color: var(--ui-line); }
+html.dark .quick-guide-number { background: var(--ui-tint); color: var(--ui-blue); }
+html.dark .quick-guide-note { border-color: var(--ui-line); color: var(--ui-secondary); }
 .teacher-guide-dialog { max-height: min(90vh, 900px); max-height: min(90dvh, 900px); }
 .teacher-guide-dialog > :last-child { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 .workspace-heading { padding: 4px 2px 18px; }
@@ -297,11 +203,11 @@ html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
     padding-right: env(safe-area-inset-right);
   }
   .workspace-sidebar-inner { width: 100%; max-width: none; }
-  .workspace-sidebar [role='tablist'] { margin: 8px 12px 0; padding: 4px; border: 0; border-radius: 14px; background: #f2f3f7; }
+  .workspace-sidebar [role='tablist'] { margin: 8px 12px 0; padding: 4px; border: 0; border-radius: 14px; background: var(--ui-fill); }
   .workspace-sidebar [role='tab'] { font-size: 13px; border-radius: 11px; }
-  .workspace-sidebar [role='tab'][aria-selected='true'] { background: #fff; box-shadow: 0 1px 4px rgb(15 23 42 / 8%); }
-  html.dark .workspace-sidebar [role='tablist'] { background: #0f172a; }
-  html.dark .workspace-sidebar [role='tab'][aria-selected='true'] { background: #334155; }
+  .workspace-sidebar [role='tab'][aria-selected='true'] { background: var(--ui-surface); box-shadow: 0 1px 4px rgb(15 23 42 / 8%); }
+  html.dark .workspace-sidebar [role='tablist'] { background: var(--ui-canvas); }
+  html.dark .workspace-sidebar [role='tab'][aria-selected='true'] { background: var(--ui-line); }
   .grid-controls > div:first-child { display: grid; grid-template-columns: minmax(0, 1fr); }
   .grid-segments { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .grid-segment { min-width: 0; }
@@ -309,7 +215,7 @@ html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
   .grid-zoom { justify-content: center; }
   .movement-feedback { gap: 8px; padding-block: 12px; }
   .movement-feedback > p { flex-basis: 100%; }
-  .movement-actions { margin-inline-start: auto; border-top: 1px solid #99f6e4; padding-top: 4px; }
+  .movement-actions { margin-inline-start: auto; border-top: 1px solid var(--ui-line); padding-top: 4px; }
   .wizard-step { flex-direction: column; gap: 4px; padding-inline: 4px; min-width: 48px; }
   .wizard-step-label { font-size: 11px; line-height: 1.3; text-align: center; }
   .wizard-footer { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
@@ -330,32 +236,82 @@ html.dark .quick-guide-note { border-color: #334155; color: #cbd5e1; }
   .workspace-sidebar { height: 100vh; height: 100dvh; }
 }
 
-/* Color always accompanies a named section or action. */
-.classroom-panel { border-color: #a5e5ee; }
-.grid-controls { border-radius: 16px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 12px; }
-@media (max-width: 639px) {
-  .grid-controls .grid-segments { grid-template-columns: minmax(0, 1fr); }
-  .grid-controls .grid-segment { width: 100%; }
-}
-html.dark .classroom-panel { border-color: #155e75; }
-html.dark .grid-controls { background: #17233b; border-color: #1e40af; }
-.quick-guide [data-guide-step='students'] .quick-guide-number { background: #dbeafe; color: #1e40af; }
-.quick-guide [data-guide-step='room'] .quick-guide-number { background: #ede9fe; color: #6d28d9; }
-.quick-guide [data-guide-step='arrange'] .quick-guide-number { background: #ccfbf1; color: #115e59; }
-.quick-guide [data-guide-step='save'] .quick-guide-number { background: #fef3c7; color: #92400e; }
-.workspace-sidebar [data-section='students'][aria-selected='true'] { background: #dbeafe; color: #1e40af; }
-.workspace-sidebar [data-section='room'][aria-selected='true'] { background: #cffafe; color: #155e75; }
-.workspace-sidebar [data-section='rules'][aria-selected='true'] { background: #ede9fe; color: #6d28d9; }
-html.dark .workspace-sidebar [data-section='students'][aria-selected='true'] { background: #1e3a8a; color: #dbeafe; }
-html.dark .workspace-sidebar [data-section='room'][aria-selected='true'] { background: #164e63; color: #cffafe; }
-html.dark .workspace-sidebar [data-section='rules'][aria-selected='true'] { background: #4c1d95; color: #ede9fe; }
-.classroom-map-scroll { touch-action: pan-x pan-y pinch-zoom; -webkit-overflow-scrolling: touch; scrollbar-color: #0891b2 #ecfeff; }
+.classroom-map-scroll { touch-action: pan-x pan-y pinch-zoom; -webkit-overflow-scrolling: touch; scrollbar-color: var(--ui-secondary) var(--ui-grouped); }
 .classroom-map-scroll::-webkit-scrollbar { height: 10px; }
-.classroom-map-scroll::-webkit-scrollbar-track { background: #ecfeff; border-radius: 8px; }
-.classroom-map-scroll::-webkit-scrollbar-thumb { background: #0891b2; border-radius: 8px; }
-.map-scroll-controls { position: sticky; bottom: 0; z-index: 10; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); margin-top: 8px; border: 1px solid #a5e5ee; border-radius: 16px; background: #ecfeff; color: #155e75; }
-.map-pan-button { display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 1px solid #67e8f9; border-radius: 12px; background: #fff; color: #155e75; }
+.classroom-map-scroll::-webkit-scrollbar-track { background: var(--ui-grouped); border-radius: 8px; }
+.classroom-map-scroll::-webkit-scrollbar-thumb { background: var(--ui-secondary); border-radius: 8px; }
+.map-scroll-controls { position: sticky; bottom: 0; z-index: 10; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); margin-top: 8px; border: 1px solid var(--ui-line); border-radius: 16px; background: var(--ui-grouped); color: var(--ui-blue); }
+.map-pan-button { display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-blue); }
 .map-pan-button:disabled { opacity: .35; }
 .map-scroll-controls input[type='range'] { height: 44px; cursor: pointer; }
-html.dark .map-scroll-controls { background: #083344; border-color: #155e75; color: #cffafe; }
-html.dark .map-pan-button { background: #164e63; border-color: #0e7490; color: #cffafe; }
+html.dark .map-scroll-controls { background: var(--ui-grouped); border-color: var(--ui-blue); color: var(--ui-blue); }
+html.dark .map-pan-button { background: var(--ui-surface); border-color: var(--ui-line); color: var(--ui-blue); }
+
+/* Shared application chrome, grouped controls and editing sheets. */
+.app-topbar { background: var(--ui-chrome); border-color: var(--ui-line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+html.dark .app-topbar { background: var(--ui-chrome); }
+.topbar-navigation { max-width: 1600px; margin-inline: auto; }
+.topbar-chart-actions { background: var(--ui-surface); border-color: var(--ui-line); }
+.topbar-icon, .topbar-guide { color: var(--ui-blue); }
+.preferences-popover { border-color: var(--ui-line); box-shadow: var(--ui-floating-shadow); padding: 8px; }
+.preferences-popover > :is(a, button) { border-radius: 9px; font-size: 14px; }
+.workspace-heading { padding: 12px 2px 24px; }
+.workspace-heading h2 { font-size: 30px; letter-spacing: -.035em; }
+.workspace-heading > div > div > p:first-child { color: var(--ui-secondary); font-weight: 400; }
+.workspace-sidebar { background: var(--ui-canvas); border-color: var(--ui-line); }
+html.dark .workspace-sidebar { background: var(--ui-surface); }
+.workspace-sidebar-inner > div:first-child { padding: 20px 16px; border: 0; }
+.workspace-sidebar-inner > div:first-child img { width: 32px; height: 32px; }
+.workspace-sidebar-inner > div:first-child h1 { font-size: 18px; }
+.workspace-sidebar [role='tablist'] { margin: 0 12px 8px; padding: 3px; border: 0; border-radius: 12px; background: var(--ui-fill); }
+.workspace-sidebar [role='tab'] { border-radius: 9px; color: var(--ui-secondary); font-weight: 500; }
+.workspace-sidebar [role='tab'][aria-selected='true'] { background: var(--ui-surface); color: var(--ui-text); box-shadow: 0 1px 4px rgb(0 0 0 / 10%); font-weight: 600; }
+html.dark .workspace-sidebar [role='tablist'] { background: var(--ui-canvas); }
+html.dark .workspace-sidebar [role='tab'][aria-selected='true'] { background: var(--ui-fill); color: var(--ui-text); }
+.sidebar-content { padding-inline: 12px; }
+.settings-group { border: 1px solid var(--ui-line); background: var(--ui-surface); }
+.settings-group > button { min-height: 52px; padding: 14px; font-size: 14px; }
+.settings-group > button svg:first-child { color: var(--ui-blue); }
+.sidebar-content button:not([role='tab']) { min-height: 36px; }
+.sidebar-content input:not([type='checkbox']):not([type='radio']):not([type='range']), .sidebar-content select { min-height: 40px; }
+.sidebar-content summary { text-transform: none; letter-spacing: normal; font-size: 13px; min-height: 44px; }
+.classroom-panel { border-color: transparent; border-radius: 24px; box-shadow: var(--ui-shadow); }
+html.dark .classroom-panel { border-color: var(--ui-line); }
+.grid-controls { border: 0; border-bottom: 1px solid var(--ui-line); border-radius: 0; padding: 0 0 14px; background: transparent; }
+.grid-segment { background: var(--ui-fill); padding: 3px; border-radius: 12px; }
+.grid-segment button { border-radius: 9px; color: var(--ui-secondary); font-weight: 500; }
+.grid-segment button[aria-pressed='true'] { background: var(--ui-surface); color: var(--ui-text); box-shadow: 0 1px 4px rgb(0 0 0 / 10%); font-weight: 600; }
+.grid-zoom { border-radius: 12px; background: var(--ui-grouped); }
+.grid-zoom button { color: var(--ui-blue); }
+.quick-guide { border: 0; border-radius: 20px; box-shadow: var(--ui-shadow); }
+.quick-guide-number { background: var(--ui-fill); color: var(--ui-secondary); font-weight: 600; }
+html.dark .quick-guide-number { background: var(--ui-fill); color: var(--ui-secondary); }
+.quick-guide-note { font-size: 12px; }
+.map-scroll-controls, html.dark .map-scroll-controls { background: var(--ui-grouped); border-color: var(--ui-line); color: var(--ui-secondary); }
+.map-pan-button { color: var(--ui-blue); }
+.setup-wizard { padding-top: 16px; }
+.setup-wizard > div:first-child h1 { font-size: 28px; letter-spacing: -.03em; }
+.setup-wizard > [role='group'] { border-radius: 24px; border-color: transparent; box-shadow: var(--ui-shadow); }
+.wizard-footer { background: var(--ui-chrome); border-color: var(--ui-line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.wizard-step[aria-current='step'] { color: var(--ui-blue); background: var(--ui-tint); }
+.metrics-panel { border-radius: 20px; }
+.metrics-grid { background: var(--ui-grouped); border-radius: 16px; gap: 0; }
+.metrics-grid > div { padding: 20px 14px; }
+.metrics-grid > div + div { border-inline-start: 1px solid var(--ui-line); }
+.metrics-grid > div > div:first-child { background: transparent; width: 32px; height: 32px; margin-bottom: 8px; }
+.metrics-grid > div > p { min-height: 32px; }
+/* Dialog portals also receive these materials; content stays opaque for legibility. */
+:is([role='dialog'].bg-white, [role='dialog'] > .bg-white, .student-detail-panel) { background: var(--ui-surface); border-radius: 24px; box-shadow: var(--ui-floating-shadow); }
+[role='dialog'] :is(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) { border-radius: 12px; }
+:is(.school-shell, .workspace-shell) button { -webkit-tap-highlight-color: transparent; }
+@media (max-width: 639px) {
+  .workspace-heading h2 { font-size: 27px; }
+  .workspace-heading { padding-top: 4px; }
+  .grid-controls .grid-segments { grid-template-columns: minmax(0, 1fr); }
+  .grid-controls .grid-segment { width: 100%; }
+  .metrics-grid > div:nth-child(3) { border-inline-start: 0; }
+  .metrics-grid > div:nth-child(n+3) { border-top: 1px solid var(--ui-line); }
+  .sidebar-content button:not([role='tab']) { min-height: 44px; }
+  .sidebar-content input:not([type='checkbox']):not([type='radio']):not([type='range']), .sidebar-content select { min-height: 44px; }
+  .student-detail-panel { border-radius: 24px 24px 0 0; }
+}

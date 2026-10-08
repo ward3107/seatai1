@@ -60,7 +60,7 @@ export default function StudentSurveyPage({ token }: { token: string }) {
       history.replaceState(null, '', location.pathname);
     } catch { setError(t('pupilPrivacy.deleteError')); } finally { setBusy(false); }
   }
-  return <main dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-sky-50 px-4 py-10 text-gray-800">
+  return <main dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-primary-50 px-4 py-10 text-gray-800">
     <div className="max-w-lg mx-auto rounded-3xl bg-white shadow-lg p-6">
       <img src="/seatai-logo.svg" width="48" height="48" alt="SeatAI" className="rounded-xl mb-5" />
       <h1 className="text-2xl font-bold mb-3">{t('phoneSurvey.studentTitle')}</h1>
@@ -68,7 +68,7 @@ export default function StudentSurveyPage({ token }: { token: string }) {
       {state === 'error' && <p role="alert">{t('phoneSurvey.linkError')}</p>}
       {state === 'done' && <p role="status">{t('phoneSurvey.thanks')}</p>}
       {state === 'deleted' && <p role="status">{t('pupilPrivacy.deleted')}</p>}
-      {notice && state !== 'deleted' && <details open={state === 'notice'} className="my-4 rounded-xl bg-sky-50 p-4 text-sm">
+      {notice && state !== 'deleted' && <details open={state === 'notice'} className="my-4 rounded-xl bg-primary-50 p-4 text-sm">
         <summary className="cursor-pointer font-semibold">{t('pupilPrivacy.title')}</summary>
         <p className="mt-3 font-semibold">{notice.schoolName}</p>
         <p className="mt-2">{t('pupilPrivacy.explanation')}</p>
@@ -76,25 +76,25 @@ export default function StudentSurveyPage({ token }: { token: string }) {
         <p className="mt-2">{notice.processors}</p>
         <p className="mt-2">{t('pupilPrivacy.contact')} <a className="underline break-all" href={`mailto:${notice.privacyEmail}`}>{notice.privacyEmail}</a></p>
       </details>}
-      {state === 'notice' && <button className="w-full rounded-xl bg-sky-700 px-4 py-3 text-white font-semibold" onClick={() => setState('ready')}>{t('pupilPrivacy.start')}</button>}
+      {state === 'notice' && <button className="w-full rounded-xl bg-primary-700 px-4 py-3 text-white font-semibold" onClick={() => setState('ready')}>{t('pupilPrivacy.start')}</button>}
       {state === 'done' && <button disabled={busy} onClick={() => void remove()} className="mt-4 underline text-sm text-rose-800">{t('pupilPrivacy.delete')}</button>}
       {state === 'ready' && <>
         <p className="text-sm mb-6">{t('phoneSurvey.studentIntro')}</p>
-        <p className="text-xs text-sky-800 mb-2">{step + 1} / {QUESTIONS.length}</p>
-        <div className="h-2 rounded bg-sky-100 mb-6"><div className="h-full rounded bg-sky-600" style={{width:`${(step + 1) / QUESTIONS.length * 100}%`}} /></div>
+        <p className="text-xs text-primary-800 mb-2">{step + 1} / {QUESTIONS.length}</p>
+        <div className="h-2 rounded bg-primary-100 mb-6"><div className="h-full rounded bg-primary-600" style={{width:`${(step + 1) / QUESTIONS.length * 100}%`}} /></div>
         <h2 ref={heading} className="text-xl font-semibold mb-3" tabIndex={-1} key={question.key}>{t(`questionnaire.${question.key}`)}</h2>
         {'hint' in question && <p className="text-sm text-gray-600 mb-4">{t(`questionnaire.${question.hint}`)}</p>}
         <div className="flex flex-wrap gap-2 mb-6">
           {('options' in question ? question.options : [1,2,3,4,5]).map(value => <button key={value} aria-pressed={answers[question.field] === value}
             onClick={() => setAnswers(a => ({ ...a,[question.field]:a[question.field] === value ? null : value }))}
-            className={`min-w-12 min-h-12 px-3 rounded-xl border font-semibold ${answers[question.field] === value ? 'bg-sky-700 text-white border-sky-700' : 'bg-sky-50 border-sky-200'}`}>
+            className={`min-w-12 min-h-12 px-3 rounded-xl border font-semibold ${answers[question.field] === value ? 'bg-primary-700 text-white border-primary-700' : 'bg-primary-50 border-primary-200'}`}>
             {'labels' in question ? t(`questionnaire.${question.labels}${value}`) : value}
           </button>)}
         </div>
         <button className="text-sm underline mb-5" onClick={() => { setAnswers(a => ({...a,[question.field]:null})); if (step < QUESTIONS.length - 1) setStep(step + 1); }}>{t('phoneSurvey.skip')}</button>
         <div className="flex justify-between gap-3">
           <button disabled={step === 0 || busy} className="px-4 py-3 border rounded-xl disabled:opacity-40" onClick={() => setStep(step - 1)}>{t('phoneSurvey.back')}</button>
-          <button disabled={busy} className="px-6 py-3 bg-sky-700 text-white rounded-xl disabled:opacity-50" onClick={() => step === QUESTIONS.length - 1 ? void submit() : setStep(step + 1)}>{t(step === QUESTIONS.length - 1 ? 'questionnaire.submit' : 'phoneSurvey.next')}</button>
+          <button disabled={busy} className="px-6 py-3 bg-primary-700 text-white rounded-xl disabled:opacity-50" onClick={() => step === QUESTIONS.length - 1 ? void submit() : setStep(step + 1)}>{t(step === QUESTIONS.length - 1 ? 'questionnaire.submit' : 'phoneSurvey.next')}</button>
         </div>
       </>}
       {error && <p role="alert" className="text-rose-700 text-sm mt-3">{error}</p>}

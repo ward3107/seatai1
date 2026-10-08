@@ -20,18 +20,25 @@ export default {
         xs: '400px',
       },
       colors: {
-        // Teal actions; darker midtones keep white labels readable.
+        // Accessible iOS blue, shared by every primary action.
         primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#0f766e',
-          600: '#0d6b63',
-          700: '#115e59',
-          800: '#134e4a',
-          900: '#123f3b',
+          50: '#eff5ff', 100: '#deebff', 200: '#bed8ff',
+          300: '#91bfff', 400: '#559aff', 500: '#0070ed',
+          600: '#0064d9', 700: '#0056bd', 800: '#06468f',
+          900: '#15375f', 950: '#10243f',
+        },
+        // Neutral surfaces across existing utility-based panels.
+        gray: {
+          50: '#f7f7fa', 100: '#f2f2f7', 200: '#e5e5ea',
+          300: '#d1d1d6', 400: '#8e8e93', 500: '#72727b',
+          600: '#606069', 700: '#3a3a3c', 800: '#242426',
+          900: '#1c1c1e', 950: '#000000',
+        },
+        slate: {
+          50: '#f7f7fa', 100: '#f2f2f7', 200: '#e5e5ea',
+          300: '#d1d1d6', 400: '#8e8e93', 500: '#72727b',
+          600: '#606069', 700: '#3a3a3c', 800: '#242426',
+          900: '#1c1c1e', 950: '#000000',
         },
         // Warm ochre — the color of graded-paper ink. Used sparingly,
         // for status highlights and callouts, never as a co-primary.
