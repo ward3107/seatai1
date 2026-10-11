@@ -51,7 +51,7 @@ export default function AuthScreen({ available, signedIn, onReady, onDemo, entry
           {!recover && <PasswordField label={t('school.password')} autoComplete={register ? 'new-password' : 'current-password'} />}
           {!recover && !register && <button type="button" disabled={busy} className="school-text-button" onClick={() => { setRecover(true); setError(''); setMessage(''); }}>{t('school.forgotPassword')}</button>}
         </>}
-        {error && <p role="alert" className="school-error">{error}</p>}{message && <p role="status" className="rounded-xl bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-950/40 dark:text-teal-200">{message}</p>}
+        {error && <p role="alert" className="school-error">{error}</p>}{message && <p role="status" className="rounded-xl bg-sky-50 p-3 text-sm text-sky-800 dark:bg-sky-950/40 dark:text-sky-200">{message}</p>}
         <button type="submit" disabled={busy} className="school-button w-full">{t(busy ? 'school.loading' : signedIn ? 'school.createSchool' : recover ? 'school.sendRecovery' : register ? 'school.register' : 'school.login')}</button>{!signedIn && <button type="button" disabled={busy} className="school-button-secondary w-full" onClick={() => { if (recover) { setRecover(false); setRegister(false); } else setRegister(v => !v); setError(''); setMessage(''); }}>{t(recover ? 'school.backToLogin' : register ? 'school.login' : 'school.register')}</button>}
       </form>}
       <div className="entry-demo-link"><p>{t('entry.demoLoginHint')}</p><Action secondary onClick={onDemo}><Users size={18} aria-hidden="true" />{t('school.tryDemo')}</Action></div>

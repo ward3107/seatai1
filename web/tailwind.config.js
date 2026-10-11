@@ -20,12 +20,12 @@ export default {
         xs: '400px',
       },
       colors: {
-        // Forest green, shared by every primary action.
+        // Deep indigo, shared by every primary action.
         primary: {
-          50: '#eff8f2', 100: '#d8eee2', 200: '#b9dfc9',
-          300: '#94cbae', 400: '#55a882', 500: '#28745f',
-          600: '#246b5a', 700: '#195544', 800: '#214d3e',
-          900: '#213e32', 950: '#13291f',
+          50: '#f6f3ff', 100: '#eee8ff', 200: '#ddd0ff',
+          300: '#cbb5ff', 400: '#a889ee', 500: '#7e5ed4',
+          600: '#5b3fac', 700: '#482f90', 800: '#35276a',
+          900: '#28214e', 950: '#1b163a',
         },
         // Neutral surfaces across existing utility-based panels.
         gray: {

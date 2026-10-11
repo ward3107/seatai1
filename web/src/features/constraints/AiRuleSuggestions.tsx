@@ -112,7 +112,7 @@ export default function AiRuleSuggestions({ onApply }: AiRuleSuggestionsProps) {
               <button
                 type="button"
                 onClick={() => accept(s)}
-                className="p-1 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition-colors"
+                className="p-1 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 transition-colors"
                 aria-label={t('constraints.ai_accept')}
                 title={t('constraints.ai_accept')}
               >

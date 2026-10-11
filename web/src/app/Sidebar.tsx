@@ -181,7 +181,7 @@ export default function Sidebar() {
             {/* Quiet privacy reassurance — always visible so IT and
                 teachers know what they're trusting at a glance. */}
             <div
-              className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300"
+              className="flex items-center justify-center gap-1.5 text-[11px] text-indigo-700 dark:text-indigo-300"
               title={t('app.privacy_local_only')}
             >
               <ShieldCheck size={11} aria-hidden="true" />

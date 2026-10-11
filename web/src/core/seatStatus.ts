@@ -5,7 +5,7 @@ import type { OptimizationResult, SeatingConstraints, Student } from '../types';
 /**
  * Per-seat constraint satisfaction for the *current* arrangement (after the
  * optimiser ran and after any manual drag/swap edits). This is the live
- * "is this seat happy?" signal behind the green ✓ / red ⚠ seat badges and
+ * "is this seat happy?" signal behind the violet ✓ / red ⚠ seat badges and
  * the drop-target tinting while dragging.
  *
  * Unlike `getViolations` (which only knows front-row + incompatible
@@ -179,7 +179,7 @@ export function getConstraintStatus(
 
   // Aisle / near-window assignment rules. Previously unchecked here, so a
   // student required on the aisle/window but placed in the interior wrongly
-  // showed a green ✓. Uses the same relative-margin geometry as the optimizer.
+  // showed a violet ✓. Uses the same relative-margin geometry as the optimizer.
   const { xMin, xMax } = slotXExtent(slots);
   for (const id of constraints.aisle_ids ?? []) {
     const idx = slotOfStudent.get(id);

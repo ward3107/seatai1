@@ -210,9 +210,9 @@ function PairPicker({
           icon: 'text-red-500 dark:text-red-400',
         }
       : {
-          chip: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-          box: 'bg-emerald-50/40 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800',
-          icon: 'text-emerald-500 dark:text-emerald-400',
+          chip: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+          box: 'bg-indigo-50/40 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800',
+          icon: 'text-indigo-500 dark:text-indigo-400',
         };
 
   const getName = (id: string) => students.find((s) => s.id === id)?.name ?? id;

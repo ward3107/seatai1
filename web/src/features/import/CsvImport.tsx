@@ -162,7 +162,7 @@ export default function CsvImport() {
         {t('csvImport.download_template')}
       </button>
 
-      {/* Result banner — green when clean, amber when warnings, red when errors. */}
+      {/* Result banner — violet when clean, amber when warnings, red when errors. */}
       {result && (() => {
         const hasErrors = result.errors.length > 0;
         const hasWarnings = result.warnings.length > 0;
@@ -170,9 +170,9 @@ export default function CsvImport() {
           ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
           : hasWarnings
             ? 'bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800'
-            : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800';
+            : 'bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800';
         const Icon = hasErrors || hasWarnings ? AlertCircle : CheckCircle2;
-        const iconCls = hasErrors ? 'text-red-500 dark:text-red-400' : hasWarnings ? 'text-amber-500 dark:text-amber-400' : 'text-green-500 dark:text-green-400';
+        const iconCls = hasErrors ? 'text-red-500 dark:text-red-400' : hasWarnings ? 'text-amber-500 dark:text-amber-400' : 'text-violet-500 dark:text-violet-400';
         return (
           <div role="status" aria-live="polite" className={`rounded-lg p-3 flex items-start gap-2 ${bannerCls}`}>
             <Icon size={16} className={`${iconCls} shrink-0 mt-0.5`} />

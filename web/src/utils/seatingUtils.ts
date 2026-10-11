@@ -107,7 +107,7 @@ export function getHeatMapColor(
       // on the grid don't shout. Uses one lightness step per band with
       // muted borders (-300 instead of -400) and pastel fills (-50).
       const s = student.academic_score;
-      if (s >= 85) return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700';
+      if (s >= 85) return 'bg-indigo-50 border-indigo-300 dark:bg-indigo-900/20 dark:border-indigo-700';
       if (s >= 70) return 'bg-primary-50 border-primary-300 dark:bg-primary-900/20 dark:border-primary-700';
       if (s >= 55) return 'bg-amber-50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700';
       if (s >= 40) return 'bg-accent-50 border-accent-300 dark:bg-accent-900/20 dark:border-accent-700';
@@ -115,7 +115,7 @@ export function getHeatMapColor(
     }
     case 'behavior': {
       const s = student.behavior_score;
-      if (s >= 85) return 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700';
+      if (s >= 85) return 'bg-indigo-50 border-indigo-300 dark:bg-indigo-900/20 dark:border-indigo-700';
       if (s >= 70) return 'bg-primary-50 border-primary-300 dark:bg-primary-900/20 dark:border-primary-700';
       if (s >= 55) return 'bg-amber-50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700';
       if (s >= 40) return 'bg-accent-50 border-accent-300 dark:bg-accent-900/20 dark:border-accent-700';
@@ -129,7 +129,7 @@ export function getHeatMapColor(
     case 'conflicts': {
       return isViolated
         ? 'bg-red-100 border-red-400'
-        : 'bg-emerald-50 border-emerald-300';
+        : 'bg-indigo-50 border-indigo-300';
     }
     default:
       return '';

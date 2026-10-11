@@ -197,7 +197,7 @@ export default function ExportButton() {
                   role="menuitem"
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <FileSpreadsheet size={16} className="text-emerald-500 dark:text-emerald-400" />
+              <FileSpreadsheet size={16} className="text-indigo-500 dark:text-indigo-400" />
               {t('export.save_csv')}
             </button>
             <button

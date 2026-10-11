@@ -198,8 +198,8 @@ interface AppState {
   showRelations: boolean;
   showTimeline: boolean;             // show optimization timeline panel
 
-  /** Show a green ✓ / red ⚠ constraint-status badge on every occupied
-   *  seat (and live red/green tinting on drop targets while dragging). */
+  /** Show a violet ✓ / red ⚠ constraint-status badge on every occupied
+   *  seat (and live red/violet tinting on drop targets while dragging). */
   showConstraintBadges: boolean;
   /** Show compact data tags (ability / behaviour / IEP) on each seat card. */
   showSeatTags: boolean;

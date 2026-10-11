@@ -73,7 +73,7 @@ export default function MetricsPanel() {
       label: t('optimization.behavioral_fit'),
       value: result.objective_scores.behavioral_balance,
       icon: Users,
-      color: 'green',
+      color: 'violet',
     },
     {
       label: t('optimization.diversity'),
@@ -89,11 +89,11 @@ export default function MetricsPanel() {
     },
   ];
 
-  // Metric swatches map into the sage/ochre family — same visual system as
+  // Metric swatches map into the sage/ochre family â€” same visual system as
   // the rest of the app, tuned so the four tiles read as related-not-identical.
   const colorClasses = {
     blue: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300',
-    green: 'bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300',
+    violet: 'bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300',
     purple: 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300',
     orange: 'bg-accent-50 dark:bg-accent-900/20 text-accent-800 dark:text-accent-300',
   };
@@ -104,7 +104,7 @@ export default function MetricsPanel() {
       animate={{ opacity: 1, y: 0 }}
       className="metrics-panel bg-white dark:bg-gray-800 rounded-2xl p-4"
     >
-      {/* Header — the score already appears in the TopBar and the disclosure
+      {/* Header â€” the score already appears in the TopBar and the disclosure
           summary, so keep this row tight and let the metric tiles carry the
           weight. */}
       <div className="flex items-center justify-between mb-4">
@@ -121,16 +121,16 @@ export default function MetricsPanel() {
         </div>
       </div>
 
-      {/* Overall Score — lead with the verbal rating; the percentage is
+      {/* Overall Score â€” lead with the verbal rating; the percentage is
           available underneath for teachers who want the number. */}
       <div className="text-center mb-4">
         <div className="text-xl font-semibold text-primary-700 dark:text-primary-300 leading-none">
           {t(`score.${getScoreRating(result)}`)}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 tabular-nums">
-          {getDisplayScorePct(result)}% · {t('optimization.overall_fitness_score')}
+          {getDisplayScorePct(result)}% Â· {t('optimization.overall_fitness_score')}
         </p>
-        {/* Honest framing — the GA finds a strong (near-optimal) plan via a
+        {/* Honest framing â€” the GA finds a strong (near-optimal) plan via a
             heuristic search; it isn't a proven mathematical optimum. We say so
             plainly and show how the search actually terminated. */}
         <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-1.5 max-w-md mx-auto">
@@ -165,7 +165,7 @@ export default function MetricsPanel() {
       <div className="metrics-grid grid grid-cols-2 sm:grid-cols-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
-          // objective_scores are already in [0, 100] — don't multiply again.
+          // objective_scores are already in [0, 100] â€” don't multiply again.
           const percentage = Math.max(0, Math.min(100, Math.round(metric.value)));
 
           return (
@@ -195,7 +195,7 @@ export default function MetricsPanel() {
                   className={`h-full rounded-full ${
                     metric.color === 'blue'
                       ? 'bg-primary-600'
-                      : metric.color === 'green'
+                      : metric.color === 'violet'
                       ? 'bg-primary-500'
                       : metric.color === 'purple'
                       ? 'bg-accent-600'
@@ -208,7 +208,7 @@ export default function MetricsPanel() {
         })}
       </div>
 
-      {/* Unmet required (hard) rules — surfaced prominently because it means
+      {/* Unmet required (hard) rules â€” surfaced prominently because it means
           the teacher's required rules were contradictory or impossible. */}
       {result.unmet_hard_rules ? (
         <div role="alert" className="mt-4 p-3 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg">
@@ -230,7 +230,7 @@ export default function MetricsPanel() {
         </div>
       )}
 
-      {/* Whole-class AI summary — only when the teacher has opted in to AI
+      {/* Whole-class AI summary â€” only when the teacher has opted in to AI
           features in Settings. Sends aggregate facts, not the roster. */}
       {externalAiAllowed() && aiSettings.enabled && aiSettings.apiKey && (
         <div className="mt-4 p-3 bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg">

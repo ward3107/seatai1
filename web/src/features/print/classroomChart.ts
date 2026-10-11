@@ -9,7 +9,7 @@ export const PAGE_WIDTH = 1123;
 export const PAGE_HEIGHT = 794;
 const FONT = 'Arial, sans-serif';
 const ROOM = { x: 54, y: 190, width: 1015, height: 492 };
-const COLORS = ['#f0fdfa', '#eff6ff', '#f5f3ff', '#fff7ed'];
+const COLORS = ['#f2efff', '#eff6ff', '#f5f3ff', '#fff7ed'];
 export type TextMeasure = (text: string, fontSize: number) => number;
 const approximateMeasure: TextMeasure = (text, size) => Array.from(text).length * size * 0.58;
 
@@ -104,7 +104,7 @@ export function createClassroomChart(options: ChartOptions): ClassroomChart {
   drawing += fittedText(`${t('print.student_count', { count: occupied })}  ·  ${date}`, PAGE_WIDTH / 2, 113, ROOM.width, 22, 13, measure, 400, '#526775');
   drawing += `<path d="M54 132H1069" stroke="#dce5e9"/>`;
   drawing += rect(ROOM.x, ROOM.y, ROOM.width, ROOM.height, '#ffffff', '#91a7b4', 16);
-  drawing += rect(PAGE_WIDTH / 2 - 113, ROOM.y - 45, 226, 28, '#e6f6f3', '#64a69a', 7);
+  drawing += rect(PAGE_WIDTH / 2 - 113, ROOM.y - 45, 226, 28, '#eee8ff', '#6d83c5', 7);
   drawing += fittedText(t('print.teacher_board'), PAGE_WIDTH / 2, ROOM.y - 31, 206, 24, 13, measure);
 
   // Desk outlines make pairs / working groups recognisable without changing
@@ -166,9 +166,9 @@ export function createClassroomChart(options: ChartOptions): ClassroomChart {
       const labelWidth = 234;
       const left = label.x < PAGE_WIDTH / 2;
       drawing += `<path d="M${round(x)} ${round(y)}L${round(left ? label.x + labelWidth / 2 : label.x - labelWidth / 2)} ${round(label.y)}" fill="none" stroke="#c0cdd3" stroke-width="1"/>`;
-      drawing += rect(x - markerSize / 2, y - markerSize / 2, markerSize, markerSize, '#e6f6f3', '#7aaca4', 5);
+      drawing += rect(x - markerSize / 2, y - markerSize / 2, markerSize, markerSize, '#eee8ff', '#8e9fd0', 5);
       drawing += fittedText(String(number), x, y, markerSize - 3, markerSize - 2, Math.min(11, markerSize * 0.5), measure);
-      drawing += rect(label.x - labelWidth / 2, label.y - label.height / 2, labelWidth, label.height, name ? '#f0fdfa' : '#fafcfd', '#b4c6cd', 5);
+      drawing += rect(label.x - labelWidth / 2, label.y - label.height / 2, labelWidth, label.height, name ? '#f2efff' : '#fafcfd', '#b4c6cd', 5);
       drawing += fittedText(String(number), label.x - labelWidth / 2 + 13, label.y, 22, label.height - 2, 10, measure, 400, '#617886');
       drawing += fittedText(`${name || t('print.empty_seat')}${markers ? ` ${markers}` : ''}`, label.x + 10, label.y, labelWidth - 38, label.height - 4, 15, measure, name ? 600 : 400);
       chartLabels.push({ row: point.row, col: point.col, number, name, x: label.x, y: label.y, width: labelWidth, height: label.height });
@@ -205,7 +205,7 @@ export function createClassroomChart(options: ChartOptions): ClassroomChart {
   if (sensitive) drawing += fittedText(`${t('print.teacher_only')}  ·  ▲ ${t('print.legend_advanced')}  ·  ▼ ${t('print.legend_below_basic')}  ·  ♿ ${t('print.legend_mobility')}  ·  ⭐ ${t('print.legend_front_row')}`, PAGE_WIDTH / 2, 711, ROOM.width, 27, 11, measure, 400);
   drawing += `<path d="M54 730H1069" stroke="#dce5e9"/>`;
   drawing += fittedText(t('print.orientation_hint'), PAGE_WIDTH / 2, 750, ROOM.width - 170, 22, 12, measure, 400, '#526775');
-  drawing += '<text x="54" y="755" font-size="14" fill="#397c73" direction="ltr" font-weight="700">SeatAI</text>';
+  drawing += '<text x="54" y="755" font-size="14" fill="#5e67a6" direction="ltr" font-weight="700">SeatAI</text>';
   return { title, seats: chartSeats, labels: chartLabels, unseatedCount, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${PAGE_WIDTH}" height="${PAGE_HEIGHT}" viewBox="0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}" role="img" aria-label="${escapeXml(title)}" font-family="${FONT}">${drawing}</svg>` };
 }
 

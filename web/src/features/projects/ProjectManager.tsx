@@ -184,7 +184,7 @@ export default function ProjectManager() {
                           onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
                           className="flex-1 text-sm px-1.5 py-0.5 border border-primary-400 rounded dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none"
                         />
-                        <button onClick={commitEdit} className="text-green-600 dark:text-green-300 hover:text-green-800"><Check size={13} /></button>
+                        <button onClick={commitEdit} className="text-violet-600 dark:text-violet-300 hover:text-violet-800"><Check size={13} /></button>
                         <button onClick={() => setEditingId(null)} className="text-gray-400 dark:text-gray-400 hover:text-gray-600"><X size={13} /></button>
                       </div>
                     ) : (
@@ -259,7 +259,7 @@ export default function ProjectManager() {
               <button
                 onClick={handleBackup}
                 disabled={projects.length === 0 && students.length === 0}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-medium hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <DownloadCloud size={13} aria-hidden="true" />
                 {t('projects.backup_button')}

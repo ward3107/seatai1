@@ -1,38 +1,38 @@
-/* Classroom studio: forest actions, botanical neutrals and colored seating cues. */
+/* Classroom studio: indigo actions, violet neutrals and colored seating cues. */
 :root {
-  --ui-canvas: #f2f6f2;
+  --ui-canvas: #f5f3f9;
   --ui-surface: #ffffff;
-  --ui-grouped: #f4f7f3;
-  --ui-fill: #e7eeea;
-  --ui-text: #253c35;
-  --ui-secondary: #596d65;
-  --ui-line: #d6e2da;
-  --ui-action: #246b5a;
-  --ui-action-hover: #195544;
-  --ui-tint: #e0f2e9;
+  --ui-grouped: #f8f6fb;
+  --ui-fill: #eeeaf4;
+  --ui-text: #282341;
+  --ui-secondary: #625d74;
+  --ui-line: #e1dbea;
+  --ui-action: #5b3fac;
+  --ui-action-hover: #482f90;
+  --ui-tint: #eee8ff;
   --ui-chrome: rgba(255, 255, 255, .92);
   --ui-shadow: 0 2px 8px rgb(28 28 30 / 4%);
   --ui-floating-shadow: 0 16px 56px rgb(28 28 30 / 14%);
   --ui-peach: #ffe4d1;
   --ui-lilac: #e9e4f7;
-  --ui-mint: #d8eee2;
+  --ui-powder: #dce9fa;
   --ui-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 html.dark {
-  --ui-canvas: #101e19;
-  --ui-surface: #1b2d24;
-  --ui-grouped: #22372d;
-  --ui-fill: #2d4338;
-  --ui-text: #eff6ef;
-  --ui-secondary: #afc4b5;
-  --ui-line: #3c5547;
-  --ui-action: #9adebb;
-  --ui-action-hover: #b9edce;
-  --ui-tint: #234334;
-  --ui-chrome: rgba(27, 45, 36, .94);
-  --ui-peach: #49372b;
-  --ui-lilac: #3b354e;
-  --ui-mint: #294437;
+  --ui-canvas: #100e21;
+  --ui-surface: #211c37;
+  --ui-grouped: #29233f;
+  --ui-fill: #36304c;
+  --ui-text: #f6f2ff;
+  --ui-secondary: #bdb6d0;
+  --ui-line: #483f60;
+  --ui-action: #ccbaff;
+  --ui-action-hover: #e0d5ff;
+  --ui-tint: #35295d;
+  --ui-chrome: rgba(33, 28, 55, .94);
+  --ui-peach: #4d3340;
+  --ui-lilac: #3b3254;
+  --ui-powder: #273453;
   --ui-shadow: none;
   --ui-floating-shadow: 0 20px 60px rgb(0 0 0 / 45%);
 }

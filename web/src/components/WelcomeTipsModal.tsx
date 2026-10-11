@@ -96,11 +96,11 @@ export default function WelcomeTipsModal({ open, onClose }: Props) {
           ))}
           {/* Privacy reassurance — the single most important sentence a
               teacher needs to see before trusting the app with a roster. */}
-          <li className="flex items-start gap-3 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
+          <li className="flex items-start gap-3 p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 flex items-center justify-center flex-shrink-0">
               <ShieldCheck size={14} aria-hidden="true" />
             </div>
-            <p className="text-sm text-emerald-900 dark:text-emerald-100 leading-snug">
+            <p className="text-sm text-indigo-900 dark:text-indigo-100 leading-snug">
               {t('app.privacy_local_only')}
             </p>
           </li>

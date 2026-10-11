@@ -68,7 +68,7 @@ export default function GoogleClassroomImport() {
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-3">
       <div className="flex items-center gap-2">
-        <GraduationCap size={18} className="text-emerald-600 dark:text-emerald-300" />
+        <GraduationCap size={18} className="text-indigo-600 dark:text-indigo-300" />
         <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">{t('googleImport.title')}</span>
       </div>
 
@@ -79,7 +79,7 @@ export default function GoogleClassroomImport() {
       ) : (
         <>
           {/* Privacy reassurance — this is the whole reason teachers trust it. */}
-          <p className="flex items-start gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded p-2 leading-snug">
+          <p className="flex items-start gap-1.5 text-[11px] text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded p-2 leading-snug">
             <ShieldCheck size={13} className="shrink-0 mt-0.5" />
             {t('googleImport.privacy_note')}
           </p>
@@ -88,7 +88,7 @@ export default function GoogleClassroomImport() {
             <button
               onClick={connect}
               disabled={busy === 'connect'}
-              className="w-full py-2 px-4 bg-emerald-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-emerald-600 disabled:opacity-60 transition-colors"
+              className="w-full py-2 px-4 bg-indigo-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-indigo-600 disabled:opacity-60 transition-colors"
             >
               {busy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <GraduationCap size={15} />}
               {busy === 'connect' ? t('googleImport.connecting') : t('googleImport.connect')}
@@ -153,8 +153,8 @@ export default function GoogleClassroomImport() {
       )}
 
       {done && (
-        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
-          <CheckCircle2 size={15} className="text-green-500 dark:text-green-400 shrink-0 mt-0.5" />
+        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800">
+          <CheckCircle2 size={15} className="text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
           <p className="flex-1 text-xs text-gray-700 dark:text-gray-300">
             {t('googleImport.imported_from', { count: done.count, class: done.className })}
           </p>

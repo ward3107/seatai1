@@ -9,14 +9,14 @@ import { useLanguage } from '../../hooks/useLanguage';
 
 /** Short level → label/colour for the optional per-seat data tags. */
 const ACADEMIC_TAG: Record<string, { short: string; cls: string }> = {
-  advanced: { short: 'A+', cls: 'bg-emerald-100 text-emerald-700' },
-  proficient: { short: 'A', cls: 'bg-green-100 text-green-700' },
+  advanced: { short: 'A+', cls: 'bg-indigo-100 text-indigo-700' },
+  proficient: { short: 'A', cls: 'bg-violet-100 text-violet-700' },
   basic: { short: 'B', cls: 'bg-yellow-100 text-yellow-700' },
   below_basic: { short: 'B-', cls: 'bg-orange-100 text-orange-700' },
 };
 const BEHAVIOR_TAG: Record<string, { short: string; cls: string }> = {
-  excellent: { short: '☺+', cls: 'bg-emerald-100 text-emerald-700' },
-  good: { short: '☺', cls: 'bg-green-100 text-green-700' },
+  excellent: { short: '☺+', cls: 'bg-indigo-100 text-indigo-700' },
+  good: { short: '☺', cls: 'bg-violet-100 text-violet-700' },
   average: { short: '≈', cls: 'bg-yellow-100 text-yellow-700' },
   challenging: { short: '!', cls: 'bg-red-100 text-red-700' },
 };
@@ -33,14 +33,14 @@ interface Props {
    *  diff toggle. */
   isMoved?: boolean;
   heatMapMode: HeatMapMode;
-  /** When set, render a constraint-status badge: 'ok' (green ✓) or
+  /** When set, render a constraint-status badge: 'ok' (violet ✓) or
    *  'violated' (red ⚠). Undefined hides the badge. */
   constraintStatus?: 'ok' | 'violated';
   /** Tooltip text for the constraint badge (already localized). */
   constraintTitle?: string;
   /** When true, show compact ability / behaviour / IEP data tags. */
   showTags?: boolean;
-  /** Live drag feedback for this drop target: 'valid' (green) would keep
+  /** Live drag feedback for this drop target: 'valid' (violet) would keep
    *  rules satisfied, 'invalid' (red) would break a rule. */
   dropPreview?: 'valid' | 'invalid' | null;
   interactionMode: 'drag' | 'click' | 'details';
@@ -166,12 +166,12 @@ export default memo(function SeatCard({
         // Selected (click mode)
         isSelected && 'ring-2 ring-primary-500 ring-offset-1 border-primary-400 ',
 
-        // Drop target highlight — red/green when we have a live constraint
-        // preview, neutral green otherwise.
+        // Drop target highlight — red/violet when we have a live constraint
+        // preview, neutral violet otherwise.
         isOver && !isDragging && dropPreview === 'invalid' &&
           'ring-2 ring-red-400 ring-offset-1 bg-red-50 dark:bg-red-900/30 border-red-400',
         isOver && !isDragging && dropPreview !== 'invalid' &&
-          'ring-2 ring-green-400 ring-offset-1 bg-green-50 dark:bg-green-900/30 border-green-400',
+          'ring-2 ring-violet-400 ring-offset-1 bg-violet-50 dark:bg-violet-900/30 border-violet-400',
 
         // Currently being dragged
         isDragging && 'opacity-25',
@@ -189,13 +189,13 @@ export default memo(function SeatCard({
       )}
     >
       {canDrag && <GripVertical size={12} className="absolute top-1 end-1 text-gray-400" aria-label={t('workspace.drag_handle')} />}
-      {/* Drop-target validity — a ✓ / ✕ glyph in addition to the green/red
+      {/* Drop-target validity — a ✓ / ✕ glyph in addition to the violet/red
           ring, so the valid/invalid state isn't conveyed by color alone. */}
       {isOver && !isDragging && (
         <div
           className={clsx(
             'absolute top-1 left-1/2 -translate-x-1/2 rounded-full w-4 h-4 flex items-center justify-center text-white text-[10px] font-bold pointer-events-none',
-            dropPreview === 'invalid' ? 'bg-red-500' : 'bg-green-500',
+            dropPreview === 'invalid' ? 'bg-red-500' : 'bg-violet-500',
           )}
           aria-hidden="true"
         >
@@ -220,13 +220,13 @@ export default memo(function SeatCard({
         </div>
       )}
 
-      {/* Constraint-status badge — green ✓ when every rule for this seat is
+      {/* Constraint-status badge — violet ✓ when every rule for this seat is
           satisfied, red ⚠ when one is broken. Opt-in via the toolbar. */}
       {student && constraintStatus && (
         <div
           className={clsx(
             'absolute bottom-1 right-1 pointer-events-none rounded-full',
-            constraintStatus === 'violated' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300',
+            constraintStatus === 'violated' ? 'text-red-600 dark:text-red-300' : 'text-violet-600 dark:text-violet-300',
           )}
           title={constraintTitle}
         >
@@ -280,7 +280,7 @@ export default memo(function SeatCard({
           )}
 
           {/* Score badge — in the academic/behavior heat-maps the colour
-              alone isn't accessible (red↔green), so show the number too. */}
+              alone isn't accessible (red↔violet), so show the number too. */}
           {(heatMapMode === 'academic' || heatMapMode === 'behavior') && (
             <span className="mt-0.5 px-1 rounded bg-white/80 dark:bg-gray-800/80 text-[10px] font-semibold tabular-nums text-gray-700 dark:text-gray-300 leading-tight">
               {heatMapMode === 'academic' ? student.academic_score : student.behavior_score}
