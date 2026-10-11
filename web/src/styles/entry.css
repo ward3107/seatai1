@@ -167,7 +167,6 @@
 }
 /* Keep the supplied artwork intact with accessible contact links over its icons. */
 .creator-signature { position: relative; width: 320px; max-width: 100%; flex-shrink: 0; }
-.dark .creator-signature { background: #fff; border-radius: 18px; }
 .dark .entry-how .quick-guide { background: transparent; }
 .entry-footer .creator-signature img { display: block; width: 100%; height: auto; }
 .creator-signature a { position: absolute; border-radius: 7px; min-height: 44px; }
