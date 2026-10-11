@@ -228,7 +228,7 @@ export default function ClassroomGrid() {
   );
 
   // Seat currently hovered as a drop target during a drag — drives the live
-  // red/green tinting that previews whether the swap keeps rules satisfied.
+  // red/violet tinting that previews whether the swap keeps rules satisfied.
   const [overSeatKey, setOverSeatKey] = useState<string | null>(null);
 
   // Off-screen live region for keyboard-driven seat actions (lock/unlock). A
@@ -391,7 +391,7 @@ export default function ClassroomGrid() {
 
   // Spoken announcements accompany pointer drag feedback.
   // Critically, the over-target message states whether the swap is allowed or
-  // would break a rule — the same verdict the sighted user sees as a green/red
+  // would break a rule — the same verdict the sighted user sees as a violet/red
   // ring — so keyboard/SR users aren't relying on color they can't perceive.
   const dndAnnouncements = useMemo(() => {
     const nameOf = (id: string) => {

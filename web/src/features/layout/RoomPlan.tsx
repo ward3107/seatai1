@@ -116,7 +116,7 @@ export default function RoomPlan({ editable = false }: { editable?: boolean }) {
         </select>
       </label>}
       {(current.kind === 'teacher' ? ['x', 'y'] as const : [featureWall(current) === 'left' || featureWall(current) === 'right' ? 'y' : 'x'] as const).map(axis => <label key={axis} className="block text-xs">{t(`roomPlan.${axis}`)}
-        <div className="mt-1 flex items-center gap-2"><input aria-label={t(`roomPlan.${axis}`)} className="h-11 min-w-0 flex-1 accent-teal-700" type="range" min={0} max={100} value={Math.round(current[axis] * 100)} onChange={event => move(current, axis === 'x' ? Number(event.target.value) / 100 : current.x, axis === 'y' ? Number(event.target.value) / 100 : current.y)} /><output className="w-10 text-end tabular-nums">{Math.round(current[axis] * 100)}%</output></div>
+        <div className="mt-1 flex items-center gap-2"><input aria-label={t(`roomPlan.${axis}`)} className="h-11 min-w-0 flex-1 accent-sky-700" type="range" min={0} max={100} value={Math.round(current[axis] * 100)} onChange={event => move(current, axis === 'x' ? Number(event.target.value) / 100 : current.x, axis === 'y' ? Number(event.target.value) / 100 : current.y)} /><output className="w-10 text-end tabular-nums">{Math.round(current[axis] * 100)}%</output></div>
       </label>)}
     </div>}
     {error && <p role="alert" className="mb-2 text-xs text-rose-700 dark:text-rose-300">{error}</p>}

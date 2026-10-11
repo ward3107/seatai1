@@ -7,7 +7,7 @@
  * the full width (a circle sits in x≈[0.08, 0.92]) would otherwise never
  * register any edge seat. The optimizer's fitness function, the seat-status
  * badges, the violation highlights, and the "why this seat" explanations all
- * route through here, so they can't drift apart and show a teacher a green ✓
+ * route through here, so they can't drift apart and show a teacher a violet ✓
  * and a red ⚠ for the same seat.
  */
 

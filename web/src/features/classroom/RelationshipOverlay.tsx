@@ -81,7 +81,7 @@ export default function RelationshipOverlay({
 
     const newLines: LineData[] = [];
 
-    // Friend lines (green)
+    // Friend lines (violet)
     for (const friendId of activeStudent.friends_ids) {
       const friendSeatKey = studentToSeat.get(friendId);
       if (!friendSeatKey) continue;
@@ -131,7 +131,7 @@ export default function RelationshipOverlay({
       })}
     >
       <defs>
-        <filter id="rel-glow-green" x="-30%" y="-30%" width="160%" height="160%">
+        <filter id="rel-glow-violet" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="2.5" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
@@ -170,7 +170,7 @@ export default function RelationshipOverlay({
             y2={line.y2}
             stroke={
               line.type === 'friend'
-                ? '#22c55e'
+                ? '#8b5cf6'
                 : line.type === 'conflict-violation'
                 ? '#ef4444'
                 : '#fca5a5'
@@ -180,7 +180,7 @@ export default function RelationshipOverlay({
             strokeDasharray={line.type === 'conflict' ? '5,4' : undefined}
             filter={
               line.type === 'friend'
-                ? 'url(#rel-glow-green)'
+                ? 'url(#rel-glow-violet)'
                 : line.type === 'conflict-violation'
                 ? 'url(#rel-glow-red)'
                 : undefined
@@ -195,7 +195,7 @@ export default function RelationshipOverlay({
             r={3}
             fill={
               line.type === 'friend'
-                ? '#22c55e'
+                ? '#8b5cf6'
                 : line.type === 'conflict-violation'
                 ? '#ef4444'
                 : '#fca5a5'
@@ -208,7 +208,7 @@ export default function RelationshipOverlay({
             r={3}
             fill={
               line.type === 'friend'
-                ? '#22c55e'
+                ? '#8b5cf6'
                 : line.type === 'conflict-violation'
                 ? '#ef4444'
                 : '#fca5a5'

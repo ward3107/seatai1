@@ -42,7 +42,7 @@ import { aiExplainPlacement } from '../../utils/aiExplain';
 import { getNeighborHistory, relativeTime } from '../../utils/rotationHistory';
 
 const TONE_STYLES: Record<ExplanationLine['tone'], string> = {
-  positive: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+  positive: 'bg-indigo-50 border-indigo-200 text-indigo-900',
   neutral: 'bg-gray-50 border-gray-200 text-gray-700',
   caution: 'bg-amber-50 border-amber-200 text-amber-900',
   negative: 'bg-red-50 border-red-200 text-red-900',
@@ -57,7 +57,7 @@ const RELATION_BADGE: Record<NeighborBreakdown['relation'], { cls: string; key: 
 };
 
 const CONFIDENCE_BADGE: Record<'high' | 'medium' | 'low', string> = {
-  high: 'bg-emerald-100 text-emerald-800',
+  high: 'bg-indigo-100 text-indigo-800',
   medium: 'bg-amber-100 text-amber-800',
   low: 'bg-red-100 text-red-800',
 };
@@ -347,7 +347,7 @@ export default function StudentDetailPanel() {
                 tone="behavior"
               />
             </div>
-            {student.is_bilingual && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-xs text-teal-800 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100"><Languages size={14} aria-hidden="true" />{t('detail.bilingual')}</p>}
+            {student.is_bilingual && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"><Languages size={14} aria-hidden="true" />{t('detail.bilingual')}</p>}
           </section>
 
           {/* Teacher notes */}
@@ -437,7 +437,7 @@ export default function StudentDetailPanel() {
               {explanation.strengths.length > 0 && (
                 <section>
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <CheckCircle2 size={12} className="text-emerald-600" /> {t('detail.strengths')}
+                    <CheckCircle2 size={12} className="text-indigo-600" /> {t('detail.strengths')}
                   </h3>
                   <ul className="space-y-1.5">
                     {explanation.strengths.map((r, i) => (
@@ -463,8 +463,8 @@ export default function StudentDetailPanel() {
 
               {/* Neighbors */}
               {explanation.neighbors.length > 0 && (
-                <section className="rounded-xl border border-teal-200 bg-teal-50 p-3 dark:border-teal-800 dark:bg-teal-950/40">
-                  <h3 className="text-sm font-semibold text-teal-900 dark:text-teal-100 mb-2 flex items-center gap-1.5">
+                <section className="rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-950/40">
+                  <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-100 mb-2 flex items-center gap-1.5">
                     <Users size={16} aria-hidden="true" /> {t('detail.neighbors')}
                   </h3>
                   <ul className="space-y-2">
@@ -473,7 +473,7 @@ export default function StudentDetailPanel() {
                       return (
                         <li
                           key={n.student.id}
-                          className="flex items-start gap-2 p-2 rounded-lg bg-white/80 border border-teal-100 dark:bg-gray-900 dark:border-teal-900"
+                          className="flex items-start gap-2 p-2 rounded-lg bg-white/80 border border-sky-100 dark:bg-gray-900 dark:border-sky-900"
                         >
                           {n.student.photo_url ? (
                             <img
@@ -521,7 +521,7 @@ export default function StudentDetailPanel() {
                                   <ArrowDownRight size={9} /> {t('detail.same_gender')}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-emerald-600">
+                                <span className="inline-flex items-center gap-1 text-indigo-600">
                                   <ArrowUpRight size={9} /> {t('detail.mixed_gender')}
                                 </span>
                               )}

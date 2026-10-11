@@ -1,16 +1,16 @@
 # SeatAI classroom studio interface
 
 The interface combines simple iOS-style controls with a classroom identity:
-forest green, paper-like seating plans, mint, peach and lilac. Shared controls
+deep indigo, paper-like seating plans, powder blue, peach and lilac. Shared controls
 stay consistent across home, class setup, student editing, school dashboards,
 authentication, dialogs, questionnaire and print controls.
 
-Palette: canvas #F2F6F2, surface #FFFFFF, text #253C35, secondary #596D65,
-separator #D6E2DA, action #246B5A. Dark mode uses a forest canvas #101E19 and
-layered green surfaces. Student needs, statuses and chart colors retain their
+Palette: canvas #F5F3F9, surface #FFFFFF, text #282341, secondary #625D74,
+separator #E1DBEA, action #5B3FAC. Dark mode uses a night canvas #100E21 and
+layered violet surfaces. Student needs, statuses and chart colors retain their
 meaning. No extra fonts or visual libraries are loaded.
 
-Home has a deep green split hero with an illustrated classroom: paired desks,
+Home has a deep indigo split hero with an illustrated classroom: paired desks,
 a board and windows. The illustration is explicitly labelled as such. Sample
 class controls show miniature seating maps for 15, 30 and 45 students. Staff
 roles form a separate section with softly colored rows. Authentication uses

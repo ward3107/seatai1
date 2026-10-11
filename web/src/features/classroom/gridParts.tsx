@@ -249,11 +249,11 @@ export function HeatMapLegend({ mode, t }: { mode: string; t: (key: string) => s
         ]
       : mode === 'conflicts'
       ? [
-          { color: 'bg-emerald-200', label: t('classroom.legend_no_violation') },
+          { color: 'bg-indigo-200', label: t('classroom.legend_no_violation') },
           { color: 'bg-rose-200', label: t('classroom.legend_violation') },
         ]
       : [
-          { color: 'bg-emerald-200', label: '85–100' },
+          { color: 'bg-indigo-200', label: '85–100' },
           { color: 'bg-primary-200', label: '70–84' },
           { color: 'bg-amber-200', label: '55–69' },
           { color: 'bg-accent-200', label: '40–54' },

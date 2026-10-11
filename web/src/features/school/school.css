@@ -7,11 +7,11 @@
 .school-panel, .school-stat { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 22px; padding: 1.25rem; box-shadow: var(--ui-shadow); }
 .school-stat { padding: 1rem; }
 .school-stat-icon, .school-role-badge { display: inline-flex; gap: .5rem; align-items: center; border-radius: 14px; padding: .65rem; color: var(--school-accent); background: var(--school-soft); }
-.school-stat:nth-child(2) .school-stat-icon { color: #0f766e; background: #f0fdfa; }
+.school-stat:nth-child(2) .school-stat-icon { color: #5b3fac; background: #f1eaff; }
 .school-stat:nth-child(3) .school-stat-icon { color: #b45309; background: #fffbeb; }
 .school-next { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--ui-line); background: var(--ui-surface); border-radius: 22px; padding: 1.25rem; }
 .school-button, .school-button-secondary { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .5rem; border-radius: 13px; padding: .65rem 1rem; font-weight: 600; font-size: .875rem; line-height: 1.4; transition: background-color .15s; }
-.school-button { background: #246b5a; color: #fff; }
+.school-button { background: #5b3fac; color: #fff; }
 .school-button:hover { filter: brightness(.94); }
 .school-button-secondary { background: var(--ui-surface); color: var(--school-accent); border: 1px solid var(--ui-line); }
 .school-button-secondary:hover { background: var(--school-soft); }
@@ -29,14 +29,14 @@ button.school-case-card:hover { border-color: var(--school-accent); background: 
 .school-status { border-radius: 999px; padding: .3rem .7rem; font-weight: 600; font-size: .75rem; }
 .school-status-new { background: #fffbeb; color: #92400e; }
 .school-status-in_progress { background: #f5f3ff; color: #5b21b6; }
-.school-status-resolved { background: #f0fdfa; color: #115e59; }
+.school-status-resolved { background: #f1eaff; color: #51368f; }
 .school-bottom-nav { padding: .35rem .35rem max(.35rem, env(safe-area-inset-bottom)); border-top: 1px solid var(--ui-line); background: var(--ui-chrome); }
 .school-nav { display: flex; justify-content: center; gap: .35rem; }
 .school-nav-button { flex: 1; min-width: 0; min-height: 54px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .3rem; padding: .5rem .2rem; color: var(--ui-secondary); font-size: .7rem; font-weight: 600; border-radius: 12px; }
 .school-nav-active { background: var(--school-soft); color: var(--school-accent); }
 .school-demo-banner { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-shrink: 0; padding: .75rem 1rem; background: #fffbeb; color: #92400e; border-bottom: 1px solid #fde68a; }
 .school-role-preview { border-radius: 16px; padding: 1rem; border: 1px solid; }
-.school-preview-teacher { background: #ecfeff; border-color: #a5f3fc; color: #155e75; }
+.school-preview-teacher { background: #eff5ff; border-color: #c8d8ff; color: #294a87; }
 .school-preview-counselor { background: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
 .school-preview-principal { background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a; }
 .school-close { width: 44px; min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; }
@@ -64,7 +64,7 @@ button.school-case-card:hover { border-color: var(--school-accent); background: 
 .school-analysis h3, .school-comparison h3 { font-weight: 700; margin-bottom: 1rem; }
 .school-analysis-map { min-width: 0; background: var(--ui-grouped); border-radius: 16px; padding: 1rem; }
 .school-map-scroll { overflow-x: auto; max-width: 100%; padding-bottom: .5rem; }
-.school-board { margin: .3rem auto 1.5rem; width: 72%; min-height: 30px; text-align: center; border-bottom: 4px solid #406966; color: #335c58; font-size: .78rem; font-weight: 650; }
+.school-board { margin: .3rem auto 1.5rem; width: 72%; min-height: 30px; text-align: center; border-bottom: 4px solid #6a5ba6; color: #514885; font-size: .78rem; font-weight: 650; }
 .school-seat-map { display: grid; gap: .55rem; direction: ltr; padding: .25rem; }
 .school-map-seat { display: flex; flex-direction: column; justify-content: center; min-height: 52px; padding: .35rem; background: white; color: #183f4b; border: 1px solid #b4cbd1; border-bottom: 1px solid #b4cbd1; border-radius: 7px; font-size: .72rem; font-weight: 650; text-align: center; overflow-wrap: anywhere; }
 .school-seat-number { font-size: .62rem; font-weight: 500; color: #627981; margin-bottom: .12rem; }
@@ -82,7 +82,7 @@ button.school-case-card:hover { border-color: var(--school-accent); background: 
 .school-bar-label { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; margin-bottom: .35rem; }
 .school-bar { display: block; height: 8px; background: var(--ui-line); border-radius: 6px; overflow: hidden; }
 .school-bar>span { display: block; height: 100%; background: var(--ui-action); border-radius: inherit; }
-.school-objectives>div:nth-child(2) .school-bar>span { background: #4f7f63; }
+.school-objectives>div:nth-child(2) .school-bar>span { background: #607fc0; }
 .school-objectives>div:nth-child(3) .school-bar>span { background: #7276a3; }
 .school-objectives>div:nth-child(4) .school-bar>span { background: #ae802c; }
 .school-review-counts { margin-top: 1.5rem; display: grid; gap: .45rem; }
@@ -114,7 +114,7 @@ button.school-case-card:hover { border-color: var(--school-accent); background: 
 .school-stats { gap: 0; overflow: hidden; border-radius: 20px; background: var(--ui-surface); }
 .school-stats .school-stat { border: 0; border-radius: 0; box-shadow: none; padding: 22px; }
 .school-stats .school-stat + .school-stat { border-inline-start: 1px solid var(--ui-line); }
-.school-stats .school-stat-icon { color: var(--ui-action); background: var(--ui-mint); }
+.school-stats .school-stat-icon { color: var(--ui-action); background: var(--ui-powder); }
 .school-stats .school-stat:nth-child(2) .school-stat-icon { color: #76503a; background: var(--ui-peach); }
 .school-stats .school-stat:nth-child(3) .school-stat-icon { color: #685680; background: var(--ui-lilac); }
 .dark .school-stats .school-stat:nth-child(2) .school-stat-icon { color: #f4c6a5; }
@@ -149,7 +149,7 @@ button.school-case-card:hover { border-color: var(--school-accent); background: 
 .dark .school-attention { color: #edbd75; }
 .dark .school-status-new { background: #392f19; color: #e8c578; }
 .dark .school-status-in_progress { background: #31233f; color: #d8bbf6; }
-.dark .school-status-resolved { background: #1c352b; color: #a3d7bc; }
+.dark .school-status-resolved { background: #30264d; color: #d5c5ff; }
 @media (min-width: 1024px) {
   .school-sidebar { width: 224px; background: var(--ui-canvas); }
   .school-sidebar .school-nav-active { background: var(--ui-surface); box-shadow: var(--ui-shadow); }

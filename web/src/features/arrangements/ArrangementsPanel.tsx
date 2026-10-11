@@ -117,7 +117,7 @@ export default function ArrangementsPanel() {
                           }}
                           className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-900 dark:text-gray-100"
                         />
-                        <button onClick={commitEdit} aria-label={t('arrangements.save')} className="p-1 text-green-600 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40 rounded">
+                        <button onClick={commitEdit} aria-label={t('arrangements.save')} className="p-1 text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/40 rounded">
                           <Check size={15} />
                         </button>
                       </>

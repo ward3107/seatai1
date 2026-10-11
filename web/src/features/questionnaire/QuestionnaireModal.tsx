@@ -174,11 +174,11 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                           className={clsx(
                             'flex items-center justify-between gap-2 rounded-lg border px-3 text-left',
                             sm ? 'py-3 text-base' : 'py-2.5 text-sm',
-                            done ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-gray-600 dark:text-gray-300' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary-300',
+                            done ? 'bg-violet-50 dark:bg-violet-900/30 border-violet-200 dark:border-violet-800 text-gray-600 dark:text-gray-300' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary-300',
                           )}
                         >
                           <span className="truncate font-medium">{s.name}</span>
-                          {done && <Check size={15} className="text-green-500 dark:text-green-400 shrink-0" />}
+                          {done && <Check size={15} className="text-violet-500 dark:text-violet-400 shrink-0" />}
                         </button>
                       );
                     })}
@@ -274,7 +274,7 @@ export default function QuestionnaireModal({ open, onClose }: Props) {
                             className={clsx(
                               'rounded-full font-medium border transition-all',
                               sm ? 'px-3.5 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
-                              selected ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-emerald-300',
+                              selected ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-300',
                             )}
                           >
                             {s.name}

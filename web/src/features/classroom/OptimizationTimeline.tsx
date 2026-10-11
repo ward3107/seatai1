@@ -140,7 +140,7 @@ export default function OptimizationTimeline({ onClose }: OptimizationTimelinePr
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
             <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.max_fitness')}</div>
-            <div className="text-sm font-bold text-green-600 dark:text-green-300">{stats.maxFitness.toFixed(1)}</div>
+            <div className="text-sm font-bold text-violet-600 dark:text-violet-300">{stats.maxFitness.toFixed(1)}</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm">
             <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase">{t('classroom.improvement')}</div>

@@ -548,7 +548,7 @@ export default function ExplanationPanel() {
                 {reasons.map((r, i) => (
                   <li key={i} className="flex items-start gap-1.5">
                     {r.type === 'good' ? (
-                      <CheckCircle2 size={11} className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 size={11} className="text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" />
                     ) : r.type === 'warn' ? (
                       <AlertTriangle size={11} className="text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
                     ) : (
@@ -559,7 +559,7 @@ export default function ExplanationPanel() {
                         className={clsx(
                           'text-[11px] leading-snug',
                           r.type === 'good'
-                            ? 'text-emerald-700 dark:text-emerald-300'
+                            ? 'text-indigo-700 dark:text-indigo-300'
                             : r.type === 'warn'
                             ? 'text-amber-700 dark:text-amber-300'
                             : 'text-gray-500 dark:text-gray-400'

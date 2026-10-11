@@ -64,7 +64,7 @@ export default function OneRosterImport() {
         <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">{t('oneRoster.title')}</span>
       </div>
 
-      <p className="flex items-start gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded p-2 leading-snug">
+      <p className="flex items-start gap-1.5 text-[11px] text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded p-2 leading-snug">
         <ShieldCheck size={13} className="shrink-0 mt-0.5" />
         {t('oneRoster.hint')}
       </p>
@@ -146,8 +146,8 @@ export default function OneRosterImport() {
       )}
 
       {done && (
-        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
-          <CheckCircle2 size={15} className="text-green-500 dark:text-green-400 shrink-0 mt-0.5" />
+        <div className="rounded-lg p-2.5 flex items-start gap-2 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800">
+          <CheckCircle2 size={15} className="text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
           <p className="flex-1 text-xs text-gray-700 dark:text-gray-300">
             {t('oneRoster.imported_from', { count: done.count, class: done.className })}
           </p>

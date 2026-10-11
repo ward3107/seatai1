@@ -77,7 +77,7 @@ function DeltaBadge({ delta, t }: { delta: number; t: (k: string) => string }) {
     <span
       className={clsx(
         'inline-flex items-center gap-0.5 font-medium',
-        better ? 'text-emerald-600 dark:text-emerald-300' : 'text-red-500 dark:text-red-400',
+        better ? 'text-indigo-600 dark:text-indigo-300' : 'text-red-500 dark:text-red-400',
       )}
       title={better ? t('compare.better') : t('compare.worse')}
     >

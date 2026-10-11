@@ -355,7 +355,7 @@ export default function StudentForm() {
               <>
                 {/* Friends */}
                 <div>
-                  <p className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">{t('students.friends_label')}</p>
+                  <p className="text-xs font-medium text-violet-700 dark:text-violet-300 mb-1">{t('students.friends_label')}</p>
                   <div className="flex flex-wrap gap-1">
                     {otherStudents.map(s => {
                       const active = form.friends_ids.includes(s.id);
@@ -368,10 +368,10 @@ export default function StudentForm() {
                           onClick={() => toggleId('friends_ids', s.id)}
                           className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
                             active
-                              ? 'bg-green-100 dark:bg-green-900/40 border-green-400 text-green-800 dark:text-green-300'
+                              ? 'bg-violet-100 dark:bg-violet-900/40 border-violet-400 text-violet-800 dark:text-violet-300'
                               : conflict
                               ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
-                              : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-green-400 hover:text-green-700'
+                              : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-violet-400 hover:text-violet-700'
                           }`}
                         >
                           {s.name.split(' ')[0]}
