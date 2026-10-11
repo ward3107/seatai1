@@ -1,25 +1,27 @@
-# SeatAI interface
+# SeatAI classroom studio interface
 
-The interface uses iOS conventions for a teacher's daily work: grouped lists,
-clear section titles, segmented view controls, readable device typography and
-one consistent blue for actions. The classroom map remains the central visual.
+The interface combines simple iOS-style controls with a classroom identity:
+forest green, paper-like seating plans, mint, peach and lilac. Shared controls
+stay consistent across home, class setup, student editing, school dashboards,
+authentication, dialogs, questionnaire and print controls.
 
-Palette: canvas #F2F2F7, surface #FFFFFF, text #1C1C1E, secondary #606069,
-separator #DEDEE5, action #0064D9. Dark mode uses black canvas and layered neutral
-surfaces. Colors indicating student needs, status and chart series retain their
-meaning. No additional web fonts or visual libraries are loaded.
+Palette: canvas #F2F6F2, surface #FFFFFF, text #253C35, secondary #596D65,
+separator #D6E2DA, action #246B5A. Dark mode uses a forest canvas #101E19 and
+layered green surfaces. Student needs, statuses and chart colors retain their
+meaning. No extra fonts or visual libraries are loaded.
 
-Layout: navigation → page title and primary action → grouped content. Home uses
-a quiet split introduction with the seating illustration; staff entrances form
-a grouped list. School dashboards use a shared statistics strip, classroom map
-and labelled charts. Mobile navigation stays within safe areas, and editing
-panels behave as sheets. Text follows the active language direction.
+Home has a deep green split hero with an illustrated classroom: paired desks,
+a board and windows. The illustration is explicitly labelled as such. Sample
+class controls show miniature seating maps for 15, 30 and 45 students. Staff
+roles form a separate section with softly colored rows. Authentication uses
+one connected split panel. Dashboards retain grouped statistics and labelled
+charts, with coordinated colored icons.
 
-Typography: device system family with 34–52px entry headings, 28–34px page
-headings, 17–20px section headings and 14–17px body. Form fields remain 16px on
-phones. Touch controls are at least 44px; keyboard focus remains visible.
+Mobile stacks the hero and staff sections; sample classes remain easy to
+compare. Authentication prioritizes the form on small screens. Layout follows
+the active language direction. Device typography, 16px phone form fields,
+44px touch controls, visible keyboard focus and reduced-motion behavior are
+preserved. Printing retains white paper and existing page dimensions.
 
-Scope: home, class setup, classroom controls, students and settings, staff
-sign-in/recovery, all school roles, dialogs, questionnaire and print controls.
-Printing retains white paper and its existing page dimensions. No permissions,
-storage, optimization logic or authentication behavior changes.
+This revision changes presentation only: permissions, storage, optimization
+and authentication behavior are unchanged.

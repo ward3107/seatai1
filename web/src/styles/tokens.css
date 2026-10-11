@@ -1,32 +1,38 @@
-/* Shared iOS-inspired materials. Device fonts keep Hebrew/Arabic native. */
+/* Classroom studio: forest actions, botanical neutrals and colored seating cues. */
 :root {
-  --ui-canvas: #f2f2f7;
+  --ui-canvas: #f2f6f2;
   --ui-surface: #ffffff;
-  --ui-grouped: #f7f7fa;
-  --ui-fill: #ededf2;
-  --ui-text: #1c1c1e;
-  --ui-secondary: #606069;
-  --ui-line: #dedee5;
-  --ui-blue: #0064d9;
-  --ui-blue-hover: #0056bd;
-  --ui-tint: #eaf2ff;
+  --ui-grouped: #f4f7f3;
+  --ui-fill: #e7eeea;
+  --ui-text: #253c35;
+  --ui-secondary: #596d65;
+  --ui-line: #d6e2da;
+  --ui-action: #246b5a;
+  --ui-action-hover: #195544;
+  --ui-tint: #e0f2e9;
   --ui-chrome: rgba(255, 255, 255, .92);
   --ui-shadow: 0 2px 8px rgb(28 28 30 / 4%);
   --ui-floating-shadow: 0 16px 56px rgb(28 28 30 / 14%);
+  --ui-peach: #ffe4d1;
+  --ui-lilac: #e9e4f7;
+  --ui-mint: #d8eee2;
   --ui-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 html.dark {
-  --ui-canvas: #000000;
-  --ui-surface: #1c1c1e;
-  --ui-grouped: #242426;
-  --ui-fill: #303034;
-  --ui-text: #f5f5f7;
-  --ui-secondary: #aaaab3;
-  --ui-line: #3a3a3e;
-  --ui-blue: #78b5ff;
-  --ui-blue-hover: #a2ccff;
-  --ui-tint: #172b46;
-  --ui-chrome: rgba(28, 28, 30, .94);
+  --ui-canvas: #101e19;
+  --ui-surface: #1b2d24;
+  --ui-grouped: #22372d;
+  --ui-fill: #2d4338;
+  --ui-text: #eff6ef;
+  --ui-secondary: #afc4b5;
+  --ui-line: #3c5547;
+  --ui-action: #9adebb;
+  --ui-action-hover: #b9edce;
+  --ui-tint: #234334;
+  --ui-chrome: rgba(27, 45, 36, .94);
+  --ui-peach: #49372b;
+  --ui-lilac: #3b354e;
+  --ui-mint: #294437;
   --ui-shadow: none;
   --ui-floating-shadow: 0 20px 60px rgb(0 0 0 / 45%);
 }
