@@ -26,9 +26,9 @@ body { margin: 0; min-height: 100vh; background: var(--ui-canvas); color: var(--
 .workspace-sidebar { box-shadow: none; }
 [hidden] { display: none !important; }
 :where(button, a, summary, select, input, textarea):focus-visible {
-  outline: 2px solid var(--ui-blue); outline-offset: 3px;
+  outline: 2px solid var(--ui-action); outline-offset: 3px;
 }
-:where(input[type='checkbox'], input[type='radio'], input[type='range']) { accent-color: var(--ui-blue); }
+:where(input[type='checkbox'], input[type='radio'], input[type='range']) { accent-color: var(--ui-action); }
 /* Existing utility-based panels inherit the same materials, including dialogs. */
 :where(html) :is(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: var(--ui-surface); }
 html.dark :is(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: var(--ui-surface); color: var(--ui-text); }
@@ -165,11 +165,11 @@ html.dark .topbar-icon:hover, html.dark .topbar-guide:hover { background: var(--
 .quick-guide-number {
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 28px; height: 28px; border-radius: 9px; background: var(--ui-tint);
-  color: var(--ui-blue); font-size: 13px; font-weight: 700;
+  color: var(--ui-action); font-size: 13px; font-weight: 700;
 }
 .quick-guide-note { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ui-line); color: var(--ui-secondary); font-size: 13px; line-height: 1.6; }
 html.dark .quick-guide { background: var(--ui-surface); border-color: var(--ui-line); }
-html.dark .quick-guide-number { background: var(--ui-tint); color: var(--ui-blue); }
+html.dark .quick-guide-number { background: var(--ui-tint); color: var(--ui-action); }
 html.dark .quick-guide-note { border-color: var(--ui-line); color: var(--ui-secondary); }
 .teacher-guide-dialog { max-height: min(90vh, 900px); max-height: min(90dvh, 900px); }
 .teacher-guide-dialog > :last-child { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
@@ -240,19 +240,19 @@ html.dark .quick-guide-note { border-color: var(--ui-line); color: var(--ui-seco
 .classroom-map-scroll::-webkit-scrollbar { height: 10px; }
 .classroom-map-scroll::-webkit-scrollbar-track { background: var(--ui-grouped); border-radius: 8px; }
 .classroom-map-scroll::-webkit-scrollbar-thumb { background: var(--ui-secondary); border-radius: 8px; }
-.map-scroll-controls { position: sticky; bottom: 0; z-index: 10; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); margin-top: 8px; border: 1px solid var(--ui-line); border-radius: 16px; background: var(--ui-grouped); color: var(--ui-blue); }
-.map-pan-button { display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-blue); }
+.map-scroll-controls { position: sticky; bottom: 0; z-index: 10; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); margin-top: 8px; border: 1px solid var(--ui-line); border-radius: 16px; background: var(--ui-grouped); color: var(--ui-action); }
+.map-pan-button { display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-action); }
 .map-pan-button:disabled { opacity: .35; }
 .map-scroll-controls input[type='range'] { height: 44px; cursor: pointer; }
-html.dark .map-scroll-controls { background: var(--ui-grouped); border-color: var(--ui-blue); color: var(--ui-blue); }
-html.dark .map-pan-button { background: var(--ui-surface); border-color: var(--ui-line); color: var(--ui-blue); }
+html.dark .map-scroll-controls { background: var(--ui-grouped); border-color: var(--ui-action); color: var(--ui-action); }
+html.dark .map-pan-button { background: var(--ui-surface); border-color: var(--ui-line); color: var(--ui-action); }
 
 /* Shared application chrome, grouped controls and editing sheets. */
 .app-topbar { background: var(--ui-chrome); border-color: var(--ui-line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 html.dark .app-topbar { background: var(--ui-chrome); }
 .topbar-navigation { max-width: 1600px; margin-inline: auto; }
 .topbar-chart-actions { background: var(--ui-surface); border-color: var(--ui-line); }
-.topbar-icon, .topbar-guide { color: var(--ui-blue); }
+.topbar-icon, .topbar-guide { color: var(--ui-action); }
 .preferences-popover { border-color: var(--ui-line); box-shadow: var(--ui-floating-shadow); padding: 8px; }
 .preferences-popover > :is(a, button) { border-radius: 9px; font-size: 14px; }
 .workspace-heading { padding: 12px 2px 24px; }
@@ -271,7 +271,7 @@ html.dark .workspace-sidebar [role='tab'][aria-selected='true'] { background: va
 .sidebar-content { padding-inline: 12px; }
 .settings-group { border: 1px solid var(--ui-line); background: var(--ui-surface); }
 .settings-group > button { min-height: 52px; padding: 14px; font-size: 14px; }
-.settings-group > button svg:first-child { color: var(--ui-blue); }
+.settings-group > button svg:first-child { color: var(--ui-action); }
 .sidebar-content button:not([role='tab']) { min-height: 36px; }
 .sidebar-content input:not([type='checkbox']):not([type='radio']):not([type='range']), .sidebar-content select { min-height: 40px; }
 .sidebar-content summary { text-transform: none; letter-spacing: normal; font-size: 13px; min-height: 44px; }
@@ -282,18 +282,18 @@ html.dark .classroom-panel { border-color: var(--ui-line); }
 .grid-segment button { border-radius: 9px; color: var(--ui-secondary); font-weight: 500; }
 .grid-segment button[aria-pressed='true'] { background: var(--ui-surface); color: var(--ui-text); box-shadow: 0 1px 4px rgb(0 0 0 / 10%); font-weight: 600; }
 .grid-zoom { border-radius: 12px; background: var(--ui-grouped); }
-.grid-zoom button { color: var(--ui-blue); }
+.grid-zoom button { color: var(--ui-action); }
 .quick-guide { border: 0; border-radius: 20px; box-shadow: var(--ui-shadow); }
 .quick-guide-number { background: var(--ui-fill); color: var(--ui-secondary); font-weight: 600; }
 html.dark .quick-guide-number { background: var(--ui-fill); color: var(--ui-secondary); }
 .quick-guide-note { font-size: 12px; }
 .map-scroll-controls, html.dark .map-scroll-controls { background: var(--ui-grouped); border-color: var(--ui-line); color: var(--ui-secondary); }
-.map-pan-button { color: var(--ui-blue); }
+.map-pan-button { color: var(--ui-action); }
 .setup-wizard { padding-top: 16px; }
 .setup-wizard > div:first-child h1 { font-size: 28px; letter-spacing: -.03em; }
 .setup-wizard > [role='group'] { border-radius: 24px; border-color: transparent; box-shadow: var(--ui-shadow); }
 .wizard-footer { background: var(--ui-chrome); border-color: var(--ui-line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-.wizard-step[aria-current='step'] { color: var(--ui-blue); background: var(--ui-tint); }
+.wizard-step[aria-current='step'] { color: var(--ui-action); background: var(--ui-tint); }
 .metrics-panel { border-radius: 20px; }
 .metrics-grid { background: var(--ui-grouped); border-radius: 16px; gap: 0; }
 .metrics-grid > div { padding: 20px 14px; }

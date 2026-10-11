@@ -38,7 +38,7 @@ export default function OnboardingView() {
     </section>
     <section id="sample-classes" className="entry-samples" aria-labelledby="sample-classes-title">
       <div><h2 id="sample-classes-title">{t('entry.sampleTitle')}</h2><p>{t('entry.sampleHint')}</p></div>
-      <div className="entry-sample-options">{SAMPLE_CLASSES.map(sample => <button type="button" key={sample.id} onClick={() => loadSampleClass(sample.id)} className="sample-class-button"><strong>{sample.students.length}</strong><span>{t('app.students')}</span><Arrow size={17} aria-hidden="true" /></button>)}</div>
+      <div className="entry-sample-options">{SAMPLE_CLASSES.map(sample => <button type="button" key={sample.id} onClick={() => loadSampleClass(sample.id)} className="sample-class-button"><span className="sample-mini-map" aria-hidden="true">{Array.from({ length: sample.students.length }, (_, index) => <i key={index} />)}</span><span className="sample-class-label"><strong>{sample.students.length}</strong><span>{t('app.students')}</span></span><Arrow size={20} aria-hidden="true" /></button>)}</div>
     </section>
     <section className="entry-team" aria-labelledby="entry-team-title">
       <div className="entry-section-heading"><div><h2 id="entry-team-title">{t('entry.teamTitle')}</h2><p>{t('entry.teamIntro')}</p></div><a className="entry-secondary" href="#school">{t('entry.teamLogin')}</a></div>

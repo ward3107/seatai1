@@ -20,12 +20,12 @@ export default {
         xs: '400px',
       },
       colors: {
-        // Accessible iOS blue, shared by every primary action.
+        // Forest green, shared by every primary action.
         primary: {
-          50: '#eff5ff', 100: '#deebff', 200: '#bed8ff',
-          300: '#91bfff', 400: '#559aff', 500: '#0070ed',
-          600: '#0064d9', 700: '#0056bd', 800: '#06468f',
-          900: '#15375f', 950: '#10243f',
+          50: '#eff8f2', 100: '#d8eee2', 200: '#b9dfc9',
+          300: '#94cbae', 400: '#55a882', 500: '#28745f',
+          600: '#246b5a', 700: '#195544', 800: '#214d3e',
+          900: '#213e32', 950: '#13291f',
         },
         // Neutral surfaces across existing utility-based panels.
         gray: {
