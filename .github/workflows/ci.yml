@@ -12,6 +12,13 @@ on:
 # to mirror that — running `npm ci` inside `web/` would fail because
 # there's no lockfile there.
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint:
     name: Lint
