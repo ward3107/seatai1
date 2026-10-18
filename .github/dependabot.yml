@@ -6,7 +6,7 @@ updates:
   schedule:
     interval: weekly
     day: sunday
-    time: 06:00
+    time: "06:00"
     timezone: Asia/Jerusalem
   open-pull-requests-limit: 5
   groups:
@@ -28,6 +28,6 @@ updates:
   schedule:
     interval: weekly
     day: sunday
-    time: 06:30
+    time: "06:30"
     timezone: Asia/Jerusalem
   open-pull-requests-limit: 2
