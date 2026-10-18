@@ -1,22 +1,33 @@
+# Keep the React renderer and type packages together; majors still require owner review.
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-      day: sunday
-      time: "06:00"
-      timezone: Asia/Jerusalem
-    open-pull-requests-limit: 5
-    groups:
-      development-patches:
-        dependency-type: development
-        update-types: [patch]
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
-      day: sunday
-      time: "06:30"
-      timezone: Asia/Jerusalem
-    open-pull-requests-limit: 2
+- package-ecosystem: npm
+  directory: /
+  schedule:
+    interval: weekly
+    day: sunday
+    time: 06:00
+    timezone: Asia/Jerusalem
+  open-pull-requests-limit: 5
+  groups:
+    react-compatible:
+      patterns:
+      - react
+      - react-dom
+      - '@types/react'
+      - '@types/react-dom'
+      update-types:
+      - minor
+      - patch
+    development-patches:
+      dependency-type: development
+      update-types:
+      - patch
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+    day: sunday
+    time: 06:30
+    timezone: Asia/Jerusalem
+  open-pull-requests-limit: 2
