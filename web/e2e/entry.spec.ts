@@ -5,7 +5,41 @@ import type { Membership, SchoolWorkspace } from '../src/features/school/types';
 async function openEntry(page: Page) {
   await openApp(page);
   await page.evaluate(() => window.__ZUSTAND_STORE__.getState().setSidebarOpen(false));
-  await expect(page.locator('aside')).not.toBeInViewport();
+  await expectSidebarClosed(page);
+}
+
+async function expectSidebarClosed(page: Page) {
+  const sidebar = page.locator('aside');
+  await expect(sidebar).toHaveAttribute('aria-hidden', 'true');
+  await expect(sidebar).toHaveAttribute('inert', '');
+  // A collapsed desktop sidebar has zero width. WebKit can report an
+  // IntersectionObserver ratio of 1 for that zero-area target, so wait for
+  // its actual painted width to disappear instead of testing that ratio.
+  await expect.poll(() => sidebar.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const height = Math.max(0, Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0));
+    return height > 0
+      ? Math.max(0, Math.min(rect.right, innerWidth) - Math.max(rect.left, 0))
+      : 0;
+  })).toBeLessThanOrEqual(0.5);
+}
+
+for (const width of [390, 1440]) {
+  test(`${width}px: closing the sidebar hides its controls and reopening restores them`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openEntry(page);
+    await createSampleClass(page);
+    await page.getByRole('button', { name: 'Open sidebar', exact: true }).click();
+    const sidebar = page.locator('aside');
+    await expect(sidebar).toHaveAttribute('aria-hidden', 'false');
+    await expect(sidebar).not.toHaveAttribute('inert', '');
+    await expect(sidebar).toBeInViewport({ ratio: 0.9 });
+    const roomTab = sidebar.getByRole('tab', { name: 'Room', exact: true });
+    await roomTab.click();
+    await expect(roomTab).toHaveAttribute('aria-selected', 'true');
+    await roomTab.press('Escape');
+    await expectSidebarClosed(page);
+  });
 }
 
 test('role entrances explain access and reach the shared sign-in without a dashboard', async ({ page }) => {
